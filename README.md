@@ -9,4 +9,4 @@ Codebase for the Since AI hackathon 2026 challenge
 <h2>The license</h2>
 
 <h2>The shrek</h2>
-<img src="https://images.unsplash.com/photo-1589652717521-10c0d097853d?auto=format&fit=crop&w=800&q=80" alt="Shrek" width="400">
+<img src="images/shrek.png" alt="Shrek" width="400">
