@@ -11,14 +11,14 @@ import { cn } from '../lib/cn'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
 
-function Kpi({ icon, label, value, tone, onClick }: { icon: ReactNode; label: string; value: number; tone?: string; onClick?: () => void }) {
+function Kpi({ icon, label, value, tone, onClick, title }: { icon: ReactNode; label: string; value: number; tone?: string; onClick?: () => void; title?: string }) {
   return (
-    <div className="flex-1" onClick={onClick}>
+    <div className="min-w-0 flex-1" onClick={onClick} title={title}>
     <Card className={cn('flex items-center gap-3 px-3.5 py-2.5', onClick && 'cursor-pointer hover:border-accent')}>
       <span className={cn('flex size-9 items-center justify-center rounded-lg bg-surface-2 text-muted', tone)}>{icon}</span>
       <div className="min-w-0">
-        <div className="text-xl font-semibold leading-none tabular-nums" >{value}</div>
-        <div className="mt-1 truncate text-[12.5px] text-muted">{label}</div>
+        <div className="text-2xl font-semibold leading-none tabular-nums">{value}</div>
+        <div className="mt-1 truncate text-[13px] text-muted">{label}</div>
       </div>
     </Card>
     </div>
@@ -42,6 +42,7 @@ export default function LivePage() {
     const today = new Date().toDateString() // job timestamps are wall time
     return {
       open: Object.values(incidents).filter((i) => i.status === 'open').length,
+      total: Object.keys(threads).length,
       live: Object.values(threads).filter((t) => t.status === 'active' || t.status === 'processing').length,
       valid: Object.values(assertions).filter((a) => validAt(a, now)).length,
       jobsToday: jobs.filter((j) => new Date(j.started_at).toDateString() === today).length,
@@ -55,7 +56,7 @@ export default function LivePage() {
     <div className="flex h-full min-h-0 flex-col gap-3 p-3">
       <div className="flex shrink-0 gap-3">
         <Kpi icon={<Siren size={18} />} label="Open incidents" value={k.open} tone={k.open ? 'bg-bad/15 text-bad' : undefined} />
-        <Kpi icon={<MessagesSquare size={18} />} label="Live conversations" value={k.live} tone={k.live ? 'bg-ok/15 text-ok' : undefined} onClick={() => nav('/conversations')} />
+        <Kpi icon={<MessagesSquare size={18} />} label={`Active conversations · ${k.total} total`} title="Threads still receiving messages or being processed. Quiet threads are processed and no longer count." value={k.live} tone={k.live ? 'bg-ok/15 text-ok' : undefined} onClick={() => nav('/conversations')} />
         <Kpi icon={<BookCheck size={18} />} label="Assertions valid now" value={k.valid} tone="bg-accent-soft text-accent" onClick={() => nav('/knowledge')} />
         <Kpi icon={<Workflow size={18} />} label="Pipeline jobs today" value={k.jobsToday} />
         <Kpi icon={<AlertTriangle size={18} />} label="LLM calls with errors" value={k.llmErr} tone={k.llmErr ? 'bg-warn/15 text-warn' : undefined} onClick={() => nav('/llm')} />

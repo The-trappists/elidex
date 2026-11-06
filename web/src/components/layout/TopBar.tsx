@@ -25,12 +25,14 @@ function ScenarioLauncher() {
         Run scenario <ChevronDown size={14} />
       </Button>
       {open && (
-        <div className="absolute right-0 top-11 z-30 max-h-[70vh] w-96 overflow-auto rounded-xl border border-line bg-surface p-1.5 shadow-xl animate-slide-in">
+        <div role="menu" className="absolute right-0 top-11 z-50 max-h-[70vh] w-[28rem] overflow-auto rounded-xl border border-line bg-surface p-1.5 shadow-2xl shadow-black/40 ring-1 ring-black/5 animate-slide-in dark:bg-surface-2">
+          <div className="px-3 pb-1.5 pt-1 text-xs font-medium uppercase tracking-wide text-muted">Scenarios</div>
           {scenarios.length === 0 && <div className="p-3 text-sm text-muted">No scenario yet. Add one in Data.</div>}
           {scenarios.map((s) => (
             <button
               key={s.id}
-              className="flex w-full flex-col items-start gap-1 rounded-lg px-3 py-2 text-left hover:bg-surface-2"
+              role="menuitem"
+              className="flex w-full flex-col items-start gap-1 rounded-lg border border-transparent px-3 py-2.5 text-left hover:border-line hover:bg-bg focus-visible:border-accent focus-visible:outline-none"
               onClick={() => {
                 setOpen(false)
                 void withToast(() => api.runScenario(s.id), `Started: ${s.title}`)
@@ -40,7 +42,7 @@ function ScenarioLauncher() {
                 <span className="text-sm font-medium">{s.title}</span>
                 <Badge className={cn('ml-auto', SOURCE_STYLE[s.channel].cls)}>{SOURCE_STYLE[s.channel].label}</Badge>
               </div>
-              {s.description && <span className="line-clamp-2 text-xs text-muted">{s.description}</span>}
+              {s.description && <span className="text-xs leading-snug text-muted">{s.description}</span>}
             </button>
           ))}
         </div>
