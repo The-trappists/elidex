@@ -17,10 +17,10 @@ We are tackling **Elisa's "Silent Knowledge for Autonomous Network Operations"**
 | [Ideas](docs/ideas.md) | Candidate directions, their original angle and scope fit |
 | [Architecture options](docs/architecture.md) | Reference pipeline, alternatives per stage |
 | [Data model options](docs/data-model.md) | Ways to represent knowledge, required metadata |
-| [Tech stack options](docs/tech-stack.md) | Options per layer |
+| [Tech stack options](docs/tech-stack.md) | Options per layer, event tools and credits that fit |
 | [48h plan](docs/plan.md) | Phases, gates, roles |
 | [Demo and risks](docs/demo-and-risks.md) | Demo shape, risks, open questions for mentors |
 | [Decisions](docs/decisions.md) | What we chose and why |
 | [Contributing](CONTRIBUTING.md) | Language, git workflow, shared contracts |
-| [CLAUDE.md](CLAUDE.md) | How the AI assistant helps: alternatives, scope checks, code generation |
+| [AGENTS.md](AGENTS.md) | Instructions for every AI assistant: alternatives, scope checks, code generation |
 <h2>The license</h2>
