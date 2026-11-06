@@ -1,4 +1,4 @@
-import { ChevronRight, Workflow } from 'lucide-react'
+import { AlertTriangle, ChevronRight, Workflow } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { cn } from '../../lib/cn'
 import { fmtMs } from '../../lib/format'
@@ -50,10 +50,11 @@ export function PipelineLane({ limit = 15 }: { limit?: number }) {
             <li
               key={j.id}
               onClick={() => setOpen(j.id)}
-              className={cn('cursor-pointer px-4 py-2.5 transition-colors hover:bg-surface-2', j.error && 'bg-bad/5')}
+              className={cn('cursor-pointer px-4 py-2.5 transition-colors hover:bg-surface-2', j.error && 'border-l-4 border-l-bad bg-bad/10 hover:bg-bad/15')}
             >
               <div className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{t?.subject ?? j.thread_id}</span>
+                {j.error && <Badge className="bg-bad text-white"><AlertTriangle size={12} /> Failed</Badge>}
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{t?.subject ?? j.thread_id}</span>
                 {t && <Badge className={SOURCE_STYLE[t.source].cls}>{SOURCE_STYLE[t.source].label}</Badge>}
                 <Badge className="bg-surface-2 text-muted">{extractorLabel(j.extractor)}</Badge>
                 {isRunning(j) && <Badge className="bg-info/15 text-info"><span className="live-dot size-1.5 rounded-full bg-current" />Reading</Badge>}
@@ -61,7 +62,7 @@ export function PipelineLane({ limit = 15 }: { limit?: number }) {
               </div>
               <div className="mt-1.5 flex items-center gap-3">
                 <StageChips job={j} />
-                <span className={cn('min-w-0 flex-1 truncate text-xs', j.error ? 'text-bad' : 'text-muted')}>{describeJob(j)}</span>
+                <span title={j.error ?? undefined} className={cn('min-w-0 flex-1 truncate text-xs', j.error ? 'font-medium text-bad' : 'text-muted')}>{describeJob(j)}</span>
               </div>
             </li>
           )
