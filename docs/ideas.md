@@ -4,11 +4,12 @@
 
 All ideas share the same core (capture → link → serve). They differ in **where the original angle sits**.
 
-> **After Elisa's presentation** (see [challenge.md](challenge.md#what-elisa-said-at-the-presentation)): the deliverable is machine-readable context for their autonomous workflows, with no human input at all, and their workflows are not ours to build. So:
-> - **A** matches the brief most directly.
-> - **B** must not turn into building Elisa's workflow; at most a minimal stand-in for the demo.
-> - **C** and **F** rely on a human confirming facts, which Elisa ruled out; keep only their silent parts (auto-capture, automatic freshness and conflict detection).
-> - **D** and **E** stay valid as ways to enrich the context.
+> **After Elisa's slides** (see [challenge.md](challenge.md)): the deliverable is context assertions bound to graph entities with a validity period, captured from Teams and email with no extra work for specialists, and **reused by an agent on a similar case** (Erkki's case). Usability is the primary criterion. So:
+> - **A** is the base every idea needs (the context layer + agent access).
+> - **D** matches Elisa's "Reuse" step almost word for word: Erkki's fix suggested on the next similar node.
+> - **E** fits Erkki's rule naturally (conditions: old unit, after SFP swap, zero counters).
+> - **B** must not turn into building Elisa's workflow; at most a minimal agent for the demo.
+> - **C** and **F** rely on a human confirming facts, which "no extra work" rules out; keep only their silent parts (auto-capture, automatic `valid_to` and conflict detection).
 
 ## Overview
 

@@ -1,56 +1,61 @@
 # Demo, risks and open questions
 
-## Demo shape (adapt to the chosen idea)
+## Demo shape
 
-Elisa described a strong demo as **1. Capture, 2. Link, 3. Reuse**. A 3-minute demo can follow that arc whatever the idea:
+Elisa's slides describe the strong demo: **Erkki's case, end to end** (see [challenge.md](challenge.md#the-two-stories)).
 
-1. **The problem:** a noisy Slack/Discord channel or email thread; one line holds knowledge nobody would ever file.
-2. **Capture:** the conversation is processed and the useful knowledge is extracted, with no human input.
-3. **Link:** the knowledge is attached to the right network element, with its source, date and confidence.
-4. **Reuse:** show the machine-readable context an autonomous workflow would receive, and what it changes. We do not build Elisa's workflow; a minimal stand-in is enough to show the context is exploitable.
-5. **The numbers:** precision/recall of filtering and linking on a labelled set.
+| Step | Elisa's definition | What we show |
+| --- | --- | --- |
+| **Capture** | Knowledge is taken from the chat or email, with no separate documentation step | `teams_chat.json` (12 messages) and `email.txt` go in; one rule comes out |
+| **Link** | Stored as a context assertion bound to the right entities, with its source and validity period | The rule is bound to TRN-042 **and** to the right class (older units, ~2019 model), with source, `valid_from` / `valid_to` and trust |
+| **Reuse** | On a similar case, an agent proposes: check the counters, bounce the interface, before hardware swaps or reboots | A new synthetic case on **another** old node: the agent's context includes the rule, and it proposes the bounce first |
 
-### Candidate scenario (from Elisa's own example)
+Then **the numbers:** relevance and linking precision on our labelled synthetic set.
 
-A device fails, the AI diagnoses it, an engineer is dispatched, and the visit stops at a locked barrier on a private road. Months earlier, an email said where the key is.
+Possible extras, if time allows, each tied to one of Elisa's "hard" points:
 
-| Step | What the demo shows |
+| Extra | Hard point |
 | --- | --- |
-| Capture | The email (among noise) is detected as operational knowledge |
-| Link | The fact "barrier key at the neighbouring farm" is linked to the site, typed as `access` |
-| Reuse | The context for that site, as JSON, includes the access fact with source and confidence; the dispatch plan includes fetching the key |
+| The barrier-key email bound to a site, typed as access knowledge | Real knowledge outside technical topics |
+| A firmware update that ends the rule's validity (`valid_to` set) | Time |
+| Two experts who disagree; both kept, trust shown | Trust |
+| An ambiguous "these units" that the system refuses to overlink | Linking: a wrong link is worse than none |
 
-Other payoff moments, per idea:
+Payoff moments per idea:
 
 | Idea | Payoff moment |
 | --- | --- |
-| A — Context API | The workflow's context includes the warning, with the cited message |
-| B — Ask-before-act guard | The reroute action is blocked or adapted before it runs |
-| C — Capture bot | The bot proposes "Save this for SITE-TKU-042?" right in the chat (conflicts with "no human input") |
-| D — Incident memory | The next similar incident gets the past fix suggested |
-| E — Conditional knowledge | A snow forecast triggers a warning before anything breaks |
-| F — Lifecycle | A stale fact is detected and its owner is asked to confirm (conflicts with "no human input") |
+| A — Context API | The agent's context for the new node includes Erkki's rule, with the cited message |
+| B — Ask-before-act guard | A "reboot" or "swap SFP" action is adapted to "bounce the interface first" |
+| C — Capture bot | Silent capture only; a confirmation prompt conflicts with "no extra work" |
+| D — Incident memory | The next similar incident gets Erkki's fix suggested: this is exactly Elisa's "Reuse" step |
+| E — Conditional knowledge | The rule fires only when its conditions (old unit, after SFP swap, zero counters) hold |
+| F — Lifecycle | A firmware fix ends the rule's validity automatically |
 
 ## Risks (common to all ideas)
 
 | Risk | Possible mitigations |
 | --- | --- |
-| Entity linking picks the wrong element | Alias table; confidence threshold; low-confidence links marked in the output |
-| Stale or contradicting knowledge | Freshness decay at query time; versioning instead of deleting; conflicts flagged |
-| Implicit knowledge missed ("^^", hedges, "we learned it over the years") | Prompt and label examples for implicit statements; map hedges to lower confidence |
-| Output too vague to be exploited by a machine | Fixed types and fields (see [data-model.md](data-model.md)); no free-text-only output |
-| No real data from Elisa | Synthetic data ready early; swap in theirs when it comes |
-| Compute cost (Elisa's stated bottleneck) and LLM rate limits | Cheap filter before the LLM; cache results; small batch for the live demo |
+| Wrong link (Elisa: worse than no link) | Alias table and model/install-year attributes in the inventory; abstain below a confidence threshold; prefer the narrowest entity the text supports |
+| Linking at the wrong generality (TRN-042 only vs. all ~2019 units) | Extract the scope the speaker states ("older units"), bind to a class entity, keep the instance as evidence |
+| Stale knowledge (firmware fix, new lock) | `valid_from` / `valid_to`; close validity when a later message or change contradicts it |
+| Experts disagree, or a hunch looks like a fact | Trust fields (verified outcome such as "traffic is back" vs. hunch); keep both assertions, flag the conflict |
+| Implicit knowledge missed (😄, hedges, "learned it over the years") | Prompt and label examples for implicit statements |
+| Output too vague for an agent | Fixed fields (see [data-model.md](data-model.md)); never free text only |
+| Tiny material (one case) | Generate more synthetic data early (other devices, outdated advice, disagreement) and **document how** |
+| LLM cost or rate limits | Cache results; small batch for the live demo |
 | Scope drift (workflows, tickets, fault detection, full NMS) | Check every feature against the [scope checklist](challenge.md#scope-checklist) |
 | Demo breaks live | Recorded backup video |
 
 ## Open questions for Elisa mentors
 
-- [ ] What data will we get: format, size, language (Finnish, English or both)? The language also drives the model choice.
-- [ ] Is there a real network-element inventory or ID format we should match?
-- [ ] Which context types and actions do their workflows consume (access, known issue, workaround, contact…)? This shapes our taxonomy.
-- [ ] Which LLMs and compute may we use during the event? (LUMI AI Factory and Red Hat are listed as technology partners.)
+Ask Joni or Matti at the Elisa stand or on the Since AI Discord.
+
+- [ ] Language of real conversations at Elisa: Finnish, English or both? The material looks English; real Teams chats may not be.
+- [ ] Is there an inventory or ID scheme beyond TRN-042 (node types, models, install year) we should mimic in synthetic data?
+- [ ] Should the agent consume context through a specific interface or format, or is ours free?
 - [ ] Would a proactive angle (idea E) be welcome, or seen as too close to fault detection?
-- [x] How will the challenge be judged? Relevance, Linking, Feasibility, Agent-ready, with minimal extra work for people.
-- [x] Any constraints on sending message data to external LLM APIs? Privacy and GDPR are not to be considered.
-- [x] What consumes the output? Elisa's autonomous network workflows; integrating with them is not our job.
+- [x] How will the challenge be judged? Usability first; then relevance, linking, feasibility, agent-ready.
+- [x] What data will we get? `use_case.md`, `teams_chat.json`, `email.txt`, `reference_architecture.png`; generate more and document it.
+- [x] Any constraints on sending message data to external LLM APIs? No production data is involved, and GDPR is not to be considered.
+- [x] Which compute? Not a constraint per Elisa ("not the models or the compute"; "models can be rented").
