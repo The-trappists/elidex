@@ -266,22 +266,33 @@ class Processor:
     async def _extract(self, job: PipelineJob, thread: LiveThread, core) -> list[ExtractedItem]:
         wb = self.wb
         mode = wb.settings.extractor_mode
-        if mode == "auto":
-            mode = "llm" if config.llm_configured() else "scripted"
-        if mode == "llm":
-            if not config.llm_configured():
-                raise RuntimeError("LLM not configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
-            extractor = LLMExtractor(cache_path=config.WORKBENCH_LLM_CACHE_FILE)
-            topics = sorted({a.topic for a in wb.store.assertions.values()})
-            job.extractor = f"llm:{config.LLM_MODEL}"
-            self._touch(job)
+        if mode == "auto" and config.llm_configured():
             try:
-                return await asyncio.to_thread(extractor.extract, core, topics, wb.now())
-            finally:
-                job.llm_call_ids = [t["id"] for t in extractor.last_traces]
-                ok = [t for t in extractor.last_traces if not t["error"]]
-                if ok and ok[-1]["provider"] == "fallback":
-                    job.extractor = f"llm:{ok[-1]['model']} (fallback)"
+                return await self._extract_llm(job, core)
+            except Exception as e:  # noqa: BLE001 - auto mode falls back to scripted answers
+                job.notes.append(f"LLM failed ({type(e).__name__}), fell back to scripted answers")
+        elif mode == "llm":
+            return await self._extract_llm(job, core)
+        return self._extract_scripted(job, thread, core)
+
+    async def _extract_llm(self, job: PipelineJob, core) -> list[ExtractedItem]:
+        wb = self.wb
+        if not config.llm_configured():
+            raise RuntimeError("LLM not configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
+        extractor = LLMExtractor(cache_path=config.WORKBENCH_LLM_CACHE_FILE)
+        topics = sorted({a.topic for a in wb.store.assertions.values()})
+        job.extractor = f"llm:{config.LLM_MODEL}"
+        self._touch(job)
+        try:
+            return await asyncio.to_thread(extractor.extract, core, topics, wb.now())
+        finally:
+            job.llm_call_ids = [t["id"] for t in extractor.last_traces]
+            ok = [t for t in extractor.last_traces if not t["error"]]
+            if ok and ok[-1]["provider"] == "fallback":
+                job.extractor = f"llm:{ok[-1]['model']} (fallback)"
+
+    def _extract_scripted(self, job: PipelineJob, thread: LiveThread, core) -> list[ExtractedItem]:
+        wb = self.wb
         scenario = wb.scenarios.get(thread.scenario_id) if thread.scenario_id else None
         if scenario and scenario.expected:
             job.extractor = "scripted"
