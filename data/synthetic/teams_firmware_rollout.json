@@ -1,0 +1,18 @@
+{
+  "channel": "teams",
+  "note": "Synthetic. Shows knowledge going out of date (idea D).",
+  "date": "2026-10-30",
+  "participants": [
+    {"name": "Aino Arkkitehti", "role": "Network Architect"},
+    {"name": "Veikko Vikkelä", "role": "Field Engineer"}
+  ],
+  "messages": [
+    {"seq": 1, "time": "08:40", "author": "Aino Arkkitehti", "role": "Network Architect",
+     "text": "Heads up team: the firmware 4.2 rollout to all transmission nodes installed 2019 or earlier finished last night. Release notes say it fixes the forwarding-state bug after optical module replacement."},
+    {"seq": 2, "time": "08:42", "author": "Veikko Vikkelä", "role": "Field Engineer",
+     "text": "So no more disable/enable trick after SFP swaps?"},
+    {"seq": 3, "time": "08:45", "author": "Aino Arkkitehti", "role": "Network Architect",
+     "text": "Correct, it shouldn't be needed anymore on those units. If you still see zero counters after a swap, it's something else."},
+    {"seq": 4, "time": "08:46", "author": "Veikko Vikkelä", "role": "Field Engineer", "text": "👍"}
+  ]
+}

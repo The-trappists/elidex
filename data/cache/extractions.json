@@ -1,0 +1,203 @@
+{
+  "_note": "Hand-written extractions, in the format the LLM extractor produces. Replayed when no LLM is configured (offline demo). `ctx run --llm` overwrites entries.",
+  "elisa/teams_chat.json": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "scope": {
+          "instance_ids": [
+            "TRN-042"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "install_year_max": 2019
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "optical levels normal",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "normal"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "forwarding-state issue, not a faulty SFP",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "avoid": [
+          "replace the SFP again",
+          "reboot the unit (unless the interface bounce fails)"
+        ],
+        "fact": null,
+        "stated_by": "Erkki Expert",
+        "trust_level": "verified",
+        "evidence": "seq 9: 'Did that. Traffic is back'",
+        "cited_seq": [
+          2,
+          4,
+          6,
+          8,
+          10
+        ],
+        "confidence": 0.85
+      }
+    ]
+  },
+  "elisa/email.txt": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "scope": {
+          "instance_ids": [
+            "TRN-042"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "install_year_max": 2019
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "optical levels normal",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "normal"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "forwarding-state issue, not a faulty SFP",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "avoid": [
+          "replace the SFP again",
+          "reboot the unit (unless the interface bounce fails)"
+        ],
+        "fact": null,
+        "stated_by": "Erkki Expert",
+        "trust_level": "stated",
+        "evidence": "'This has solved the issue in several cases I've seen.'",
+        "cited_seq": [
+          1
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "synthetic/email_barrier_access.txt": {
+    "items": [
+      {
+        "type": "access",
+        "topic": "site-access-barrier-key",
+        "summary": "The private road to SITE-NF-017 is closed by a locked barrier; the key is at the Kemijärvi service station.",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [
+            "SITE-NF-017"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [],
+        "diagnosis": null,
+        "action": "Collect the barrier key at the Kemijärvi service station (sign it out at the counter) before driving to the site.",
+        "avoid": [],
+        "fact": "A locked barrier closes the private road about 2 km before the mast; the key is kept at the Kemijärvi service station on the main road.",
+        "trust_level": "stated",
+        "evidence": "'Learned that the hard way last week'",
+        "stated_by": "Liisa Lappi",
+        "cited_seq": [
+          1
+        ],
+        "confidence": 0.9
+      }
+    ]
+  },
+  "synthetic/teams_firmware_rollout.json": {
+    "items": [
+      {
+        "type": "invalidation",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "Firmware 4.2, now on all transmission nodes installed 2019 or earlier, fixes the forwarding-state bug after optical module replacement: the interface bounce is no longer needed.",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "install_year_max": 2019
+          },
+          "trigger": null
+        },
+        "conditions": [],
+        "diagnosis": null,
+        "action": null,
+        "avoid": [],
+        "fact": "Firmware 4.2 fixes the forwarding-state bug on these units; zero counters after a swap now point to something else.",
+        "trust_level": "stated",
+        "evidence": "seq 1: release notes",
+        "stated_by": "Aino Arkkitehti",
+        "cited_seq": [
+          1,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  }
+}

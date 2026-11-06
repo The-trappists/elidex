@@ -1,0 +1,6 @@
+id,type,model,install_year,firmware,site_id,aliases
+TRN-042,transmission_node,TX-3000,2019,3.8,SITE-TKU-004,TRN42
+TRN-117,transmission_node,TX-3000,2018,3.8,SITE-OUL-011,TRN117
+TRN-208,transmission_node,TX-3000,2020,4.0,SITE-TMP-002,
+TRN-305,transmission_node,TX-5000,2024,5.1,SITE-TKU-009,
+RAD-221,radio_unit,RU-200,2021,2.3,SITE-NF-017,
