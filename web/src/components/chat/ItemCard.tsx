@@ -25,7 +25,7 @@ export function ItemCard({ item, highlighted, onHover }: { item: ExtractedItem; 
       <div className="flex flex-wrap items-center gap-1.5">
         <TypeBadge type={item.type} />
         <span className="font-semibold">{item.topic}</span>
-        <span className="ml-auto text-[10px] text-muted">conf {Math.round(item.confidence * 100)}%</span>
+        <span className="ml-auto text-[11.5px] text-muted">conf {Math.round(item.confidence * 100)}%</span>
       </div>
       <p className="mt-1.5 text-text">{item.summary}</p>
       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -39,7 +39,7 @@ export function ItemCard({ item, highlighted, onHover }: { item: ExtractedItem; 
           {item.conditions.map((c, i) => (
             <li key={i}>
               {c.text}
-              {c.check && <code className="ml-1 rounded bg-surface-2 px-1 font-mono text-[10px]">{c.check.field} {c.check.op} {JSON.stringify(c.check.value)}</code>}
+              {c.check && <code className="ml-1 rounded bg-surface-2 px-1 font-mono text-[11.5px]">{c.check.field} {c.check.op} {JSON.stringify(c.check.value)}</code>}
             </li>
           ))}
         </ul>
@@ -48,12 +48,12 @@ export function ItemCard({ item, highlighted, onHover }: { item: ExtractedItem; 
       {item.action && <Line k="Action" v={item.action} />}
       {item.fact && <Line k="Fact" v={item.fact} />}
       {item.avoid.length > 0 && <Line k="Avoid" v={item.avoid.join('; ')} />}
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
         <TrustBadge level={item.trust_level} />
         <span>by {item.stated_by}</span>
         {item.cited_seq.length > 0 && <span>msgs {item.cited_seq.map((q) => `#${q}`).join(' ')}</span>}
       </div>
-      {item.evidence && <div className="mt-1 text-[11px] italic text-muted">"{item.evidence}"</div>}
+      {item.evidence && <div className="mt-1 text-[12.5px] italic text-muted">"{item.evidence}"</div>}
     </div>
   )
 }

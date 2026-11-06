@@ -94,7 +94,7 @@ export function TopBar() {
         </button>
         <div className="leading-tight">
           <div className="font-mono text-sm font-medium tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) + ':' + String(now.getSeconds()).padStart(2, '0') : '—'}</div>
-          <div className="text-[10px] uppercase tracking-wide text-muted">simulated time</div>
+          <div className="text-[11.5px] uppercase tracking-wide text-muted">simulated time</div>
         </div>
       </div>
       <div className="flex rounded-lg border border-line bg-surface-2 p-0.5">

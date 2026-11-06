@@ -25,13 +25,13 @@ export function CopyBlock({ title, text, collapsible, extra, tone }: { title: st
         ) : (
           <span className="text-xs font-semibold text-muted">{title}</span>
         )}
-        <span className="text-[10px] text-muted">{text.length.toLocaleString()} chars</span>
+        <span className="text-[11.5px] text-muted">{text.length.toLocaleString()} chars</span>
         {extra}
-        <button className="ml-auto flex items-center gap-1 text-[11px] text-muted hover:text-text" onClick={copy}>
+        <button className="ml-auto flex items-center gap-1 text-[12.5px] text-muted hover:text-text" onClick={copy}>
           {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      {open && <pre className={cn('max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-surface-2 p-3 font-mono text-[11.5px] leading-relaxed', tone)}>{text}</pre>}
+      {open && <pre className={cn('max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-surface-2 p-3 font-mono text-[13px] leading-relaxed', tone)}>{text}</pre>}
     </div>
   )
 }

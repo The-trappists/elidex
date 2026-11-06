@@ -17,7 +17,7 @@ export function StageChips({ job, compact }: { job: PipelineJob; compact?: boole
           {i > 0 && <ChevronRight size={11} className="mx-px shrink-0 text-muted/60" />}
           <span
             title={`${STAGE_LABEL[s.stage]}: ${s.status}${s.detail ? ' · ' + s.detail : ''}`}
-            className={cn('rounded border px-1.5 py-0.5 text-[10px] font-medium leading-none', STAGE_STATUS_STYLE[s.status], compact && 'px-1')}
+            className={cn('rounded border px-1.5 py-0.5 text-[11.5px] font-medium leading-none', STAGE_STATUS_STYLE[s.status], compact && 'px-1')}
           >
             {STAGE_LABEL[s.stage]}
           </span>
@@ -53,11 +53,11 @@ export function PipelineLane({ limit = 15 }: { limit?: number }) {
                 <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{t?.subject ?? j.thread_id}</span>
                 {t && <Badge className={SOURCE_STYLE[t.source].cls}>{SOURCE_STYLE[t.source].label}</Badge>}
                 <Badge className="font-mono">{extractorLabel(j.extractor)}</Badge>
-                <span className="w-14 text-right text-[11px] tabular-nums text-muted">{fmtMs(dur)}</span>
+                <span className="w-14 text-right text-[12.5px] tabular-nums text-muted">{fmtMs(dur)}</span>
               </div>
               <div className="mt-1.5 flex items-center gap-3">
                 <StageChips job={j} />
-                <span className={cn('min-w-0 flex-1 truncate text-[11px]', j.error ? 'text-bad' : 'text-muted')}>{j.error ? j.error : summaryText(j)}</span>
+                <span className={cn('min-w-0 flex-1 truncate text-[12.5px]', j.error ? 'text-bad' : 'text-muted')}>{j.error ? j.error : summaryText(j)}</span>
               </div>
             </li>
           )

@@ -68,7 +68,7 @@ export function AgentModal({ incident, onClose }: { incident: Incident | null; o
           {result && (
             <div className="space-y-4">
               <div className="rounded-lg border border-accent/30 bg-accent-soft p-3">
-                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-accent">Recommendation</div>
+                <div className="mb-1 text-[12.5px] font-semibold uppercase tracking-wide text-accent">Recommendation</div>
                 <p className="whitespace-pre-wrap text-sm">{result.recommendation}</p>
               </div>
 

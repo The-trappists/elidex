@@ -43,7 +43,7 @@ export function BindingChips({ bound }: { bound: Binding[] }) {
       {bound.map((b, i) => (
         <IdChip key={i}>
           {b.entity}
-          <span className="ml-1 text-[9px] text-muted">{b.role.replace('_', ' ')}</span>
+          <span className="ml-1 text-[11px] text-muted">{b.role.replace('_', ' ')}</span>
         </IdChip>
       ))}
     </div>

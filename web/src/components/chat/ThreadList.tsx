@@ -96,7 +96,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
                     <span className="truncate text-sm font-medium">{threadTitle(t)}</span>
-                    <span className="ml-auto shrink-0 text-[10px] text-muted">{t.last_message_at ? fmtDateTime(t.last_message_at).slice(5) : ''}</span>
+                    <span className="ml-auto shrink-0 text-[11.5px] text-muted">{t.last_message_at ? fmtDateTime(t.last_message_at).slice(5) : ''}</span>
                   </div>
                   <div className="truncate text-xs text-muted">{last ? `${last.author}: ${last.text}` : 'No messages yet'}</div>
                   <div className="mt-1 flex gap-1">

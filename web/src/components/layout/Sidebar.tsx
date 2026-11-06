@@ -23,7 +23,7 @@ export function Sidebar() {
         <img src="/favicon.svg" alt="" className="size-7" />
         <div className="leading-tight">
           <div className="text-sm font-semibold">Context Workbench</div>
-          <div className="text-[11px] text-muted">what the humans know</div>
+          <div className="text-[12.5px] text-muted">what the humans know</div>
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-0.5 p-2">
@@ -41,11 +41,11 @@ export function Sidebar() {
           >
             <Icon size={17} />
             {label}
-            {!!badge[to] && <span className="ml-auto rounded-full bg-bad px-1.5 text-[10px] font-semibold text-white">{badge[to]}</span>}
+            {!!badge[to] && <span className="ml-auto rounded-full bg-bad px-1.5 text-[11.5px] font-semibold text-white">{badge[to]}</span>}
           </NavLink>
         ))}
       </div>
-      <div className="border-t border-line p-3 text-[11px] text-muted">Since AI 2026 · Elisa challenge</div>
+      <div className="border-t border-line p-3 text-[12.5px] text-muted">Since AI 2026 · Elisa challenge</div>
     </nav>
   )
 }

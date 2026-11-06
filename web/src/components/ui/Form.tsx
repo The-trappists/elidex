@@ -28,7 +28,7 @@ export function Field({ label, hint, children, className }: { label: ReactNode; 
     <label className={cn('block space-y-1', className)}>
       <span className="text-xs font-medium text-muted">{label}</span>
       {children}
-      {hint && <span className="block text-[11px] text-muted">{hint}</span>}
+      {hint && <span className="block text-[12.5px] text-muted">{hint}</span>}
     </label>
   )
 }

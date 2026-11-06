@@ -67,7 +67,7 @@ export function NewThreadModal({ open, onClose }: { open: boolean; onClose: () =
                 <Avatar name={p.name} color={p.avatar_color} size={24} />
                 <span className="min-w-0">
                   <span className="block truncate text-xs font-medium">{p.name}</span>
-                  <span className="block truncate text-[10px] text-muted">{p.role}</span>
+                  <span className="block truncate text-[11.5px] text-muted">{p.role}</span>
                 </span>
               </button>
             ))}

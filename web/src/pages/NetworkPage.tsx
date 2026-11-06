@@ -52,7 +52,7 @@ export default function NetworkPage() {
         <div className="shrink-0 border-b border-line px-4 py-3">
           <div className="flex items-end gap-4">
             <div>
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted"><Clock size={12} /> t =</div>
+              <div className="flex items-center gap-1.5 text-[12.5px] font-semibold uppercase tracking-wide text-muted"><Clock size={12} /> t =</div>
               <div className="text-2xl font-semibold tabular-nums leading-tight">{format(at, 'EEE d MMM yyyy, HH:mm')}</div>
             </div>
             <Badge className={cn(state === 'now' ? 'bg-ok/15 text-ok' : state === 'past' ? 'bg-surface-2 text-muted' : 'bg-info/15 text-info')}>
@@ -73,7 +73,7 @@ export default function NetworkPage() {
             onChange={(e) => setT(new Date(Number(e.target.value)))}
             aria-label="Time t"
           />
-          <div className="flex justify-between text-[10px] text-muted">
+          <div className="flex justify-between text-[11.5px] text-muted">
             <span>{format(min, 'd MMM yyyy')}</span>
             <span>sim now + 30 days: {format(max, 'd MMM yyyy')}</span>
           </div>

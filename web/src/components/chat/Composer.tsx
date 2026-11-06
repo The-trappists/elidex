@@ -48,7 +48,7 @@ export function Composer({ thread }: { thread: LiveThread }) {
           <option value={CUSTOM}>Custom…</option>
         </Select>
         {isCustom && <Input className="h-8 w-44 text-xs" placeholder="Author name" value={custom} onChange={(e) => setCustom(e.target.value)} />}
-        {slackOn && <span className="ml-auto text-[11px] text-slack">Will be mirrored to Slack</span>}
+        {slackOn && <span className="ml-auto text-[12.5px] text-slack">Will be mirrored to Slack</span>}
       </div>
       <div className="flex items-end gap-2">
         <Textarea

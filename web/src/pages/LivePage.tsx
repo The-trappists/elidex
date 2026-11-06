@@ -18,7 +18,7 @@ function Kpi({ icon, label, value, tone, onClick }: { icon: ReactNode; label: st
       <span className={cn('flex size-9 items-center justify-center rounded-lg bg-surface-2 text-muted', tone)}>{icon}</span>
       <div className="min-w-0">
         <div className="text-xl font-semibold leading-none tabular-nums" >{value}</div>
-        <div className="mt-1 truncate text-[11px] text-muted">{label}</div>
+        <div className="mt-1 truncate text-[12.5px] text-muted">{label}</div>
       </div>
     </Card>
     </div>
@@ -66,7 +66,7 @@ export default function LivePage() {
             icon={<Network size={15} />}
             className="min-h-0 flex-[3]"
             bodyClassName="relative overflow-hidden"
-            actions={<span className="flex items-center gap-1 text-[11px] text-muted"><Activity size={12} className={running ? 'text-ok' : ''} />{running ? 'clock running' : 'clock paused'}</span>}
+            actions={<span className="flex items-center gap-1 text-[12.5px] text-muted"><Activity size={12} className={running ? 'text-ok' : ''} />{running ? 'clock running' : 'clock paused'}</span>}
           >
             <div className="absolute inset-0">
               <NetworkGraph at={now} layers={{ knowledge }} onLayersChange={(l) => setKnowledge(l.knowledge)} onSelect={(id) => id && nav(`/network?select=${encodeURIComponent(id)}`)} />

@@ -57,7 +57,7 @@ export function MessageList({
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-semibold">{g[0].author}</span>
                 {role && <span className="text-xs text-muted">{role}</span>}
-                <span className="text-[11px] text-muted">{fmtDateTime(g[0].sent_at)}</span>
+                <span className="text-[12.5px] text-muted">{fmtDateTime(g[0].sent_at)}</span>
               </div>
               {g.map((m) => {
                 const c = citations.get(m.seq)
@@ -71,7 +71,7 @@ export function MessageList({
                   >
                     <div className="whitespace-pre-wrap break-words text-sm">{m.text}</div>
                     {c && (
-                      <div className="mt-1 flex items-center gap-1.5 text-[11px]">
+                      <div className="mt-1 flex items-center gap-1.5 text-[12.5px]">
                         <span style={{ color: TYPE_STYLE[c.type].hex }}>→ {c.topic}</span>
                         {c.assertionId && (
                           <Link to={assertionHref(c.assertionId)}>
@@ -80,7 +80,7 @@ export function MessageList({
                         )}
                       </div>
                     )}
-                    <span className="absolute right-2 top-1 hidden text-[10px] text-muted group-hover:block">#{m.seq}</span>
+                    <span className="absolute right-2 top-1 hidden text-[11.5px] text-muted group-hover:block">#{m.seq}</span>
                   </div>
                 )
               })}

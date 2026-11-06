@@ -12,7 +12,7 @@ import { fmtDateTime, fmtMs } from '../lib/format'
 import { useLive } from '../store/live'
 
 const columns: Column<LlmCall>[] = [
-  { key: 'time', header: 'Time', className: 'whitespace-nowrap text-xs', cell: (c) => (<><div>{fmtDateTime(c.ts)}</div><div className="text-[10px] text-muted">sim {fmtDateTime(c.sim_time)}</div></>) },
+  { key: 'time', header: 'Time', className: 'whitespace-nowrap text-xs', cell: (c) => (<><div>{fmtDateTime(c.ts)}</div><div className="text-[11.5px] text-muted">sim {fmtDateTime(c.sim_time)}</div></>) },
   { key: 'purpose', header: 'Purpose', cell: (c) => <Badge>{c.purpose}</Badge> },
   { key: 'model', header: 'Model', className: 'font-mono text-xs', cell: (c) => (<span className="flex items-center gap-1.5">{c.model}{c.fallback_used && <Badge className="bg-warn/15 text-warn">fallback</Badge>}</span>) },
   { key: 'lat', header: 'Latency', className: 'whitespace-nowrap text-xs', cell: (c) => fmtMs(c.latency_ms) },

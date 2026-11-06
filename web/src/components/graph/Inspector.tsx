@@ -13,8 +13,8 @@ import { classMembers, classesOf, type NodeKind } from './graphModel'
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
   <section className="border-b border-line px-4 py-3 last:border-0">
     <div className="mb-2 flex items-center gap-1.5">
-      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted">{title}</h4>
-      {count !== undefined && <span className="rounded bg-surface-2 px-1 text-[10px] text-muted">{count}</span>}
+      <h4 className="text-[12.5px] font-semibold uppercase tracking-wide text-muted">{title}</h4>
+      {count !== undefined && <span className="rounded bg-surface-2 px-1 text-[11.5px] text-muted">{count}</span>}
       <div className="ml-auto">{action}</div>
     </div>
     {children}
@@ -47,7 +47,7 @@ type P = { id: string; at: Date; onSelect: (id: string, kind: NodeKind) => void 
 function Title({ kind, title, sub }: { kind: string; title: string; sub?: ReactNode }) {
   return (
     <div className="border-b border-line px-4 py-3">
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted">{kind}</div>
+      <div className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">{kind}</div>
       <div className="break-words text-base font-semibold">{title}</div>
       {sub && <div className="mt-1 flex flex-wrap items-center gap-1.5">{sub}</div>}
     </div>
@@ -88,7 +88,7 @@ function ElementInfo({ id, at, onSelect }: P) {
       <Section title="Classes" count={its.length}>
         {its.length ? <div className="flex flex-wrap gap-1.5">{its.map((c) => <IdChip key={c.id} onClick={() => onSelect(c.id, 'class')}>{c.label}</IdChip>)}</div> : <None>Not in any known class.</None>}
       </Section>
-      <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-[11px] text-muted">Include expired</span>} />}>
+      <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-[12.5px] text-muted">Include expired</span>} />}>
         {hits === null || (loading && !hits.length) ? (
           <div className="h-16 animate-pulse rounded-lg bg-surface-2" />
         ) : hits.length ? (
@@ -108,7 +108,7 @@ function ElementInfo({ id, at, onSelect }: P) {
                   <Badge className={i.status === 'open' ? 'ml-auto bg-bad/15 text-bad' : 'ml-auto bg-ok/15 text-ok'}>{i.status}</Badge>
                 </div>
                 <p className="mt-1 text-muted">{i.summary}</p>
-                <div className="mt-1 text-[10.5px] text-muted">{fmtAgo(i.opened_at, at)}</div>
+                <div className="mt-1 text-[12px] text-muted">{fmtAgo(i.opened_at, at)}</div>
               </li>
             ))}
           </ul>

@@ -33,7 +33,7 @@ function ValidityBar({ a, at }: { a: ContextAssertion; at: Date }) {
         />
         <div className="absolute -top-1 h-4 w-0.5 rounded bg-text" style={{ left: pct(t) }} title="chosen time" />
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-muted">
+      <div className="mt-1 flex justify-between text-[11.5px] text-muted">
         <span>{fmtDate(a.valid_from)}</span>
         <span>{a.valid_to ? fmtDate(a.valid_to) : 'still believed true'}</span>
       </div>
@@ -61,9 +61,9 @@ export function ContextCard({ a, at }: { a: ContextAssertion | ContextHit; at: D
       {a.conditions.length > 0 && <p className="mt-1 text-muted"><b className="font-medium text-text">When:</b> {a.conditions.map((c) => c.text).join('; ')}</p>}
 
       <div className="mt-2 flex flex-wrap items-center gap-1">
-        {via && <span className="rounded bg-accent-soft px-1 py-0.5 font-mono text-[10px] text-accent">via {via}</span>}
+        {via && <span className="rounded bg-accent-soft px-1 py-0.5 font-mono text-[11.5px] text-accent">via {via}</span>}
         {a.bound_to.map((b, i) => (
-          <span key={i} className="inline-flex items-center gap-1 text-[10px] text-muted">
+          <span key={i} className="inline-flex items-center gap-1 text-[11.5px] text-muted">
             {b.role.replace('_', ' ')} <IdChip>{b.entity}</IdChip>
           </span>
         ))}
@@ -71,7 +71,7 @@ export function ContextCard({ a, at }: { a: ContextAssertion | ContextHit; at: D
 
       <div className="mt-2.5"><ValidityBar a={a} at={at} /></div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10.5px] text-muted">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-muted">
         <span>by <b className="font-medium text-text">{a.trust.stated_by}</b>{a.trust.role ? `, ${a.trust.role}` : ''}</span>
         {a.sources.map((s, i) => (
           <button key={i} className="inline-flex items-center gap-1 hover:text-accent" onClick={() => nav(`/conversations/${encodeURIComponent(s.file)}`)} title={s.file}>

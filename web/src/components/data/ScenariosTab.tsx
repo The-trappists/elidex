@@ -44,7 +44,7 @@ function JsonEditor({ scenario, onClose }: { scenario: Scenario | null; onClose:
       }
     >
       <Textarea rows={24} spellCheck={false} className="font-mono text-xs" value={text} onChange={(e) => setText(e.target.value)} />
-      <p className="mt-2 text-[11px] text-muted">Saving with an existing id replaces that scenario. Change the id to save a new one.</p>
+      <p className="mt-2 text-[12.5px] text-muted">Saving with an existing id replaces that scenario. Change the id to save a new one.</p>
     </Modal>
   )
 }

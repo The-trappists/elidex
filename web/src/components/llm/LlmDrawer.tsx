@@ -9,7 +9,7 @@ import { callStatus, fmtCost, STATUS_LABEL, tryParse } from './status'
 
 const Meta = ({ k, v }: { k: string; v: React.ReactNode }) => (
   <div className="min-w-0">
-    <div className="text-[10px] uppercase tracking-wide text-muted">{k}</div>
+    <div className="text-[11.5px] uppercase tracking-wide text-muted">{k}</div>
     <div className="truncate text-xs">{v}</div>
   </div>
 )

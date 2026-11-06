@@ -57,7 +57,7 @@ export function AgentTester() {
         <div className="flex items-center justify-between">
           <div>
             <Toggle checked={useLlm && llm} disabled={!llm} onChange={setUseLlm} label="Use the LLM" />
-            {!llm && <div className="mt-0.5 text-[11px] text-muted">No LLM configured, so the rule-based agent is used.</div>}
+            {!llm && <div className="mt-0.5 text-[12.5px] text-muted">No LLM configured, so the rule-based agent is used.</div>}
           </div>
           <Button variant="primary" disabled={!entity} loading={busy} onClick={run}>Run agent</Button>
         </div>

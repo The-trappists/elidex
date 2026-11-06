@@ -39,7 +39,7 @@ export function IncidentFeed({ resolvedLimit = 6 }: { resolvedLimit?: number }) 
       {!open.length && <div className="rounded-lg border border-dashed border-line p-3 text-center text-xs text-muted">All clear: no open incident.</div>}
       {resolved.length > 0 && (
         <>
-          <div className="pt-1 text-[11px] font-semibold uppercase tracking-wide text-muted">Recently resolved</div>
+          <div className="pt-1 text-[12.5px] font-semibold uppercase tracking-wide text-muted">Recently resolved</div>
           {resolved.map(card)}
         </>
       )}

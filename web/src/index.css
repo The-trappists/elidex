@@ -13,7 +13,7 @@
   --surface-2: #f1f3f6;
   --line: #e3e6eb;
   --text: #111827;
-  --muted: #6b7280;
+  --muted: #5b6472;
   --accent: #4f46e5;
   --accent-soft: #eef2ff;
 
@@ -52,9 +52,9 @@
   --bg: #0b0d12;
   --surface: #12151c;
   --surface-2: #1a1e27;
-  --line: #262b36;
+  --line: #2e3442;
   --text: #e5e7eb;
-  --muted: #8b93a3;
+  --muted: #a3abba;
   --accent: #818cf8;
   --accent-soft: #1e1b4b;
 
@@ -67,6 +67,11 @@
 @theme inline {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Slightly larger small sizes: the workbench is dense and is shown on projectors. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.15rem;
+  --text-sm: 0.875rem;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -106,6 +111,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
 

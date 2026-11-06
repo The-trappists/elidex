@@ -11,7 +11,7 @@ import { Badge, EmptyState, IdChip, Button, withToast } from '../ui'
 import { ItemCard } from './ItemCard'
 
 const H = ({ children, count }: { children: string; count?: number }) => (
-  <h4 className="mb-1.5 mt-4 text-[11px] font-semibold uppercase tracking-wide text-muted">
+  <h4 className="mb-1.5 mt-4 text-[12.5px] font-semibold uppercase tracking-wide text-muted">
     {children}
     {count !== undefined && <span className="ml-1 font-normal">({count})</span>}
   </h4>
@@ -22,12 +22,12 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
     <div>
       <div className="flex flex-wrap items-center gap-1.5">
         {job.stages.map((s) => (
-          <span key={s.stage} title={`${s.detail}${s.duration_ms != null ? ` (${fmtMs(s.duration_ms)})` : ''}`} className={cn('rounded-md border px-1.5 py-0.5 text-[11px]', STAGE_STATUS_STYLE[s.status])}>
+          <span key={s.stage} title={`${s.detail}${s.duration_ms != null ? ` (${fmtMs(s.duration_ms)})` : ''}`} className={cn('rounded-md border px-1.5 py-0.5 text-[12.5px]', STAGE_STATUS_STYLE[s.status])}>
             {STAGE_LABEL[s.stage]}
           </span>
         ))}
       </div>
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-muted">
+      <div className="mt-2 flex items-center gap-2 text-[12.5px] text-muted">
         <span>Extractor</span>
         <IdChip>{job.extractor}</IdChip>
         <span className="ml-auto">{fmtDateTime(job.started_at)}</span>
@@ -70,7 +70,7 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
         </div>
       )}
       {job.removed_assertion_ids.length > 0 && (
-        <div className="mt-1.5 text-[11px] text-muted">Removed by this run: {job.removed_assertion_ids.join(', ')}</div>
+        <div className="mt-1.5 text-[12.5px] text-muted">Removed by this run: {job.removed_assertion_ids.join(', ')}</div>
       )}
 
       {job.notes.length > 0 && (
@@ -169,7 +169,7 @@ export function ParserOutput({
               {showPrev &&
                 previous.map((j) => (
                   <div key={j.id} className="mt-3 rounded-lg border border-line p-2.5 opacity-90">
-                    <div className="mb-2 text-[11px] text-muted">Job {j.id}</div>
+                    <div className="mb-2 text-[12.5px] text-muted">Job {j.id}</div>
                     <JobView job={j} assertions={assertions} hoverItem={null} onHoverItem={() => {}} />
                   </div>
                 ))}
