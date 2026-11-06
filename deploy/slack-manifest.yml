@@ -1,0 +1,27 @@
+display_information:
+  name: Context Workbench
+  description: Mirrors Workbench persona chats into Slack and reads human replies back.
+features:
+  bot_user:
+    display_name: Context Workbench
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - chat:write.customize
+      - channels:history
+      - groups:history
+      - channels:read
+      - groups:read
+      - users:read
+settings:
+  event_subscriptions:
+    bot_events:
+      - message.channels
+      - message.groups
+  interactivity:
+    is_enabled: false
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false
