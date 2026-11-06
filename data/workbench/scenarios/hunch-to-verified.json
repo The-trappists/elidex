@@ -1,0 +1,120 @@
+{
+  "id": "hunch-to-verified",
+  "title": "From hunch to verified",
+  "description": "A NOC operator shares a hedged hunch; later in the thread an outcome confirms it. Tests trust levels: the knowledge ends up verified with evidence.",
+  "channel": "teams",
+  "subject": "TRN-176 optical levels after module swap",
+  "incident": {
+    "entity_id": "TRN-176",
+    "kind": "low-optics-after-module-swap",
+    "severity": "minor",
+    "summary": "Optical levels low on TRN-176 after a module swap",
+    "observations": {
+      "sfp_replaced": true,
+      "interface_status": "UP",
+      "optical_levels": "low",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "helmi",
+    "veikko",
+    "erkki"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "Quick one: TRN-176 at Hervanta, module swapped half an hour ago and our dashboard shows optical levels low. Anyone seen this?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 60,
+      "text": "I'm on site. RX looks low on my meter too, but the link is UP."
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 90,
+      "text": "Hmm, I think the TX-3000s on 4.0 need some minutes to settle the optics after a swap. Not sure though, just a hunch from last spring."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 45,
+      "text": "Haven't seen it myself. Don't swap the module again yet, give it a bit."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 120,
+      "text": "Going for a coffee then ☕"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 180,
+      "text": "Update: waited about ten minutes, levels came up to normal on their own. Traffic fine."
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 40,
+      "text": "Told you 😄 nice."
+    }
+  ],
+  "resolves_incident_at_seq": 6,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "optical-levels-settle-after-swap",
+        "summary": "On TX-3000 units installed from 2020, optical levels can read low for about ten minutes after a module swap; wait before replacing the module again.",
+        "scope": {
+          "instance_ids": [
+            "TRN-176"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "model": "TX-3000",
+            "install_year_min": 2020
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "optical levels low",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "low"
+            }
+          }
+        ],
+        "diagnosis": "optics still settling after the swap",
+        "action": "Wait about ten minutes and re-check the optical levels before replacing the module again.",
+        "avoid": [
+          "replace the module again straight away"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 6: 'waited about ten minutes, levels came up to normal on their own'",
+        "stated_by": "Helmi Hakkarainen",
+        "cited_seq": [
+          3,
+          6
+        ],
+        "confidence": 0.75
+      }
+    ]
+  },
+  "tags": [
+    "trust",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

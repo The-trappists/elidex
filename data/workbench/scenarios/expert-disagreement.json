@@ -1,0 +1,207 @@
+{
+  "id": "expert-disagreement",
+  "title": "Two experts disagree on the first step",
+  "description": "Erkki says bounce the interface, Aino says reseat the module first. Tests lifecycle conflict handling: two workarounds on the same topic and class by different authors are both kept and flagged.",
+  "channel": "teams",
+  "subject": "TRN-088 first step after SFP swap",
+  "incident": {
+    "entity_id": "TRN-088",
+    "kind": "traffic-loss-after-sfp-swap",
+    "severity": "major",
+    "summary": "Counters stuck at zero on TRN-088 after an SFP swap",
+    "observations": {
+      "sfp_replaced": true,
+      "interface_status": "UP",
+      "optical_levels": "normal",
+      "traffic_counters": 0,
+      "alarms": "cleared"
+    }
+  },
+  "participants": [
+    "veikko",
+    "erkki",
+    "aino"
+  ],
+  "messages": [
+    {
+      "persona": "veikko",
+      "delay_s": 5,
+      "text": "Team, TRN-088 at Kangas: SFP swapped, link UP, counters stuck at zero. What's the first step, interface bounce or something else?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 60,
+      "text": "Bounce the interface. On TX-3000s installed up to 2019 that's always the first thing."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 90,
+      "text": "I disagree. The vendor guide for TX-3000 says reseat the module first. A half-seated module also gives UP with zero counters."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 60,
+      "text": "Reseating means another optics reset and a second outage window. The bounce is quicker and it has worked every time."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 75,
+      "text": "Every time you tried it, yes. I would still reseat first on any TX-3000 up to 2019, and bounce if that fails."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 120,
+      "text": "I'll try Erkki's way first since it's quicker."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 150,
+      "text": "Bounced it. Traffic is back."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 40,
+      "text": "OK. Still, someone should settle this and put it in the field instructions."
+    }
+  ],
+  "resolves_incident_at_seq": 7,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "sfp-swap-first-step",
+        "summary": "Erkki: on TX-3000 units installed up to 2019, bounce the interface first after an SFP swap with zero counters.",
+        "scope": {
+          "instance_ids": [
+            "TRN-088"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "model": "TX-3000",
+            "install_year_max": 2019
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "optical levels normal",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "normal"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": null,
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "avoid": [
+          "reseating the module first"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 7: 'Bounced it. Traffic is back.'",
+        "stated_by": "Erkki Expert",
+        "cited_seq": [
+          2,
+          4,
+          7
+        ],
+        "confidence": 0.8
+      },
+      {
+        "type": "workaround",
+        "topic": "sfp-swap-first-step",
+        "summary": "Aino: on TX-3000 units installed up to 2019, reseat the module first (vendor guide), then bounce the interface if that fails.",
+        "scope": {
+          "instance_ids": [
+            "TRN-088"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "model": "TX-3000",
+            "install_year_max": 2019
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "optical levels normal",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "normal"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "half-seated module can give UP with zero counters",
+        "action": "Reseat the optical module first, then bounce the interface if that fails.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "stated",
+        "evidence": "seq 3: 'the vendor guide for TX-3000 says reseat the module first'",
+        "stated_by": "Aino Arkkitehti",
+        "cited_seq": [
+          3,
+          5
+        ],
+        "confidence": 0.7
+      }
+    ]
+  },
+  "tags": [
+    "lifecycle",
+    "conflict",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

@@ -1,0 +1,66 @@
+{
+  "id": "noise-chitchat",
+  "title": "Noise: coffee, planning and jokes",
+  "description": "Office chatter with no network knowledge. Tests that the parser stays quiet: expected has no items.",
+  "channel": "teams",
+  "subject": "Friday chat",
+  "incident": null,
+  "participants": [
+    "helmi",
+    "sanna",
+    "jaakko",
+    "raimo",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "Who is bringing the cinnamon buns on Friday? 🥐"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 60,
+      "text": "Not me, I did the last two times. Jaakko?"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 90,
+      "text": "I can do it! Do we want the cardamom ones too?"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 45,
+      "text": "Cardamom or I'm not coming. Also the weekly planning is moved to 13:00, the room is booked."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 120,
+      "text": "13:00 works. Did anyone see the football last night?"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 60,
+      "text": "Don't remind me. My team lost again."
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 75,
+      "text": "Joke of the day: why did the engineer cross the road? To patch the other side. 😄"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 30,
+      "text": "I'll be here all week."
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": []
+  },
+  "tags": [
+    "noise",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

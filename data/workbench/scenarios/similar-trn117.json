@@ -1,0 +1,140 @@
+{
+  "id": "similar-trn117",
+  "title": "Reuse: same symptoms on TRN-117",
+  "description": "Another old unit, same symptoms; a colleague applies Erkki's trick and it works. Expected is a verification of the same topic on the same class (trust verified) so it merges with the existing rule; the honest alternative, [], would hide that the field confirmed the rule a second time.",
+  "channel": "teams",
+  "subject": "TRN-117 no traffic after SFP swap",
+  "incident": {
+    "entity_id": "TRN-117",
+    "kind": "traffic-loss-after-sfp-swap",
+    "severity": "major",
+    "summary": "No traffic on TRN-117 after an SFP swap",
+    "observations": {
+      "sfp_replaced": true,
+      "interface_status": "UP",
+      "optical_levels": "normal",
+      "traffic_counters": 0,
+      "alarms": "cleared"
+    }
+  },
+  "participants": [
+    "jaakko",
+    "helmi",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "Morning! I'm at Linnanmaa, just swapped the SFP on TRN-117. Link is UP and alarms cleared, but there is no traffic. Never seen this before, any ideas?"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 60,
+      "text": "NOC here, confirming we see nothing coming through from your side. Coffee's on me if you fix it :)"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 90,
+      "text": "Jaakko, check the traffic counters. UP, RX power normal and counters at zero?"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 60,
+      "text": "RX power is normal. Counters sit at zero."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 45,
+      "text": "Yeah, that's a 2018 unit. Bounce the interface like Erkki's trick: disable, wait a bit, enable. Don't reboot the whole node and don't swap the SFP again."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 120,
+      "text": "Done. Traffic is back! Thanks 🙌"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 40,
+      "text": "Nice. Write it in your notes, it's not in the manual."
+    }
+  ],
+  "resolves_incident_at_seq": 6,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "scope": {
+          "instance_ids": [
+            "TRN-117"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "install_year_max": 2019
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "optical levels normal",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "normal"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "forwarding-state issue, not a faulty SFP",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "avoid": [
+          "replace the SFP again",
+          "reboot the unit (unless the interface bounce fails)"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 6: 'Done. Traffic is back!'",
+        "stated_by": "Veikko Vikkelä",
+        "cited_seq": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "confidence": 0.85
+      }
+    ]
+  },
+  "tags": [
+    "reuse",
+    "trust",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

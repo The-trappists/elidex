@@ -1,0 +1,118 @@
+{
+  "id": "new-unit-trn305",
+  "title": "No overlinking: TRN-305 is a different case",
+  "description": "Same symptoms on a 2024 TX-5000, but the cause is a missing VLAN on the new port. Tests that the knowledge is bound to the instance only and never to the class of old TX-3000 units.",
+  "channel": "teams",
+  "subject": "TRN-305 no traffic after SFP swap",
+  "incident": {
+    "entity_id": "TRN-305",
+    "kind": "traffic-loss-after-sfp-swap",
+    "severity": "major",
+    "summary": "No traffic on TRN-305 after an SFP swap",
+    "observations": {
+      "sfp_replaced": true,
+      "interface_status": "UP",
+      "optical_levels": "normal",
+      "traffic_counters": 0,
+      "alarms": "cleared"
+    }
+  },
+  "participants": [
+    "veikko",
+    "erkki"
+  ],
+  "messages": [
+    {
+      "persona": "veikko",
+      "delay_s": 5,
+      "text": "Erkki, I'm at the harbour hut on TRN-305. New TX-5000, swapped the SFP, link UP, counters zero. Same as TRN-042?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 60,
+      "text": "The old bug is on the TX-3000s. This is a TX-5000 with newer firmware, so let's not assume. What does the port config say?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 120,
+      "text": "Checking... the new port is in default VLAN 1, the others are tagged with 120."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 60,
+      "text": "There it is. Service VLAN 120 is not tagged on that port. Set the port to trunk and tag VLAN 120."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 150,
+      "text": "Done. Traffic is flowing 👍"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 40,
+      "text": "Good. Only seen it on this one so far, so I would not call it a rule."
+    }
+  ],
+  "resolves_incident_at_seq": 5,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "port-vlan-missing-after-sfp-swap",
+        "summary": "On TRN-305, after the SFP swap the new port was in the default VLAN; tagging service VLAN 120 restored traffic.",
+        "scope": {
+          "instance_ids": [
+            "TRN-305"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "service VLAN 120 not tagged on the new port",
+        "action": "Set the port to trunk and tag VLAN 120.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 5: 'Done. Traffic is flowing'",
+        "stated_by": "Erkki Expert",
+        "cited_seq": [
+          3,
+          4,
+          5
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "no-overlink",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
