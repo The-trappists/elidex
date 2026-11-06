@@ -10,9 +10,9 @@
 - New idea? Add it to the table at the bottom of [docs/ideas.md](docs/ideas.md) and check it against the [scope checklist](docs/challenge.md#scope-checklist).
 - Once a decision is logged, update the doc it affects so it no longer reads as a proposal.
 
-## Working with the AI assistant
+## Working with AI assistants
 
-See [CLAUDE.md](CLAUDE.md). In short: ask it for alternatives and scope checks, use it to generate code, and keep the decisions with the team.
+See [AGENTS.md](AGENTS.md); it applies to every AI tool we use (Claude Code, Copilot, Cursor, Gemini…). In short: ask the assistant for alternatives and scope checks, use it to generate code, and keep the decisions with the team.
 
 ## Git workflow
 
