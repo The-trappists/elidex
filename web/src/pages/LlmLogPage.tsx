@@ -18,7 +18,7 @@ const columns: Column<LlmCall>[] = [
   { key: 'lat', header: 'Latency', className: 'whitespace-nowrap text-xs', cell: (c) => fmtMs(c.latency_ms) },
   { key: 'tok', header: 'Tokens in/out', className: 'whitespace-nowrap text-xs', cell: (c) => `${c.usage.prompt_tokens ?? '—'} / ${c.usage.completion_tokens ?? '—'}` },
   { key: 'cost', header: 'Cost', className: 'text-xs', cell: (c) => fmtCost(c.usage.cost) },
-  { key: 'status', header: 'Status', cell: (c) => { const s = STATUS_LABEL[callStatus(c)]; return <Badge className={s.cls}>{s.label}</Badge> } },
+  { key: 'status', header: 'Status', cell: (c) => { const s = STATUS_LABEL[callStatus(c)]; return (<><Badge className={s.cls}>{s.label}</Badge>{c.error && <div className="mt-1 max-w-64 truncate text-xs text-bad" title={c.error}>{c.error}</div>}</>) } },
   { key: 'thread', header: 'Thread', className: 'max-w-48 truncate text-xs', cell: (c) => c.thread_id ? <Link className="text-accent hover:underline" to={threadHref(c.thread_id)} onClick={(e) => e.stopPropagation()}>{c.thread_id}</Link> : <span className="text-muted">—</span> },
 ]
 
@@ -103,6 +103,7 @@ export default function LlmLogPage() {
           rowKey={(c) => c.id}
           selectedKey={openId}
           onRowClick={(c) => setParams({ call: c.id })}
+          rowClassName={(c) => !!c.error && 'bg-bad/10 shadow-[inset_3px_0_0_var(--bad)]'}
           empty={<EmptyState icon={<ScrollText size={28} />} title={calls.length ? 'No call matches the filters' : 'No LLM calls yet'} hint="Every prompt and response sent to a model is recorded here once a thread is processed with the LLM extractor." />}
         />
       </div>
