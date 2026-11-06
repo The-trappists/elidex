@@ -27,7 +27,9 @@ function Kpi({ icon, label, value, tone, onClick }: { icon: ReactNode; label: st
 
 export default function LivePage() {
   const nav = useNavigate()
-  const now = useSimNow(5000) ?? new Date()
+  // Round to the second so memoized values do not recompute on every render.
+  const nowSec = Math.floor((useSimNow(5000) ?? new Date()).getTime() / 1000)
+  const now = useMemo(() => new Date(nowSec * 1000), [nowSec])
   const incidents = useLive((s) => s.incidents)
   const threads = useLive((s) => s.threads)
   const assertions = useLive((s) => s.assertions)

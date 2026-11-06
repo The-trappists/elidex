@@ -14,7 +14,9 @@ const HOUR = 3_600_000
 
 export default function NetworkPage() {
   const [params, setParams] = useSearchParams()
-  const now = useSimNow(5000) ?? new Date()
+  // Round to the second so memoized values do not recompute on every render.
+  const nowSec = Math.floor((useSimNow(5000) ?? new Date()).getTime() / 1000)
+  const now = useMemo(() => new Date(nowSec * 1000), [nowSec])
   const [t, setT] = useState<Date | null>(null) // null = follow sim now
   const [knowledge, setKnowledge] = useState(true)
   const assertions = useLive((s) => s.assertions)
