@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | `NetworkElement` | `id`, `type` (site, router, link, base station), `name`, `aliases[]`, `location` | `SITE-TKU-042`, alias "Kupittaa mast" |
 | `Incident` | `id`, `opened_at`, `status`, `element_ids[]` | `INC-2026-1187` |
-| `Message` | `id`, `channel` (chat, email, ticket), `author_hash`, `sent_at`, `text` | a chat line from the NOC channel |
+| `Message` | `id`, `source` (slack, discord, email), `channel`, `thread_id`, `author_id`, `sent_at`, `text` | a Slack line from the NOC channel |
 | `Knowledge` | depends on the option below | |
 
 ## Three ways to represent a piece of knowledge
@@ -51,16 +51,61 @@
 
 ## Metadata every option should keep
 
-These map directly to the challenge requirements (confidence, freshness, privacy):
+These map to the dimensions Elisa named (time, trust, people) and to confidence and freshness:
 
-- `source_message_id`: every piece of knowledge traces back to its message.
+- `source_message_id` + `quote`: every piece of knowledge traces back to its message.
 - `observed_at`: when the message was sent (not when we ingested it), used for freshness.
-- `confidence`: extraction and linking confidence combined.
-- `status`: e.g. `active`, `superseded`, `needs_review`.
-- `author_hash`: never the author's name.
+- `last_confirmed` / `valid_until`: when the fact was last seen true, or stopped being true.
+- `confidence`: extraction and linking confidence combined; hedges ("I think", "^^") lower it.
+- `status`: e.g. `active`, `superseded`, `conflicting`.
+- `author_id` + role: who said it, for trust. Privacy and GDPR are out of scope (per Elisa), so hashing is optional.
+
+## Making the context exploitable
+
+The output is read by a machine, with no human in between. Properties to aim for:
+
+| Property | Why | Example |
+| --- | --- | --- |
+| Linked to a real ID | Workflows look up by element, not by sentence | `element_id: "SITE-TKU-042"` |
+| Typed | Each workflow reads only what concerns it | `access`, `known_issue`, `workaround`, `condition`, `contact` |
+| Actionable | Says what to do, not only what happened | `action: "get_key"`, `where: "neighbouring farm"` |
+| Testable conditions | "Flaky in winter" becomes a rule a machine can evaluate | `condition: {"season": "winter"}` |
+| Scored | The workflow sets its own threshold | `confidence: 0.82` |
+| Fresh | Old facts weigh less | `last_confirmed: "2026-10-11"` |
+| Traceable | An automated decision can be justified | source, quote, author |
+| Deduplicated, conflicts visible | Ten messages saying the same thing make one stronger fact | `mentions: 10`, `conflicts_with: [...]` |
+
+### Example: access fact
+
+```json
+{
+  "id": "fact_0412",
+  "element_id": "SITE-TKU-042",
+  "type": "access",
+  "fact": "Barrier key held at the neighbouring farm",
+  "action": "get_key",
+  "where": "neighbouring farm",
+  "condition": null,
+  "confidence": 0.82,
+  "observed_at": "2024-03-02T09:10:00Z",
+  "last_confirmed": "2026-10-11T14:03:00Z",
+  "mentions": 3,
+  "source": {"source": "email", "message_id": "msg_10233", "quote": "..."},
+  "status": "active"
+}
+```
+
+### Two output shapes (to discuss)
+
+| Option | Good for | Weak at |
+| --- | --- | --- |
+| **Atomic facts** (one record per fact, as above) | Simple to produce, filter and evaluate | The workflow must aggregate |
+| **Per-element profile** (everything known about one element, grouped by type, stale facts and conflicts resolved) | Directly usable by a workflow | More merging work |
+
+Suggested (not decided): store atomic facts, build the per-element profile on request.
 
 ## Open points
 
-- Fixed list of predicates, or free text normalised later?
+- Fixed taxonomy of types and fields, or free text normalised later? To align with the context types Elisa's workflows use, if they share them.
 - How to combine extraction confidence and linking confidence into one score?
 - Does a contradiction supersede the old knowledge, or keep both with lower confidence?

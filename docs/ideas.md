@@ -4,6 +4,12 @@
 
 All ideas share the same core (capture → link → serve). They differ in **where the original angle sits**.
 
+> **After Elisa's presentation** (see [challenge.md](challenge.md#what-elisa-said-at-the-presentation)): the deliverable is machine-readable context for their autonomous workflows, with no human input at all, and their workflows are not ours to build. So:
+> - **A** matches the brief most directly.
+> - **B** must not turn into building Elisa's workflow; at most a minimal stand-in for the demo.
+> - **C** and **F** rely on a human confirming facts, which Elisa ruled out; keep only their silent parts (auto-capture, automatic freshness and conflict detection).
+> - **D** and **E** stay valid as ways to enrich the context.
+
 ## Overview
 
 | # | Direction | Original angle | Scope fit | Demo impact | Effort |
