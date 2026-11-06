@@ -15,6 +15,7 @@ export function Table<T>({
   onRowClick,
   selectedKey,
   empty,
+  rowClassName,
 }: {
   columns: Column<T>[]
   rows: T[]
@@ -22,6 +23,8 @@ export function Table<T>({
   onRowClick?: (row: T) => void
   selectedKey?: string | null
   empty?: ReactNode
+  /** Extra classes per row, e.g. to flag failed rows. */
+  rowClassName?: (row: T) => string | false | undefined
 }) {
   if (!rows.length && empty) return <>{empty}</>
   return (

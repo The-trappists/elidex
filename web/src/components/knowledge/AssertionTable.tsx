@@ -1,6 +1,8 @@
-import { BookOpen } from 'lucide-react'
+import { BookOpen, PlayCircle } from 'lucide-react'
+import { api } from '../../api/client'
+import { useLive } from '../../store/live'
 import type { ContextAssertion } from '../../api/types'
-import { EmptyState, IdChip, Table, type Column } from '../ui'
+import { Button, EmptyState, IdChip, Table, withToast, type Column } from '../ui'
 import { BindingChips, ConflictIcon, TrustBadge, TypeBadge, Validity } from './bits'
 
 const columns: Column<ContextAssertion>[] = [
@@ -26,6 +28,20 @@ const columns: Column<ContextAssertion>[] = [
   { key: 'src', header: 'Heard in', className: 'whitespace-nowrap text-xs text-muted', cell: (a) => `${a.sources.length} conversation${a.sources.length === 1 ? '' : 's'}` },
 ]
 
+function NoKnowledge() {
+  const any = useLive((s) => Object.keys(s.assertions).length > 0)
+  const first = useLive((s) => s.scenarios[0])
+  if (any) return <EmptyState icon={<BookOpen size={28} />} title="Nothing matches the filters" hint="Clear the search or the type, trust, thread and validity filters." />
+  return (
+    <EmptyState
+      icon={<BookOpen size={28} />}
+      title="No knowledge yet"
+      hint="Assertions appear here once a conversation goes quiet and is processed. Start the clock and run a scenario (top bar), or post messages in Conversations."
+      action={first && <Button variant="primary" icon={<PlayCircle size={15} />} onClick={() => void withToast(() => api.runScenario(first.id), `Started: ${first.title}`)}>Run "{first.title}"</Button>}
+    />
+  )
+}
+
 export function AssertionTable({ rows, selected, onOpen }: { rows: ContextAssertion[]; selected: string | null; onOpen: (id: string) => void }) {
   return (
     <Table
@@ -34,7 +50,7 @@ export function AssertionTable({ rows, selected, onOpen }: { rows: ContextAssert
       rowKey={(a) => a.id}
       selectedKey={selected}
       onRowClick={(a) => onOpen(a.id)}
-      empty={<EmptyState icon={<BookOpen size={28} />} title="No knowledge to show" hint="Nothing matches the filters, or no conversation has been processed yet." />}
+      empty={<NoKnowledge />}
     />
   )
 }
