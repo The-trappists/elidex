@@ -30,6 +30,10 @@ The AI supports the team; the team decides.
 | `src/context_layer/` | Core pipeline: listen, understand, link, store, agent, API, MCP |
 | `src/context_layer/mvp/` | Starters for ideas B, C, D |
 | `data/synthetic/` | Our synthetic data and how it was made |
+| `docs/workbench.md` | Workbench (team test bench): contract, API, processing rules |
+| `src/context_layer/workbench/`, `web/` | Workbench backend and UI |
+| `data/workbench/` | Workbench seed: topology, personas, scenarios |
+| `deploy/`, `docs/deploy-vultr.md`, `docs/slack-setup.md` | Deployment and Slack bridge |
 | `CONTRIBUTING.md` | Git workflow and conventions |
 
 A first code base (core of idea A + starters for B, C, D) exists; its stack choices are proposals until logged in `docs/decisions.md`. The shared contract is `src/context_layer/models.py`.

@@ -35,11 +35,15 @@ uv run ctx run                      # Teams + email -> context assertions (out/c
 uv run ctx context TRN-117 --at 2026-10-20T08:00
 uv run ctx agent                    # demo agent on the synthetic cases
 uv run ctx run --lifecycle && uv run ctx agent --conditions --guard   # MVP angles D, C, B
+uv run ctx workbench                # team test bench: live UI + API on http://127.0.0.1:8010 (build web/ first)
+uv run ctx llm-check                # which LLM provider and JSON mode work with your .env
 uv run streamlit run demo/app.py    # demo UI
 uv run ctx serve                    # REST API, docs at http://127.0.0.1:8000/docs
 uv run ctx mcp                      # MCP server (stdio) for agents
 uv run pytest
 ```
+
+**Workbench UI** (see [docs/workbench.md](docs/workbench.md)): `cd web && npm ci && npm run build`, then `uv run ctx workbench`. For UI work with hot reload, run `npm run dev` in `web/` (port 5173, proxies `/api` to 8010). Deployment: [docs/deploy-vultr.md](docs/deploy-vultr.md). Slack: [docs/slack-setup.md](docs/slack-setup.md).
 
 | Path | Content |
 | --- | --- |
@@ -47,6 +51,10 @@ uv run pytest
 | `src/context_layer/mvp/` | Starters for ideas B (guard), C (conditions), D (lifecycle): see [docs/mvps.md](docs/mvps.md) |
 | `data/synthetic/` | Our synthetic records, messages and cases ([how they were made](data/synthetic/README.md)) |
 | `data/cache/` | Cached extractions for the offline demo |
+| `src/context_layer/workbench/` | Workbench backend: live state, pipeline jobs, simulator, Slack bridge, REST + SSE |
+| `web/` | Workbench UI (React, Vite, Tailwind, Cytoscape) |
+| `data/workbench/` | Workbench seed: topology, personas, scenarios ([how they were made](data/workbench/README.md)) |
+| `deploy/` | Docker Compose + Caddy for the Vultr VM, Slack app manifest |
 | `demo/app.py` | Streamlit demo |
 | `tests/` | End-to-end checks on Erkki's case |
 

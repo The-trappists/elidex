@@ -10,7 +10,7 @@ The Workbench is the team's real-time test bench. It is not the pitch demo. It l
 - read every LLM call afterwards.
 
 ```bash
-uv run ctx workbench            # API + built UI on http://127.0.0.1:8000
+uv run ctx workbench            # API + built UI on http://127.0.0.1:8010
 cd web && npm run dev           # UI with hot reload on http://127.0.0.1:5173 (proxies /api)
 uv run ctx llm-check            # which LLM provider / JSON mode works
 ```
@@ -115,6 +115,15 @@ Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show 
    - `auto`: `llm` if a key is configured, else `scripted`.
 5. Eval: when the extractor is the LLM and the thread has `expected`, items are compared on `(type, topic)` and the result goes in `job.eval`. Same bindings count as matched; different bindings go in `binding_diffs`.
 6. Invalidation items are only applied when `settings.lifecycle` is on (as in `pipeline.build_store`).
+
+### Data lifecycle
+
+- On first start, the seed is loaded:
+  - inventory, personas and scenarios;
+  - the historical threads from `data/elisa` and `data/synthetic`, processed right away, so the knowledge base is not empty.
+- The sim clock starts at `WORKBENCH_SIM_START` and runs at ×10.
+- `POST /data/reset {"mode": "seed"}` restores that seed. `{"mode": "empty"}` keeps the inventory, personas and scenarios, and drops threads, incidents, assertions, jobs and runs: use it to watch knowledge being built from scratch.
+- Scenario runs create threads and incidents with origin `generated`. Threads and incidents made by hand are `manual`, and threads from Slack are `slack`. "Remove generated data" deletes all three.
 
 ### LLM trace
 
