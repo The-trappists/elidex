@@ -1,20 +1,23 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
 import { cn } from '../../lib/cn'
 
+// Full width unless the caller sets its own w-* class (clsx does not resolve Tailwind conflicts).
+const width = (className?: string) => (/(^|\s)!?w-/.test(className ?? '') ? '' : 'w-full')
+
 const BASE =
-  'w-full rounded-lg border border-line bg-surface px-2.5 text-sm text-text placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
+  'rounded-lg border border-line bg-surface px-2.5 text-sm text-text placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(BASE, 'h-9', className)} {...rest} />
+  return <input className={cn(BASE, width(className), 'h-9', className)} {...rest} />
 }
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cn(BASE, 'py-2', className)} {...rest} />
+  return <textarea className={cn(BASE, width(className), 'py-2', className)} {...rest} />
 }
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(BASE, 'h-9 pr-8', className)} {...rest}>
+    <select className={cn(BASE, width(className), 'h-9 pr-8', className)} {...rest}>
       {children}
     </select>
   )
