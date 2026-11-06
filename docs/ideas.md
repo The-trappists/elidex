@@ -70,6 +70,27 @@ All ideas share the same core (capture → link → serve). They differ in **whe
 - **C + F:** capture and maintain, the full lifecycle of human knowledge.
 - **A + E:** the graph stores conditions; one live signal makes the demo memorable.
 
+## Context: Polystar, Elisa's assurance platform
+
+> **Status: background research, not a decision.** Facts below come from public marketing material only (checked 2026-11-06).
+
+- **What it is:** Polystar (formerly Elisa Polystar, part of Elisa Industriq) sells AI-driven automated assurance to 100+ telecom operators. Products: Osix Monitoring, Kalix Analytics, Kalix DataOps.
+- **MWC 2026 launches (in Kalix):** an agentic AI framework ("telecom-trained expert agents operating on a governed data fabric") for root-cause analysis and automation; explainable anomaly detection "based on an integrated knowledge base and LLM-powered tools"; capacity forecasting; fixed broadband/FWA analytics.
+- **The gap:** public sources say the agents use "structured network data". Nothing mentions tickets, chats, runbooks or human knowledge. That is exactly our challenge.
+- **Scope warning:** anomaly detection is Polystar's job and out of scope for us. Do not rebuild it.
+
+Ways to use this (options, for the team to decide):
+
+| Option | Idea | Demo impact | Effort |
+| --- | --- | --- | --- |
+| 1. Pitch framing | "Polystar knows *what* is happening; we add *what humans know*" | High with Elisa judges | Near zero |
+| 2. Simulated consumer | A mock "Kalix-like" root-cause agent queries our API (A) or goes through our guard (B) | High, concrete story | Low–medium |
+| 3. Alert enrichment | A simulated anomaly arrives; we attach the human facts linked to that element (A + E) | Very high | Medium |
+
+Recommendation (not a decision): 1 + 2. Do not claim a real Polystar integration; we know nothing about their APIs.
+
+Sources: [Polystar](https://www.elisaindustriq.com/polystar), [MWC 2026 release](https://tools.prnewswire.com/en-us/live/20813/release/20260226EN96563), [Intellyx brief](https://intellyx.com/2024/03/03/elisa-polystar-integrating-ai-driven-analytics-and-automation-for-self-driving-networks/).
+
 ## Your ideas
 
 | Idea | Original angle | Scope check (see [challenge.md](challenge.md#scope-checklist)) | Proposed by |

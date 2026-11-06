@@ -55,6 +55,9 @@ Ask Joni or Matti at the Elisa stand or on the Since AI Discord.
 - [ ] Is there an inventory or ID scheme beyond TRN-042 (node types, models, install year) we should mimic in synthetic data?
 - [ ] Should the agent consume context through a specific interface or format, or is ours free?
 - [ ] Would a proactive angle (idea E) be welcome, or seen as too close to fault detection?
+- [ ] Are Polystar's Kalix agents the intended consumer of our output? (See [ideas.md](ideas.md#context-polystar-elisas-assurance-platform).)
+- [ ] What goes into Kalix's "integrated knowledge base" today, and does it include any human-written content?
+- [ ] In what format does Polystar expose alarms, anomalies and network-element IDs, so our mock consumer looks realistic?
 - [x] How will the challenge be judged? Usability first; then relevance, linking, feasibility, agent-ready.
 - [x] What data will we get? `use_case.md`, `teams_chat.json`, `email.txt`, `reference_architecture.png`; generate more and document it.
 - [x] Any constraints on sending message data to external LLM APIs? No production data is involved, and GDPR is not to be considered.
