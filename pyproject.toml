@@ -17,6 +17,9 @@ dependencies = [
     "aiohttp>=3.14.5",
 ]
 
+[project.optional-dependencies]
+neo4j = ["neo4j>=5.20"]  # `ctx graph push`, see docs/knowledge-graph.md
+
 [project.scripts]
 ctx = "context_layer.cli:main"
 

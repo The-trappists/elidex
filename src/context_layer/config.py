@@ -49,6 +49,12 @@ LLM_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_FALLBACK_REASONING_EFFORT
 
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
 
+# Optional Neo4j mirror of the knowledge graph (`ctx graph push`, docs/knowledge-graph.md).
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE") or None
+
 
 def _key_set(key: str) -> bool:
     return bool(key) and key != "your-key-here"

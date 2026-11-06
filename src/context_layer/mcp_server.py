@@ -25,6 +25,45 @@ def get_context(entity_id: str, at: str | None = None) -> list[dict]:
     return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})} for h in hits]
 
 
+def _graph():
+    from .graph import KnowledgeGraph
+
+    return KnowledgeGraph.build(_store())
+
+
+def _json(rows):
+    import json
+
+    return json.loads(json.dumps(rows, default=str))
+
+
+@mcp.tool()
+def get_provenance(assertion_id: str) -> list[dict]:
+    """The original messages (Teams, email) an assertion was extracted from: author, role, time and verbatim text.
+    Use it to cite the human source or to judge how much to trust a piece of knowledge."""
+    return _json(_graph().provenance(assertion_id))
+
+
+@mcp.tool()
+def find_experts(entity_id: str | None = None, at: str | None = None) -> list[dict]:
+    """People who stated knowledge about an element or site (including its class and site), most verified first.
+    Use it when no assertion covers the case and a human must be asked."""
+    return _json(_graph().experts(entity_id, at=datetime.fromisoformat(at) if at else None))
+
+
+@mcp.tool()
+def get_timeline(entity_id: str, at: str | None = None) -> list[dict]:
+    """Every piece of human knowledge that ever covered an entity, oldest first, with status at `at`
+    (valid, closed, future), what closed it and conflicts. Explains why advice changed over time."""
+    return _json(_graph().timeline(entity_id, at=datetime.fromisoformat(at) if at else None))
+
+
+@mcp.tool()
+def get_rule_reach(assertion_id: str) -> dict:
+    """Which network elements an assertion applies to (directly, through its class or its site)."""
+    return _graph().reach(assertion_id)
+
+
 @mcp.tool()
 def check_action(action: str, entity_id: str, at: str | None = None, observations: dict[str, Any] | None = None) -> dict:
     """Before acting on an element (reboot, replace, dispatch...), check it against human knowledge.

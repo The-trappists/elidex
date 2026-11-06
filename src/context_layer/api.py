@@ -38,6 +38,55 @@ def context(entity_id: str, at: datetime | None = None, include_expired: bool = 
     return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in hits]
 
 
+def _graph():
+    from .graph import KnowledgeGraph
+
+    return KnowledgeGraph.build(get_store())
+
+
+@app.get("/graph")
+def graph(at: datetime | None = None, node: str | None = None, depth: int = 1) -> list[dict]:
+    """Cytoscape.js elements: the whole graph, as believed at `at`, or the neighbourhood of `node`."""
+    from .graph import to_cytoscape
+
+    kg = _graph()
+    g = kg.neighborhood(node, depth) if node else kg.g
+    if at:
+        believed = kg.snapshot(at)
+        g = g.subgraph(n for n in g if n in believed).copy()
+    return to_cytoscape(g)
+
+
+@app.get("/graph/stats")
+def graph_stats() -> dict:
+    return _graph().stats()
+
+
+@app.get("/graph/provenance/{assertion_id}")
+def graph_provenance(assertion_id: str) -> list[dict]:
+    return _graph().provenance(assertion_id)
+
+
+@app.get("/graph/reach/{assertion_id}")
+def graph_reach(assertion_id: str) -> dict:
+    return _graph().reach(assertion_id)
+
+
+@app.get("/graph/experts")
+def graph_experts(entity_id: str | None = None, at: datetime | None = None) -> list[dict]:
+    return _graph().experts(entity_id, at=at)
+
+
+@app.get("/graph/timeline/{entity_id}")
+def graph_timeline(entity_id: str, at: datetime | None = None) -> list[dict]:
+    return _graph().timeline(entity_id, at=at)
+
+
+@app.get("/graph/mentions/{entity_id}")
+def graph_mentions(entity_id: str) -> list[dict]:
+    return _graph().mentions(entity_id)
+
+
 class GuardRequest(BaseModel):
     action: str
     entity_id: str
