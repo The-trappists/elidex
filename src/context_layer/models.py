@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-SourceKind = Literal["teams", "email"]
+SourceKind = Literal["teams", "email", "slack"]
 AssertionType = Literal["workaround", "access", "fact", "invalidation"]
 TrustLevel = Literal["hunch", "stated", "verified"]
 BindingRole = Literal["applies_to", "observed_on", "trigger"]

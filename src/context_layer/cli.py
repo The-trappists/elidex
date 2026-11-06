@@ -1,4 +1,4 @@
-"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx serve`, `ctx mcp`."""
+"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx serve`, `ctx mcp`, `ctx workbench`, `ctx llm-check`."""
 
 import argparse
 import json
@@ -81,6 +81,18 @@ def cmd_serve(args: argparse.Namespace) -> None:
     uvicorn.run("context_layer.api:app", host=args.host, port=args.port, reload=False)
 
 
+def cmd_workbench(args: argparse.Namespace) -> None:
+    import uvicorn
+
+    uvicorn.run("context_layer.workbench.app:app", host=args.host, port=args.port, reload=args.reload)
+
+
+def cmd_llm_check(_: argparse.Namespace) -> None:
+    from .llm_check import main as check
+
+    check()
+
+
 def cmd_mcp(_: argparse.Namespace) -> None:
     from .mcp_server import mcp
 
@@ -117,6 +129,16 @@ def main(argv: list[str] | None = None) -> None:
     srv.set_defaults(func=cmd_serve)
 
     sub.add_parser("mcp", help="MCP server over stdio, for agents").set_defaults(func=cmd_mcp)
+
+    wb = sub.add_parser("workbench", help="real-time test bench: API + web UI (docs/workbench.md)")
+    wb.add_argument("--host", default="127.0.0.1")
+    wb.add_argument("--port", type=int, default=8000)
+    wb.add_argument("--reload", action="store_true", help="restart on code changes (dev)")
+    wb.set_defaults(func=cmd_workbench)
+
+    sub.add_parser("llm-check", help="test each configured LLM provider and JSON mode on Elisa's chat").set_defaults(
+        func=cmd_llm_check
+    )
 
     args = p.parse_args(argv)
     args.func(args)

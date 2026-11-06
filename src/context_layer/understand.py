@@ -52,17 +52,33 @@ class CachedExtractor:
 
 
 class LLMExtractor:
+    """One call per thread. `last_traces` holds the LLM trace dicts of the latest extract() call."""
+
     def __init__(self, cache_path: Path = config.CACHE_FILE):
         self.cache_path = cache_path
         fields = ", ".join(f"{k} ({v})" for k, v in OBSERVABLE_FIELDS.items())
-        schema = json.dumps(ExtractionResult.model_json_schema())
-        self.system = SYSTEM_PROMPT.format(fields=fields, schema=schema)
+        self.schema = ExtractionResult.model_json_schema()
+        self.system = SYSTEM_PROMPT.format(fields=fields, schema=json.dumps(self.schema))
+        self.last_traces: list[dict] = []
 
-    def extract(self, thread: Thread, known_topics: list[str]) -> list[ExtractedItem]:
-        user = f"Known topics (reuse one for the same knowledge): {', '.join(known_topics) or 'none'}\n\n{thread.render()}"
-        raw = llm.complete(self.system, user, json_mode=True)
+    @staticmethod
+    def parse(raw: str) -> ExtractionResult:
         raw = re.sub(r"^```(?:json)?|```$", "", raw.strip()).strip()
-        result = ExtractionResult.model_validate_json(raw)
+        return ExtractionResult.model_validate_json(raw)
+
+    def extract(self, thread: Thread, known_topics: list[str], sim_time=None) -> list[ExtractedItem]:
+        user = f"Known topics (reuse one for the same knowledge): {', '.join(known_topics) or 'none'}\n\n{thread.render()}"
+        raw, self.last_traces = llm.complete_traced(
+            self.system,
+            user,
+            json_mode=True,
+            schema=self.schema,
+            purpose="extract",
+            thread_id=thread.id,
+            sim_time=sim_time,
+            validate=self.parse,
+        )
+        result = self.parse(raw)
         self._save(thread.id, result)
         return result.items
 

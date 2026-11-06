@@ -22,9 +22,46 @@ DEFAULT_EMAIL_TIME = os.getenv("DEFAULT_EMAIL_TIME", "10:30")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "")
+# How to ask for JSON: "json_object" (response_format), "json_schema" (strict schema) or "prompt" (no response_format).
+LLM_JSON_MODE = os.getenv("LLM_JSON_MODE", "json_object")
+LLM_TIMEOUT = float(os.getenv("LLM_TIMEOUT", "60"))
+
+# Optional second provider, used when the primary fails (429, 5xx, timeout).
+LLM_FALLBACK_BASE_URL = os.getenv("LLM_FALLBACK_BASE_URL", "")
+LLM_FALLBACK_API_KEY = os.getenv("LLM_FALLBACK_API_KEY", "")
+LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "")
+LLM_FALLBACK_JSON_MODE = os.getenv("LLM_FALLBACK_JSON_MODE", LLM_JSON_MODE)
 
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
 
 
+def _key_set(key: str) -> bool:
+    return bool(key) and key != "your-key-here"
+
+
 def llm_configured() -> bool:
-    return bool(LLM_API_KEY) and LLM_API_KEY != "your-key-here" and bool(LLM_MODEL)
+    return _key_set(LLM_API_KEY) and bool(LLM_MODEL)
+
+
+def llm_fallback_configured() -> bool:
+    return _key_set(LLM_FALLBACK_API_KEY) and bool(LLM_FALLBACK_MODEL)
+
+
+# ---------------------------------------------------------------- workbench
+
+WORKBENCH_DIR = OUT_DIR / "workbench"
+WORKBENCH_STATE_FILE = Path(os.getenv("WORKBENCH_STATE_FILE", WORKBENCH_DIR / "state.json"))
+WORKBENCH_LLM_CALLS_FILE = WORKBENCH_STATE_FILE.parent / "llm_calls.jsonl"
+WORKBENCH_LLM_CACHE_FILE = WORKBENCH_STATE_FILE.parent / "llm_cache.json"
+WORKBENCH_SEED_DIR = DATA_DIR / "workbench"
+WORKBENCH_SIM_START = os.getenv("WORKBENCH_SIM_START", "2026-10-15T08:00")
+WORKBENCH_IDLE_SECONDS = float(os.getenv("WORKBENCH_IDLE_SECONDS", "8"))
+WEB_DIST_DIR = ROOT / "web" / "dist"
+
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "")
+SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN", "")
+SLACK_CHANNEL_ID = os.getenv("SLACK_CHANNEL_ID", "")
+
+
+def slack_configured() -> bool:
+    return all(v and not v.startswith("your-") for v in (SLACK_BOT_TOKEN, SLACK_APP_TOKEN, SLACK_CHANNEL_ID))
