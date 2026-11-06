@@ -27,11 +27,12 @@ function ScenarioLauncher() {
         Run scenario <ChevronDown size={14} />
       </Button>
       {open && (
-        <div className="absolute right-0 top-11 z-30 max-h-[70vh] w-96 overflow-auto rounded-2xl border border-line glass p-1.5 shadow-[var(--shadow-lg)] animate-slide-in">
+        <div role="menu" className="absolute right-0 top-11 z-30 max-h-[70vh] w-96 overflow-auto rounded-2xl border border-line glass p-1.5 shadow-[var(--shadow-lg)] animate-slide-in">
           {scenarios.length === 0 && <div className="p-3 text-sm text-muted">No scenario yet. Add one in Data.</div>}
           {scenarios.map((s) => (
             <button
               key={s.id}
+              role="menuitem"
               className="flex w-full flex-col items-start gap-1 rounded-xl px-3 py-2 text-left transition hover:bg-accent-soft"
               onClick={() => {
                 setOpen(false)
@@ -42,7 +43,7 @@ function ScenarioLauncher() {
                 <span className="text-sm font-medium">{s.title}</span>
                 <Badge className={cn('ml-auto', SOURCE_STYLE[s.channel].cls)}>{SOURCE_STYLE[s.channel].label}</Badge>
               </div>
-              {s.description && <span className="line-clamp-2 text-xs text-muted">{s.description}</span>}
+              {s.description && <span className="text-xs leading-snug text-muted">{s.description}</span>}
             </button>
           ))}
         </div>
