@@ -1,6 +1,8 @@
 # 48h plan and roles
 
 > **Status: proposal.** Hours count from the official start; adjust once the schedule is confirmed.
+>
+> **Hard deadline (Elisa slides):** demo, slides, docs and code repo submitted via sinceai.app by **Sunday 8 November 2026, 10:00**. Elisa reviews 10:00–13:00. "Docs" includes documenting the synthetic data we generate and how.
 
 | Phase | Hours | Goals | Gate at the end |
 | --- | --- | --- | --- |

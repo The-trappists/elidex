@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hidden knowledge — Elisa × Since AI 2026</title>
+<style>
+	:root {
+		--bg: #030a26;
+		--bg2: #0a1645;
+		--fg: #f2f6ff;
+		--muted: #93a6d6;
+		--line: #1b2c6e;
+		--brand: #0019af;
+		--blue: #5b8cff;
+		--accent: #38c6f4;
+		--ok: #3ddc97;
+		--bad: #ff5468;
+		--font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	}
+	* { box-sizing: border-box; margin: 0; padding: 0; }
+	html, body { height: 100%; color: var(--fg); font-family: var(--font); overflow: hidden; }
+	body {
+		background:
+			radial-gradient(1200px 600px at 85% -10%, rgba(0,25,175,.55), transparent 60%),
+			radial-gradient(900px 500px at -10% 110%, rgba(56,198,244,.14), transparent 60%),
+			var(--bg);
+	}
+
+	.deck {
+		position: absolute; top: 50%; left: 50%;
+		width: 1600px; height: 900px;
+		transform-origin: center center;
+	}
+	.slide {
+		position: absolute; inset: 0;
+		padding: 110px 140px;
+		display: flex; flex-direction: column; justify-content: center;
+		opacity: 0; visibility: hidden;
+		transform: translateY(16px);
+		transition: opacity .45s ease, transform .45s ease, visibility .45s;
+	}
+	.slide.active { opacity: 1; visibility: visible; transform: none; }
+	.slide.center { align-items: center; text-align: center; }
+
+	.kicker { font-size: 22px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 28px; }
+	h1 { font-size: 104px; line-height: 1.02; letter-spacing: -.035em; font-weight: 800; }
+	h2 { font-size: 64px; line-height: 1.08; letter-spacing: -.03em; font-weight: 750; margin-bottom: 44px; }
+	p.lead { font-size: 34px; line-height: 1.45; color: var(--muted); max-width: 1200px; }
+	.hl { color: var(--accent); }
+	.blue { color: var(--blue); }
+	.muted { color: var(--muted); }
+	.big-quote { font-size: 76px; line-height: 1.15; font-weight: 750; letter-spacing: -.025em; max-width: 1300px; }
+	.attrib { margin-top: 36px; font-size: 28px; color: var(--muted); }
+
+	.grad {
+		background: linear-gradient(90deg, #fff 0%, #a9c8ff 45%, var(--accent) 100%);
+		-webkit-background-clip: text; background-clip: text; color: transparent;
+	}
+
+	ul.clean { list-style: none; display: grid; gap: 22px; }
+	ul.clean li { font-size: 34px; line-height: 1.35; padding-left: 44px; position: relative; }
+	ul.clean li::before { content: ""; position: absolute; left: 0; top: 16px; width: 18px; height: 18px; border-radius: 50%; background: var(--blue); }
+
+	.cards { display: grid; gap: 24px; }
+	.cards.c3 { grid-template-columns: repeat(3, 1fr); }
+	.cards.c5 { grid-template-columns: repeat(5, 1fr); }
+	.cards.c2 { grid-template-columns: repeat(2, 1fr); }
+	.card {
+		background: var(--bg2); border: 1px solid var(--line); border-radius: 22px;
+		padding: 34px 30px;
+	}
+	.card .num { font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 14px; letter-spacing: .1em; }
+	.card h3 { font-size: 32px; letter-spacing: -.01em; margin-bottom: 14px; }
+	.card p { font-size: 23px; line-height: 1.45; color: var(--muted); }
+
+	/* Barrier timeline */
+	.timeline { display: flex; align-items: stretch; gap: 0; margin-top: 20px; }
+	.tl-step { flex: 1; position: relative; padding-top: 74px; }
+	.tl-step::before { content: ""; position: absolute; top: 26px; left: 0; right: 0; height: 4px; background: var(--ok); }
+	.tl-step:last-child::before { background: linear-gradient(90deg, var(--ok), var(--bad)); }
+	.tl-dot {
+		position: absolute; top: 0; left: 0;
+		width: 56px; height: 56px; border-radius: 50%;
+		display: grid; place-items: center; font-size: 28px; font-weight: 800;
+		background: var(--ok); color: #05210f;
+	}
+	.tl-step.fail .tl-dot { background: var(--bad); color: #2a0007; }
+	.tl-step h3 { font-size: 32px; margin-bottom: 8px; padding-right: 30px; }
+	.tl-step p { font-size: 23px; color: var(--muted); padding-right: 30px; line-height: 1.4; }
+	.callout {
+		margin-top: 64px; padding: 30px 38px; border-radius: 20px;
+		background: rgba(255,84,104,.08); border: 1px solid rgba(255,84,104,.35);
+		font-size: 34px; line-height: 1.4;
+	}
+
+	/* Chat */
+	.chat-wrap { display: grid; grid-template-columns: 1fr 1.15fr; gap: 80px; align-items: center; }
+	.chat { display: flex; flex-direction: column; gap: 10px; }
+	.msg { max-width: 92%; padding: 11px 20px; border-radius: 20px; font-size: 21px; line-height: 1.35; }
+	.msg .who { display: block; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; opacity: .7; }
+	.msg.v { align-self: flex-start; background: #1b2347; border-bottom-left-radius: 6px; }
+	.msg.e { align-self: flex-end; background: var(--brand); border-bottom-right-radius: 6px; }
+	.msg.win { background: rgba(61,220,151,.18); border: 1px solid rgba(61,220,151,.45); }
+
+	/* Layers */
+	.layers-wrap { display: grid; grid-template-columns: 1.25fr 1fr; gap: 80px; align-items: center; }
+	.layers { display: grid; gap: 14px; }
+	.layer {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: 24px 32px; border-radius: 16px;
+		background: var(--bg2); border: 1px solid var(--line);
+		font-size: 28px; font-weight: 600;
+	}
+	.layer span { font-size: 21px; color: var(--muted); font-weight: 500; }
+	.layer.missing {
+		background: rgba(56,198,244,.08);
+		border: 2px dashed var(--accent);
+		color: var(--accent);
+		box-shadow: 0 0 60px rgba(56,198,244,.22);
+	}
+	.layer.missing span { color: var(--accent); }
+	.brace { font-size: 30px; line-height: 1.5; }
+	.brace b { font-size: 64px; display: block; letter-spacing: -.02em; }
+
+	.arch img { width: 100%; max-height: 660px; object-fit: contain; border-radius: 18px; border: 1px solid var(--line); display: block; }
+
+	/* Statement box */
+	.statement {
+		font-size: 48px; line-height: 1.3; font-weight: 650; letter-spacing: -.015em;
+		padding: 56px 64px; border-radius: 28px;
+		background: linear-gradient(135deg, rgba(0,25,175,.55), rgba(0,25,175,.12));
+		border: 1px solid rgba(91,140,255,.45);
+	}
+
+	/* Demo steps */
+	.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; counter-reset: s; }
+	.steps .card { position: relative; padding-top: 96px; }
+	.steps .card::before {
+		counter-increment: s; content: counter(s);
+		position: absolute; top: 28px; left: 30px;
+		width: 52px; height: 52px; border-radius: 14px;
+		display: grid; place-items: center; font-weight: 800; font-size: 26px;
+		background: var(--accent); color: #031235;
+	}
+
+	.eval-primary { font-size: 40px; font-weight: 700; line-height: 1.3; margin-bottom: 40px; }
+	.pill { align-self: flex-start; display: inline-block; padding: 8px 18px; border-radius: 999px; font-size: 20px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 18px; }
+	.pill.p1 { background: var(--accent); color: #031235; }
+	.pill.p2 { background: var(--line); color: var(--fg); }
+
+	.deadline { display: flex; gap: 40px; align-items: stretch; }
+	.deadline .card { flex: 1; }
+	.deadline .card .big { font-size: 64px; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 10px; }
+
+	.contacts { margin-top: 60px; display: flex; gap: 60px; justify-content: center; font-size: 26px; color: var(--muted); }
+	.contacts b { color: var(--fg); display: block; font-size: 30px; }
+
+	.notes { display: none; }
+
+	/* Chrome */
+	.progress { position: fixed; left: 0; bottom: 0; height: 4px; background: var(--accent); transition: width .35s ease; z-index: 10; }
+	.counter { position: fixed; right: 22px; bottom: 14px; font-size: 14px; color: var(--muted); z-index: 10; font-variant-numeric: tabular-nums; }
+	.brand { position: fixed; left: 22px; bottom: 14px; font-size: 14px; color: var(--muted); letter-spacing: .08em; z-index: 10; }
+	.notes-panel {
+		position: fixed; left: 0; right: 0; bottom: 0; max-height: 38vh; overflow: auto;
+		background: rgba(3,8,30,.96); border-top: 1px solid var(--line);
+		padding: 22px 32px 36px; font-size: 18px; line-height: 1.55; color: #d6dbf5;
+		transform: translateY(100%); transition: transform .3s ease; z-index: 20;
+	}
+	.notes-panel.open { transform: none; }
+	.notes-panel h4 { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+	<!-- 1 -->
+	<section class="slide">
+		<div class="kicker">Elisa × Since AI 2026 · Challenge</div>
+		<h1><span class="grad">Hidden knowledge</span></h1>
+		<p class="lead" style="margin-top:36px">Capturing and linking human-generated context<br />for autonomous network operations</p>
+		<p class="muted" style="margin-top:70px;font-size:26px">Joni Nuvola · AI Architect · Autonomous Network Operations</p>
+		<aside class="notes">Hi everyone! I'm Joni, AI Architect at Elisa, in the Autonomous Network Operations team. Matti, who heads that team, and I are around all weekend at the Elisa stand and on Discord.</aside>
+	</section>
+
+	<!-- 2 -->
+	<section class="slide">
+		<div class="kicker">Our goal</div>
+		<h2>The world's first and most advanced<br /><span class="blue">autonomous network.</span></h2>
+		<ul class="clean">
+			<li>AI already does root-cause analysis</li>
+			<li>A large share of faults is already identified by AI</li>
+			<li>Agents read topology and telemetry and troubleshoot across domains</li>
+		</ul>
+		<p class="lead" style="margin-top:56px">So what's stopping us? <span class="hl">Not the models or the compute.</span></p>
+		<aside class="notes">This sounds like marketing, but it's our working goal. We're further along than you might think. So what's stopping us? It isn't the models or the compute. It's something much more human.</aside>
+	</section>
+
+	<!-- 3 -->
+	<section class="slide">
+		<div class="kicker">Story 1 · Northern Finland</div>
+		<h2>The locked barrier</h2>
+		<div class="timeline">
+			<div class="tl-step"><div class="tl-dot">✓</div><h3>Device fails</h3><p>Fault detected in the network</p></div>
+			<div class="tl-step"><div class="tl-dot">✓</div><h3>AI diagnoses</h3><p>Correctly identifies the faulty device</p></div>
+			<div class="tl-step"><div class="tl-dot">✓</div><h3>Engineer dispatched</h3><p>Drives to the site</p></div>
+			<div class="tl-step fail"><div class="tl-dot">✕</div><h3>Locked barrier</h3><p>Private road, no key. The cycle stops.</p></div>
+		</div>
+		<div class="callout">Where was the key's location? <b>In an email.</b> <span class="muted">Not in any system the AI could ever see.</span></div>
+		<aside class="notes">A device fails in Northern Finland. The AI analyses it correctly and an engineer is dispatched. Everything works as designed, until a locked barrier on a private road. People start digging and find where the key is: in an email. The AI did everything right. The process failed because of one sentence in someone's inbox.</aside>
+	</section>
+
+	<!-- 4 -->
+	<section class="slide" style="padding-top:70px;padding-bottom:70px">
+		<div class="kicker">Story 2 · Transmission node TRN-042</div>
+		<div class="chat-wrap">
+			<div>
+				<h2>Meet Erkki</h2>
+				<p class="lead">SFP replaced. Link <b style="color:var(--ok)">UP</b>, optics normal, alarms cleared.<br /><br /><span class="hl">But traffic doesn't come back.</span></p>
+			</div>
+			<div class="chat">
+				<div class="msg v"><span class="who">Veikko · field engineer</span>Changed the SFP on TRN-042. Link is up, alarms cleared, but no traffic. Seen this before?</div>
+				<div class="msg e"><span class="who">Erkki · expert</span>Is this one of the older units?</div>
+				<div class="msg v"><span class="who">Veikko</span>Yes, around 2019.</div>
+				<div class="msg e"><span class="who">Erkki</span>Don't trust the green link status on those. Are the counters increasing?</div>
+				<div class="msg v"><span class="who">Veikko</span>Link UP. RX normal. Counters basically zero.</div>
+				<div class="msg e"><span class="who">Erkki</span>That's it. Disable the interface, wait, enable it. Don't reboot.</div>
+				<div class="msg v win"><span class="who">Veikko</span>Traffic is back 👍</div>
+			</div>
+		</div>
+		<aside class="notes">Veikko has replaced an SFP. Everything is green but there's no traffic. The natural conclusion is that the new SFP is bad: swap it again or reboot. He pings Erkki on Teams. "Older unit? Don't trust the green link. Check the counters. Zero? Bounce the interface." A few minutes later, traffic is back.</aside>
+	</section>
+
+	<!-- 5 -->
+	<section class="slide center">
+		<p class="lead" style="font-size:40px;margin-bottom:30px">"Is this documented somewhere?"</p>
+		<div class="big-quote">"Not that I know of 😄<br />We've just learned it over the years."</div>
+		<div class="attrib">— Erkki Expert</div>
+		<p class="lead" style="margin-top:80px;font-size:40px"><span class="hl">That smiley is our problem.</span></p>
+		<aside class="notes">My favourite line in the material. [pause] That smiley is our problem. That's hidden knowledge.</aside>
+	</section>
+
+	<!-- 6 -->
+	<section class="slide">
+		<div class="kicker">How we model the network</div>
+		<div class="layers-wrap">
+			<div class="layers">
+				<div class="layer">Intent / design <span>as-designed</span></div>
+				<div class="layer">Physical / passive <span>as-built</span></div>
+				<div class="layer">Runtime / active <span>as-running</span></div>
+				<div class="layer missing">Context <span>as-experienced · missing</span></div>
+				<div class="layer">Event stream <span>as-observed</span></div>
+			</div>
+			<div class="brace">
+				<span class="muted">Decades of data tell us</span>
+				<b>WHAT</b>
+				<span class="muted" style="display:block;margin-top:30px">Nothing captures</span>
+				<b class="hl">WHY</b>
+				<p class="muted" style="font-size:24px;margin-top:24px;line-height:1.5">Workarounds · site access · why a config is odd · what actually fixed it</p>
+			</div>
+		</div>
+		<aside class="notes">We describe the network in layers: as-designed, as-built, as-running (topology and telemetry), and the as-observed event stream. They tell us WHAT. The context layer, as-experienced, is the WHY. It lives in heads, Teams chats, emails and calls, and it leaves when people do.</aside>
+	</section>
+
+	<!-- 7 -->
+	<section class="slide">
+		<div class="kicker">Reference architecture (in your material)</div>
+		<div class="layers-wrap" style="grid-template-columns:1.5fr 1fr">
+			<div class="arch"><img src="../sinceAI/ELISA_HIDDEN_KNOWLEDGE_EXAMPLE_2026/reference_architecture.png" alt="Elisa data-layer and context architecture" /></div>
+			<ul class="clean">
+				<li>Time-aware layers</li>
+				<li>Each context assertion is <b>bound to a graph entity</b></li>
+				<li>Has <b class="hl">valid_from</b> / <b class="hl">valid_to</b></li>
+				<li>Cross-reference all layers at any point in time</li>
+			</ul>
+		</div>
+		<aside class="notes">This is the reference model from the brief. Every context assertion is bound to a graph entity and has a validity window. valid_to defaults to "still believed true".</aside>
+	</section>
+
+	<!-- 8 -->
+	<section class="slide center">
+		<div class="big-quote">For a human-run network, this was annoying.<br /><span class="hl">For an autonomous one, it's a hard stop.</span></div>
+		<p class="lead" style="margin-top:60px">An agent can't call Erkki at 3 a.m.</p>
+		<aside class="notes">An agent can't call Erkki at three in the morning.</aside>
+	</section>
+
+	<!-- 9 -->
+	<section class="slide">
+		<div class="kicker">The challenge</div>
+		<div class="statement">Capture human-generated knowledge, <span class="blue">bind it to the right network context</span>, and make it available to AI agents, so that autonomous workflows can run <span class="hl">end to end</span>.</div>
+		<aside class="notes">Read the statement. Then move to the guiding question, which is the one that matters most.</aside>
+	</section>
+
+	<!-- 10 -->
+	<section class="slide center">
+		<div class="kicker">Guiding question</div>
+		<div class="big-quote">How could we collect silent metadata <span class="grad">without creating additional work</span> for our specialists?</div>
+		<aside class="notes">Why is "no additional work" the core? Because the other way has been tried, by us and by every company: "Please document this in the wiki." "Please write a proper closure comment." Documentation is always the first thing to go.</aside>
+	</section>
+
+	<!-- 11 -->
+	<section class="slide center">
+		<div class="big-quote">If your solution needs Erkki to fill in a form,<br /><span class="hl">Erkki won't fill in the form.</span></div>
+		<aside class="notes">To be honest. [pause]</aside>
+	</section>
+
+	<!-- 12 -->
+	<section class="slide">
+		<div class="kicker">What makes it hard</div>
+		<h2>Harder than it looks</h2>
+		<div class="cards c5">
+			<div class="card"><div class="num">01</div><h3>The real knowledge</h3><p>Twelve messages of chat, about one sentence of actual rule.</p></div>
+			<div class="card"><div class="num">02</div><h3>Linking</h3><p>"These older units": TRN-042 only? The model? Install year? A wrong link is worse than none.</p></div>
+			<div class="card"><div class="num">03</div><h3>Time</h3><p>Firmware fixes the bug and the barrier gets a new lock. When does it stop being true?</p></div>
+			<div class="card"><div class="num">04</div><h3>Trust</h3><p>Hunch or verified fix? Two experts disagree? Who said it, and where?</p></div>
+			<div class="card"><div class="num">05</div><h3>People</h3><p>These are colleague conversations. How does it feel to be on the other side?</p></div>
+		</div>
+		<aside class="notes">I won't tell you how to solve these, but think about them. The rule: on older units, after an SFP swap, UP plus normal optics plus zero counters means a forwarding-state issue, so bounce the interface first. Linking: an autonomous system will act on a wrong link confidently. Time: that's why valid_from and valid_to exist.</aside>
+	</section>
+
+	<!-- 13 -->
+	<section class="slide">
+		<div class="kicker">What you get</div>
+		<h2>Deliberately small material</h2>
+		<div class="cards c2" style="gap:24px">
+			<div class="card"><h3>📄 use_case.md</h3><p>The case in plain language, plus the locked-barrier example</p></div>
+			<div class="card"><h3>💬 teams_chat.json</h3><p>Same case as a 12-message Teams conversation</p></div>
+			<div class="card"><h3>✉️ email.txt</h3><p>Same case as an email from Erkki</p></div>
+			<div class="card"><h3>🧭 reference_architecture.png</h3><p>Time-aware layers and context binding</p></div>
+		</div>
+		<p class="lead" style="margin-top:44px;font-size:28px"><b class="hl">Generate more synthetic data:</b> other devices, advice that goes out of date, experts who disagree. Document what you generated and how. <span class="muted">No production data and no Elisa system access needed.</span></p>
+		<aside class="notes">Everything is illustrative. We encourage you to generate more data, just document it.</aside>
+	</section>
+
+	<!-- 14 -->
+	<section class="slide">
+		<div class="kicker">Evaluation</div>
+		<span class="pill p1">Primary</span>
+		<div class="eval-primary">Usability: useful context captured and linked with <span class="hl">minimal extra work</span>, ideally from channels specialists already use (Teams, email).</div>
+		<span class="pill p2">Secondary</span>
+		<div class="cards c3" style="grid-template-columns:repeat(4,1fr)">
+			<div class="card"><h3>Relevance</h3><p>Of the captured context</p></div>
+			<div class="card"><h3>Linking</h3><p>Right entity, right time validity</p></div>
+			<div class="card"><h3>Feasibility</h3><p>Technically realistic</p></div>
+			<div class="card"><h3>Agent-ready</h3><p>Fits agentic network operations</p></div>
+		</div>
+		<aside class="notes">Usability comes first. After that: relevance, correct linking, feasibility and fit for agentic operations.</aside>
+	</section>
+
+	<!-- 15 -->
+	<section class="slide">
+		<div class="kicker">What a strong demo looks like</div>
+		<h2>Erkki's case, end to end</h2>
+		<div class="steps">
+			<div class="card"><h3>Capture</h3><p>Knowledge is taken from the chat or email, with <b style="color:var(--fg)">no separate documentation step</b>.</p></div>
+			<div class="card"><h3>Link</h3><p>Stored as a context assertion bound to the <b style="color:var(--fg)">right entities</b>, with its source and validity period.</p></div>
+			<div class="card"><h3>Reuse</h3><p>On a similar case, an agent proposes: <b style="color:var(--fg)">check the counters, bounce the interface</b>, before hardware swaps or reboots.</p></div>
+		</div>
+		<aside class="notes">For example, the next time this happens on another old node, the agent should already know the answer.</aside>
+	</section>
+
+	<!-- 16 -->
+	<section class="slide">
+		<div class="kicker">Deliverables</div>
+		<h2>Demo · Slides · Docs · Repo</h2>
+		<div class="deadline">
+			<div class="card"><p>Submit via sinceai.app by</p><div class="big hl">Sun 10:00</div><p>8 November 2026</p></div>
+			<div class="card"><p>Elisa reviews</p><div class="big">10–13</div><p>Sunday</p></div>
+			<div class="card"><p>Questions all weekend</p><div class="big blue">Elisa stand</div><p>and Since AI Discord</p></div>
+		</div>
+		<aside class="notes">Working demo, pitch slides, documentation and code repo, through the Since AI app by Sunday 10:00.</aside>
+	</section>
+
+	<!-- 17 -->
+	<section class="slide center">
+		<div class="big-quote">Models can be rented.<br /><span class="grad">Erkki's experience can't.</span></div>
+		<p class="lead" style="margin-top:50px">Next time someone asks <i>"Is this documented somewhere?"</i>, the answer should be <b class="hl">yes</b>, and nobody had to write it down.</p>
+		<div class="contacts">
+			<div><b>Joni Nuvola</b>Discord jnuvola</div>
+			<div><b>Matti Penttilä</b>Discord mattipenttila_26920</div>
+		</div>
+		<aside class="notes">Everyone can rent the same models. What nobody can buy is the experience of people like Erkki. Find us at the stand or on Discord. Good luck, and have fun!</aside>
+	</section>
+
+</div>
+
+<div class="brand">ELISA × SINCE AI 2026</div>
+<div class="counter" id="counter"></div>
+<div class="progress" id="progress"></div>
+<div class="notes-panel" id="notesPanel"><h4>Speaker notes · N to hide</h4><div id="notesText"></div></div>
+
+<script>
+	const deck = document.getElementById('deck');
+	const slides = [...document.querySelectorAll('.slide')];
+	const counter = document.getElementById('counter');
+	const progress = document.getElementById('progress');
+	const notesPanel = document.getElementById('notesPanel');
+	const notesText = document.getElementById('notesText');
+	let i = Math.min(Math.max(parseInt(location.hash.slice(1), 10) - 1 || 0, 0), slides.length - 1);
+
+	function fit() {
+		const s = Math.min(innerWidth / 1600, innerHeight / 900);
+		deck.style.transform = `translate(-50%, -50%) scale(${s})`;
+	}
+	function show(n) {
+		i = Math.min(Math.max(n, 0), slides.length - 1);
+		slides.forEach((el, k) => el.classList.toggle('active', k === i));
+		counter.textContent = `${i + 1} / ${slides.length}`;
+		progress.style.width = `${((i + 1) / slides.length) * 100}%`;
+		const note = slides[i].querySelector('.notes');
+		notesText.textContent = note ? note.textContent : '';
+		history.replaceState(null, '', `#${i + 1}`);
+	}
+	addEventListener('keydown', (e) => {
+		if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+		else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+		else if (e.key === 'Home') show(0);
+		else if (e.key === 'End') show(slides.length - 1);
+		else if (e.key === 'n' || e.key === 'N') notesPanel.classList.toggle('open');
+		else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+	});
+	addEventListener('click', (e) => { if (!notesPanel.contains(e.target)) show(e.clientX < innerWidth / 3 ? i - 1 : i + 1); });
+	addEventListener('resize', fit);
+	addEventListener('hashchange', () => show((parseInt(location.hash.slice(1), 10) || 1) - 1));
+	fit();
+	show(i);
+</script>
+</body>
+</html>

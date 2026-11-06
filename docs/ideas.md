@@ -4,6 +4,13 @@
 
 All ideas share the same core (capture → link → serve). They differ in **where the original angle sits**.
 
+> **After Elisa's slides** (see [challenge.md](challenge.md)): the deliverable is context assertions bound to graph entities with a validity period, captured from Teams and email with no extra work for specialists, and **reused by an agent on a similar case** (Erkki's case). Usability is the primary criterion. So:
+> - **A** is the base every idea needs (the context layer + agent access).
+> - **D** matches Elisa's "Reuse" step almost word for word: Erkki's fix suggested on the next similar node.
+> - **E** fits Erkki's rule naturally (conditions: old unit, after SFP swap, zero counters).
+> - **B** must not turn into building Elisa's workflow; at most a minimal agent for the demo.
+> - **C** and **F** rely on a human confirming facts, which "no extra work" rules out; keep only their silent parts (auto-capture, automatic `valid_to` and conflict detection).
+
 ## Overview
 
 | # | Direction | Original angle | Scope fit | Demo impact | Effort |
