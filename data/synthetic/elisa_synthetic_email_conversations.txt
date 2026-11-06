@@ -1,0 +1,180 @@
+Synthetic email conversation examples — Elisa network operations
+
+All names, node IDs, events and messages below are fictional and created for demonstration. They do not describe production systems or operational incidents.
+
+========================================================================
+EMAIL EXAMPLE 01
+Subject: TRN-118: link up but no traffic after optic change
+Participants: Veikko Vikkelä (Network Specialist), Erkki Expert (Network Specialist)
+
+From: Veikko Vikkelä
+To: Erkki Expert
+
+Hi Erkki,
+
+I replaced the optical module on TRN-118 during the planned window. The interface is UP and receive power is in range, but traffic counters have stayed at zero for several minutes. The peer also looks up. Have you seen this pattern?
+
+--- Reply ---
+
+From: Erkki Expert
+To: Veikko Vikkelä
+
+Hi Veikko,
+
+Yes, I've seen stale forwarding state on this older platform after an optic swap. Before changing anything, compare counters at both ends and confirm the peer isn't blocked. If both ends are clear and counters remain flat, a scoped interface disable/enable within the approved window has restored service in cases I've handled. I would not start with another optic or a whole-node reboot.
+
+Please treat that as experience from this platform, not a universal procedure.
+
+--- Reply ---
+
+From: Veikko Vikkelä
+To: Erkki Expert
+
+Thanks. Both ends were clear. We performed the scoped interface reset under the change, and counters resumed immediately. Service is back; I'll record the model and symptoms in the handover.
+
+
+========================================================================
+EMAIL EXAMPLE 02
+Subject: MW-204 modulation dips during heavy rain
+Participants: Aino Aalto (Network Specialist), Mika Ranta (Network Specialist)
+
+From: Aino Aalto
+To: Mika Ranta
+
+Hi Mika,
+
+MW-204 had two brief modulation drops during the rain this morning, with BER spikes that cleared afterward. Both link ends are currently up. Do you think this calls for an alignment visit?
+
+--- Reply ---
+
+From: Mika Ranta
+To: Aino Aalto
+
+Hi Aino,
+
+In my experience, simultaneous short dips at both ends that line up with heavy rain can be weather-related. Please compare the far-end level and dry-weather baseline before dispatching for alignment. If the level remains shifted after the weather clears, or the ends stop tracking together, investigate further.
+
+The timestamps and recovery pattern matter here; one alarm by itself isn't enough to identify the cause.
+
+--- Reply ---
+
+From: Aino Aalto
+To: Mika Ranta
+
+Thanks. Both ends returned to baseline as the rain eased. We have left monitoring open and will escalate if the dry-weather level changes.
+
+
+========================================================================
+EMAIL EXAMPLE 03
+Subject: VLAN 317 loss following access migration
+Participants: Noora Heikkinen (Network Specialist), Jari Salmi (Network Specialist)
+
+From: Noora Heikkinen
+To: Jari Salmi
+
+Hi Jari,
+
+We see intermittent loss limited to VLAN 317 after the migration. Physical counters are clean. I suspect a handoff mismatch, but wanted your view before we touch the trunk.
+
+--- Reply ---
+
+From: Jari Salmi
+To: Noora Heikkinen
+
+Hi Noora,
+
+I've seen temporary patch ports retain a different tagging expectation from the upstream handoff. Compare the mode and allowed VLAN list at both ends. If one side treats VLAN 317 as native and the other expects it tagged, that would fit the symptom. Keep the allowed list scoped to the approved service rather than opening all VLANs.
+
+--- Reply ---
+
+From: Noora Heikkinen
+To: Jari Salmi
+
+Confirmed: the temporary port was native while upstream expected tagged. We restored the approved service definition under change control and verified MAC learning and traffic. Loss is clear.
+
+
+========================================================================
+EMAIL EXAMPLE 04
+Subject: SYN-601 timing offset after antenna maintenance
+Participants: Kaisa Puro (Network Specialist), Rami Lehto (Network Specialist)
+
+From: Kaisa Puro
+To: Rami Lehto
+
+Hi Rami,
+
+SYN-601 entered holdover shortly after antenna maintenance. The connector has now been reseated and GNSS is back, but the timing offset is still converging. Is that expected?
+
+--- Reply ---
+
+From: Rami Lehto
+To: Kaisa Puro
+
+Hi Kaisa,
+
+I've seen the receiver take time to settle after reacquisition. Check the receiver alarms and monitor against the site's stability criterion; a green source indicator alone doesn't establish that timing is stable. Also keep the maintenance interval in the incident record. If the offset plateaus or alarms return, inspect the full antenna path and verify the alternate source.
+
+--- Reply ---
+
+From: Kaisa Puro
+To: Rami Lehto
+
+Thanks. Offset entered the acceptance window and stayed there for the required interval. We closed the incident with the maintenance details.
+
+
+========================================================================
+EMAIL EXAMPLE 05
+Subject: Access blocked at SITE-NT-044
+Participants: Meri Halla (Network Specialist), Joonas Aho (Network Specialist)
+
+From: Meri Halla
+To: Joonas Aho
+
+Hi Joonas,
+
+A locked barrier on the private road is preventing access to SITE-NT-044. I'm stopped at the public turnoff. What is the right next step?
+
+--- Reply ---
+
+From: Joonas Aho
+To: Meri Halla
+
+Hi Meri,
+
+Pause the visit and use the authorized access contact listed in the work order. Do not bypass the barrier or enter without permission. In prior visits, access approval was time-bound, so confirm it covers today's work before proceeding. The shared handover should record the site constraint and process only; don't include keys, codes, or private contact details.
+
+--- Reply ---
+
+From: Meri Halla
+To: Joonas Aho
+
+Access was confirmed for today's work window. We resumed the visit and kept a future access check in the handover.
+
+
+========================================================================
+EMAIL EXAMPLE 06
+Subject: Stale topology snapshot in AGG-711 impact analysis
+Participants: Pekka Niskanen (Network Specialist), Saara Kivi (Network Specialist)
+
+From: Pekka Niskanen
+To: Saara Kivi
+
+Hi Saara,
+
+Our impact analysis points to AGG-711, but the topology snapshot predates a port move last week. Live neighbor data now points to AGG-712. How should I record the result?
+
+--- Reply ---
+
+From: Saara Kivi
+To: Pekka Niskanen
+
+Hi Pekka,
+
+Keep the snapshot timestamp with the impact result and reconcile the current relationship against live neighbor data and the approved change record. When CM is updated, use the change's effective time: retain the old relationship historically with an end time, and start the new one from the move. That way we can explain what the analysis knew at the time.
+
+--- Reply ---
+
+From: Pekka Niskanen
+To: Saara Kivi
+
+Understood. The change record confirms AGG-712. I've submitted the CM correction and retained the original snapshot reference in the incident.

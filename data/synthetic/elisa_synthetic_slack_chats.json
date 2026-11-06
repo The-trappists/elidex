@@ -1,0 +1,315 @@
+[
+  {
+    "channel": "slack",
+    "note": "Synthetic example only. Fictional names, node IDs and messages; no production, customer or personal data. Times are illustrative.",
+    "participants": [
+      {
+        "name": "Veikko Vikkelä",
+        "role": "Field Engineer"
+      },
+      {
+        "name": "Erkki Expert",
+        "role": "Transmission Specialist"
+      }
+    ],
+    "messages": [
+      {
+        "seq": 1,
+        "time": "09:14",
+        "author": "Veikko Vikkelä",
+        "role": "Field Engineer",
+        "text": "Hi Erkki, on TRN-118 I replaced the optical module. Link is UP and receive power is in range, but traffic counters haven't moved for five minutes. Anything familiar?"
+      },
+      {
+        "seq": 2,
+        "time": "09:16",
+        "author": "Erkki Expert",
+        "role": "Transmission Specialist",
+        "text": "I've seen that on this older platform after an optic swap. First compare counters at both ends and check that the peer isn't administratively blocked."
+      },
+      {
+        "seq": 3,
+        "time": "09:18",
+        "author": "Veikko Vikkelä",
+        "role": "Field Engineer",
+        "text": "Peer is clear. Both ends show link up, but counters are still flat."
+      },
+      {
+        "seq": 4,
+        "time": "09:20",
+        "author": "Erkki Expert",
+        "role": "Transmission Specialist",
+        "text": "That points more toward stale forwarding state than a bad optic. In the approved maintenance window, try a scoped disable/enable of the interface; avoid rebooting the node unless that doesn't recover it."
+      },
+      {
+        "seq": 5,
+        "time": "09:24",
+        "author": "Veikko Vikkelä",
+        "role": "Field Engineer",
+        "text": "Done within the window. Counters are moving and service is back 👍"
+      },
+      {
+        "seq": 6,
+        "time": "09:25",
+        "author": "Erkki Expert",
+        "role": "Transmission Specialist",
+        "text": "Good. That has been my experience with this model, but note the platform and symptoms so nobody treats it as a universal SFP fix."
+      }
+    ]
+  },
+  {
+    "channel": "slack",
+    "note": "Synthetic example only. Fictional names, node IDs and messages; no production, customer or personal data. Times are illustrative.",
+    "participants": [
+      {
+        "name": "Aino Aalto",
+        "role": "NOC Engineer"
+      },
+      {
+        "name": "Mika Ranta",
+        "role": "Radio Specialist"
+      }
+    ],
+    "messages": [
+      {
+        "seq": 1,
+        "time": "11:03",
+        "author": "Aino Aalto",
+        "role": "NOC Engineer",
+        "text": "MW-204 dropped modulation twice during the rain. BER spiked but recovered both times. Should we send someone to realign the dish?"
+      },
+      {
+        "seq": 2,
+        "time": "11:06",
+        "author": "Mika Ranta",
+        "role": "Radio Specialist",
+        "text": "Before dispatch, compare the far-end level and weather timestamps. In my experience, a brief dip that tracks heavy rain at both ends is different from a persistent alignment shift."
+      },
+      {
+        "seq": 3,
+        "time": "11:09",
+        "author": "Aino Aalto",
+        "role": "NOC Engineer",
+        "text": "Both ends dipped together and returned to their previous level between showers. No recent site work."
+      },
+      {
+        "seq": 4,
+        "time": "11:12",
+        "author": "Mika Ranta",
+        "role": "Radio Specialist",
+        "text": "I'd monitor through the weather and compare the dry-weather baseline. If the level stays shifted or one end behaves differently, then investigate alignment or hardware."
+      },
+      {
+        "seq": 5,
+        "time": "11:26",
+        "author": "Aino Aalto",
+        "role": "NOC Engineer",
+        "text": "Rain has eased; level is back at baseline and no new BER spike. Keeping the watch open for now."
+      }
+    ]
+  },
+  {
+    "channel": "slack",
+    "note": "Synthetic example only. Fictional names, node IDs and messages; no production, customer or personal data. Times are illustrative.",
+    "participants": [
+      {
+        "name": "Noora Heikkinen",
+        "role": "IP Engineer"
+      },
+      {
+        "name": "Jari Salmi",
+        "role": "Network Specialist"
+      }
+    ],
+    "messages": [
+      {
+        "seq": 1,
+        "time": "08:41",
+        "author": "Noora Heikkinen",
+        "role": "IP Engineer",
+        "text": "After the access migration, only VLAN 317 has intermittent loss. Ports are up and physical counters look clean."
+      },
+      {
+        "seq": 2,
+        "time": "08:44",
+        "author": "Jari Salmi",
+        "role": "Network Specialist",
+        "text": "I've run into this when a temporary handoff disagrees about tagging. Compare the VLAN mode and allowed list at both ends before changing the trunk."
+      },
+      {
+        "seq": 3,
+        "time": "08:49",
+        "author": "Noora Heikkinen",
+        "role": "IP Engineer",
+        "text": "Found it: upstream expects tagged, but the temporary patch port is treating 317 as native."
+      },
+      {
+        "seq": 4,
+        "time": "08:52",
+        "author": "Jari Salmi",
+        "role": "Network Specialist",
+        "text": "That matches the scope of the loss. Restore the approved service definition at both ends, then verify MAC learning and traffic. Don't broaden the allowed VLAN list as a workaround."
+      },
+      {
+        "seq": 5,
+        "time": "09:02",
+        "author": "Noora Heikkinen",
+        "role": "IP Engineer",
+        "text": "Corrected under the change. MAC learning is normal and loss is clear. I've noted that the temporary port was the exception."
+      }
+    ]
+  },
+  {
+    "channel": "slack",
+    "note": "Synthetic example only. Fictional names, node IDs and messages; no production, customer or personal data. Times are illustrative.",
+    "participants": [
+      {
+        "name": "Kaisa Puro",
+        "role": "RAN Engineer"
+      },
+      {
+        "name": "Rami Lehto",
+        "role": "Timing Specialist"
+      }
+    ],
+    "messages": [
+      {
+        "seq": 1,
+        "time": "10:02",
+        "author": "Kaisa Puro",
+        "role": "RAN Engineer",
+        "text": "SYN-601 lost GNSS shortly after antenna maintenance. It's in holdover and the timing offset is climbing."
+      },
+      {
+        "seq": 2,
+        "time": "10:06",
+        "author": "Rami Lehto",
+        "role": "Timing Specialist",
+        "text": "I saw a similar pattern after connector work. Check receiver alarms and the antenna path first, then confirm the alternate source is healthy before considering any source change."
+      },
+      {
+        "seq": 3,
+        "time": "10:12",
+        "author": "Kaisa Puro",
+        "role": "RAN Engineer",
+        "text": "Connector wasn't fully seated. GNSS is reacquired, but offset hasn't returned to baseline yet."
+      },
+      {
+        "seq": 4,
+        "time": "10:15",
+        "author": "Rami Lehto",
+        "role": "Timing Specialist",
+        "text": "Reacquisition can take time to converge. Monitor against the site's stability criterion; don't call it recovered just because the source indicator is green."
+      },
+      {
+        "seq": 5,
+        "time": "10:31",
+        "author": "Kaisa Puro",
+        "role": "RAN Engineer",
+        "text": "Offset is inside the acceptance window now and stable for the required interval. Closing with the maintenance note."
+      }
+    ]
+  },
+  {
+    "channel": "slack",
+    "note": "Synthetic example only. Fictional names, node IDs and messages; no production, customer or personal data. Times are illustrative.",
+    "participants": [
+      {
+        "name": "Meri Halla",
+        "role": "Field Engineer"
+      },
+      {
+        "name": "Joonas Aho",
+        "role": "Regional Network Specialist"
+      }
+    ],
+    "messages": [
+      {
+        "seq": 1,
+        "time": "07:48",
+        "author": "Meri Halla",
+        "role": "Field Engineer",
+        "text": "I'm at the turnoff for SITE-NT-044. The private road has a locked barrier, so I can't reach the cabinet."
+      },
+      {
+        "seq": 2,
+        "time": "07:52",
+        "author": "Joonas Aho",
+        "role": "Regional Network Specialist",
+        "text": "I've seen this access constraint before. Stop at a safe place and use the authorized access contact in the work order. Don't bypass the barrier or enter without permission."
+      },
+      {
+        "seq": 3,
+        "time": "08:01",
+        "author": "Meri Halla",
+        "role": "Field Engineer",
+        "text": "Coordinator is arranging access with the site owner; no ETA yet."
+      },
+      {
+        "seq": 4,
+        "time": "08:04",
+        "author": "Joonas Aho",
+        "role": "Regional Network Specialist",
+        "text": "Pause the dispatch until access is confirmed. Today's approval may only cover this visit. Keep any shared note to the site constraint and approved process—no keys, codes or private contact details."
+      },
+      {
+        "seq": 5,
+        "time": "08:19",
+        "author": "Meri Halla",
+        "role": "Field Engineer",
+        "text": "Access confirmed for this work window. Resuming the visit and leaving the recurring access check in the handover."
+      }
+    ]
+  },
+  {
+    "channel": "slack",
+    "note": "Synthetic example only. Fictional names, node IDs and messages; no production, customer or personal data. Times are illustrative.",
+    "participants": [
+      {
+        "name": "Pekka Niskanen",
+        "role": "Service Assurance Engineer"
+      },
+      {
+        "name": "Saara Kivi",
+        "role": "Configuration Management Specialist"
+      }
+    ],
+    "messages": [
+      {
+        "seq": 1,
+        "time": "09:32",
+        "author": "Pekka Niskanen",
+        "role": "Service Assurance Engineer",
+        "text": "Impact analysis points to AGG-711, but I noticed the topology snapshot predates last week's port move. Can I use it for today's incident?"
+      },
+      {
+        "seq": 2,
+        "time": "09:36",
+        "author": "Saara Kivi",
+        "role": "Configuration Management Specialist",
+        "text": "Treat it as a time-stamped view, not current truth. Compare live neighbor data with the approved change record, and record which snapshot produced the impact result."
+      },
+      {
+        "seq": 3,
+        "time": "09:43",
+        "author": "Pekka Niskanen",
+        "role": "Service Assurance Engineer",
+        "text": "Live neighbor is AGG-712; the change record confirms the move. CM still has the old relationship."
+      },
+      {
+        "seq": 4,
+        "time": "09:47",
+        "author": "Saara Kivi",
+        "role": "Configuration Management Specialist",
+        "text": "Update through the normal CM workflow using the move's effective time. Keep the old relationship with its end time so historical impact results remain explainable."
+      },
+      {
+        "seq": 5,
+        "time": "09:55",
+        "author": "Pekka Niskanen",
+        "role": "Service Assurance Engineer",
+        "text": "Got it. Report now cites the snapshot time and the confirmed mapping correction."
+      }
+    ]
+  }
+]
