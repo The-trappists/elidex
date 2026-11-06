@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> None:
 
     wb = sub.add_parser("workbench", help="real-time test bench: API + web UI (docs/workbench.md)")
     wb.add_argument("--host", default="127.0.0.1")
-    wb.add_argument("--port", type=int, default=8000)
+    wb.add_argument("--port", type=int, default=8010)
     wb.add_argument("--reload", action="store_true", help="restart on code changes (dev)")
     wb.set_defaults(func=cmd_workbench)
 

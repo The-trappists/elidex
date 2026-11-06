@@ -66,6 +66,12 @@ class ContextStore:
         self._index(a)
         return a, True
 
+    def remove_assertion(self, assertion_id: str) -> None:
+        """Drop an assertion and its graph node (its edges go with the node)."""
+        self.assertions.pop(assertion_id, None)
+        if assertion_id in self.g:
+            self.g.remove_node(assertion_id)
+
     def _index(self, a: ContextAssertion) -> None:
         self.assertions[a.id] = a
         self.g.add_node(a.id, kind="assertion")

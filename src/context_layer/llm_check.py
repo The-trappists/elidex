@@ -76,7 +76,7 @@ def main() -> None:
     llm.add_trace_sink(llm.jsonl_sink(config.WORKBENCH_LLM_CALLS_FILE))
     results = run_check()
     print_report(results)
-    config.WORKBENCH_DIR.mkdir(parents=True, exist_ok=True)
-    out = config.WORKBENCH_DIR / "llm_check.json"
+    out = config.WORKBENCH_LLM_CALLS_FILE.parent / "llm_check.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    print(f"Saved to {out.relative_to(config.ROOT)}")
+    print(f"Saved to {out} (every call is also in {config.WORKBENCH_LLM_CALLS_FILE.name})")
