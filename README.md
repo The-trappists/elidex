@@ -7,20 +7,20 @@ Codebase for the Since AI hackathon 2026 challenge
 <h2>The team</h2>
 <h2>The project</h2>
 
-We are tackling **Elisa's "Silent Knowledge for Autonomous Network Operations"** challenge: capture the operational knowledge hidden in chats, emails and people's heads, link it to network elements or incidents, and make it usable by automated workflows.
+We are tackling **Elisa's challenge "Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations"**: capture the knowledge experts share in Teams chats and emails, bind it to network entities with a validity period, and let an AI agent reuse it on a similar case.
 
-> **Status: exploring ideas.** The docs below are proposals and alternatives, not decisions. Decisions are logged in [docs/decisions.md](docs/decisions.md).
+> **Status: choosing an idea.** Docs are proposals until logged in [docs/decisions.md](docs/decisions.md). Start with **Challenge**, then **Ideas**.
 
 | Doc | What's inside |
 | --- | --- |
-| [Challenge](docs/challenge.md) | Problem, scope, scope checklist |
-| [Ideas](docs/ideas.md) | Candidate directions, their original angle and scope fit |
-| [Architecture options](docs/architecture.md) | Reference pipeline, alternatives per stage |
-| [Data model options](docs/data-model.md) | Ways to represent knowledge, required metadata |
-| [Tech stack options](docs/tech-stack.md) | Options per layer, event tools and credits that fit |
-| [48h plan](docs/plan.md) | Phases, gates, roles |
-| [Demo and risks](docs/demo-and-risks.md) | Demo shape, risks, open questions for mentors |
+| [Challenge](docs/challenge.md) | The brief, the material, scope checklist |
+| [Ideas](docs/ideas.md) | Candidate directions, all in scope |
+| [Design](docs/design.md) | Pipeline and context-assertion schema |
+| [Plan](docs/plan.md) | 48h plan, demo, risks, questions for mentors |
+| [Tech stack](docs/tech-stack.md) | Stack options and event tools |
 | [Decisions](docs/decisions.md) | What we chose and why |
 | [Contributing](CONTRIBUTING.md) | Language, git workflow, shared contracts |
-| [AGENTS.md](AGENTS.md) | Instructions for every AI assistant: alternatives, scope checks, code generation |
+| [AGENTS.md](AGENTS.md) | Instructions for every AI assistant |
+
+Elisa's material: [brief](docs/elisa/challenge-brief.pdf), [slides](docs/elisa/sinceai-2026-challenge-pitch-elisa.html), example data in [data/elisa/](data/elisa/).
 <h2>The license</h2>
