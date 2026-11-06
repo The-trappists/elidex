@@ -4,7 +4,7 @@ Guidance for every AI coding assistant working in this repo (Claude Code, GitHub
 
 ## Context
 
-Hackathon team at Since AI 2026, working on **Elisa's "Silent Knowledge for Autonomous Network Operations"** challenge. The team is still choosing its original idea. Read `docs/challenge.md` (scope) and `docs/ideas.md` (directions) before answering design questions.
+Hackathon team at Since AI 2026, working on **Elisa's "Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations"** challenge. The team is still choosing its original idea. Read `docs/challenge.md` (scope) and `docs/ideas.md` (directions) before answering design questions.
 
 ## Your role
 
@@ -18,13 +18,14 @@ The AI supports the team; the team decides.
 
 | Path | Content |
 | --- | --- |
-| `docs/challenge.md` | Challenge facts and the scope checklist |
+| `docs/challenge.md` | Challenge facts, material and the scope checklist |
 | `docs/ideas.md` | Candidate idea directions |
-| `docs/architecture.md` | Reference pipeline and options per stage |
-| `docs/data-model.md` | Knowledge representation options |
+| `docs/design.md` | Pipeline and context-assertion schema options |
+| `docs/plan.md` | 48h plan, demo, risks, open questions |
 | `docs/tech-stack.md` | Stack options and event tools |
 | `docs/decisions.md` | What the team decided; the only source of truth for choices |
-| `docs/demo-and-risks.md` | Demo shape, risks, open questions |
+| `docs/elisa/` | Elisa's challenge brief (PDF) and pitch slides |
+| `data/elisa/` | Elisa's example material: chat, email, use case, architecture |
 | `CONTRIBUTING.md` | Git workflow and conventions |
 
 No code structure exists yet; it will be defined once an idea is chosen.
@@ -32,7 +33,7 @@ No code structure exists yet; it will be defined once an idea is chosen.
 ## Rules
 
 - **English only** in code, comments, commits and docs.
-- Don't invent facts about the challenge (dates, data, judging criteria). Unknowns are listed in `docs/demo-and-risks.md`.
+- Don't invent facts about the challenge (dates, data, judging criteria). Unknowns are listed in `docs/plan.md`.
 - Prefer the simplest thing that works end to end; a hackathon demo beats a perfect component.
 - Never commit secrets; config goes in `.env` (not committed) with placeholders in `.env.example`.
 - When a decision is taken during a conversation, offer to add it to `docs/decisions.md`.
