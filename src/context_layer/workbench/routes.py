@@ -338,7 +338,24 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
               for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,
+        cited_assertion_ids=agent_mod.cited_assertion_ids(report.recommendation, report.hits),
+        evidence_confidence=_evidence_confidence(
+            report.hits,
+            agent_mod.cited_assertion_ids(report.recommendation, report.hits),
+        ),
     )
+
+
+def _evidence_confidence(hits, cited_ids: list[str]) -> float | None:
+    """Transparent aggregate of cited evidence quality, not a model self-rating."""
+    selected = [h.assertion for h in hits if h.assertion.id in cited_ids]
+    if not selected:
+        return None
+    trust = {"hunch": 0.45, "stated": 0.7, "verified": 1.0}
+    scores = [a.confidence * trust.get(a.trust.level, 0.5) for a in selected]
+    # Independent source records add modest support, capped so duplicates do not dominate.
+    support = min(1.0, 0.75 + 0.1 * max(len({s.file for s in a.sources}) - 1 for a in selected))
+    return round(sum(scores) / len(scores) * support, 2)
 
 
 @router.post("/agent/outcome")
