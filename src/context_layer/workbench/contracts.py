@@ -35,7 +35,7 @@ StageStatus = Literal["pending", "running", "done", "skipped", "error"]
 Severity = Literal["minor", "major", "critical"]
 IncidentStatus = Literal["open", "resolved"]
 LinkKind = Literal["fiber", "microwave", "backhaul"]
-LlmPurpose = Literal["extract", "generate_scenario", "agent", "check"]
+LlmPurpose = Literal["extract", "generate_scenario", "agent", "check", "critic", "judge"]
 JsonMode = Literal["json_object", "json_schema", "prompt"]
 
 FlagKind = Literal[
@@ -250,7 +250,8 @@ class LlmCall(BaseModel):
     sim_time: datetime | None = None
     purpose: LlmPurpose
     thread_id: str | None = None
-    provider: str  # "primary" or "fallback"
+    provider: str  # "primary" or "fallback"; "critic" / "critic_fallback" for the critic role
+    role: str | None = None  # "primary" or "critic"; None on old trace lines
     base_url: str
     model: str
     json_mode: JsonMode | None = None
