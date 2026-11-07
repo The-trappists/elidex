@@ -11,7 +11,7 @@ import { callStatus, fmtCost, STATUS_LABEL, tryParse } from './status'
 
 const Meta = ({ k, v }: { k: string; v: React.ReactNode }) => (
   <div className="min-w-0">
-    <div className="text-xs uppercase tracking-wide text-muted">{k}</div>
+    <div className="text-xs text-muted">{k}</div>
     <div className="truncate text-xs">{v}</div>
   </div>
 )
@@ -43,13 +43,13 @@ export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id
         <>
           <p className="mb-4 text-[15px] font-medium leading-snug">{describeCall(call, threadName ?? undefined)}</p>
           {(call.error || call.parse_error) && <ErrorNote className="mb-4" explained={explainError(call.error ?? call.parse_error)!} raw={call.error ?? call.parse_error} />}
-          <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-line bg-surface-2 p-3 sm:grid-cols-4">
+          <div className="mb-4 grid grid-cols-2 gap-3 rounded-md border border-line bg-surface-2 p-3 sm:grid-cols-4">
             <Meta k="Answer time" v={fmtMs(call.latency_ms)} />
             <Meta k="Text volume" v={fmtTokens(call)} />
             <Meta k="Model" v={call.model} />
             <Meta k="Conversation" v={call.thread_id ? <Link className="text-accent hover:underline" to={threadHref(call.thread_id)}>{threadName ?? call.thread_id}</Link> : '—'} />
           </div>
-          <details className="mb-4 rounded-xl border border-line px-3 py-2 text-xs">
+          <details className="mb-4 rounded-md border border-line px-3 py-2 text-xs">
             <summary className="cursor-pointer select-none font-medium text-muted hover:text-text">Technical details</summary>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Meta k="Id" v={<IdChip>{call.id}</IdChip>} />
@@ -73,7 +73,7 @@ export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id
                 (parsed.ok ? (
                   <CopyBlock title="Parsed JSON" text={JSON.stringify(parsed.value, null, 2)} />
                 ) : (
-                  <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs">
+                  <div className="rounded-md border border-warn/40 bg-warn/10 p-3 text-xs">
                     <b className="text-warn">Not valid JSON:</b> <span className="font-mono">{parsed.error}</span>
                     {call.parse_error && <div className="mt-1 text-muted">Backend: {call.parse_error}</div>}
                   </div>

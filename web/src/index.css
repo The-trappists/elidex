@@ -8,102 +8,95 @@
  * rather than raw colors, so light and dark stay consistent.
  */
 :root {
-  /* Surfaces: a cool, slightly violet-tinted neutral scale */
-  --bg: #f4f5fb;
+  /* Neutral scale: one hue, flat surfaces. */
+  --bg: #f7f7f8;
   --surface: #ffffff;
-  --surface-2: #eef0f8;
-  --surface-3: #e4e7f3;
-  --line: #dfe2ef;
-  --text: #14172b;
-  --muted: #5b6180;
+  --surface-2: #f1f2f4;
+  --surface-3: #e6e8ec;
+  --line: #e3e5e9;
+  --text: #15171c;
+  --muted: #646a78;
 
-  /* Brand: violet to cyan "signal" gradient */
-  --accent: #4f3fe0;
-  --accent-2: #0ea5e9;
-  --accent-soft: #ecebff;
-  --brand-gradient: linear-gradient(135deg, #5a4cf0 0%, #2563eb 55%, #0369a1 100%);
+  /* One accent. Everything interactive uses it; nothing else is "brand". */
+  --accent: #2f5bea;
+  --accent-2: #2f5bea;
+  --accent-soft: #eaf0ff;
+  --on-accent: #ffffff;
+  --brand-gradient: #2f5bea;
 
-  /* channels */
-  --teams: #4a4eb0;
-  --email: #0c6b82;
-  --slack: #be1850;
+  /* Channels, types and trust are NOT colored in the UI (a small dot at most). */
+  --teams: #646a78;
+  --email: #646a78;
+  --slack: #646a78;
+  --t-workaround: #646a78;
+  --t-access: #646a78;
+  --t-fact: #646a78;
+  --t-invalidation: #646a78;
+  --trust-hunch: #646a78;
+  --trust-stated: #646a78;
+  --trust-verified: #15803d;
 
-  /* assertion types */
-  --t-workaround: #6d28d9;
-  --t-access: #92400e;
-  --t-fact: #0369a1;
-  --t-invalidation: #475569;
+  /* Status: the only semantic colors. */
+  --ok: #15803d;
+  --warn: #a16207;
+  --bad: #c0262d;
+  --info: #2f5bea;
 
-  /* trust */
-  --trust-hunch: #92400e;
-  --trust-stated: #1d4ed8;
-  --trust-verified: #046649;
+  --radius-container: 0.625rem;
+  --radius-control: 0.5rem;
 
-  /* status */
-  --ok: #046649;
-  --warn: #92400e;
-  --bad: #be123c;
-  --info: #1d4ed8;
-
-  /* shape: two levels only. Containers (cards, panels, modals) use rounded-2xl; controls (buttons, inputs, tabs, rows) use rounded-xl; pills use rounded-full. */
-  --radius-container: 1rem;
-  --radius-control: 0.75rem;
-
-  /* depth */
-  --shadow-sm: 0 1px 2px rgb(20 23 43 / 0.05), 0 1px 1px rgb(20 23 43 / 0.03);
-  --shadow-md: 0 6px 18px -6px rgb(20 23 43 / 0.14), 0 2px 4px rgb(20 23 43 / 0.04);
-  --shadow-lg: 0 24px 48px -12px rgb(20 23 43 / 0.28);
-  --glow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent), 0 8px 24px -8px color-mix(in srgb, var(--accent) 45%, transparent);
+  --shadow-sm: none;
+  --shadow-md: 0 4px 16px -4px rgb(21 23 28 / 0.12);
+  --shadow-lg: 0 16px 40px -12px rgb(21 23 28 / 0.25);
+  --glow: none;
 
   /* graph */
-  --g-element: #3b4261;
-  --g-site: #dfe3f2;
-  --g-class: #8b5cf6;
-  --g-assertion: #8b5cf6;
-  --g-incident: #e11d48;
-  --g-link: #9aa1bd;
+  --g-element: #3a4152;
+  --g-site: #e9ebf0;
+  --g-class: #7c5cd6;
+  --g-assertion: #7c5cd6;
+  --g-incident: #c0262d;
+  --g-link: #9aa1b2;
 }
 
 .dark {
-  --bg: #090a13;
-  --surface: #11131f;
-  --surface-2: #181b2b;
-  --surface-3: #212539;
-  --line: #262b42;
-  --text: #e9ebf8;
-  --muted: #8d93b0;
+  --bg: #0e0f12;
+  --surface: #15171c;
+  --surface-2: #1b1e25;
+  --surface-3: #252932;
+  --line: #262a33;
+  --text: #e8eaee;
+  --muted: #8b92a1;
 
-  --accent: #8b7dff;
-  --accent-2: #38bdf8;
-  --accent-soft: #1d1a4d;
-  --brand-gradient: linear-gradient(135deg, #5a4cf0 0%, #2563eb 55%, #0369a1 100%);
+  --accent: #7b9bff;
+  --accent-2: #7b9bff;
+  --accent-soft: #19233f;
+  --on-accent: #0e0f12;
+  --brand-gradient: #7b9bff;
 
-  --teams: #8b8fe8;
-  --email: #22d3ee;
-  --slack: #f0508a;
+  --teams: #8b92a1;
+  --email: #8b92a1;
+  --slack: #8b92a1;
+  --t-workaround: #8b92a1;
+  --t-access: #8b92a1;
+  --t-fact: #8b92a1;
+  --t-invalidation: #8b92a1;
+  --trust-hunch: #8b92a1;
+  --trust-stated: #8b92a1;
+  --trust-verified: #4ade80;
 
-  --t-workaround: #a78bfa;
-  --t-access: #fbbf24;
-  --t-fact: #38bdf8;
-  --t-invalidation: #94a3b8;
+  --ok: #4ade80;
+  --warn: #facc15;
+  --bad: #f87171;
+  --info: #7b9bff;
 
-  --trust-hunch: #fbbf24;
-  --trust-stated: #60a5fa;
-  --trust-verified: #34d399;
+  --shadow-md: 0 6px 20px -6px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 20px 48px -12px rgb(0 0 0 / 0.7);
 
-  --ok: #34d399;
-  --warn: #fbbf24;
-  --bad: #fb6585;
-  --info: #60a5fa;
-
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 8px 22px -8px rgb(0 0 0 / 0.55);
-  --shadow-lg: 0 28px 56px -12px rgb(0 0 0 / 0.7);
-
-  --g-element: #cdd3ee;
-  --g-site: #1a1e31;
+  --g-element: #c9cedb;
+  --g-site: #1c1f27;
   --g-class: #a78bfa;
-  --g-link: #4a5275;
+  --g-link: #4a5163;
 }
 
 @theme inline {
@@ -118,6 +111,7 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
   --color-accent-2: var(--accent-2);
   --color-surface-3: var(--surface-3);
 
@@ -150,20 +144,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
-}
-
-/* Soft ambient glow behind the app, very low contrast */
-#root::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(900px 500px at 12% -10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%),
-    radial-gradient(700px 420px at 100% 0%, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 60%);
-  pointer-events: none;
 }
 
 ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
@@ -176,7 +157,7 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .text-gradient {
@@ -186,10 +167,6 @@ body {
   color: transparent;
 }
 .bg-brand { background: var(--brand-gradient); }
-.glass {
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
-  backdrop-filter: blur(14px) saturate(1.3);
-}
 
 /* ---------------------------------------------------------------- motion */
 @keyframes pulse-ring {
@@ -208,7 +185,7 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
-.animate-page-in { animation: page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+. { animation: page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 @keyframes drawer-in {
   from { transform: translateX(32px); opacity: 0; }
@@ -245,17 +222,6 @@ body {
   animation: flow 0.9s linear infinite;
 }
 
-/* Stagger children: add .stagger on a list, items animate in sequence */
-.stagger > * { animation: slide-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: 40ms; }
-.stagger > *:nth-child(3) { animation-delay: 80ms; }
-.stagger > *:nth-child(4) { animation-delay: 120ms; }
-.stagger > *:nth-child(5) { animation-delay: 160ms; }
-.stagger > *:nth-child(n+6) { animation-delay: 200ms; }
-
-.lift { transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s, border-color 0.2s; }
-.lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

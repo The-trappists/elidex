@@ -93,5 +93,5 @@ Checked by hand against Neo4j 5.26 Community (Docker, Windows): `ctx graph push`
 ## Open points for the team
 
 - Keep NetworkX as the only runtime store and Neo4j as a mirror, or make Neo4j the store?
-- Feed `/graph` into the workbench graph view (Cytoscape is already there)?
+- ~~Feed `/graph` into the workbench graph view?~~ Done: the workbench Graph page reads `GET /api/graph`.
 - Are `MENTIONS` edges (plain ID and alias matching) useful for the agent, or just noise?

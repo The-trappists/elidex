@@ -2,13 +2,12 @@ import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn('rounded-2xl border border-line bg-surface shadow-[var(--shadow-sm)]', className)}>{children}</div>
+  return <div className={cn('rounded-lg border border-line bg-surface', className)}>{children}</div>
 }
 
-/** Card with a header row (title, optional icon, right-side actions) and a scrollable body. */
+/** Card with a header row (title, optional right-side actions) and a scrollable body. */
 export function Panel({
   title,
-  icon,
   actions,
   children,
   className,
@@ -23,9 +22,8 @@ export function Panel({
 }) {
   return (
     <Card className={cn('flex min-h-0 flex-col', className)}>
-      <div className="flex h-12 shrink-0 items-center gap-2.5 border-b border-line px-4">
-        {icon && <span className="flex size-6 items-center justify-center rounded-md bg-accent-soft text-accent">{icon}</span>}
-        <h2 className="text-[13px] font-semibold tracking-tight">{title}</h2>
+      <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line px-4">
+        <h2 className="text-sm font-semibold">{title}</h2>
         <div className="ml-auto flex items-center gap-1.5">{actions}</div>
       </div>
       <div className={cn('min-h-0 flex-1 overflow-auto', bodyClassName)}>{children}</div>

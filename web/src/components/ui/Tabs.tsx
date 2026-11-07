@@ -7,20 +7,23 @@ export interface TabItem<T extends string> {
   count?: number
 }
 
+/** Underlined tabs: quiet, one accent for the active one. */
 export function Tabs<T extends string>({ items, value, onChange, className }: { items: TabItem<T>[]; value: T; onChange: (v: T) => void; className?: string }) {
   return (
-    <div className={cn('inline-flex rounded-xl border border-line bg-surface-2 p-0.5', className)}>
+    <div role="tablist" className={cn('flex gap-4 border-b border-line', className)}>
       {items.map((t) => (
         <button
           key={t.id}
+          role="tab"
+          aria-selected={value === t.id}
           onClick={() => onChange(t.id)}
           className={cn(
-            'flex items-center gap-1.5 rounded-[10px] px-3 py-1 text-sm font-medium transition-all duration-200',
-            value === t.id ? 'bg-surface text-text shadow-[var(--shadow-sm)] ring-1 ring-accent/25' : 'text-muted hover:text-text',
+            '-mb-px flex items-center gap-1.5 border-b-2 px-0.5 py-2 text-sm font-medium transition-colors',
+            value === t.id ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text',
           )}
         >
           {t.label}
-          {t.count !== undefined && <span className="rounded bg-line/60 px-1 text-xs text-muted">{t.count}</span>}
+          {t.count !== undefined && <span className="text-xs text-muted">{t.count}</span>}
         </button>
       ))}
     </div>

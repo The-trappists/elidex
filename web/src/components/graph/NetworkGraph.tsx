@@ -139,7 +139,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
   // create the instance once; restyle when the theme toggles; pulse open incidents
   useEffect(() => {
     if (!host.current) return
-    const cy = cytoscape({ container: host.current, style: buildStyle(), minZoom: 0.2, maxZoom: 3, wheelSensitivity: 0.25 })
+    const cy = cytoscape({ container: host.current, style: buildStyle(), minZoom: 0.2, maxZoom: 3 })
     cyRef.current = cy
     cy.on('tap', 'node', (ev) => onSelectRef.current?.(aKey(ev.target), ev.target.data('kind')))
     cy.on('tap', (ev) => ev.target === cy && onSelectRef.current?.(null, null))
@@ -249,12 +249,12 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
       <div className="absolute right-2 top-2 flex gap-1.5">
         <Button
           size="sm"
-          variant={layers.knowledge ? 'primary' : 'secondary'}
+          variant="secondary"
           icon={<BookOpen size={13} />}
           onClick={() => onLayersChange?.({ ...layers, knowledge: !layers.knowledge })}
           title="Show equipment groups and knowledge on the graph"
         >
-          Knowledge
+          {layers.knowledge ? 'Hide knowledge' : 'Show knowledge'}
         </Button>
         {layers.knowledge && (
           <Button

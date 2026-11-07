@@ -197,7 +197,7 @@ export default function LlmLogPage() {
         />
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-sm)]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow-sm)]">
         <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
           <div className="flex gap-1.5">
             {chip('', 'All', calls.length)}

@@ -1,84 +1,57 @@
-import { AlertTriangle, BookCheck, Cpu, MessagesSquare, Network, Siren, Workflow } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { NetworkGraph } from '../components/graph/NetworkGraph'
 import { validAt } from '../components/graph/graphModel'
 import { IncidentFeed } from '../components/incidents/IncidentFeed'
-import { ChatTicker } from '../components/pipeline/ChatTicker'
 import { PipelineLane } from '../components/pipeline/PipelineLane'
-import { Panel, Stat } from '../components/ui'
+import { Panel } from '../components/ui'
+import { cn } from '../lib/cn'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
 
+function Metric({ label, value, tone, onClick }: { label: string; value: number; tone?: 'bad' | 'warn'; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} className="group flex items-baseline gap-2 text-left" disabled={!onClick}>
+      <span className={cn('text-2xl font-semibold tabular-nums', tone === 'bad' && value > 0 && 'text-bad', tone === 'warn' && value > 0 && 'text-warn')}>{value}</span>
+      <span className="text-sm text-muted group-hover:text-text">{label}</span>
+    </button>
+  )
+}
+
 export default function LivePage() {
   const nav = useNavigate()
-  // Round to the second so memoized values do not recompute on every render.
   const nowSec = Math.floor((useSimNow(5000) ?? new Date()).getTime() / 1000)
   const now = useMemo(() => new Date(nowSec * 1000), [nowSec])
   const incidents = useLive((s) => s.incidents)
   const threads = useLive((s) => s.threads)
   const assertions = useLive((s) => s.assertions)
-  const jobs = useLive((s) => s.jobs)
   const llmCalls = useLive((s) => s.llmCalls)
-  const running = useLive((s) => s.clock?.running ?? false)
-  const [knowledge, setKnowledge] = useState(true)
 
-  const k = useMemo(() => {
-    const today = new Date().toDateString() // job timestamps are wall time
-    return {
+  const k = useMemo(
+    () => ({
       open: Object.values(incidents).filter((i) => i.status === 'open').length,
       live: Object.values(threads).filter((t) => t.status === 'active' || t.status === 'processing').length,
       valid: Object.values(assertions).filter((a) => validAt(a, now)).length,
-      jobsToday: jobs.filter((j) => new Date(j.started_at).toDateString() === today).length,
       llmErr: llmCalls.filter((c) => c.error || c.parse_error || c.parsed_ok === false).length,
-    }
-  }, [incidents, threads, assertions, jobs, llmCalls, now])
-
-  const empty = !Object.keys(threads).length && !Object.keys(incidents).length && !jobs.length
+    }),
+    [incidents, threads, assertions, llmCalls, now],
+  )
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3 p-3">
-      <div className="flex shrink-0 gap-3">
-        <Stat icon={<Siren size={19} />} label="Open incidents" hint={k.open ? 'need attention' : 'all clear'} value={k.open} tone={k.open ? 'bad' : 'ok'} onClick={() => nav('/')} />
-        <Stat icon={<MessagesSquare size={19} />} label="Conversations in progress" hint="being read right now" value={k.live} tone={k.live ? 'ok' : 'neutral'} onClick={() => nav('/conversations')} />
-        <Stat icon={<BookCheck size={19} />} label="Things the team knows" hint="valid at this moment" value={k.valid} tone="accent" onClick={() => nav('/knowledge')} />
-        <Stat icon={<Workflow size={19} />} label="Conversations processed today" value={k.jobsToday} />
-        <Stat icon={<AlertTriangle size={19} />} label="AI problems" hint={k.llmErr ? 'see what failed' : 'none'} value={k.llmErr} tone={k.llmErr ? 'warn' : 'ok'} onClick={() => nav('/llm')} />
+    <div className="flex h-full min-h-0 flex-col gap-4 p-5">
+      <div className="flex shrink-0 flex-wrap items-baseline gap-x-8 gap-y-1">
+        <Metric label="open incidents" value={k.open} tone="bad" />
+        <Metric label="conversations in progress" value={k.live} onClick={() => nav('/conversations')} />
+        <Metric label="pieces of knowledge in force" value={k.valid} onClick={() => nav('/knowledge')} />
+        {k.llmErr > 0 && <Metric label="AI problems" value={k.llmErr} tone="warn" onClick={() => nav('/llm')} />}
       </div>
 
-      <div className="flex min-h-0 flex-1 gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <Panel
-            title="Network and what we know about it"
-            icon={<Network size={15} />}
-            className="min-h-0 flex-[3]"
-            bodyClassName="relative overflow-hidden"
-            actions={<span className="flex items-center gap-1 text-xs text-muted"><span className={running ? 'live-dot size-1.5 rounded-full bg-ok text-ok' : 'size-1.5 rounded-full bg-muted'} />{running ? 'Simulation running' : 'Simulation paused'}</span>}
-          >
-            <div className="absolute inset-0">
-              <NetworkGraph at={now} layers={{ knowledge }} onLayersChange={(l) => setKnowledge(l.knowledge)} onSelect={(id) => id && nav(`/network?select=${encodeURIComponent(id)}`)} />
-              {empty && (
-                <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center">
-                  <div className="rounded-full border border-accent/30 bg-accent-soft px-4 py-1.5 text-xs font-medium text-accent shadow-sm">
-                    Nothing happening yet. Start the clock and run a scenario from the top bar.
-                  </div>
-                </div>
-              )}
-            </div>
-          </Panel>
-          <Panel title="How conversations become knowledge" icon={<Cpu size={15} />} className="min-h-0 flex-[2]">
-            <PipelineLane />
-          </Panel>
-        </div>
-
-        <div className="flex w-[420px] shrink-0 flex-col gap-3 2xl:w-[480px]">
-          <Panel title="Incidents" icon={<Siren size={15} />} className="min-h-0 flex-[3]">
-            <IncidentFeed />
-          </Panel>
-          <Panel title="Latest messages" icon={<MessagesSquare size={15} />} className="min-h-0 flex-[2]" bodyClassName="overflow-hidden">
-            <ChatTicker />
-          </Panel>
-        </div>
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">
+        <Panel title="Incidents">
+          <IncidentFeed />
+        </Panel>
+        <Panel title="Recent processing" actions={<span className="text-xs text-muted">Click a row to follow its steps</span>}>
+          <PipelineLane />
+        </Panel>
       </div>
     </div>
   )

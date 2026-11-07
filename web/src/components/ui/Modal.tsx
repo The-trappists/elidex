@@ -31,7 +31,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060e]/55 p-4 backdrop-blur-sm animate-fade-in" onMouseDown={onClose}>
       <div
-        className={cn('flex max-h-[90vh] w-full flex-col rounded-2xl border border-line bg-surface shadow-[var(--shadow-lg)] animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
+        className={cn('flex max-h-[90vh] w-full flex-col rounded-lg border border-line bg-surface shadow-[var(--shadow-lg)] animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center border-b border-line px-5 py-3.5">

@@ -88,7 +88,7 @@ export function AgentTester() {
               {result.hits.length === 0 && <div className="text-xs text-muted">No knowledge matched this equipment at this time.</div>}
               <div className="space-y-1.5">
                 {result.hits.map((h) => (
-                  <div key={h.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-line px-2 py-1.5 text-xs">
+                  <div key={h.id} className="flex flex-wrap items-center gap-2 rounded-md border border-line px-2 py-1.5 text-xs">
                     <IdChip>{h.id}</IdChip><TypeBadge type={h.type} /><span className="font-medium">{h.topic}</span>
                     <span className="ml-auto text-muted">via {h.matched_via}</span>
                   </div>

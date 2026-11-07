@@ -5,10 +5,10 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type Size = 'sm' | 'md'
 
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-brand text-white shadow-sm hover:brightness-110 hover:shadow-[var(--glow)] active:brightness-95',
-  secondary: 'bg-surface border border-line text-text hover:bg-surface-2 hover:border-accent/40',
+  primary: 'bg-accent text-on-accent hover:opacity-90',
+  secondary: 'bg-surface border border-line text-text hover:bg-surface-2',
   ghost: 'text-muted hover:text-text hover:bg-surface-2',
-  danger: 'bg-bad text-white hover:brightness-110 active:brightness-95',
+  danger: 'bg-surface border border-bad/40 text-bad hover:bg-bad/10',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -22,8 +22,8 @@ export function Button({ variant = 'secondary', size = 'md', icon, loading, clas
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap',
-        size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-9 px-3.5 text-sm',
+        'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap',
+        size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-8 px-3 text-sm',
         VARIANT[variant],
         className,
       )}

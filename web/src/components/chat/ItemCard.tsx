@@ -19,7 +19,7 @@ export function ItemCard({ item, highlighted, onHover }: { item: ExtractedItem; 
     <div
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={cn('rounded-xl border border-line border-l-[3px] bg-surface p-2.5 text-xs transition', highlighted && 'ring-2 ring-accent/50 bg-accent-soft')}
+      className={cn('rounded-md border border-line border-l-[3px] bg-surface p-2.5 text-xs transition', highlighted && 'ring-2 ring-accent/50 bg-accent-soft')}
       style={{ borderLeftColor: TYPE_STYLE[item.type].hex }}
     >
       <div className="flex flex-wrap items-center gap-1.5">

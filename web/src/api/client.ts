@@ -29,8 +29,7 @@ import type {
   StateSnapshot,
   TopologyLink,
   WbElement,
-  WbSite,
-} from './types'
+  WbSite, KgGraph } from './types'
 
 export class ApiError extends Error {
   status: number
@@ -115,6 +114,7 @@ export const api = {
   context: (entity: string, at?: string | null, includeExpired = false) =>
     req<ContextHit[]>('GET', `/context/${enc(entity)}${qs({ at, include_expired: includeExpired })}`),
   deleteAssertion: (id: string) => req<void>('DELETE', `/assertions/${enc(id)}`),
+  knowledgeGraph: (at?: string) => req<KgGraph>('GET', `/graph${qs({ at })}`),
   provenance: (assertionId: string) => req<GraphProvenance[]>('GET', `/graph/provenance/${enc(assertionId)}`),
   reach: (assertionId: string) => req<GraphReach>('GET', `/graph/reach/${enc(assertionId)}`),
   experts: (entityId: string, at?: string | null) =>

@@ -67,13 +67,13 @@ export function AgentModal({ incident, onClose }: { incident: Incident | null; o
 
           {result && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-accent/30 bg-accent-soft p-3">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-accent">Recommendation</div>
+              <div className="rounded-md border border-accent/30 bg-accent-soft p-3">
+                <div className="mb-1 text-xs font-medium text-accent">Recommendation</div>
                 <p className="whitespace-pre-wrap text-sm">{result.recommendation}</p>
               </div>
 
               {v && (
-                <div className={cn('rounded-xl border p-3', v.decision === 'go' ? 'border-ok/40 bg-ok/10' : 'border-warn/40 bg-warn/10')}>
+                <div className={cn('rounded-md border p-3', v.decision === 'go' ? 'border-ok/40 bg-ok/10' : 'border-warn/40 bg-warn/10')}>
                   <div className={cn('flex items-center gap-1.5 text-sm font-semibold', v.decision === 'go' ? 'text-ok' : 'text-warn')}>
                     {v.decision === 'go' ? <CheckCircle2 size={16} /> : <ShieldAlert size={16} />}
                     Guard: {v.decision === 'go' ? 'go' : 'adapt'} · {v.action}

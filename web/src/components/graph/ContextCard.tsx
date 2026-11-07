@@ -48,7 +48,7 @@ export function ContextCard({ a, at }: { a: ContextAssertion | ContextHit; at: D
   const via = 'matched_via' in a ? a.matched_via : null
   const threads = useLive((s) => s.threads)
   return (
-    <div className={cn('rounded-xl border border-line bg-surface p-3 text-xs', !live && 'opacity-60')} style={{ borderLeft: `3px solid ${TYPE_STYLE[a.type].hex}` }}>
+    <div className={cn('rounded-md border border-line bg-surface p-3 text-xs', !live && 'opacity-60')} style={{ borderLeft: `3px solid ${TYPE_STYLE[a.type].hex}` }}>
       <div className="flex flex-wrap items-center gap-1.5">
         <Badge className={TYPE_STYLE[a.type].cls}>{TYPE_STYLE[a.type].label}</Badge>
         <span className="text-[13px] font-semibold">{a.topic}</span>

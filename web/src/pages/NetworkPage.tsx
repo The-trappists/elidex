@@ -1,12 +1,10 @@
 import { addDays, format } from 'date-fns'
-import { Clock, Network } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Inspector } from '../components/graph/Inspector'
 import { NetworkGraph } from '../components/graph/NetworkGraph'
 import type { NodeKind } from '../components/graph/graphModel'
-import { Badge, Button, Panel } from '../components/ui'
-import { cn } from '../lib/cn'
+import { Button } from '../components/ui'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
 
@@ -49,45 +47,39 @@ export default function NetworkPage() {
   const state = Math.abs(rel) < HOUR / 2 ? 'now' : rel < 0 ? 'past' : 'future'
 
   return (
-    <div className="flex h-full min-h-0 gap-3 p-3">
-      <Panel title="Network and knowledge over time" icon={<Network size={15} />} className="min-w-0 flex-1" bodyClassName="flex flex-col overflow-hidden">
-        <div className="shrink-0 border-b border-line px-4 py-3">
-          <div className="flex items-end gap-4">
-            <div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted"><Clock size={12} /> Showing the situation on</div>
-              <div className="text-2xl font-semibold tabular-nums leading-tight">{format(at, 'EEE d MMM yyyy, HH:mm')}</div>
+    <div className="flex h-full min-h-0">
+      <section className="flex min-w-0 flex-1 flex-col">
+        <div className="flex shrink-0 items-center gap-4 border-b border-line bg-surface px-4 py-2.5">
+          <div className="shrink-0 leading-tight">
+            <div className="text-xs text-muted">Situation on</div>
+            <div className="text-sm font-semibold tabular-nums">
+              {format(at, 'EEE d MMM yyyy, HH:mm')}
+              {state !== 'now' && <span className="ml-2 font-normal text-muted">({state === 'past' ? 'past' : 'future'})</span>}
             </div>
-            <Badge className={cn(state === 'now' ? 'bg-ok/15 text-ok' : state === 'past' ? 'bg-surface-2 text-muted' : 'bg-info/15 text-info')}>
-              {state === 'now' ? 'Now' : state === 'past' ? 'In the past' : 'In the future'}
-            </Badge>
-            <p className="hidden flex-1 text-xs text-muted xl:block">Drag the slider to travel in time: knowledge that was not valid yet, or no longer valid, fades out. Hover an item to see what it is connected to.</p>
-            <Button className="ml-auto" size="sm" variant={t ? 'primary' : 'secondary'} disabled={!t} onClick={() => setT(null)}>
-              Now
-            </Button>
           </div>
           <input
             type="range"
-            className="mt-2 w-full accent-[var(--accent)]"
+            className="min-w-0 flex-1 accent-[var(--accent)]"
             min={min}
             max={max}
             step={HOUR}
             value={Math.min(Math.max(at.getTime(), min), max)}
             onChange={(e) => setT(new Date(Number(e.target.value)))}
-            aria-label="Time t"
+            aria-label="Travel in time"
+            title="Drag to see which knowledge was in force at another time"
           />
-          <div className="flex justify-between text-xs text-muted">
-            <span>{format(min, 'd MMM yyyy')}</span>
-            <span>sim now + 30 days: {format(max, 'd MMM yyyy')}</span>
-          </div>
+          <Button size="sm" disabled={!t} onClick={() => setT(null)}>
+            Back to now
+          </Button>
         </div>
-        <div className="relative min-h-0 flex-1">
+        <div className="relative min-h-0 flex-1 bg-bg">
           <NetworkGraph at={at} layers={{ knowledge }} onLayersChange={(l) => setKnowledge(l.knowledge)} selectedId={selectedId} onSelect={(id) => select(id)} />
         </div>
-      </Panel>
+      </section>
 
-      <Panel title="Inspector" className="w-[400px] shrink-0 2xl:w-[460px]">
+      <aside className="w-80 shrink-0 overflow-auto border-l border-line bg-surface 2xl:w-96">
         <Inspector id={selectedId} kind={kind} at={at} onSelect={(id) => select(id)} />
-      </Panel>
+      </aside>
     </div>
   )
 }
