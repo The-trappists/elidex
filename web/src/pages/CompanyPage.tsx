@@ -65,7 +65,7 @@ export default function CompanyPage() {
   const [onlyNew, setOnlyNew] = useState(false)
   const [tab, setTab] = useState<'live' | 'graph' | 'auto'>('live')
   // Narrow or short: a compact header and one panel group at a time (tabs) instead of three columns.
-  const compact = useMediaQuery('(max-width: 1279px), (max-height: 799px)')
+  const compact = useMediaQuery('(max-width: 1279px), (max-height: 899px)')
   const tabbed = compact
   useEffect(() => void loadCompany(), [loadCompany])
   const since = useSinceSync(c ?? { cycles: [], started_at: null })
@@ -87,7 +87,7 @@ export default function CompanyPage() {
     )
 
   const live = (
-    <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 md:grid-cols-2 md:grid-rows-1 xl:grid-cols-[minmax(0,1fr)] xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className={cn('grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 md:grid-cols-2 md:grid-rows-1', !tabbed && 'md:grid-cols-[minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]')}>
       <Panel title="Pipeline" actions={<Badge>{c.status === 'running' ? 'live' : 'idle'}</Badge>}>
         <PipelineLane limit={12} compact />
       </Panel>
@@ -97,7 +97,7 @@ export default function CompanyPage() {
     </div>
   )
   const graph = (
-    <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,3fr)_minmax(0,2fr)] gap-3">
+    <div className={cn('grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,3fr)_minmax(0,2fr)] gap-3', tabbed && 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:grid-rows-1')}>
       <Panel
         title="Knowledge graph"
         actions={<Badge className="bg-accent-soft text-accent" title="Knowledge created since the last autonomous sync">+{since.count} since last sync</Badge>}
@@ -124,7 +124,7 @@ export default function CompanyPage() {
       {tabbed ? (
         <>
           <Tabs value={tab} onChange={setTab} items={[{ id: 'live', label: 'Pipeline and chats' }, { id: 'graph', label: 'Graph and network' }, { id: 'auto', label: 'Autonomous system' }]} />
-          <div className="flex min-h-[320px] flex-1 flex-col">{tab === 'live' ? live : tab === 'graph' ? graph : auto}</div>
+          <div className="flex min-h-[320px] flex-1 flex-col max-md:min-h-[560px]">{tab === 'live' ? live : tab === 'graph' ? graph : auto}</div>
         </>
       ) : (
         <div className={cn('grid min-h-0 flex-1 grid-cols-12 grid-rows-1 gap-3', 'min-h-[480px]')}>

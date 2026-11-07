@@ -35,7 +35,7 @@ window.__audit = async function (route, w, h, opts) {
   const d = f.contentDocument, win = f.contentWindow
   if (opts.click) {
     const el = d.querySelector(opts.click)
-    if (el) { el.click(); await new Promise((r) => setTimeout(r, 700)) }
+    if (el) { el.click(); await new Promise((r) => setTimeout(r, 700)); d.getAnimations().forEach((an) => { try { an.finish() } catch (e) { /* infinite animation */ } }) }
   }
   const sel = (el) => {
     const c = typeof el.className === 'string' ? el.className.split(/\s+/).filter(Boolean).slice(0, 2).join('.') : ''
@@ -72,7 +72,11 @@ window.__audit = async function (route, w, h, opts) {
   }
   out.offscreen = out.offscreen.slice(0, 6)
   const INTER = 'button,a[href],input,select,textarea,[role=tab],[role=button],[role=menuitem],summary,[tabindex="0"]'
-  const inter = [...d.querySelectorAll(INTER)].filter((e) => visible(e) && !e.closest('.skip-link') && clipped(e).ok)
+  const onTop = (e) => { // not covered by a drawer, modal or popover
+    const c = clipped(e), t = d.elementFromPoint(Math.min(Math.max((c.L + c.R) / 2, 0), w - 1), Math.min(Math.max((c.T + c.B) / 2, 0), h - 1))
+    return !t || e.contains(t) || t.contains(e)
+  }
+  const inter = [...d.querySelectorAll(INTER)].filter((e) => visible(e) && !e.closest('.skip-link') && clipped(e).ok && onTop(e))
   out.truncated = []
   out.ellipsisCount = 0
   for (const e of main.querySelectorAll('*')) {
@@ -126,14 +130,16 @@ window.__audit = async function (route, w, h, opts) {
     const big = tag === 'canvas' || tag === 'table' || (tag === 'svg' && e.clientWidth > 300) || scr || (/(auto|scroll)/.test(cs.overflowY) && e.children.length > 3) || (e.matches('ul,ol,[role=list]') && e.children.length >= 3)
     if (big) {
       const c = clipped(e), vh = Math.max(0, Math.min(c.B, h) - Math.max(c.T, 0))
-      cands.push({ vh, el: e, what: sel(e) + ' ' + Math.round(c.R - c.L) + 'w' })
+      cands.push({ vh, el: e, T: Math.max(c.T, 0), B: Math.min(c.B, h), what: sel(e) + ' ' + Math.round(c.R - c.L) + 'w' })
     }
   }
   // keep only the innermost candidates: an outer page scroller would otherwise always win
   for (let i = cands.length - 1; i >= 0; i--) if (cands.some((o) => o !== cands[i] && cands[i].el.contains(o.el))) cands.splice(i, 1)
   // the page itself may scroll (document or main): then the primary area is whatever is visible below the chrome
-  cands.sort((a, b) => b.vh - a.vh)
-  out.primary = { share: cands[0] ? +(cands[0].vh / h).toFixed(2) : 0, what: cands[0] ? cands[0].what : 'none' }
+  // primary = vertical extent of the innermost lists / tables / canvases (several panels side by side count together)
+  const vis = cands.filter((c) => c.vh > 0)
+  const span = vis.length ? Math.max(...vis.map((c) => c.B)) - Math.min(...vis.map((c) => c.T)) : 0
+  out.primary = { share: +(span / h).toFixed(2), what: vis.length ? vis.length + ' areas, e.g. ' + vis[0].what : 'none' }
   out.tinyScrollers = out.tinyScrollers.slice(0, 4)
   out.violations = (out.pageOverflowX ? 1 : 0) + out.offscreen.length + out.truncated.length + out.overlaps.length + out.smallCount + out.tinyScrollers.length + (out.headerShare > 0.4 ? 1 : 0)
   window.__res[key] = out

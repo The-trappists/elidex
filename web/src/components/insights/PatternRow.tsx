@@ -44,10 +44,10 @@ function Report({ o, threads }: { o: PatternOccurrence; threads: Record<string, 
       <p className="mt-1 break-words">{o.action ?? o.topic}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
         <CopyId id={o.assertion_id} />
-        <Link className="inline-flex items-center gap-1 text-accent hover:underline" to={assertionHref(o.assertion_id)}><ExternalLink size={11} />Knowledge</Link>
-        <Link className="inline-flex items-center gap-1 text-accent hover:underline" to={graphHref(o.assertion_id)}><Waypoints size={11} />Graph</Link>
+        <Link className="inline-flex min-h-6 items-center gap-1 text-accent hover:underline" to={assertionHref(o.assertion_id)}><ExternalLink size={11} />Knowledge</Link>
+        <Link className="inline-flex min-h-6 items-center gap-1 text-accent hover:underline" to={graphHref(o.assertion_id)}><Waypoints size={11} />Graph</Link>
         {o.sources.slice(0, 2).map((s) => (
-          <Link key={s} className="inline-flex max-w-full items-center gap-1 text-accent hover:underline" to={threadHref(s)} title={s}>
+          <Link key={s} className="inline-flex min-h-6 max-w-full items-center gap-1 text-accent hover:underline" to={threadHref(s)} title={s}>
             <MessageSquare size={11} /><span className="truncate">{threads[s]?.subject ?? 'Conversation'}</span>
           </Link>
         ))}

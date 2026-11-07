@@ -178,8 +178,8 @@ export function AgentTester() {
       </div>
 
       {/* results + graph */}
-      <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 overflow-auto bg-bg p-4" aria-live="polite" aria-busy={busy}>
+      <div className="flex min-h-0 flex-1 max-[899px]:flex-col max-[899px]:overflow-auto">
+        <div className="min-w-0 flex-1 overflow-auto bg-bg p-4 max-[899px]:flex-none max-[899px]:overflow-visible" aria-live="polite" aria-busy={busy}>
           <div className="mx-auto max-w-4xl space-y-6">
             {busy && !result && <p className="text-sm text-muted">The agent is working on this case…</p>}
             {!result && !busy && (
@@ -291,20 +291,20 @@ export function AgentTester() {
 
         {/* graph side panel */}
         {graphOpen ? (
-          <aside className="flex w-[26rem] max-w-[45%] shrink-0 flex-col border-l border-line bg-surface" aria-label="Knowledge graph panel">
+          <aside className="flex w-[26rem] max-w-[45%] shrink-0 flex-col border-l border-line bg-surface max-[899px]:h-80 max-[899px]:w-full max-[899px]:max-w-none max-[899px]:border-l-0 max-[899px]:border-t" aria-label="Knowledge graph panel">
             <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2">
               <h2 className="text-sm font-semibold">Knowledge graph</h2>
               <span className="min-w-0 flex-1 truncate text-[12px] text-muted">Entity and knowledge used are highlighted</span>
-              <button type="button" className="rounded p-1 text-muted hover:bg-surface-2 hover:text-text" aria-label="Collapse the graph panel" title="Collapse" onClick={() => setGraphOpen(false)}><PanelRightClose size={16} /></button>
+              <button type="button" className="rounded p-1.5 text-muted hover:bg-surface-2 hover:text-text" aria-label="Collapse the graph panel" title="Collapse" onClick={() => setGraphOpen(false)}><PanelRightClose size={16} /></button>
             </div>
             <div className="min-h-0 flex-1 p-2">
               <AgentGraph targetId={result ? runEntity : entity} evidenceIds={hits.map((h) => h.id)} />
             </div>
           </aside>
         ) : (
-          <button type="button" className="flex w-9 shrink-0 flex-col items-center gap-2 border-l border-line bg-surface py-3 text-muted hover:text-text" aria-label="Expand the graph panel" title="Show the knowledge graph" onClick={() => setGraphOpen(true)}>
+          <button type="button" className="flex w-9 shrink-0 flex-col items-center gap-2 border-l border-line bg-surface py-3 text-muted hover:text-text max-[899px]:w-full max-[899px]:flex-row max-[899px]:justify-center max-[899px]:border-l-0 max-[899px]:border-t" aria-label="Expand the graph panel" title="Show the knowledge graph" onClick={() => setGraphOpen(true)}>
             <PanelRightOpen size={16} />
-            <span className="text-[12px] [writing-mode:vertical-rl]">Knowledge graph</span>
+            <span className="text-[12px] [writing-mode:vertical-rl] max-[899px]:[writing-mode:horizontal-tb]">Knowledge graph</span>
           </button>
         )}
       </div>

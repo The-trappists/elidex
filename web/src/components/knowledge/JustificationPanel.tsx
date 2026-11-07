@@ -109,7 +109,7 @@ export function JustificationPanel({ id }: { id: string }) {
             <span className="text-muted">Based on {j.n_sources} source{j.n_sources === 1 ? '' : 's'}</span>
             {j.source_thread_ids.length > 0 && (
               <span className="ml-2 inline-flex flex-wrap gap-x-3 gap-y-1">
-                {j.source_thread_ids.map((t) => <Link key={t} className="break-all text-accent hover:underline" to={threadHref(t)}>{t}</Link>)}
+                {j.source_thread_ids.map((t) => <Link key={t} className="inline-block break-all py-1 text-accent hover:underline" to={threadHref(t)}>{t}</Link>)}
               </span>
             )}
             {j.track_record && Object.keys(j.track_record).length > 0 && (

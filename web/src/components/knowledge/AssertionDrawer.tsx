@@ -54,7 +54,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
         <div className="text-sm">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>
-            <Link to={`/graph?focus=${encodeURIComponent(a.id)}`} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
+            <Link to={`/graph?focus=${encodeURIComponent(a.id)}`} className="inline-flex h-7 items-center max-md:h-8 gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
               <Network size={13} /> Show in graph
             </Link>
             <CopyId id={a.id} />

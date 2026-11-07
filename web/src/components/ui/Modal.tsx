@@ -96,7 +96,7 @@ export function Drawer({
       <aside
         role="dialog"
         aria-modal="true"
-        className={cn('flex h-full w-full flex-col border-line bg-surface shadow-[var(--shadow-lg)]', side === 'left' ? 'border-r' : 'border-l', closing ? 'animate-drawer-out' : 'animate-drawer-in', side === 'left' ? 'drawer-left' : 'drawer-panel', width)}
+        className={cn('flex h-full w-full min-w-0 max-w-full flex-col border-line bg-surface shadow-[var(--shadow-lg)]', side === 'left' ? 'border-r' : 'border-l', closing ? 'animate-drawer-out' : 'animate-drawer-in', side === 'left' ? 'drawer-left' : 'drawer-panel', width)}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-line px-5 py-3.5">
