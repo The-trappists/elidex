@@ -1,4 +1,4 @@
-import { CheckCircle2, Download, FlaskConical, Gauge, ScrollText, Send, XCircle } from 'lucide-react'
+import { CheckCircle2, Download, FlaskConical, ScrollText, XCircle } from 'lucide-react'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -7,8 +7,8 @@ import type { LlmCall } from '../api/types'
 import { threadHref } from '../components/knowledge/bits'
 import { CheckModal } from '../components/llm/CheckModal'
 import { LlmDrawer } from '../components/llm/LlmDrawer'
-import { callStatus, STATUS_LABEL, type CallStatus } from '../components/llm/status'
-import { Badge, Button, EmptyState, ErrorNote, Input, Select, Stat, Table, toast, type Column } from '../components/ui'
+import { callStatus, isProblem, recentProblems, STATUS_LABEL, type CallStatus } from '../components/llm/status'
+import { Button, EmptyState, ErrorNote, Input, Select, Table, toast, type Column } from '../components/ui'
 import { cn } from '../lib/cn'
 import { describeCall, explainError, fmtTokens, purposeLabel } from '../lib/explain'
 import { fmtDateTime, fmtMs } from '../lib/format'
@@ -16,23 +16,13 @@ import { useLive } from '../store/live'
 
 const STATUS_ICON: Record<CallStatus, typeof CheckCircle2> = { ok: CheckCircle2, api_error: XCircle, parse_error: XCircle }
 
-/** A thin bar that shows how slow a call was compared with the slowest one on screen (log scale). */
-function SpeedBar({ ms, max }: { ms: number | null; max: number }) {
+/** Answer time as text; only slow answers get a color. */
+function Speed({ ms }: { ms: number | null }) {
   if (ms == null) return <span className="text-muted">—</span>
-  // Log scale so one very slow call does not flatten every other bar.
-  const pct = Math.max(6, Math.round((Math.log10(ms + 1) / Math.log10(Math.max(max, 10) + 1)) * 100))
-  const tone = ms < 3000 ? 'bg-ok' : ms < 10000 ? 'bg-warn' : 'bg-bad'
-  return (
-    <div className="w-28">
-      <div className="text-xs font-medium tabular-nums">{fmtMs(ms)}</div>
-      <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface-3">
-        <div className={cn('h-full rounded-full transition-all duration-700', tone)} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  )
+  return <span className={cn('text-xs tabular-nums', ms >= 10000 ? 'text-warn' : 'text-muted')}>{fmtMs(ms)}</span>
 }
 
-function useColumns(maxLatency: number): Column<LlmCall>[] {
+function useColumns(): Column<LlmCall>[] {
   const threads = useLive((s) => s.threads)
   const name = (c: LlmCall) => (c.thread_id ? threads[c.thread_id]?.subject || c.thread_id : undefined)
   return [
@@ -69,13 +59,13 @@ function useColumns(maxLatency: number): Column<LlmCall>[] {
         const s = STATUS_LABEL[k]
         const Icon = STATUS_ICON[k]
         return (
-          <Badge className={s.cls}>
-            <Icon size={12} /> {s.label}
-          </Badge>
+          <span className={cn('inline-flex items-center gap-1 text-xs font-medium', s.cls)}>
+            <Icon size={13} /> {s.label}
+          </span>
         )
       },
     },
-    { key: 'lat', header: 'Speed', cell: (c) => <SpeedBar ms={c.latency_ms} max={maxLatency} /> },
+    { key: 'lat', header: 'Answer time', cell: (c) => <Speed ms={c.latency_ms} /> },
     { key: 'tok', header: 'Text volume', className: 'whitespace-nowrap text-xs text-muted', cell: (c) => fmtTokens(c) },
     {
       key: 'model',
@@ -83,7 +73,7 @@ function useColumns(maxLatency: number): Column<LlmCall>[] {
       cell: (c) => (
         <span className="flex flex-col gap-1">
           <span className="font-mono text-xs">{c.model}</span>
-          {c.fallback_used && <Badge className="w-fit bg-warn/15 text-warn">backup used</Badge>}
+          {c.fallback_used && <span className="text-xs text-warn">backup used</span>}
         </span>
       ),
     },
@@ -108,6 +98,15 @@ const dl = (href: string, label: string) => (
     <Button size="sm" variant="ghost" icon={<Download size={13} />}>{label}</Button>
   </a>
 )
+
+function Figure({ value, label }: { value: number | string; label: string }) {
+  return (
+    <span className="flex items-baseline gap-2">
+      <span className="text-2xl font-semibold tabular-nums">{value}</span>
+      <span className="text-sm text-muted">{label}</span>
+    </span>
+  )
+}
 
 export default function LlmLogPage() {
   const live = useLive((s) => s.llmCalls)
@@ -146,10 +145,9 @@ export default function LlmLogPage() {
       (!q || (c.thread_id ?? '').toLowerCase().includes(q.toLowerCase())),
   )
 
-  const maxLatency = useMemo(() => Math.max(0, ...rows.map((c) => c.latency_ms ?? 0)), [rows])
-  const columns = useColumns(maxLatency)
+  const columns = useColumns()
   const stats = useMemo(() => {
-    const failed = calls.filter((c) => callStatus(c) !== 'ok')
+    const failed = calls.filter(isProblem)
     // Failures that share the headline of the latest one (calls are newest first).
     const headline = (c?: LlmCall) => explainError(c?.error ?? c?.parse_error)?.title
     const same = failed.filter((c) => headline(c) === headline(failed[0]))
@@ -159,6 +157,7 @@ export default function LlmLogPage() {
       okPct: calls.length ? Math.round(((calls.length - failed.length) / calls.length) * 100) : 0,
       avg: timed.length ? Math.round(timed.reduce((n, c) => n + (c.latency_ms ?? 0), 0) / timed.length / 100) / 10 : 0,
       failed: failed.length,
+      recent: recentProblems(calls).length,
       lastFailure: failed[0],
       sameAsLast: same.length,
       firstSame: same[same.length - 1]?.ts,
@@ -170,25 +169,28 @@ export default function LlmLogPage() {
       key={k || 'all'}
       onClick={() => setStatus(k)}
       className={cn(
-        'flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all',
-        status === k ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted hover:border-accent/40 hover:text-text',
+        'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors',
+        status === k ? 'bg-surface-3 text-text' : 'text-muted hover:text-text',
       )}
     >
       {label}
-      <span className="rounded-full bg-surface-3 px-1.5 text-xs tabular-nums">{n}</span>
+      <span className="tabular-nums text-muted">{n}</span>
     </button>
   )
 
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <div className="flex shrink-0 gap-3">
-        <Stat icon={<Send size={18} />} label="Requests to the AI" value={stats.total} hint="since the server started" tone="accent" />
-        <Stat icon={<CheckCircle2 size={18} />} label="Went through" value={stats.okPct} suffix="%" hint={stats.failed ? `${stats.failed} did not` : 'no failure'} tone={stats.okPct >= 90 ? 'ok' : stats.okPct >= 60 ? 'warn' : 'bad'} />
-        <Stat icon={<Gauge size={18} />} label="Average answer time" value={stats.avg} suffix="s" hint="successful requests only" />
-        <Stat icon={<XCircle size={18} />} label="Problems" value={stats.failed} hint={stats.failed ? 'click to see them' : 'all good'} tone={stats.failed ? 'bad' : 'ok'} onClick={stats.failed ? () => setStatus('problem') : undefined} />
+    <div className="flex h-full flex-col gap-4 p-5">
+      <div className="flex shrink-0 flex-wrap items-baseline gap-x-8 gap-y-1 px-1">
+        <Figure value={stats.total} label="requests since the server started" />
+        <Figure value={stats.total ? `${stats.okPct}%` : "—"} label="went through" />
+        <Figure value={stats.avg ? `${stats.avg} s` : "—"} label="average answer time" />
+        <button className="group flex items-baseline gap-2" onClick={() => setStatus('problem')} disabled={!stats.failed}>
+          <span className={cn('text-2xl font-semibold tabular-nums', stats.recent > 0 && 'text-bad')}>{stats.failed}</span>
+          <span className="text-sm text-muted group-enabled:group-hover:text-text">problems · {stats.recent} in the last hour</span>
+        </button>
       </div>
 
-      {stats.lastFailure && status === '' && (
+      {stats.lastFailure && stats.recent > 0 && status === '' && (
         <ErrorNote
           explained={explainError(stats.lastFailure.error ?? stats.lastFailure.parse_error)!}
           raw={stats.lastFailure.error ?? stats.lastFailure.parse_error}
@@ -197,9 +199,9 @@ export default function LlmLogPage() {
         />
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-[var(--shadow-sm)]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-line bg-surface">
         <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
-          <div className="flex gap-1.5">
+          <div className="flex gap-0.5 rounded-md border border-line p-0.5">
             {chip('', 'All', calls.length)}
             {chip('ok', 'Succeeded', calls.filter((c) => callStatus(c) === 'ok').length)}
             {chip('problem', 'Problems', stats.failed)}
@@ -222,7 +224,7 @@ export default function LlmLogPage() {
               {dl(api.exportTranscriptUrl(), 'Transcripts')}
             </div>
             <span className="mx-1 h-5 w-px bg-line" />
-            <Button size="sm" variant="primary" icon={<FlaskConical size={13} />} onClick={() => setCheck(true)}>Test the AI connection</Button>
+            <Button size="sm" icon={<FlaskConical size={13} />} onClick={() => setCheck(true)}>Test the AI connection</Button>
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
@@ -232,7 +234,7 @@ export default function LlmLogPage() {
             rowKey={(c) => c.id}
             selectedKey={openId}
             onRowClick={(c) => setParams({ call: c.id })}
-            rowClassName={(c) => !!(c.error ?? c.parse_error) && 'bg-bad/10 shadow-[inset_3px_0_0_var(--bad)]'}
+            rowClassName={(c) => isProblem(c) && 'bg-bad/5'}
             empty={<EmptyState icon={<ScrollText size={26} />} title={calls.length ? 'No request matches these filters' : 'No request to the AI yet'} hint="Each time a conversation is read by the language model, a line appears here with what it did, how long it took and whether it worked." action={calls.length ? <Button size="sm" onClick={() => { setStatus(''); setPurpose(''); setModel(''); setQ('') }}>Clear filters</Button> : undefined} />}
           />
         </div>
