@@ -112,3 +112,14 @@ def test_endpoints_answer_503_when_the_databases_are_not_configured(monkeypatch)
     assert client.get("/similar", params={"q": "port down"}).status_code == 503
     monkeypatch.setattr(config, "mongo_configured", lambda: True)
     assert client.get("/similar", params={"q": "x", "collection": "users"}).status_code == 422
+
+
+def test_ordered_vectors_handles_missing_index_and_wrong_counts():
+    from types import SimpleNamespace as NS
+
+    no_index = [NS(index=None, embedding=[3.0, 4.0]), NS(index=None, embedding=[0.0, 2.0])]  # what Gemini returns
+    assert embed.ordered_vectors(no_index, 2) == [[0.6, 0.8], [0.0, 1.0]]
+    shuffled = [NS(index=1, embedding=[0.0, 2.0]), NS(index=0, embedding=[3.0, 4.0])]
+    assert embed.ordered_vectors(shuffled, 2) == [[0.6, 0.8], [0.0, 1.0]]
+    with pytest.raises(SystemExit, match="returned 1 vectors for 2"):
+        embed.ordered_vectors(no_index[:1], 2)

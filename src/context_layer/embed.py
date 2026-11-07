@@ -51,9 +51,23 @@ def embed(texts: list[str], batch: int = 64) -> list[list[float]]:
     client = OpenAI(base_url=p.base_url or None, api_key=p.api_key, timeout=config.LLM_TIMEOUT)
     out: list[list[float]] = []
     for i in range(0, len(texts), batch):
-        resp = client.embeddings.create(model=config.EMBEDDING_MODEL, input=texts[i : i + batch])
-        for item in sorted(resp.data, key=lambda d: d.index):
-            v = item.embedding
-            norm = math.sqrt(sum(x * x for x in v)) or 1.0
-            out.append([x / norm for x in v])
+        chunk = texts[i : i + batch]
+        resp = client.embeddings.create(model=config.EMBEDDING_MODEL, input=chunk)
+        out += ordered_vectors(resp.data, len(chunk))
+    return out
+
+
+def ordered_vectors(data: list, expected: int) -> list[list[float]]:
+    """Normalised vectors in input order. `index` is sorted on when every item has one; Gemini's OpenAI-compatible
+    endpoint leaves it empty (None), and then the order of the response is the order of the input."""
+    items = list(data)
+    if items and all(getattr(d, "index", None) is not None for d in items):
+        items.sort(key=lambda d: d.index)
+    if len(items) != expected:
+        raise SystemExit(f"The embedding endpoint returned {len(items)} vectors for {expected} texts: lower the batch size or retry.")
+    out = []
+    for item in items:
+        v = item.embedding
+        norm = math.sqrt(sum(x * x for x in v)) or 1.0
+        out.append([x / norm for x in v])
     return out
