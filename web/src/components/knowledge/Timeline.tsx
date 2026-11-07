@@ -41,7 +41,7 @@ export function Timeline({ rows, now, onOpen }: { rows: ContextAssertion[]; now:
       <div className="min-h-0 flex-1 overflow-auto px-4 pb-2">
         <div className="min-w-[760px]">
           {/* axis */}
-          <div className="sticky top-0 z-10 flex border-b border-line bg-bg py-2 text-xs text-muted">
+          <div className="sticky top-0 z-10 flex border-b border-line bg-bg py-2 text-[13px] text-muted">
             <div style={{ width: LABEL_W }} className="shrink-0" />
             <div className="relative h-4 flex-1">
               {ticks.map((t, i) => (
@@ -59,28 +59,28 @@ export function Timeline({ rows, now, onOpen }: { rows: ContextAssertion[]; now:
               ))}
               {nowPct !== null && (
                 <div className="absolute inset-y-0 z-10 border-l-2 border-bad" style={{ left: `${nowPct}%` }}>
-                  <span className="absolute -top-0 left-1 rounded bg-bad px-1 text-xs font-medium text-white">now</span>
+                  <span className="absolute -top-0 left-1 rounded bg-bad px-1 text-[13px] font-medium text-white">now</span>
                 </div>
               )}
             </div>
             {groups.map(([topic, items]) => (
               <div key={topic} className="border-b border-line/60 py-1.5">
-                <div className="mb-0.5 text-xs font-semibold text-muted">{topic}</div>
+                <div className="mb-0.5 text-[13px] font-semibold text-muted">{topic}</div>
                 {items.map((a) => {
                   const color = TYPE_STYLE[a.type].hex
                   const l = pct(new Date(a.valid_from).getTime())
                   const r = a.valid_to ? pct(new Date(a.valid_to).getTime()) : 100
                   return (
                     <div key={a.id} className="flex h-7 items-center">
-                      <div style={{ width: LABEL_W }} className="shrink-0 truncate pr-3 text-xs" title={a.summary}>
-                        <span className="font-mono text-xs text-muted">{a.id}</span> {a.bound_to[0]?.entity}
+                      <div style={{ width: LABEL_W }} className="shrink-0 truncate pr-3 text-[13px]" title={a.summary}>
+                        <span className="font-mono text-[13px] text-muted">{a.id}</span> {a.bound_to[0]?.entity}
                       </div>
                       <div className="relative h-full flex-1">
                         <button
                           onMouseEnter={() => setHover(a)}
                           onMouseLeave={() => setHover(null)}
                           onClick={() => onOpen(a.id)}
-                          className="absolute top-1.5 flex h-4 items-center justify-end rounded-sm pr-0.5 text-xs text-white hover:brightness-110"
+                          className="absolute top-1.5 flex h-4 items-center justify-end rounded-sm pr-0.5 text-[13px] text-white hover:brightness-110"
                           style={{
                             left: `${l}%`,
                             width: `max(${Math.max(r - l, 0)}%, 6px)`,
@@ -98,14 +98,14 @@ export function Timeline({ rows, now, onOpen }: { rows: ContextAssertion[]; now:
           </div>
         </div>
       </div>
-      <div className="h-16 shrink-0 border-t border-line bg-surface px-4 py-2 text-xs">
+      <div className="h-16 shrink-0 border-t border-line bg-surface px-4 py-2 text-[13px]">
         {hover ? (
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <TypeBadge type={hover.type} />
               <span className="font-medium">{hover.topic}</span>
               <TrustBadge level={hover.trust.level} />
-              <span className="font-mono text-xs text-muted">{hover.id}</span>
+              <span className="font-mono text-[13px] text-muted">{hover.id}</span>
             </div>
             <div className="truncate text-muted">{hover.summary}</div>
             <div className="text-muted">

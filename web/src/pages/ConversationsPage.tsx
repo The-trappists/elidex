@@ -70,7 +70,7 @@ export default function ConversationsPage() {
               <SourceIcon source={thread.source} />
               <div className="min-w-0 flex-1">
                 <h1 className="truncate text-sm font-semibold">{threadTitle(thread)}</h1>
-                <div className="flex items-center gap-2 text-xs text-muted">
+                <div className="flex items-center gap-2 text-[13px] text-muted">
                   <span>{THREAD_STATUS_STYLE[thread.status].label}</span>
                   <span>·</span>
                   <span>{ORIGIN_STYLE[thread.origin].label}</span>

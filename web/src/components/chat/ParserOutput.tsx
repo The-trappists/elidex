@@ -46,19 +46,19 @@ export function ParserOutput({
         />
       ) : (
         <>
-          <div className="mb-3 flex items-center gap-2 text-xs text-muted">
+          <div className="mb-3 flex items-center gap-2 text-[13px] text-muted">
             <span title={`${fmtDateTime(latest.started_at)} (real time)`}>Processed {formatDistanceToNowStrict(new Date(latest.started_at), { addSuffix: true })}</span>
           </div>
           <JobSteps job={latest} thread={thread} assertions={assertions} hoverItem={hoverItem} onHoverItem={onHoverItem} />
           {previous.length > 0 && (
             <div className="mt-5 border-t border-line pt-3">
-              <button className="flex items-center gap-1 text-xs font-medium text-muted hover:text-text" onClick={() => setShowPrev((v) => !v)}>
+              <button className="flex items-center gap-1 text-[13px] font-medium text-muted hover:text-text" onClick={() => setShowPrev((v) => !v)}>
                 {showPrev ? <ChevronDown size={14} /> : <ChevronRight size={14} />} Previous jobs ({previous.length})
               </button>
               {showPrev &&
                 previous.map((j) => (
                   <div key={j.id} className="mt-3">
-                    <div className="mb-2 text-xs text-muted">Job {j.id}</div>
+                    <div className="mb-2 text-[13px] text-muted">Job {j.id}</div>
                     <JobSteps job={j} thread={thread} assertions={assertions} />
                   </div>
                 ))}

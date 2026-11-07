@@ -38,8 +38,8 @@ export function Composer({ thread }: { thread: LiveThread }) {
   return (
     <div className="border-t border-line p-3">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-xs text-muted">Send as</span>
-        <Select className="h-8 w-48 text-xs" value={isCustom ? CUSTOM : personaId} onChange={(e) => setWho(e.target.value)}>
+        <span className="text-[13px] text-muted">Send as</span>
+        <Select className="h-8 w-48 text-[13px]" value={isCustom ? CUSTOM : personaId} onChange={(e) => setWho(e.target.value)}>
           {personas.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name} ({p.role})
@@ -47,8 +47,8 @@ export function Composer({ thread }: { thread: LiveThread }) {
           ))}
           <option value={CUSTOM}>Custom…</option>
         </Select>
-        {isCustom && <Input className="h-8 w-44 text-xs" placeholder="Author name" value={custom} onChange={(e) => setCustom(e.target.value)} />}
-        {slackOn && <span className="ml-auto text-xs text-slack">Will be mirrored to Slack</span>}
+        {isCustom && <Input className="h-8 w-44 text-[13px]" placeholder="Author name" value={custom} onChange={(e) => setCustom(e.target.value)} />}
+        {slackOn && <span className="ml-auto text-[13px] text-slack">Will be mirrored to Slack</span>}
       </div>
       <div className="flex items-end gap-2">
         <Textarea

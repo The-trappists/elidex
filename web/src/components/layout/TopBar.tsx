@@ -7,7 +7,7 @@ import { fmtDateTime, toNaiveIso } from '../../lib/format'
 import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
 import { useLive } from '../../store/live'
-import { Button, withToast } from '../ui'
+import { Button, IconButton, withToast } from '../ui'
 import { ALL_NAV } from './Sidebar'
 
 const SPEEDS = [1, 10, 60, 600]
@@ -100,13 +100,13 @@ export function TopBar() {
       <div className="ml-auto flex items-center gap-4">
         {/* simulated clock */}
         <div className="flex items-center gap-2">
-          <button
-            className="flex size-7 items-center justify-center rounded-md border border-line text-text transition-colors hover:bg-surface-2"
-            title={clock?.running ? 'Pause the simulated clock' : 'Start the simulated clock'}
+          <IconButton
+            variant="secondary"
+            aria-label={clock?.running ? 'Pause the simulated clock' : 'Start the simulated clock'}
             onClick={() => void withToast(() => (clock?.running ? api.simPause() : api.simStart()))}
           >
-            {clock?.running ? <Pause size={13} /> : <Play size={13} />}
-          </button>
+            {clock?.running ? <Pause size={14} /> : <Play size={14} />}
+          </IconButton>
           <div className="leading-tight">
             <div className="font-mono text-sm tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) : '—'}</div>
             <div className="text-xs text-muted">Simulated time{clock?.running ? '' : ' · paused'}</div>
@@ -116,7 +116,7 @@ export function TopBar() {
               <button
                 key={s}
                 onClick={() => void withToast(() => api.simSpeed(s))}
-                className={cn('rounded px-1.5 py-0.5 font-mono text-xs transition-colors', clock?.speed === s ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
+                className={cn('rounded px-2 py-1 font-mono text-xs transition-colors', clock?.speed === s ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
               >
                 ×{s}
               </button>
@@ -146,9 +146,9 @@ export function TopBar() {
           {connection === 'live' ? 'Live' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
         </span>
 
-        <button className="rounded-md p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-text" onClick={() => setDark(!dark)} title="Toggle theme">
+        <IconButton onClick={() => setDark(!dark)} aria-label={dark ? 'Switch to the light theme' : 'Switch to the dark theme'}>
           {dark ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
+        </IconButton>
         <ScenarioLauncher />
         <Link
           to="/"

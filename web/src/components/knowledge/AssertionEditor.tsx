@@ -99,7 +99,7 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
           <TypeBadge type={a.type} />
           <span className="truncate font-medium">{a.topic}</span>
         </div>
-        <p className="mt-1.5 text-xs text-muted">Edits apply at once and never hold anything back. Each one is recorded and can be undone below.</p>
+        <p className="mt-1.5 text-[13px] text-muted">Edits apply at once and never hold anything back. Each one is recorded and can be undone below.</p>
       </div>
 
       <div className="space-y-3">
@@ -119,7 +119,7 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
             </Select>
           </Field>
           <div className="space-y-1">
-            <span className="text-xs font-medium text-muted">Valid until</span>
+            <span className="text-[13px] font-medium text-muted">Valid until</span>
             <div className="flex h-8 items-center">
               <Toggle checked={draft.ends} onChange={(v) => patch({ ends: v, validTo: v && !draft.validTo ? (now ?? new Date()).toISOString().slice(0, 16) : draft.validTo })} label={draft.ends ? 'Ends' : 'Still valid'} />
             </div>
@@ -136,16 +136,16 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
       </div>
 
       <section aria-label="Preview of the edit" aria-live="polite" className="rounded-lg border border-line bg-surface-2">
-        <h4 className="border-b border-line px-3 py-2 text-xs font-medium text-muted">Preview, before you apply</h4>
+        <h4 className="border-b border-line px-3 py-2 text-[13px] font-medium text-muted">Preview, before you apply</h4>
         <div className="space-y-3 px-3 py-3">
           {!dirty ? (
-            <p className="text-xs text-muted">No changes yet. Edit a field to see what it would change.</p>
+            <p className="text-[13px] text-muted">No changes yet. Edit a field to see what it would change.</p>
           ) : (
             <>
               <PreviewBlock title="Changed fields">
                 <ul className="space-y-1.5">
                   {changes.map((c) => (
-                    <li key={c.field} className="grid grid-cols-[6.5rem_1fr] gap-2 text-xs">
+                    <li key={c.field} className="grid grid-cols-[6.5rem_1fr] gap-2 text-[13px]">
                       <span className="text-muted">{c.label}</span>
                       <span className="min-w-0 break-words">
                         <span className="text-muted line-through">{c.before}</span> <ArrowRight size={11} className="mx-0.5 inline text-muted" /> <span className="font-medium">{c.after}</span>
@@ -156,7 +156,7 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
               </PreviewBlock>
               {life.text && (
                 <PreviewBlock title="Lifecycle">
-                  <p className={cn('flex items-start gap-1.5 text-xs', (life.kind === 'closes' || life.kind === 'reopens') && 'font-medium')}>
+                  <p className={cn('flex items-start gap-1.5 text-[13px]', (life.kind === 'closes' || life.kind === 'reopens') && 'font-medium')}>
                     {life.kind === 'closes' || life.kind === 'closes_later' || life.kind === 'moves_end' ? <CalendarX2 size={13} className="mt-0.5 shrink-0 text-warn" /> : <CircleDot size={13} className="mt-0.5 shrink-0 text-ok" />}
                     {life.text}
                   </p>
@@ -164,7 +164,7 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
               )}
               {effects.length > 0 && (
                 <PreviewBlock title="What agents will do">
-                  <ul className="list-disc space-y-0.5 pl-4 text-xs">{effects.map((t, i) => <li key={i}>{t}</li>)}</ul>
+                  <ul className="list-disc space-y-0.5 pl-4 text-[13px]">{effects.map((t, i) => <li key={i}>{t}</li>)}</ul>
                 </PreviewBlock>
               )}
             </>
@@ -183,7 +183,7 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
       <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex items-center gap-2 border-t border-line bg-surface px-5 py-3">
         <Button variant="primary" disabled={!dirty || emptySummary} loading={saving} onClick={apply} title="Apply edit (Ctrl or Cmd + Enter)">Apply edit</Button>
         <Button variant="ghost" disabled={!dirty || saving} icon={<RotateCcw size={13} />} onClick={reset}>Reset</Button>
-        <span className={cn('ml-1 text-xs', emptySummary ? 'text-bad' : 'text-muted')} aria-live="polite">
+        <span className={cn('ml-1 text-[13px]', emptySummary ? 'text-bad' : 'text-muted')} aria-live="polite">
           {emptySummary ? 'The summary cannot be empty.' : dirty ? `${changes.length} ${changes.length === 1 ? 'change' : 'changes'}` : 'No changes'}
         </span>
       </div>
@@ -194,17 +194,17 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
 function PreviewBlock({ title, icon, children }: { title: string; icon?: ReactNode; children: ReactNode }) {
   return (
     <div>
-      <div className="mb-1 flex items-center gap-1 text-xs font-medium text-muted">{icon}{title}</div>
+      <div className="mb-1 flex items-center gap-1 text-[13px] font-medium text-muted">{icon}{title}</div>
       {children}
     </div>
   )
 }
 
 function ReachSummary({ a, reach }: { a: ContextAssertion; reach: ReturnType<typeof reachOf> }) {
-  if (!a.bound_to.length) return <p className="text-xs text-muted">Not bound to any equipment.</p>
+  if (!a.bound_to.length) return <p className="text-[13px] text-muted">Not bound to any equipment.</p>
   const list = (els: { id: string }[]) => (els.length ? els.map((e) => e.id).join(', ') : 'no equipment in the inventory')
   return (
-    <div className="space-y-1 text-xs">
+    <div className="space-y-1 text-[13px]">
       <p>
         <b className="font-medium">{reach.total}</b> {reach.total === 1 ? 'element' : 'elements'} get this knowledge. The edit does not change the bindings.
       </p>

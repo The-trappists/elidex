@@ -53,10 +53,11 @@ export function DataActions() {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Button size="sm" icon={<Trash2 size={13} />} onClick={() => setModal('remove')}>Remove generated data</Button>
-      <Button size="sm" icon={<RotateCcw size={13} />} onClick={() => setModal('reset')}>Reset</Button>
       <a href={api.exportUrl} download><Button size="sm" icon={<Download size={13} />}>Export</Button></a>
       <Button size="sm" icon={<Upload size={13} />} onClick={() => input.current?.click()}>Import</Button>
+      <span aria-hidden className="mx-2 h-5 w-px bg-line" />
+      <Button size="sm" variant="danger" icon={<Trash2 size={13} />} onClick={() => setModal('remove')}>Remove generated data</Button>
+      <Button size="sm" variant="danger" icon={<RotateCcw size={13} />} onClick={() => setModal('reset')}>Reset</Button>
       <input ref={input} type="file" accept="application/json,.json" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
 
       <Modal open={modal === 'remove'} onClose={close} title="Remove generated data?" footer={<><Button onClick={close}>Cancel</Button><Button variant="danger" loading={busy} onClick={remove}>Remove</Button></>}>

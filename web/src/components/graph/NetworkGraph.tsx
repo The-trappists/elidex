@@ -242,7 +242,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
 
   return (
     <div className={cn('absolute inset-0 overflow-hidden', className)}>
-      <div ref={host} className="h-full w-full" />
+      <div ref={host} className="h-full w-full animate-fade-in" />
       {!elements.length && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted">No network elements yet</div>
       )}

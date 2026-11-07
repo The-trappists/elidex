@@ -1,6 +1,7 @@
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react'
 import { create } from 'zustand'
 import { cn } from '../../lib/cn'
+import { IconButton } from './Button'
 
 type Kind = 'success' | 'error' | 'info'
 export interface ToastOptions {
@@ -64,14 +65,14 @@ export function Toaster() {
                   t.action?.onClick()
                   close(t.id)
                 }}
-                className="rounded-md px-1.5 text-sm font-medium text-accent hover:bg-accent-soft"
+                className="h-7 rounded-md px-2 text-sm font-medium text-accent hover:bg-accent-soft"
               >
                 {t.action.label}
               </button>
             )}
-            <button onClick={() => close(t.id)} aria-label="Dismiss notification" className="text-muted hover:text-text">
+            <IconButton onClick={() => close(t.id)} aria-label="Dismiss notification" className="!size-7">
               <X size={14} />
-            </button>
+            </IconButton>
           </div>
         )
       })}

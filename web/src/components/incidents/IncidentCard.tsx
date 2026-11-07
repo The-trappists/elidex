@@ -4,7 +4,7 @@ import type { Incident } from '../../api/types'
 import { cn } from '../../lib/cn'
 import { fmtAgo, fmtDateTime } from '../../lib/format'
 import { SEVERITY_STYLE } from '../../lib/semantic'
-import { Badge, Button, IdChip } from '../ui'
+import { Badge, Button, IconButton, IdChip } from '../ui'
 import { HitRow } from './HitRow'
 import { useContextHits } from './useContextHits'
 
@@ -31,7 +31,7 @@ export function IncidentCard({
   return (
     <div
       className={cn(
-        'rounded-md border bg-surface',
+        'animate-item-in rounded-md border bg-surface transition-colors',
         open ? 'border-bad/40' : 'border-line opacity-60 hover:opacity-100',
       )}
     >
@@ -95,7 +95,7 @@ export function IncidentCard({
             Resolve
           </Button>
         )}
-        <Button size="sm" variant="ghost" className="ml-auto" icon={<Trash2 size={13} />} onClick={onDelete} aria-label="Delete incident" />
+        <IconButton className="ml-auto hover:!bg-bad/10 hover:!text-bad" onClick={onDelete} aria-label="Delete incident"><Trash2 size={14} /></IconButton>
       </div>
     </div>
   )

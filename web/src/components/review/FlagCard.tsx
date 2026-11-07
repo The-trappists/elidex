@@ -44,13 +44,13 @@ function Chips({ ctx, sites, classes }: { ctx: FlagContext; sites: WbSite[]; cla
 function Advice({ a, canEdit, onEdit }: { a: ContextAssertion; canEdit: boolean; onEdit: () => void }) {
   return (
     <div className="flex min-w-0 flex-col rounded-md border border-line bg-surface-2 p-3" aria-label={`Advice from ${a.trust.stated_by}`}>
-      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+      <div className="flex flex-wrap items-center gap-1.5 text-[13px]">
         <b className="font-semibold text-text">{a.trust.stated_by} says</b>
         <Badge className={TRUST_STYLE[a.trust.level].cls}>{TRUST_STYLE[a.trust.level].label}</Badge>
         <IdChip>{a.id}</IdChip>
       </div>
-      <p className="mt-1.5 text-[13px] leading-snug">{a.action ?? a.summary}</p>
-      {a.avoid.length > 0 && <p className="mt-1 text-xs leading-snug text-muted">Avoid: {a.avoid.join('; ')}</p>}
+      <p className="mt-1.5 text-sm leading-snug">{a.action ?? a.summary}</p>
+      {a.avoid.length > 0 && <p className="mt-1 text-[13px] leading-snug text-muted">Avoid: {a.avoid.join('; ')}</p>}
       <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2.5">
         <Link to={assertionHref(a.id)} onClick={(e) => e.stopPropagation()}>
           <Button size="sm" icon={<ExternalLink size={13} />}>Open knowledge item</Button>
@@ -93,13 +93,13 @@ export function FlagCard({
         'scroll-mt-12 rounded-lg border bg-surface p-4 transition-shadow',
         selected ? 'border-accent ring-2 ring-accent/25' : 'border-line',
         dismissed && 'opacity-60',
-        fresh && 'animate-slide-in',
+        fresh ? 'animate-slide-in' : 'animate-item-in',
       )}
     >
       <div className="flex items-start gap-3">
         <Icon size={16} className={cn('mt-0.5 shrink-0', meta.tone)} aria-hidden />
         <p className="min-w-0 flex-1 text-sm font-medium leading-snug">{flag.message}</p>
-        <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
+        <div className="flex shrink-0 items-center gap-1.5 text-[13px] text-muted">
           {fresh && <Badge className="bg-surface-3 text-text">New</Badge>}
           {dismissed && <Badge>Dismissed</Badge>}
           <span title={flag.created_at}>{fmtAgo(flag.created_at, now)}</span>
@@ -114,7 +114,7 @@ export function FlagCard({
           </div>
         )}
         <QuotedMessages messages={ctx.quotes} />
-        <dl className="grid grid-cols-[3.5rem_1fr] gap-x-3 gap-y-1 text-xs">
+        <dl className="grid grid-cols-[3.5rem_1fr] gap-x-3 gap-y-1 text-[13px]">
           <dt className="text-muted">Step</dt>
           <dd>
             <span className="font-medium">{stepNo}. {STAGE_LABEL[meta.step]}</span>
