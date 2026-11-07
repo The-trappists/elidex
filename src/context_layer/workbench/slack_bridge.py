@@ -49,7 +49,8 @@ class SlackBridge:
             info = await self.client.conversations_info(channel=self.channel_id)
             self.channel_name = info["channel"].get("name")
 
-            app = AsyncApp(client=self.client, token_verification_enabled=False)
+            # Socket Mode has no HTTP signing secret, so request verification is off.
+            app = AsyncApp(client=self.client, request_verification_enabled=False)
 
             @app.event("message")
             async def _on_message(event):

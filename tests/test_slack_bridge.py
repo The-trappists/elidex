@@ -130,3 +130,22 @@ def test_start_failure_sets_error():
         assert wb.settings.slack_connected is False
 
     asyncio.run(go())
+
+
+def test_start_builds_real_bolt_app(monkeypatch):
+    """Regression: AsyncApp must accept our kwargs (a bad kwarg silently disabled Slack in prod)."""
+    from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
+    from slack_sdk.web.async_client import AsyncWebClient
+
+    monkeypatch.setattr(AsyncSocketModeHandler, "connect_async", AsyncMock())
+
+    async def go():
+        wb, b, _ = make()
+        b.client = AsyncWebClient(token="xoxb-test")  # Bolt requires the real client type
+        b.client.auth_test = AsyncMock(return_value={"user_id": "UBOT", "bot_id": "BBOT"})
+        b.client.conversations_info = AsyncMock(return_value={"channel": {"name": "workbench"}})
+        await b.start()
+        assert b.connected and b.error is None
+        await b.stop()
+
+    asyncio.run(go())
