@@ -78,16 +78,16 @@ function ElementInfo({ id, at, onSelect }: P) {
   const its = classesOf(el, Object.values(classes))
   return (
     <div>
-      <Title kind="Element" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
+      <Title kind="Equipment" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
       <Section title="Details">
-        <Row k="Type" v={el.type} />
+        <Row k="Type" v={el.type.replace(/_/g, ' ')} />
         <Row k="Model" v={el.model} />
         <Row k="Installed" v={el.install_year} />
         <Row k="Firmware" v={el.firmware ?? '—'} />
         <Row k="Site" v={site ? <button className="text-accent hover:underline" onClick={() => onSelect(site.id, 'site')}>{site.name}</button> : (el.site_id ?? '—')} />
         {el.aliases.length > 0 && <Row k="Aliases" v={el.aliases.join(', ')} />}
       </Section>
-      <Section title="Classes" count={its.length}>
+      <Section title="Equipment groups" count={its.length}>
         {its.length ? <div className="flex flex-wrap gap-1.5">{its.map((c) => <IdChip key={c.id} onClick={() => onSelect(c.id, 'class')}>{c.label}</IdChip>)}</div> : <None>Not in any known class.</None>}
       </Section>
       <Section title="Context at the selected time" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>

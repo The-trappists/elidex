@@ -24,12 +24,13 @@ function DashboardLayout() {
   const section = pathname.split('/')[1] ?? ''
 
   return (
-    <div className="flex h-full animate-fade-in [animation-duration:300ms]">
+    <div className="app-shell flex h-full animate-fade-in [animation-duration:300ms]">
+      <a href="#workbench-content" className="skip-link">Skip to workspace</a>
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />
         <LlmErrorBanner />
-        <main className="min-h-0 flex-1 overflow-hidden">
+        <main id="workbench-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">
           {!ready ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">
               <span className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />

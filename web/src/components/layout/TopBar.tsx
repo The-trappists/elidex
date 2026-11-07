@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
+import { ChevronDown, Clock3, LogOut, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -17,17 +17,19 @@ function ScenarioLauncher() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
+    const escape = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', escape)
     const h = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false)
     document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
+    return () => { document.removeEventListener('mousedown', h); document.removeEventListener('keydown', escape) }
   }, [])
   return (
     <div className="relative" ref={ref}>
-      <Button icon={<PlayCircle size={15} />} onClick={() => setOpen((o) => !o)}>
+      <Button aria-expanded={open} aria-haspopup="true" icon={<PlayCircle size={15} />} onClick={() => setOpen((o) => !o)}>
         Run scenario <ChevronDown size={14} />
       </Button>
       {open && (
-        <div role="menu" className="absolute right-0 top-10 z-30 max-h-[70vh] w-96 overflow-auto rounded-lg border border-line bg-surface p-1 shadow-[var(--shadow-lg)]">
+        <div role="menu" className="absolute right-0 top-10 z-30 max-h-[70vh] w-96 max-w-[calc(100vw-6rem)] overflow-auto rounded-lg border border-line bg-surface p-1 shadow-[var(--shadow-lg)]">
           {scenarios.length === 0 && <div className="p-3 text-sm text-muted">No scenario yet. Add one in Data.</div>}
           {scenarios.map((s) => (
             <button
@@ -85,6 +87,7 @@ export function TopBar() {
   const connection = useLive((s) => s.connection)
   const now = useSimNow(500)
   const [dark, setDark] = useTheme()
+  const [showClock, setShowClock] = useState(false)
   const { pathname } = useLocation()
   const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? ALL_NAV[0]
 
@@ -92,15 +95,16 @@ export function TopBar() {
   const llmOn = !!settings?.llm_configured && mode !== 'scripted'
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-5 border-b border-line bg-surface px-5">
+    <header className="app-topbar sticky top-0 z-20 flex min-h-20 shrink-0 flex-wrap items-center gap-3 border-b border-line bg-surface px-6 py-3">
       <div className="min-w-0">
         <h1 className="truncate text-base font-semibold leading-tight">{page.title}</h1>
         <p className="hidden truncate text-xs text-muted lg:block">{page.subtitle}</p>
       </div>
 
-      <div className="ml-auto flex items-center gap-4">
+      <div className="topbar-controls ml-auto flex flex-wrap items-center gap-3">
+        <IconButton className="clock-toggle" onClick={() => setShowClock(!showClock)} aria-label="Simulation controls" aria-expanded={showClock}><Clock3 size={16} /></IconButton>
         {/* simulated clock */}
-        <div className="flex items-center gap-2">
+        <div className="simulation-controls flex flex-wrap items-center gap-2" data-open={showClock}>
           <IconButton
             variant="secondary"
             aria-label={clock?.running ? 'Pause the simulated clock' : 'Start the simulated clock'}

@@ -1,12 +1,13 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type cytoscape from 'cytoscape'
-import { Maximize2 } from 'lucide-react'
+import { Maximize2, Plus, Minus } from 'lucide-react'
 import { api } from '../../api/client'
 import type { KgElement, KgKind } from '../../api/types'
 import { useGraphQuery } from '../graph/useGraphQuery'
 import { KgCanvas, type KgCanvasHandle } from '../kg/KgCanvas'
 import { EDGE_LABEL, KIND, title } from '../kg/kgStyle'
-import { Button } from '../ui'
+import { KgDetails } from '../kg/KgDetails'
+import { Button, Drawer } from '../ui'
 
 const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Event', 'Thread']
 const short = (s: string, n = 26) => (s.length > n ? `${s.slice(0, n - 1)}…` : s)
@@ -15,6 +16,7 @@ type Data = KgElement['data']
 /** Same graph data and default node visibility as the Graph page, embedded in Agent tester. */
 export function AgentGraph({ targetId, evidenceIds }: { targetId: string; evidenceIds: string[] }) {
   const { data, error } = useGraphQuery(() => api.knowledgeGraph(), 'kg-agent-tester')
+  const [selected, setSelected] = useState<string | null>(null)
   const canvas = useRef<KgCanvasHandle | null>(null)
 
   const defs = useMemo(() => {
@@ -54,7 +56,7 @@ export function AgentGraph({ targetId, evidenceIds }: { targetId: string; eviden
           id: d.id,
           kind,
           color: KIND[kind]?.color ?? '#999',
-          short: kind === 'Message' ? '' : short(title(d)),
+          short: kind === 'Message' ? '' : short(title(d), 54),
           expired: kind === 'Assertion' && d.valid === false,
         },
       })
@@ -65,10 +67,35 @@ export function AgentGraph({ targetId, evidenceIds }: { targetId: string; eviden
   if (error && !data) return <div className="p-4 text-[13px] text-bad">Could not load graph: {error}</div>
   if (!data) return <div className="p-4 text-[13px] text-muted">Loading graph…</div>
 
+  const nodes = new Map((data.elements ?? []).filter((e) => e.group === 'nodes').map((e) => [e.data.id, e.data]))
+  const edges = (data.elements ?? []).filter((e) => e.group === 'edges').map((e) => e.data)
+  const node = selected ? nodes.get(selected) : undefined
+
   return (
-    <div className="relative h-[min(72vh,48rem)] min-h-[32rem] overflow-hidden rounded-lg border border-line bg-bg">
-      <KgCanvas defs={defs} selectedId={null} matchIds={[]} targetHighlightId={targetId} evidenceIds={evidenceIds} onSelect={() => {}} handle={canvas} />
-      <Button size="sm" variant="ghost" icon={<Maximize2 size={13} />} className="absolute right-2 top-2 bg-surface/90" onClick={() => canvas.current?.fit()}>
+    <div className="relative h-[min(65vh,40rem)] min-h-[20rem] overflow-hidden rounded-lg border border-line bg-bg">
+      <KgCanvas
+        defs={defs}
+        selectedId={selected}
+        matchIds={[]}
+        targetHighlightId={targetId}
+        evidenceIds={evidenceIds}
+        onSelect={setSelected}
+        handle={canvas}
+      />
+      <div className="graph-zoom">
+        <Button aria-label="Zoom in" icon={<Plus size={16} />} onClick={() => canvas.current?.zoom(1.3)} />
+        <Button aria-label="Zoom out" icon={<Minus size={16} />} onClick={() => canvas.current?.zoom(1 / 1.3)} />
+      </div>
+      <Drawer open={!!node} onClose={() => setSelected(null)} title="Why this context matters">
+        {node && <KgDetails node={node} nodes={nodes} edges={edges} onSelect={setSelected} />}
+      </Drawer>
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={<Maximize2 size={13} />}
+        className="absolute right-2 top-2 bg-surface/90"
+        onClick={() => canvas.current?.fit()}
+      >
         Fit
       </Button>
     </div>

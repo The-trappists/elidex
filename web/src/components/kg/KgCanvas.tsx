@@ -1,11 +1,15 @@
 // Cytoscape canvas for the knowledge graph. Elements are diffed in place; the layout re-runs only
 // when the set of visible nodes changes, from hash-seeded positions so it looks the same on each visit.
 import cytoscape from 'cytoscape'
-import fcose from 'cytoscape-fcose'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { exploreGraph } from '../graph/exploreGraph'
+import { fitReadable } from '../graph/viewport'
+import { Button } from '../ui'
+import { knowledgeLayout } from './knowledgeLayout'
+import { KIND } from './kgStyle'
+import type { KgKind } from '../../api/types'
 import { kgStyle } from './kgStyle'
 
-cytoscape.use(fcose)
 
 const hash = (s: string) => {
   let h = 0
@@ -15,10 +19,11 @@ const hash = (s: string) => {
 
 export interface KgCanvasHandle {
   fit: () => void
+  zoom: (factor: number) => void
 }
 
 export function KgCanvas({
-  defs,
+  defs: allDefs,
   selectedId,
   matchIds,
   targetHighlightId,
@@ -36,8 +41,20 @@ export function KgCanvas({
 }) {
   const host = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
-  const nodeKey = useRef('')
+  const userMoved = useRef(false)
+  const [narrow, setNarrow] = useState(false)
+  const [page, setPage] = useState({ scope: '', extra: 0 })
+  const [depth, setDepth] = useState(1)
+  const [layoutError, setLayoutError] = useState(false)
+  const focus = selectedId ?? targetHighlightId ?? null
+  const scope = focus ?? 'overview'
+  const limit = (narrow ? 12 : 30) + (page.scope === scope ? page.extra : 0)
+  const projection = useMemo(() => exploreGraph(allDefs, focus, limit, targetHighlightId ? Math.max(depth, 2) : depth, evidenceIds), [allDefs, focus, limit, depth, targetHighlightId, evidenceIds])
+  const defs = projection.defs
+  const structure = JSON.stringify(defs.map((d) => [d.data.id, d.data.source, d.data.target]))
   const evidenceKey = evidenceIds.join('|')
+  const selectionRef = useRef(focus)
+  selectionRef.current = focus
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
@@ -51,15 +68,46 @@ export function KgCanvas({
     cy.on('mouseout', 'node', () => cy.container()?.style.removeProperty('cursor'))
     const mo = new MutationObserver(() => cy.style(kgStyle()))
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    const ro = new ResizeObserver(() => cy.resize())
+    const markMoved = () => {
+      userMoved.current = true
+    }
+    const el = host.current
+    el.addEventListener('wheel', markMoved, { passive: true })
+    cy.on('dragpan pinchzoom grab', markMoved)
+    let frame = 0
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        cy.resize()
+        if (el.clientWidth > 0 && el.clientHeight > 0) {
+          setNarrow(el.clientWidth < 600)
+          if (!userMoved.current) fitReadable(cy, selectionRef.current)
+        }
+      })
+    })
     ro.observe(host.current)
-    if (handle) handle.current = { fit: () => cy.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 250 }) }
+    if (handle)
+      handle.current = {
+        fit: () => {
+          userMoved.current = false
+          fitReadable(cy, selectionRef.current)
+        },
+        zoom: (factor) => {
+          userMoved.current = true
+          cy.zoom({
+            level: Math.min(cy.maxZoom(), Math.max(cy.minZoom(), cy.zoom() * factor)),
+            renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
+          })
+        },
+      }
     return () => {
+      cancelAnimationFrame(frame)
+      el.removeEventListener('wheel', markMoved)
+      if (handle) handle.current = null
       mo.disconnect()
       ro.disconnect()
       cy.destroy()
       cyRef.current = null
-      nodeKey.current = ''
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -153,7 +201,7 @@ export function KgCanvas({
       for (const d of defs) {
         const ele = cy.getElementById(d.data.id as string)
         if (!ele.empty()) {
-          ele.data(d.data)
+          ele.data({ ...d.data, displayLabel: d.group === 'nodes' ? `${KIND[d.data.kind as KgKind]?.label ?? d.data.kind}\n${d.data.short || d.data.id}` : undefined })
           if (d.group === 'nodes' && targetHighlightId === d.data.id) ele.addClass('agent-target')
           else ele.removeClass('agent-target')
           if (d.group === 'nodes' && evidence.has(d.data.id as string)) ele.addClass('agent-evidence')
@@ -174,31 +222,34 @@ export function KgCanvas({
     const flowEdges = cy.edges('.agent-evidence-edge')
     flowEdges.stop(true)
     flowEdges.style('line-dash-offset', 0)
-    // Keep the graph responsive while the retrieval animation is being reworked. The
-    // Cytoscape animation completion callbacks were recursively scheduling work on every
-    // edge and could starve the page after the agent populated a larger result graph.
-    const key = cy
-      .nodes()
-      .map((n) => n.id())
-      .sort()
-      .join('|')
-    if (key !== nodeKey.current && cy.nodes().length) {
-      const first = nodeKey.current === ''
-      nodeKey.current = key
-      cy.layout({
-        name: 'fcose',
-        animate: !first,
-        animationDuration: 400,
-        randomize: false,
-        fit: true,
-        padding: 40,
-        nodeDimensionsIncludeLabels: true,
-        nodeRepulsion: () => 7000,
-        idealEdgeLength: () => 70,
-        gravity: 0.25,
-      } as unknown as cytoscape.LayoutOptions).run()
-    }
   }, [defs, targetHighlightId, evidenceKey])
+
+  // A selection is an intentional navigation; routine updates preserve the viewport.
+  useEffect(() => { userMoved.current = false }, [focus])
+
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || !cy.nodes().length) return
+    let cancelled = false
+    const task = knowledgeLayout(cy, narrow)
+    task.done.then((positions) => {
+      if (cancelled || cy.destroyed()) return
+      const anchor = selectionRef.current ? cy.getElementById(selectionRef.current) : cy.nodes().first()
+      const before = anchor.nonempty() ? { ...anchor.position() } : null
+      cy.batch(() => cy.nodes().forEach((n) => { const p = positions.get(n.id()); if (p) n.position(p) }))
+      if (userMoved.current && before && anchor.nonempty()) {
+        const after = anchor.position(), pan = cy.pan(), z = cy.zoom()
+        cy.pan({ x: pan.x + (before.x - after.x) * z, y: pan.y + (before.y - after.y) * z })
+      } else fitReadable(cy, selectionRef.current)
+      setLayoutError(false)
+    }).catch(() => {
+      if (cancelled || cy.destroyed()) return
+      cy.layout({ name: 'grid', fit: false, avoidOverlap: true, spacingFactor: 1.3 }).run()
+      if (!userMoved.current) fitReadable(cy, selectionRef.current)
+      setLayoutError(true)
+    }).finally(() => task.cancel())
+    return () => { cancelled = true; task.cancel() }
+  }, [structure, narrow])
 
   // focus on the selection and its neighbourhood
   const matchKey = matchIds.join('|')
@@ -215,16 +266,23 @@ export function KgCanvas({
       }
       for (const id of matchIds) cy.getElementById(id).addClass('match')
     })
-    if (selectedId) {
-      const n = cy.getElementById(selectedId)
-      if (n.nonempty() && !n.renderedBoundingBox().w) return
-      if (n.nonempty()) {
-        const bb = n.renderedPosition()
-        const { w, h } = { w: cy.width(), h: cy.height() }
-        if (bb.x < 40 || bb.y < 40 || bb.x > w - 40 || bb.y > h - 40) cy.animate({ center: { eles: n } }, { duration: 250 })
-      }
-    }
+
   }, [selectedId, matchKey, defs]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <div ref={host} className="h-full w-full" />
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-line bg-surface px-3 py-2 text-xs">
+        <span className="mr-auto text-muted" role="status">
+          {projection.shown} of {projection.available} {focus ? 'nearby items' : 'items'}
+          {focus && ` · ${projection.total} in graph`}
+        </span>
+        {focus && <Button size="sm" onClick={() => setDepth((d) => d + 1)}>Expand connections</Button>}
+        {projection.shown < projection.available && <Button size="sm" onClick={() => setPage({ scope, extra: (page.scope === scope ? page.extra : 0) + (narrow ? 12 : 30) })}>Show more</Button>}
+        {(focus || page.extra > 0 || depth > 1) && <Button size="sm" onClick={() => { setPage({ scope: '', extra: 0 }); setDepth(1); onSelect(null) }}>Reset view</Button>}
+        <span className="w-full text-muted">Sources · Knowledge · Applies to — select an item to follow its evidence.</span>
+        {layoutError && <span role="status">Using a simple layout. Connections and details are still available.</span>}
+      </div>
+      <div ref={host} role="img" aria-label="Knowledge connections. Use Browse to select items with the keyboard." className="min-h-0 w-full flex-1" />
+    </div>
+  )
 }

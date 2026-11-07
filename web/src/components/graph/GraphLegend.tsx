@@ -34,12 +34,12 @@ export function GraphLegend({ knowledge }: { knowledge: boolean }) {
     </div>
   )
   return (
-    <div className="absolute bottom-2 left-2 rounded-md border border-line bg-surface/90 text-xs text-muted shadow-sm backdrop-blur">
-      <button className="flex w-full items-center gap-1 px-2.5 py-1.5 font-medium text-text" onClick={() => setOpen(!open)}>
+    <div className="absolute bottom-3 left-3 max-w-[calc(100%-7rem)] rounded-md border border-line bg-surface/90 text-xs text-muted shadow-sm backdrop-blur">
+      <button aria-expanded={open} className="flex w-full items-center gap-1 px-2.5 py-1.5 font-medium text-text" onClick={() => setOpen(!open)}>
         Legend {open ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
       </button>
       {open && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-2.5 pb-2">
+        <div className="grid max-h-60 overflow-auto grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 px-2.5 pb-2">
           <Row icon={<Shape kind="tn" />}>Transmission node</Row>
           <Row icon={<Shape kind="ru" />}>Radio unit</Row>
           <Row icon={<Shape kind="rt" />}>Router / switch</Row>

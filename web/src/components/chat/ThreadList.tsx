@@ -89,6 +89,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
             return (
               <button
                 key={t.id}
+                data-thread-select
                 onClick={() => nav(`/conversations/${encodeURIComponent(t.id)}`)}
                 className={cn('animate-item-in flex w-full gap-2.5 border-b border-line/60 px-3 py-2.5 text-left transition hover:bg-surface-2', selectedId === t.id && 'bg-accent-soft')}
               >

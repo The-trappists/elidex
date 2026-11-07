@@ -35,7 +35,7 @@ function Chips({ ctx, sites, classes }: { ctx: FlagContext; sites: WbSite[]; cla
     <div className="flex flex-wrap items-center gap-1.5" aria-label="Equipment and sites involved">
       {els.map((e) => <IdChip key={e}>{e}</IdChip>)}
       {siteIds.map((id) => <Badge key={id} className="bg-surface-2 text-muted">{sites.find((s) => s.id === id)?.name ?? id}</Badge>)}
-      {cls.map((c) => <Badge key={c} className="bg-surface-2 text-muted">class: {c}</Badge>)}
+      {cls.map((c) => <Badge key={c} className="max-w-full whitespace-normal break-words bg-surface-2 text-muted">class: {c}</Badge>)}
     </div>
   )
 }
@@ -106,7 +106,7 @@ export function FlagCard({
         </div>
       </div>
 
-      <div className="mt-2.5 space-y-2.5 pl-7">
+      <div className="mt-2.5 space-y-2.5 sm:pl-7">
         <Chips ctx={ctx} sites={sites} classes={classes} />
         {sideBySide && (
           <div className="grid gap-2.5 md:grid-cols-2">

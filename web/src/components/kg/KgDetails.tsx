@@ -6,7 +6,7 @@ import { EDGE_LABEL, KIND, KIND_ORDER, title } from './kgStyle'
 
 type Data = KgElement['data']
 
-const HIDDEN = new Set(['id', 'kind', 'label', 'valid', 'file', 'seq', 'source'])
+const HIDDEN = new Set(['id', 'kind', 'label', 'valid', 'file', 'seq', 'source', 'topic', 'confidence'])
 const PROP_LABEL: Record<string, string> = {
   type: 'Type',
   topic: 'Topic',
@@ -39,7 +39,9 @@ const PROP_LABEL: Record<string, string> = {
 }
 
 const fmt = (k: string, v: unknown): string => {
-  if (Array.isArray(v)) return v.join('; ')
+  if (Array.isArray(v)) return v.map((item) => typeof item === 'object' && item ? String(item.text ?? item.field ?? JSON.stringify(item)) : String(item)).join('; ')
+  if (typeof v === 'object' && v) return JSON.stringify(v)
+  if (k === 'type') return String(v).replace(/_/g, ' ')
   if (k === 'confidence' && typeof v === 'number') return `${Math.round(v * 100)}%`
   if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) return fmtDateTime(v)
   return String(v)
@@ -49,7 +51,7 @@ const fmt = (k: string, v: unknown): string => {
 function openLink(d: Data): { to: string; label: string } | null {
   switch (d.kind) {
     case 'Assertion':
-      return { to: `/knowledge?assertion=${encodeURIComponent(d.id)}`, label: 'Open in Knowledge' }
+      return { to: `/knowledge?assertion=${encodeURIComponent(d.id)}`, label: 'Read this knowledge' }
     case 'Element':
     case 'Site':
       return { to: `/network?select=${encodeURIComponent(d.id)}`, label: 'Show on the network' }
@@ -73,7 +75,8 @@ export function KgDetails({ node, nodes, edges, onSelect }: { node: Data; nodes:
     if (!out && e.target !== node.id) continue
     const other = String(out ? e.target : e.source)
     const name = EDGE_LABEL[String(e.type)] ?? String(e.type)
-    const key = out ? name : `${name} (from)`
+    const incoming: Record<string, string> = { APPLIES_TO: 'Knowledge that applies here', STATED_BY: 'Knowledge shared by this person', DERIVED_FROM: 'Knowledge from this source', FROM_THREAD: 'Knowledge from this conversation', LOCATED_AT: 'Equipment at this site', MEMBER_OF: 'Equipment in this group', AUTHORED: 'Written by', CONFLICTS_WITH: 'Conflicting knowledge' }
+    const key = out ? name : incoming[String(e.type)] ?? `Connected through: ${name}`
     groups.set(key, [...(groups.get(key) ?? []), other])
   }
 
@@ -86,7 +89,7 @@ export function KgDetails({ node, nodes, edges, onSelect }: { node: Data; nodes:
           {node.kind === 'Assertion' && node.valid === false && <span className="text-warn">· not in force at this time</span>}
         </div>
         <h3 className="mt-1 text-base font-semibold leading-snug">{title(node)}</h3>
-        <div className="mt-0.5 font-mono text-xs text-muted">{node.id}</div>
+        <details className="mt-3 text-xs text-muted"><summary className="cursor-pointer">Technical reference</summary><p className="mt-2 break-all font-mono">{node.id}</p>{node.topic != null && <p className="mt-1 break-all">Topic: {String(node.topic)}</p>}</details>
         {link && (
           <Link to={link.to} className="mt-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
             {link.label} <ArrowRight size={13} />

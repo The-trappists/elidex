@@ -35,8 +35,8 @@ export function ParserOutput({
           title="Not processed yet"
           hint={
             idleSeconds != null
-              ? `The pipeline reads this thread about ${idleSeconds} s after the last message (idle timer). You can also run it now.`
-              : 'Run the pipeline to see what it extracts.'
+              ? `This conversation is read after ${idleSeconds} seconds of quiet. You can also run it now.`
+              : 'Read this conversation to find useful knowledge.'
           }
           action={
             <Button variant="primary" icon={<Play size={14} />} disabled={!thread.messages.length} onClick={() => withToast(() => api.processThread(thread.id), 'Processing started')}>
@@ -53,12 +53,12 @@ export function ParserOutput({
           {previous.length > 0 && (
             <div className="mt-5 border-t border-line pt-3">
               <button className="flex items-center gap-1 text-[13px] font-medium text-muted hover:text-text" onClick={() => setShowPrev((v) => !v)}>
-                {showPrev ? <ChevronDown size={14} /> : <ChevronRight size={14} />} Previous jobs ({previous.length})
+                {showPrev ? <ChevronDown size={14} /> : <ChevronRight size={14} />} Earlier readings ({previous.length})
               </button>
               {showPrev &&
                 previous.map((j) => (
                   <div key={j.id} className="mt-3">
-                    <div className="mb-2 text-[13px] text-muted">Job {j.id}</div>
+                    <div className="mb-2 text-[13px] text-muted">Read on {fmtDateTime(j.started_at)}</div>
                     <JobSteps job={j} thread={thread} assertions={assertions} />
                   </div>
                 ))}

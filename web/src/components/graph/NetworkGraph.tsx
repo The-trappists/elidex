@@ -2,7 +2,7 @@
 // and the layout only re-runs when elements, sites or classes are added or removed.
 import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
-import { BookOpen, Eye, EyeOff, Maximize2 } from 'lucide-react'
+import { BookOpen, Eye, EyeOff, Maximize2, Plus, Minus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ContextAssertion } from '../../api/types'
 import { cn } from '../../lib/cn'
@@ -10,6 +10,8 @@ import { useLive } from '../../store/live'
 import { Button } from '../ui'
 import { buildGraph, type NodeKind } from './graphModel'
 import { buildStyle } from './graphStyle'
+import { exploreGraph, networkOverview } from './exploreGraph'
+import { fitReadable } from './viewport'
 import { GraphLegend } from './GraphLegend'
 
 cytoscape.use(fcose)
@@ -31,12 +33,12 @@ function layoutOptions(animate: boolean) {
   // same on every visit instead of a new random arrangement each time.
   return {
     name: 'fcose',
-    animate,
+    animate: animate && !matchMedia('(prefers-reduced-motion: reduce)').matches,
     animationDuration: 600,
     randomize: false,
     fit: false,
     padding: 30,
-    quality: 'default',
+    quality: 'proof',
     nodeDimensionsIncludeLabels: true,
     nodeRepulsion: () => 9000,
     idealEdgeLength: (e: cytoscape.EdgeSingular) => (e.hasClass('binding') ? 55 : e.hasClass('member') ? 130 : 95),
@@ -92,7 +94,11 @@ function seedPositions(nodes: cytoscape.NodeSingular[]) {
 function placeNear(cy: cytoscape.Core, nodes: cytoscape.NodeSingular[]) {
   for (const n of nodes) {
     if (n.data('kind') !== 'assertion') continue
-    const other = n.connectedEdges().targets().filter((t) => t.id() !== n.id()).first() as cytoscape.NodeSingular
+    const other = n
+      .connectedEdges()
+      .targets()
+      .filter((t) => t.id() !== n.id())
+      .first() as cytoscape.NodeSingular
     if (other.empty()) continue
     const p = other.position()
     let h = 0
@@ -116,11 +122,15 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
   const cyRef = useRef<cytoscape.Core | null>(null)
   const structureRef = useRef<string | null>(null)
   const prevAssertions = useRef<Record<string, ContextAssertion> | null>(null)
+  const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set())
+  const [limit, setLimit] = useState(30)
   const userMoved = useRef(false)
+  const selectionRef = useRef(selectedId)
+  selectionRef.current = selectedId
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
-  const built = useMemo(
+  const raw = useMemo(
     () =>
       buildGraph({
         elements,
@@ -136,10 +146,22 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     [elements, sites, links, classesMap, assertionsMap, incidentsMap, layers.knowledge, fadeExpired, Math.floor(at.getTime() / 60000)], // eslint-disable-line react-hooks/exhaustive-deps
   )
 
+  const built = useMemo(() => {
+    const selected = raw.defs.find((d) => !d.data.source && d.data.rawId === selectedId)
+    const expanded = new Set(expandedSites)
+    if (selected?.data.parent) expanded.add(String(selected.data.parent))
+    // A class or assertion is already a focused query; retain its actual binding endpoints.
+    const focusedKnowledge = selected && ['class', 'assertion'].includes(String(selected.data.kind))
+    const defs = focusedKnowledge ? raw.defs : networkOverview(raw.defs, expanded)
+    const priority = selected ? [String(selected.data.id), ...defs.filter((d) => d.data.parent === selected.data.id).map((d) => String(d.data.id))] : []
+    const view = exploreGraph(defs, focusedKnowledge ? String(selected.data.id) : null, limit, 2, priority)
+    return { ...view, selected, expanded, structure: JSON.stringify(view.defs.map((d) => [d.data.id, d.data.parent, d.data.source, d.data.target])) }
+  }, [raw, expandedSites, selectedId, limit])
+
   // create the instance once; restyle when the theme toggles; pulse open incidents
   useEffect(() => {
     if (!host.current) return
-    const cy = cytoscape({ container: host.current, style: buildStyle(), minZoom: 0.2, maxZoom: 3 })
+    const cy = cytoscape({ container: host.current, style: buildStyle(), minZoom: 0.05, maxZoom: 3 })
     cyRef.current = cy
     cy.on('tap', 'node', (ev) => onSelectRef.current?.(aKey(ev.target), ev.target.data('kind')))
     cy.on('tap', (ev) => ev.target === cy && onSelectRef.current?.(null, null))
@@ -162,18 +184,22 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     const el = host.current
     const markUser = () => (userMoved.current = true)
     el.addEventListener('wheel', markUser, { passive: true })
-    cy.on('tapstart', (ev) => ev.target === cy && markUser()) // background drag = pan
+    cy.on('dragpan pinchzoom grab', markUser)
     let raf = 0
     const ro = new ResizeObserver(() => {
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
         cy.resize()
-        if (!userMoved.current && el.clientHeight > 0 && cy.nodes().length) cy.fit(undefined, 30)
+        if (!userMoved.current && el.clientWidth > 0 && el.clientHeight > 0) {
+          const selected = cy.nodes().filter((n) => aKey(n) === selectionRef.current)
+          fitReadable(cy, selected.first().id())
+        }
       })
     })
     ro.observe(el)
     let on = false
     const pulse = setInterval(() => {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
       on = !on
       cy.nodes('[?incident]').toggleClass('pulse', on)
     }, 700)
@@ -202,7 +228,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
       seedPositions(added)
       const layout = cy.layout(layoutOptions(!first))
       layout.one('layoutstop', () => {
-        if (!userMoved.current && cy.height() > 0) cy.animate({ fit: { eles: cy.elements(), padding: 30 } }, { duration: first ? 0 : 300 })
+        if (!userMoved.current) fitReadable(cy, cy.nodes().filter((n) => aKey(n) === selectionRef.current).first().id())
       })
       layout.run()
     } else {
@@ -216,7 +242,9 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
         if (prev[id] === a) continue
         const n = cy.getElementById(`as:${id}`)
         if (n.empty()) continue
-        n.stop(true).animate({ style: { 'overlay-opacity': 0.6, 'overlay-padding': 16 } }, { duration: 350 }).animate({ style: { 'overlay-opacity': 0, 'overlay-padding': 4 } }, { duration: 1600 })
+        n.stop(true)
+          .animate({ style: { 'overlay-opacity': 0.6, 'overlay-padding': 16 } }, { duration: 350 })
+          .animate({ style: { 'overlay-opacity': 0, 'overlay-padding': 4 } }, { duration: 1600 })
       }
     }
   }, [built, assertionsMap])
@@ -235,18 +263,45 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     })
   }, [selectedId, hlKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    userMoved.current = false
+    const cy = cyRef.current
+    if (cy) fitReadable(cy, cy.nodes().filter((n) => aKey(n) === selectedId).first().id())
+  }, [selectedId])
+
   const fit = () => {
     userMoved.current = false
-    cyRef.current?.animate({ fit: { eles: cyRef.current.elements(), padding: 30 } }, { duration: 300 })
+    const cy = cyRef.current
+    if (!cy) return
+    const selected = cy.nodes().filter((n) => aKey(n) === selectedId)
+    fitReadable(cy, selected.first().id())
   }
 
   return (
-    <div className={cn('absolute inset-0 overflow-hidden', className)}>
-      <div ref={host} className="h-full w-full animate-fade-in" />
+    <div className={cn('absolute inset-0 flex flex-col overflow-hidden', className)}>
+      <div
+        ref={host}
+        role="img"
+        aria-label="Network connections. Use Browse to find equipment and sites."
+        className="order-2 min-h-0 w-full flex-1"
+      />
       {!elements.length && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-muted">No network elements yet</div>
       )}
-      <div className="absolute right-2 top-2 flex gap-1.5">
+      <div className="order-1 flex shrink-0 flex-wrap items-center gap-2 border-b border-line bg-surface p-3">
+        <span className="mr-auto text-xs text-muted" role="status">{built.shown} of {built.available} items · {sites.length} sites</span>
+        {built.selected?.data.kind === 'site' && (
+          <Button size="sm" onClick={() => setExpandedSites((prev) => {
+            const next = new Set(prev), id = String(built.selected?.data.id)
+            if (next.has(id)) next.delete(id); else next.add(id)
+            userMoved.current = false
+            return next
+          })}>{expandedSites.has(String(built.selected.data.id)) ? 'Collapse site' : 'Expand site'}</Button>
+        )}
+        {built.shown < built.available && <Button size="sm" onClick={() => setLimit((n) => n + 30)}>Show more</Button>}
+        {(expandedSites.size > 0 || selectedId || limit > 30) && <Button size="sm" onClick={() => {
+          setExpandedSites(new Set()); setLimit(30); userMoved.current = false; onSelectRef.current?.(null, null)
+        }}>Site overview</Button>}
         <Button
           size="sm"
           variant="secondary"
@@ -267,8 +322,27 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
           </Button>
         )}
         <Button size="sm" icon={<Maximize2 size={13} />} onClick={fit} title="Zoom to fit">
-          Fit
+          Fit network
         </Button>
+      </div>
+      <div className="graph-zoom" role="group" aria-label="Network zoom">
+        {[1.3, 1 / 1.3].map((factor) => (
+          <Button
+            key={factor}
+            aria-label={factor > 1 ? 'Zoom in' : 'Zoom out'}
+            icon={factor > 1 ? <Plus size={16} /> : <Minus size={16} />}
+            onClick={() => {
+              const cy = cyRef.current
+              if (cy) {
+                userMoved.current = true
+                cy.zoom({
+                  level: Math.min(cy.maxZoom(), Math.max(cy.minZoom(), cy.zoom() * factor)),
+                  renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 },
+                })
+              }
+            }}
+          />
+        ))}
       </div>
       <GraphLegend knowledge={layers.knowledge} />
     </div>
