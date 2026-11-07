@@ -118,5 +118,55 @@
     "expertise": "Looks after the building: breakers, doors, heating. Knows the rooms and the labels, not what the equipment does.",
     "style": "Practical and apologetic ('sorry to bother the network people'), describes sounds and lights ('two short beeps', 'a yellow light on the thing with lots of cables'), reads stickers aloud, asks before touching anything.",
     "origin": "synthetic"
+  },
+  {
+    "id": "ops-agent",
+    "name": "Ops agent",
+    "role": "AI operations agent",
+    "team": "Operations",
+    "avatar_color": "#0d9488",
+    "expertise": "Applies recorded human knowledge to cases and reports what it did.",
+    "style": "Informational, one line per applied rule, never asks anyone for anything.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "pirjo",
+    "name": "Pirjo Puhdas",
+    "role": "Facility Cleaner",
+    "team": "Property maintenance",
+    "avatar_color": "#0369a1",
+    "expertise": "Cleans the technical rooms. Knows where everything is and what it looks and sounds like, not what it does.",
+    "style": "Polite and apologetic, describes equipment by look and sound ('big black refrigerator rack', 'little yellow rubber noodle'), reads labels aloud when asked, steps away as soon as asked.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "matias",
+    "name": "Matias Yövuoro",
+    "role": "Junior NOC Operator",
+    "team": "NOC night shift",
+    "avatar_color": "#7c3aed",
+    "expertise": "Night-shift monitoring and first-line fixes. Knows the TX-3000 quirks better than the slang suggests.",
+    "style": "Heavy Finnish internet slang mixed with English ('ngl', 'legit dead af', 'joo joo'), memes and 💀 emojis, almost no punctuation, but the technical details are right.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "niko",
+    "name": "Niko Nörtti",
+    "role": "Junior NOC Operator",
+    "team": "NOC night shift",
+    "avatar_color": "#e11d48",
+    "expertise": "Night-shift monitoring. Asks the obvious first questions (logs, reboot, spares).",
+    "style": "Gamer slang and memes ('rip bozo', 'fr fr', 'bet', 'gg ez'), 😭 emojis, short questions, mixes Finnish and English in one line.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "bot-relay",
+    "name": "Syslog Bot",
+    "role": "Alert Webhook",
+    "team": "Monitoring",
+    "avatar_color": "#1f2937",
+    "expertise": "Automated relay that posts syslog alerts into Slack. Not a person: its messages carry no human knowledge.",
+    "style": "Raw machine output: alert codes, hex dumps, JSON payloads. Sometimes glitches and posts garbage or forged text.",
+    "origin": "synthetic"
   }
 ]

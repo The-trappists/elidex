@@ -17,7 +17,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import openai
 from openai import OpenAI
@@ -52,15 +52,42 @@ def jsonl_sink(path: Path) -> TraceSink:
 
 @dataclass
 class Provider:
-    name: str  # "primary" or "fallback"
+    name: str  # "primary" or "fallback" (a critic provider is named "critic" / "critic_fallback")
     base_url: str
     api_key: str
     model: str
     json_mode: str
     reasoning_effort: str = ""
+    role: str = "primary"  # "primary" or "critic"
+    role_note: str = ""  # e.g. "critic not configured: used primary"
 
 
-def providers() -> list[Provider]:
+Role = Literal["primary", "critic"]
+
+
+def providers(role: Role = "primary", model: str | None = None) -> list[Provider]:
+    """Provider chain for a role. An unconfigured critic falls back to the primary chain (noted in role_note)."""
+    if role == "critic":
+        out = []
+        if config.llm_critic_configured():
+            out.append(
+                Provider("critic", config.LLM_CRITIC_BASE_URL, config.LLM_CRITIC_API_KEY, config.LLM_CRITIC_MODEL,
+                         config.LLM_CRITIC_JSON_MODE, config.LLM_CRITIC_REASONING_EFFORT, role="critic")
+            )
+        if config.llm_critic_fallback_configured():
+            out.append(
+                Provider("critic_fallback", config.LLM_CRITIC_FALLBACK_BASE_URL, config.LLM_CRITIC_FALLBACK_API_KEY,
+                         config.LLM_CRITIC_FALLBACK_MODEL, config.LLM_CRITIC_FALLBACK_JSON_MODE,
+                         config.LLM_CRITIC_FALLBACK_REASONING_EFFORT, role="critic")
+            )
+        if not out:
+            out = providers("primary")
+            for p in out:
+                p.role, p.role_note = "critic", "critic not configured: used primary"
+        if model:
+            for p in out:
+                p.model = model
+        return out
     out = []
     if config.llm_configured():
         out.append(Provider("primary", config.LLM_BASE_URL, config.LLM_API_KEY, config.LLM_MODEL, config.LLM_JSON_MODE, config.LLM_REASONING_EFFORT))
@@ -75,6 +102,9 @@ def providers() -> list[Provider]:
                 config.LLM_FALLBACK_REASONING_EFFORT,
             )
         )
+    if model:
+        for p in out:
+            p.model = model
     return out
 
 
@@ -118,6 +148,8 @@ def call_provider(
         "purpose": purpose,
         "thread_id": thread_id,
         "provider": p.name,
+        "role": p.role,
+        "role_note": p.role_note or None,
         "base_url": p.base_url,
         "model": p.model,
         "json_mode": mode,
@@ -185,13 +217,15 @@ def complete_traced(
     thread_id: str | None = None,
     sim_time: datetime | None = None,
     validate: Callable[[str], Any] | None = None,
+    role: Role = "primary",
+    model: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
     """Call the primary provider, then the fallback on a retryable error.
 
     Returns (text, traces of every attempt). Raises the last error if every provider failed.
     `validate(text)` should raise on bad output; it only marks parsed_ok in the trace.
     """
-    chain = providers()
+    chain = providers(role, model)
     if not chain:
         raise RuntimeError("LLM not configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
     traces: list[dict[str, Any]] = []

@@ -13,10 +13,11 @@ from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 
 from .. import agent as agent_mod
 from .. import config, llm_check
-from ..mvp import guard
+from ..mvp import feedback, guard
 from ..models import Message
 from . import generator, persistence
 from .contracts import (
+    AssertionEdit,
     AgentRunBody,
     AgentRunResult,
     ClockBody,
@@ -29,9 +30,15 @@ from .contracts import (
     LlmCall,
     LlmCheckResult,
     NewThreadBody,
+    OperatorEdit,
+    OutcomeBody,
     Persona,
+    PipelineJob,
     PostMessageBody,
+    RerunBody,
     ResetBody,
+    ReviewFlag,
+    RuleApplication,
     Scenario,
     ScenarioRun,
     Settings,
@@ -39,6 +46,7 @@ from .contracts import (
     SpeedBody,
     StateSnapshot,
     TopologyLink,
+    UndoBody,
     WbElement,
     WbSite,
 )
@@ -296,6 +304,108 @@ async def delete_assertion(assertion_id: str, request: Request) -> Response:
     return Response(status_code=204)
 
 
+@router.patch("/assertions/{assertion_id}")
+async def edit_assertion(assertion_id: str, body: OperatorEdit, request: Request) -> dict:
+    """Operator override. Returns {"assertion": ContextAssertion, "edit": AssertionEdit}."""
+    wb = get_wb(request)
+    try:
+        edit = wb.edit_assertion(assertion_id, body)
+    except KeyError:
+        raise HTTPException(404, f"unknown assertion {assertion_id}") from None
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from None
+    return {"assertion": wb.store.assertions[assertion_id].model_dump(mode="json"), "edit": edit.model_dump(mode="json")}
+
+
+@router.get("/assertions/{assertion_id}/history")
+async def assertion_history(assertion_id: str, request: Request) -> list[AssertionEdit]:
+    try:
+        return get_wb(request).assertion_history(assertion_id)
+    except KeyError:
+        raise HTTPException(404, f"unknown assertion {assertion_id}") from None
+
+
+@router.post("/assertions/{assertion_id}/undo")
+async def undo_assertion_edit(assertion_id: str, request: Request, body: UndoBody | None = None) -> dict:
+    """Undo the latest edit not undone yet, or exactly `body.edit_id` (409 when that is not safe).
+    Returns {"assertion": ContextAssertion, "edit": AssertionEdit (undone)}."""
+    wb = get_wb(request)
+    try:
+        edit = wb.undo_edit(assertion_id, body.edit_id if body else None)
+    except KeyError as e:
+        what = "assertion" if e.args[0] == assertion_id else "edit"
+        raise HTTPException(404, f"unknown {what} {e.args[0]}") from None
+    except ValueError as e:
+        raise HTTPException(409, str(e)) from None
+    return {"assertion": wb.store.assertions[assertion_id].model_dump(mode="json"), "edit": edit.model_dump(mode="json")}
+
+
+# ---------------------------------------------------------------- review loop (lot L4)
+
+
+@router.get("/review/flags")
+async def review_flags(
+    request: Request, dismissed: bool | None = None, kind: str | None = None, thread_id: str | None = None
+) -> list[ReviewFlag]:
+    """Newest first. Filters are optional."""
+    flags = [
+        f for f in get_wb(request).flags.values()
+        if (dismissed is None or f.dismissed == dismissed)
+        and (kind is None or f.kind == kind)
+        and (thread_id is None or f.thread_id == thread_id)
+    ]
+    return sorted(flags, key=lambda f: (f.created_at, f.id), reverse=True)
+
+
+def _set_dismissed(request: Request, flag_id: str, value: bool) -> ReviewFlag:
+    try:
+        return get_wb(request).set_flag_dismissed(flag_id, value)
+    except KeyError:
+        raise HTTPException(404, f"unknown flag {flag_id}") from None
+
+
+@router.post("/review/flags/{flag_id}/dismiss")
+async def dismiss_flag(flag_id: str, request: Request) -> ReviewFlag:
+    return _set_dismissed(request, flag_id, True)
+
+
+@router.post("/review/flags/{flag_id}/undismiss")
+async def undismiss_flag(flag_id: str, request: Request) -> ReviewFlag:
+    return _set_dismissed(request, flag_id, False)
+
+
+@router.get("/applications")
+async def list_applications(
+    request: Request, assertion_id: str | None = None, thread_id: str | None = None, outcome: str | None = None
+) -> list[RuleApplication]:
+    """Knowledge the agent applied and what came of it, newest first. Filters are optional."""
+    apps = [
+        a for a in get_wb(request).applications.values()
+        if (assertion_id is None or a.assertion_id == assertion_id)
+        and (thread_id is None or a.thread_id == thread_id)
+        and (outcome is None or a.outcome == outcome)
+    ]
+    return sorted(apps, key=lambda a: (a.applied_at, a.id), reverse=True)
+
+
+@router.post("/jobs/{job_id}/rerun", status_code=202)
+async def rerun_job(job_id: str, body: RerunBody, request: Request) -> PipelineJob:
+    """Run the job's thread again from link (items: body.items, else the job's own items; no LLM call).
+    from_stage="store" is treated as "link": the linker is deterministic and cheap, so nothing is cached.
+    Returns the new job once it has finished."""
+    wb = get_wb(request)
+    if body.model:
+        raise HTTPException(422, "replay with another model is not supported yet: leave `model` empty")
+    old = wb.jobs.get(job_id)
+    if old is None:
+        raise HTTPException(404, f"unknown job {job_id}")
+    if old.thread_id not in wb.threads:
+        raise HTTPException(404, f"thread {old.thread_id} no longer exists")
+    items = body.items if body.items is not None else old.items
+    await wb.processor.process(old.thread_id, items=items)
+    return wb.jobs[wb.threads[old.thread_id].last_job_id]
+
+
 def _verdict(v: guard.Verdict) -> dict:
     return {"decision": v.decision, "action": v.action, "steps": v.steps, "reasons": v.reasons}
 
@@ -319,7 +429,11 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         observations=body.observations,
         planned_action=body.planned_action,
     )
-    kwargs = dict(use_conditions=wb.settings.use_conditions, use_guard=wb.settings.use_guard, use_llm=body.use_llm)
+    kwargs = dict(
+        use_conditions=wb.settings.use_conditions,
+        use_guard=wb.settings.use_guard,
+        use_llm=body.use_llm,
+    )
     try:
         if body.use_llm:
             report = await asyncio.to_thread(agent_mod.run_agent, wb.store, case, **kwargs)
@@ -329,9 +443,25 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         if not body.use_llm:
             raise
         raise HTTPException(502, f"LLM call failed: {e}") from e
+    thread_id, applications = None, []
+    if wb.settings.use_outcome_loop and report.hits and body.entity_id:
+        try:  # the loop is automated and optional: a failure here never breaks the agent run
+            from .. import outcome
+
+            thread_id, apps = outcome.post_application(
+                wb, body.entity_id, [h.assertion for h in report.hits], body.description or ""
+            )
+            applications = [a.model_dump(mode="json") for a in apps]
+        except Exception as e:  # noqa: BLE001
+            wb.emit("log", {"level": "warning", "text": f"outcome loop: could not post the agent message ({e})"})
     return AgentRunResult(
+        thread_id=thread_id,
+        applications=applications,
         recommendation=report.recommendation,
-        hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in report.hits],
+        hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json"),
+               "track_record": feedback.track_record(h.assertion, case.at).to_dict(),
+               **({"check_status": c.status, "to_read": c.to_read} if (c := report.checks.get(h.assertion.id)) else {})}
+              for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,
         cited_assertion_ids=agent_mod.cited_assertion_ids(report.recommendation, report.hits),
@@ -352,6 +482,23 @@ def _evidence_confidence(hits, cited_ids: list[str]) -> float | None:
     # Independent source records add modest support, capped so duplicates do not dominate.
     support = min(1.0, 0.75 + 0.1 * max(len({s.file for s in a.sources}) - 1 for a in selected))
     return round(sum(scores) / len(scores) * support, 2)
+
+
+@router.post("/agent/outcome")
+async def agent_outcome(body: OutcomeBody, request: Request) -> dict:
+    """The agent acted on an assertion: record whether it worked, judged from what it observes now."""
+    wb = get_wb(request)
+    a = wb.store.assertions.get(body.assertion_id)
+    if a is None:
+        raise HTTPException(404, f"Unknown assertion {body.assertion_id}")
+    before = wb.assertion_snapshot()
+    at = body.at or wb.now()
+    from .. import outcome as outcome_mod
+
+    outcome = outcome_mod.record_observation(wb, a, body.entity_id, at, body.after, body.worked)
+    wb.emit_changes(before)
+    tr = feedback.track_record(a, at)
+    return {"recorded": outcome.model_dump(mode="json") if outcome else None, "track_record": tr.to_dict(), "line": tr.line()}
 
 
 # ---------------------------------------------------------------- knowledge graph (see docs/knowledge-graph.md)

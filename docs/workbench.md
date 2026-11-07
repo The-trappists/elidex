@@ -4,7 +4,7 @@
 
 The Workbench is the team's real-time test bench. It is not the pitch demo. It lets us:
 - watch fake employees talk, in an in-app chat or in a real Slack;
-- see each conversation go through our pipeline (listen → understand → link → store → reconcile);
+- see each conversation go through our pipeline (listen → understand → link → store → reconcile, with the loop v2 agents hooked in, see below);
 - see the network graph with scripted incidents and the knowledge bound to it;
 - add or remove generated data;
 - read every LLM call afterwards.
@@ -20,6 +20,18 @@ uv run ctx llm-check            # which LLM provider / JSON mode works
 - **Incidents are scripted** ground truth from scenarios (the "as-observed" layer). The Workbench never detects or diagnoses faults, which is out of scope (see [challenge.md](challenge.md)). An incident only triggers a conversation and shows what the context layer knows about the element.
 - Knowledge comes only from the messages. Nobody fills in a form.
 - Slack stands in for Teams: it shows that the listen step works on the channels people already use.
+
+## Loop v2 overview
+
+The Workbench runs the loop v2 agents on top of the five pipeline steps. The loop is **fully automated**: knowledge goes live with no human review and nobody is asked for a click. The operator console is optional, for observation, debugging and manual override.
+
+- A **critic** (a second model) checks each extracted item against its cited messages, inside the understand step (hook `after_understand`).
+- A **judge** compares each new assertion with its neighbours after the store step (hook `after_store`); the lifecycle reconcile step still runs afterwards as a fallback.
+- A **passive outcome loop** posts the demo agent's applied action in a thread and reads the technician's reply to update trust (`POST /api/agent/run`, hook `after_store`).
+- The **operator console** ("Needs a look" page, assertion editor, item re-run with history and undo) shows what the loop did and why, and never blocks it.
+- All three agents are toggles in Settings (`use_critic`, `use_judge`, `use_outcome_loop`, default on; critic and judge stay silent without an LLM key).
+
+Read more: [plan-loop-v2.md](plan-loop-v2.md) (what was built, known weaknesses), [design.md](design.md) (pipeline and fields), [evaluation.md](evaluation.md) (metric and model comparison), [demo-loop-v2.md](demo-loop-v2.md) (2m30 demo script), and the endpoint tables below.
 
 ## Architecture
 
@@ -82,8 +94,16 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 
 The `/graph/*` views are rebuilt on each call from the live store and live threads. The Network page Inspector shows them: "Where it comes from" and "What it reaches" on knowledge, "History of advice" and "Who to ask" on an element.
 | `DELETE /assertions/{id}` | | 204 |
+| `PATCH /assertions/{id}` | `OperatorEdit` | `{assertion, edit: AssertionEdit}`. Adds source `operator`; `stated_by` becomes `operator` only when `trust_level` is edited; an explicit `valid_to: null` reopens; 404 unknown, 422 nothing to change. Survives re-processing of the thread |
+| `GET /assertions/{id}/history` | | `AssertionEdit[]`, newest first |
+| `POST /assertions/{id}/undo` | | `{assertion, edit}`: restores the `before` of the latest edit not undone (409 when none) |
+| `GET /review/flags?dismissed=&kind=&thread_id=` | | `ReviewFlag[]`, newest first. Flags are informational, nothing waits for them. Rules in `workbench/review.py`: abstained, low_confidence (below 0.7), conflict, over_reach (6 or more reached elements the thread never names), plus the flags other hooks put in `job.flags` |
+| `POST /review/flags/{id}/dismiss`, `/undismiss` | | `ReviewFlag` |
+| `POST /jobs/{job_id}/rerun` | `RerunBody` | 202 and the new finished `PipelineJob`. Skips the extractor: uses `items`, else the job's own items. `from_stage="store"` behaves as `link`. `model` is not supported yet (422) |
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
-| `POST /agent/run` | `AgentRunBody` | `AgentRunResult` |
+| `POST /agent/run` | `AgentRunBody` | `AgentRunResult`. With `use_outcome_loop` on and knowledge applied, it also posts the ops agent message and returns the optional `thread_id` and `applications` |
+| `GET /applications?assertion_id=&thread_id=&outcome=` | | `RuleApplication[]`, newest first (outcome loop) |
+| `POST /agent/outcome` | `OutcomeBody` | `{recorded, track_record, line}`: did the knowledge work when applied? Field feedback judged from the agent's own observations (see `docs/evaluation.md` §4). Same ledger and same effects as the outcome loop below; it also resolves a pending `RuleApplication` of the same assertion and entity (`method: "observation"`). `track_record` is `{status, worked, failed, failed_on, thread, last_at}`, the same shape as in `/agent/run` hits |
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
 | `DELETE /data/generated` | | `{removed: {kind: count}}`, then emits `state.reset` |
 | `GET /data/export` | | the full state JSON (attachment) |
@@ -98,6 +118,16 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `GET /export/session.json` | | snapshot plus all jobs plus all LLM calls |
 
 Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show `detail` in a toast.
+
+### Passive outcome loop (`src/context_layer/outcome.py`, toggle `use_outcome_loop`)
+
+The loop closes itself and nobody is asked for anything.
+
+1. `POST /agent/run` applies knowledge to a case. When the toggle is on and at least one assertion was applied (conditions not failed), the ops agent (persona `ops-agent`) posts **one informational message** ("Applied ctx_0001 on TRN-117: ... Avoid: ...") into the thread of the entity's newest incident, or into a new `manual` thread named after the case. It never asks anyone to reply, confirm or rate. One `RuleApplication` (outcome `pending`) is created per assertion; event `application.upserted`.
+2. The thread's next job, in the `after_store` hook, looks at the human messages after the agent message (the ops agent's own items are ignored by an `after_understand` hook). One LLM call (critic role, purpose `judge`) returns `worked`, `failed` or `unclear` with a verbatim quote. Without an LLM, or when the call fails, a keyword heuristic decides (`method: "heuristic"`).
+3. The verdict is recorded in the one ledger `Assertion.outcomes` (`source: "thread"`, `application_id`, `quote`) and settled by `outcome.settle`, the same rule as `POST /agent/outcome`. `worked` with no failure in the ledger: trust becomes `verified` (stated by the human, evidence = quote), the thread message is added as a source, and a `judge_decision` flag says "Confirmed in the field". `worked` with a failure in the ledger: trust is not upgraded, a flag says "Mixed evidence". `failed`: confidence x0.7 and a `low_confidence` flag, and it counts in `track_record` (it can make the rule contested). One application is recorded once, so reprocessing never double counts; an observation outcome for the same assertion and entity resolves the pending application first. `unclear`: nothing changes, the application stays pending. An application is decided once; a thread without a pending application costs no LLM call. A failure is noted in `job.notes` and never blocks the job.
+
+Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 
 ### Processing rules (processor.py)
 
@@ -114,6 +144,7 @@ Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show 
    - `link`: one `Linker.link` per item; its notes go to the job.
    - `store`: `add_class` and `add_assertion` (new or merged).
    - `reconcile`: `lifecycle.reconcile` when `settings.lifecycle` is on, otherwise `skipped`.
+   Hooks (`processor.register_hook(name, fn)`, sync or async, `fn(HookContext)`): `after_understand` (may return a replacement item list), `after_store` (`ctx.new_assertions` filled), `after_reconcile`. A hook exception is noted in `job.notes` and never fails the job. The critic runs in `after_understand` (inside the understand step), the judge and the outcome loop in `after_store` (the judge runs before `lifecycle.reconcile`, which stays as a fallback), and nothing is registered on `after_reconcile` by the loop v2 agents; `STAGES` is still the five steps. Toggles: `use_critic`, `use_judge`, `use_outcome_loop` (default on; critic and judge stay silent without an LLM key).
 4. Extractor choice (`settings.extractor_mode`):
    - `llm`: `LLMExtractor(cache_path=out/workbench/llm_cache.json)`; error if no key.
    - `scripted`:
@@ -121,7 +152,7 @@ Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show 
      - otherwise the core cache (`data/cache/extractions.json`) for seeded files;
      - otherwise nothing, with note "scripted mode: no ground truth for this thread".
    - `auto`: `llm` if a key is configured, else `scripted`.
-5. Eval: when the extractor is the LLM and the thread has `expected`, items are compared on `(type, topic)` and the result goes in `job.eval`. Same bindings count as matched; different bindings go in `binding_diffs`.
+5. Eval: when the extractor is the LLM and the thread has `expected`, items are compared on `(type, scope, action similarity)`, not on the topic slug (see [evaluation.md](evaluation.md)), and the result goes in `job.eval`. Same type and scope with a similar action is matched; the same scope with another action, or the same action with another scope, goes in `binding_diffs`.
 6. Invalidation items are only applied when `settings.lifecycle` is on (as in `pipeline.build_store`).
 
 ### Data lifecycle
@@ -145,7 +176,7 @@ Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show 
 
 - `personas.json`: Elisa's two people (Erkki, Veikko) plus synthetic colleagues.
 - `topology.json`: extra elements, sites with lat/lon, and links between elements. It is merged with `data/synthetic/*.csv`.
-- `scenarios/*.json`: one `Scenario` per file (23, eleven of them on Slack). Elisa's chat replayed word for word is `elisa-trn042-chat.json`.
+- `scenarios/*.json`: one `Scenario` per file (25). Elisa's chat replayed word for word is `elisa-trn042-chat.json`.
 
 Everything except Elisa's chat and email is synthetic and documented in `data/workbench/README.md`.
 

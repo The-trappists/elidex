@@ -164,10 +164,16 @@ class KnowledgeGraph:
         return scope
 
     def assertions_in_scope(self, entity_id: str) -> list[tuple[str, str]]:
-        """(assertion id, matched via) for every assertion bound to the entity, its classes or its site."""
+        """(assertion id, matched via) for every assertion bound to the entity, its classes or its site.
+
+        Same rule as ContextStore.get_context: OBSERVED_ON is evidence, not scope. It counts for the entity
+        itself, never for the other members of its class or the other elements of its site.
+        """
+        entity = self.resolve(entity_id)
         seen: dict[str, str] = {}
         for target, via in self.scope_of(entity_id):
-            for aid in self._in(target, *_SCOPE_EDGES):
+            edges = _SCOPE_EDGES if target == entity else (S.APPLIES_TO,)
+            for aid in self._in(target, *edges):
                 seen.setdefault(aid, via)
         return list(seen.items())
 

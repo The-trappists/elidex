@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from ..store import ContextHit, ContextStore
-from . import conditions
+from . import conditions, feedback
 
 # Small verb vocabulary: enough for the demo, extend as needed.
 VERBS = {
@@ -45,16 +45,20 @@ def check(
     entity_id: str,
     at: datetime | None = None,
     observations: dict[str, Any] | None = None,
+    context_hits: list[ContextHit] | None = None,
 ) -> Verdict:
     planned = verbs_in(action)
     steps, reasons = [], []
-    for hit in store.get_context(entity_id, at=at):
+    hits = context_hits if context_hits is not None else store.get_context(entity_id, at=at)
+    for hit in hits:
         a = hit.assertion
         if observations is not None and conditions.evaluate(a, observations).applies is False:
             continue
         if a.type == "workaround" and planned & verbs_in(" ".join(a.avoid)):
             steps.append(a.action or a.summary)
             reasons.append(f"Human knowledge says avoid '{'; '.join(a.avoid)}' here: {_cite(hit)}")
+            if (tr := feedback.track_record(a, at)).status == "contested":
+                reasons.append(f"But {a.id} is contested in the field: {tr.line()}")
         elif a.type == "access" and "dispatch" in planned:
             steps.append(a.action or a.fact or a.summary)
             reasons.append(f"Site access: {a.fact or a.summary} {_cite(hit)}")

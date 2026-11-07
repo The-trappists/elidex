@@ -51,5 +51,14 @@
       "delay_s": 30,
       "text": "Wait... Veikko says soft-restart, Erkki says avoid soft-restart and pull DC cable, Aino says pulling DC cable fries the diode?? What am I supposed to do up here in the freezing wind?!"
     }
-  ]
+  ],
+  "tags": [
+    "slack",
+    "adversarial",
+    "conflict",
+    "trust",
+    "radio",
+    "synthetic"
+  ],
+  "origin": "synthetic"
 }

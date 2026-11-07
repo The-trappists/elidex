@@ -1,0 +1,55 @@
+{
+  "id": "noise-car-cold-start-sodankyla",
+  "title": "Noise: car trouble at the Sodankylä mast, sounds like a fix",
+  "description": "Two field engineers chat about their own cars at the Sodankylä fell mast parking. It reads like a workaround (cold, restart, a real site) but it is about cars, not the network. Nothing must be extracted, and nothing must bind to SITE-NF-021.",
+  "channel": "teams",
+  "subject": null,
+  "incident": null,
+  "participants": [
+    "veikko",
+    "jaakko"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "Made it up to the Sodankylä fell mast, but my car would not start again at the parking. -28 this morning."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 40,
+      "text": "Classic. Did you plug in the block heater?"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 30,
+      "text": "No socket at the mast parking. I cranked it three times, nothing."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 45,
+      "text": "Never crank more than 10 seconds or you kill the battery. Wait a minute between tries, and turn the headlights on for 30 s first to warm the battery. Works every time on my old Volvo."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 60,
+      "text": "Headlight trick worked on the second try! Thanks, owe you a coffee."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 20,
+      "text": "Ha, and get winter diesel before you drive up there again."
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": []
+  },
+  "tags": [
+    "noise",
+    "trap",
+    "looks-technical",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

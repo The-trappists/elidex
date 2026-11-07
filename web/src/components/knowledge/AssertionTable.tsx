@@ -3,7 +3,7 @@ import { api } from '../../api/client'
 import { useLive } from '../../store/live'
 import type { ContextAssertion } from '../../api/types'
 import { Button, EmptyState, IdChip, Table, withToast, type Column } from '../ui'
-import { BindingChips, ConflictIcon, TrustBadge, TypeBadge, Validity } from './bits'
+import { BindingChips, ConflictIcon, isOperatorEdited, OperatorChip, TrustBadge, TypeBadge, Validity } from './bits'
 
 const columns: Column<ContextAssertion>[] = [
   {
@@ -17,6 +17,7 @@ const columns: Column<ContextAssertion>[] = [
           <TypeBadge type={a.type} />
           <span className="text-xs text-muted">{a.topic}</span>
           <IdChip>{a.id}</IdChip>
+          {isOperatorEdited(a) && <OperatorChip />}
           <ConflictIcon a={a} />
         </div>
       </>

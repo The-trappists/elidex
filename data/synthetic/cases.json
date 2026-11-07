@@ -1,5 +1,32 @@
 [
   {
+    "id": "agent-trn042-sfp-match",
+    "title": "TRN-042 SFP case with matching human knowledge",
+    "entity_id": "TRN-042",
+    "at": "2026-10-20T07:50",
+    "description": "An SFP was replaced on TRN-042. The interface is UP, optical levels are normal, alarms are cleared, but traffic counters remain at zero.",
+    "observations": {},
+    "planned_action": "Reboot TRN-042"
+  },
+  {
+    "id": "agent-trn305-routing-mismatch",
+    "title": "TRN-305 routing policy case must abstain from power-dip advice",
+    "entity_id": "TRN-305",
+    "at": "2026-10-20T07:55",
+    "description": "TRN-305 lost packets after a routing policy change. No SFP was changed; the interface is UP, optics are normal, and traffic counters are increasing.",
+    "observations": {},
+    "planned_action": null
+  },
+  {
+    "id": "agent-trn305-power-dip-match",
+    "title": "TRN-305 TX-5000 power dip case matches the wait guidance",
+    "entity_id": "TRN-305",
+    "at": "2026-10-20T07:55",
+    "description": "After a short power dip, TRN-305 TX-5000 has a DOWN link while sync recovers.",
+    "observations": {"interface_status": "DOWN"},
+    "planned_action": "Reboot TRN-305"
+  },
+  {
     "id": "similar-old-node",
     "title": "Similar case on another old node",
     "entity_id": "TRN-117",

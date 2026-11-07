@@ -37,6 +37,7 @@ export function KgCanvas({
   const host = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const nodeKey = useRef('')
+  const evidenceKey = evidenceIds.join('|')
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
@@ -104,6 +105,39 @@ export function KgCanvas({
         }
       }
     }
+    // Orient the animated dash flow along the shortest highlighted path from the entity
+    // toward each evidence assertion, regardless of the knowledge graph's edge direction.
+    const edgeById = new Map(defs.filter((d) => d.group === 'edges').map((d) => [String(d.data.id), d]))
+    const adjacency = new Map<string, { node: string; edgeId: string }[]>()
+    for (const edgeId of usedEdges) {
+      const edge = edgeById.get(edgeId)
+      if (!edge) continue
+      const source = String(edge.data.source)
+      const target = String(edge.data.target)
+      adjacency.set(source, [...(adjacency.get(source) ?? []), { node: target, edgeId }])
+      adjacency.set(target, [...(adjacency.get(target) ?? []), { node: source, edgeId }])
+    }
+    const distance = new Map<string, number>()
+    if (targetHighlightId) {
+      const queue = [targetHighlightId]
+      distance.set(targetHighlightId, 0)
+      for (let i = 0; i < queue.length; i += 1) {
+        const node = queue[i]
+        for (const next of adjacency.get(node) ?? []) {
+          if (distance.has(next.node)) continue
+          distance.set(next.node, (distance.get(node) ?? 0) + 1)
+          queue.push(next.node)
+        }
+      }
+    }
+    const flowDirection = new Map<string, 'forward' | 'reverse'>()
+    for (const edgeId of usedEdges) {
+      const edge = edgeById.get(edgeId)
+      if (!edge) continue
+      const source = String(edge.data.source)
+      const target = String(edge.data.target)
+      flowDirection.set(edgeId, (distance.get(source) ?? 0) <= (distance.get(target) ?? 0) ? 'forward' : 'reverse')
+    }
     const wanted = new Map(defs.map((d) => [d.data.id as string, d]))
     cy.batch(() => {
       cy.elements().forEach((e) => {
@@ -126,12 +160,23 @@ export function KgCanvas({
           else ele.removeClass('agent-evidence')
           if (d.group === 'edges' && usedEdges.has(String(d.data.id))) ele.addClass('agent-evidence-edge')
           else ele.removeClass('agent-evidence-edge')
+          const direction = d.group === 'edges' ? flowDirection.get(String(d.data.id)) : undefined
+          if (direction === 'forward') ele.addClass('agent-flow-forward')
+          else ele.removeClass('agent-flow-forward')
+          if (direction === 'reverse') ele.addClass('agent-flow-reverse')
+          else ele.removeClass('agent-flow-reverse')
           const unused = d.group === 'nodes' ? !usedNodes.has(d.data.id as string) : !usedEdges.has(String(d.data.id))
           if (agentMode && unused) ele.addClass('agent-dim')
           else ele.removeClass('agent-dim')
         }
       }
     })
+    const flowEdges = cy.edges('.agent-evidence-edge')
+    flowEdges.stop(true)
+    flowEdges.style('line-dash-offset', 0)
+    // Keep the graph responsive while the retrieval animation is being reworked. The
+    // Cytoscape animation completion callbacks were recursively scheduling work on every
+    // edge and could starve the page after the agent populated a larger result graph.
     const key = cy
       .nodes()
       .map((n) => n.id())
@@ -153,7 +198,7 @@ export function KgCanvas({
         gravity: 0.25,
       } as unknown as cytoscape.LayoutOptions).run()
     }
-  }, [defs, targetHighlightId, evidenceIds])
+  }, [defs, targetHighlightId, evidenceKey])
 
   // focus on the selection and its neighbourhood
   const matchKey = matchIds.join('|')

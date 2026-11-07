@@ -121,6 +121,42 @@ def cmd_graph(args: argparse.Namespace) -> None:
     print(json.dumps(out, indent=2, ensure_ascii=False, default=str))
 
 
+def cmd_outcome(args: argparse.Namespace) -> None:
+    from .mvp import feedback
+
+    store = load_store()
+    a = store.assertions.get(args.assertion) or sys.exit(f"Unknown assertion {args.assertion}")
+    at = datetime.fromisoformat(args.at) if args.at else datetime.now()
+    worked = {"yes": True, "no": False}.get(args.worked)
+    outcome = feedback.record(a, store.resolve(args.entity), at, json.loads(args.after), worked=worked)
+    if outcome is None:
+        print("No verdict: no symptom observed after the action, nothing recorded. Pass --after or --worked.")
+        return
+    store.save(config.STORE_FILE)
+    print(f"Recorded: {'worked' if outcome.worked else 'did not work'} ({outcome.evidence})")
+    print(feedback.track_record(a).line())
+
+
+def cmd_eval(args: argparse.Namespace) -> None:
+    from .eval import render, run_eval
+    from .eval.kb import EVAL_OUT
+
+    if args.extractor == "llm" and not config.llm_configured():
+        sys.exit("LLM not configured: set LLM_API_KEY and LLM_MODEL in .env (see .env.example), or use the default scripted extractor.")
+    try:
+        result = run_eval(args.extractor)
+    except FileNotFoundError as e:
+        sys.exit(str(e))
+    EVAL_OUT.mkdir(parents=True, exist_ok=True)
+    (EVAL_OUT / f"report-{args.extractor}.json").write_text(json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    (EVAL_OUT / f"report-{args.extractor}.md").write_text(render(result), encoding="utf-8")
+    if args.json:
+        print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+    else:
+        print(render(result))
+        print(f"Saved out/eval/report-{args.extractor}.md and .json")
+
+
 def cmd_serve(args: argparse.Namespace) -> None:
     import uvicorn
 
@@ -327,6 +363,20 @@ def main(argv: list[str] | None = None) -> None:
         sp.add_argument("entity", nargs="?" if name == "experts" else None, help="element or site ID, e.g. TRN-117")
         sp.add_argument("--at", help="ISO datetime (default: now)")
     gr.set_defaults(func=cmd_graph)
+
+    oc = sub.add_parser("outcome", help="field feedback: did a piece of knowledge work when applied?")
+    oc.add_argument("assertion", help="assertion id, e.g. ctx_0004")
+    oc.add_argument("entity", help="where it was applied, e.g. TRN-229")
+    oc.add_argument("--after", default="{}", help='observations after the action, JSON, e.g. {"interface_status": "DOWN"}')
+    oc.add_argument("--worked", choices=["yes", "no"], help="override the judgment")
+    oc.add_argument("--at", help="ISO datetime (default: now)")
+    oc.set_defaults(func=cmd_outcome)
+
+    ev = sub.add_parser("eval", help="accuracy report: retrieval (right solution?) and exchange (right information?)")
+    ev.add_argument("--extractor", choices=["scripted", "llm", "cache"], default="scripted",
+                    help="scripted = labels (offline); llm = real extractor; cache = replay the last llm run")
+    ev.add_argument("--json", action="store_true")
+    ev.set_defaults(func=cmd_eval)
 
     srv = sub.add_parser("serve", help="REST API (FastAPI)")
     srv.add_argument("--host", default="127.0.0.1")

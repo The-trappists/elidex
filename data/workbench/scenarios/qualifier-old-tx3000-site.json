@@ -1,0 +1,97 @@
+{
+  "id": "qualifier-old-tx3000-site",
+  "title": "'The old TX-3000s' at a site that also has a TX-5000",
+  "description": "A tip about 'the old TX-3000s' is given while working on TRN-088 at Jyväskylä Kangas exchange, where the newer TRN-240 (TX-5000) also sits. Tests the vague-word qualifier: the knowledge binds to the instance TRN-088 only, a class built from 'old' is flagged as wider than stated (or rejected by the critic), and the site is where it was seen, not scope.",
+  "channel": "teams",
+  "subject": "Kangas exchange, TRN-088 power cycle",
+  "incident": null,
+  "participants": [
+    "veikko",
+    "erkki",
+    "jaakko"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "at Kangas exchange now, power cycled TRN-088 after the fan alarm. the OSPF neighbour did not come back 😕"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 40,
+      "text": "yeah that happens"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 12,
+      "text": "the old TX-3000s do that after a power cycle, they need a manual 'clear ospf neighbor' on the uplink port"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 35,
+      "text": "right. wait 5 min after boot, then clear the neighbour. before that it just flaps"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 60,
+      "text": "ok did it on TRN-088, neighbour is up. should I do the same on TRN-240 next to it?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 25,
+      "text": "no, that one is a TX-5000, different firmware, it comes up on its own"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 20,
+      "text": "kiitos, noted 👍"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "ospf-neighbour-stuck-after-power-cycle",
+        "summary": "After a power cycle TRN-088 (an older TX-3000) does not restore its OSPF neighbour by itself: wait 5 minutes after boot, then run 'clear ospf neighbor' on the uplink port. The neighbouring TX-5000 TRN-240 is not affected.",
+        "scope": {
+          "instance_ids": [
+            "TRN-088"
+          ],
+          "site_ids": [
+            "SITE-JKL-006"
+          ],
+          "element_class": null,
+          "trigger": "power-cycle",
+          "qualifier": "old"
+        },
+        "conditions": [],
+        "diagnosis": null,
+        "action": "Wait 5 minutes after boot, then run 'clear ospf neighbor' on the uplink port.",
+        "avoid": [
+          "expect the OSPF neighbour to come back on its own after a power cycle"
+        ],
+        "fact": null,
+        "trust_level": "stated",
+        "evidence": "seq 3-4: 'the old TX-3000s do that after a power cycle' / 'wait 5 min after boot, then clear the neighbour'",
+        "stated_by": "Veikko Vikkelä",
+        "cited_seq": [
+          3,
+          4,
+          6
+        ],
+        "evidence_quote": "the old TX-3000s do that after a power cycle, they need a manual 'clear ospf neighbor' on the uplink port",
+        "confidence": 0.7
+      }
+    ]
+  },
+  "tags": [
+    "qualifier",
+    "no-overlink",
+    "vague-word",
+    "critic",
+    "teams",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
