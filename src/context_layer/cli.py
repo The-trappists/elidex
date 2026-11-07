@@ -176,7 +176,7 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         db = mongo.connect()
         if args.dataset_cmd == "embed":
             print(f"Embedding mode: {embed.mode()}")
-            print(mongo_store.embed_collection(db, args.collection))
+            print(mongo_store.embed_collection(db, args.collection, reset=args.reset))
         else:
             for d in mongo_store.similar(db, args.collection, args.text, args.limit):
                 text = mongo_store.TEXT_OF[args.collection](d)
@@ -359,6 +359,7 @@ def main(argv: list[str] | None = None) -> None:
     lt.add_argument("--analytics", action="store_true", help="then build the analytics layer (compression, daily_mentions); time-series service only")
     em = dsub.add_parser("embed", help="embed the knowledge text in Atlas and create the vector index (EMBEDDING_MODEL, or the offline fallback)")
     em.add_argument("--collection", choices=["assertions", "facts"], default="assertions")
+    em.add_argument("--reset", action="store_true", help="drop the vectors and the vector index first (needed to switch embedding model)")
     sm = dsub.add_parser("similar", help="the knowledge nearest to a sentence, by vector search in Atlas")
     sm.add_argument("text")
     sm.add_argument("--collection", choices=["assertions", "facts"], default="assertions")

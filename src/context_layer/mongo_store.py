@@ -76,11 +76,21 @@ def index_status(db, collection: str) -> dict | None:
     return next((i for i in db[collection].list_search_indexes() if i["name"] == name), None)
 
 
-def embed_collection(db, collection: str, batch: int = 64, log=print) -> dict:
+def reset_embeddings(db, collection: str) -> None:
+    """Forget the vectors, their recorded mode and the vector index, to start again with another model or size."""
+    db[collection].update_many({}, {"$unset": {"embedding": ""}})
+    db["meta"].delete_one({"_id": f"embedding:{collection}"})
+    if index_status(db, collection):
+        db[collection].drop_search_index(vector_index_name(collection))
+
+
+def embed_collection(db, collection: str, batch: int = 64, log=print, reset: bool = False) -> dict:
     """Embed every document of `collection` that has no vector yet, then make sure the vector index exists."""
     from pymongo import UpdateOne
     from pymongo.operations import SearchIndexModel
 
+    if reset:
+        reset_embeddings(db, collection)
     text_of = TEXT_OF[collection]
     meta = db["meta"].find_one({"_id": f"embedding:{collection}"})
     if meta and meta["mode"] != embed.mode():
