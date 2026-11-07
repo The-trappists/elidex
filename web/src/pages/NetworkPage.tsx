@@ -2,10 +2,10 @@ import { addDays, format } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Inspector } from '../components/graph/Inspector'
-import { NetworkGraph } from '../components/graph/NetworkGraph'
 import type { NodeKind } from '../components/graph/graphModel'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
-import { NetworkKey } from '../components/graph/GraphLegend'
+import { TopologyGraph, TopologyKey } from '../components/force/TopologyGraph'
+import { knowledgeTargets } from '../components/force/models'
 import { Button, Input } from '../components/ui'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
@@ -44,6 +44,11 @@ export default function NetworkPage() {
             ? 'assertion'
             : null
   const select = (id: string | null) => setParams(id ? { select: id } : {}, { replace: true })
+  // A group or a piece of knowledge is not drawn: light up the equipment it applies to instead.
+  const highlightIds = useMemo(
+    () => (selectedId && (kind === 'class' || kind === 'assertion') ? knowledgeTargets(selectedId, { elements, classes, assertions }) : []),
+    [selectedId, kind, elements, classes, assertions],
+  )
 
   const rel = at.getTime() - now.getTime()
   const state = Math.abs(rel) < HOUR / 2 ? 'now' : rel < 0 ? 'past' : 'future'
@@ -81,9 +86,9 @@ export default function NetworkPage() {
           </div>
         </>
       }
-      legend={<NetworkKey />}
+      legend={<TopologyKey />}
       canvas={
-        <NetworkGraph at={at} selectedId={selectedId} onSelect={(id) => select(id)} />
+        <TopologyGraph at={at} selectedId={kind === 'element' || kind === 'site' ? selectedId : null} highlightIds={highlightIds} onSelect={select} />
       }
       browse={
         <div className="p-4">

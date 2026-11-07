@@ -161,7 +161,7 @@ docker compose --env-file .env -f deploy/docker-compose.neo4j.yml down    # stop
 | `data/synthetic/` | Our synthetic records, messages and cases ([how they were made](data/synthetic/README.md)) |
 | `data/cache/` | Cached extractions for the offline demo |
 | `src/context_layer/workbench/` | Workbench backend: live state, pipeline jobs, simulator, Slack bridge, REST + SSE |
-| `web/` | Workbench UI (React, Vite, Tailwind, Cytoscape) |
+| `web/` | Workbench UI (React, Vite, Tailwind, canvas force graphs) |
 | `data/workbench/` | Workbench seed: topology, personas, scenarios ([how they were made](data/workbench/README.md)) |
 | `deploy/` | Docker Compose + Caddy for the Vultr VM, Slack app manifest |
 | `demo/app.py` | Streamlit demo |
