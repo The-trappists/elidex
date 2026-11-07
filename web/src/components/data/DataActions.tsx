@@ -4,7 +4,7 @@ import { api } from '../../api/client'
 import { REMOVABLE_ORIGINS } from '../../api/types'
 import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
-import { Button, Field, Input, InProgress, Modal, toast, withToast } from '../ui'
+import { Button, Field, FilterMenu, Input, InProgress, Modal, toast, withToast } from '../ui'
 
 function countGenerated() {
   const s = useLive.getState()
@@ -60,16 +60,28 @@ export function DataActions() {
     if (input.current) input.current.value = ''
   }
 
+  const buttons = (kind: 'row' | 'menu') => {
+    const fill = kind === 'menu' ? 'w-full !justify-start' : ''
+    return (
+      <>
+      <a href={api.exportUrl} download className="flex flex-col"><Button size="sm" className={fill} icon={<Download size={13} />}>Export</Button></a>
+      <Button size="sm" className={fill} icon={<Upload size={13} />} onClick={() => input.current?.click()}>Import</Button>
+      <Button size="sm" className={fill} variant="primary" icon={<Database size={13} />} onClick={() => setModal('dataset')}>Load company dataset</Button>
+      {kind === 'row' && <span aria-hidden className="mx-2 h-5 w-px bg-line" />}
+      <Button size="sm" className={fill} variant="danger" icon={<Trash2 size={13} />} onClick={() => setModal('remove')}>Remove generated data</Button>
+      <Button size="sm" className={fill} variant="danger" icon={<RotateCcw size={13} />} onClick={() => setModal('reset')}>Reset</Button>
+      </>
+    )
+  }
+
   const gen = modal === 'remove' ? countGenerated() : null
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <a href={api.exportUrl} download><Button size="sm" icon={<Download size={13} />}>Export</Button></a>
-      <Button size="sm" icon={<Upload size={13} />} onClick={() => input.current?.click()}>Import</Button>
-      <Button size="sm" variant="primary" icon={<Database size={13} />} onClick={() => setModal('dataset')}>Load company dataset</Button>
-      <span aria-hidden className="mx-2 h-5 w-px bg-line" />
-      <Button size="sm" variant="danger" icon={<Trash2 size={13} />} onClick={() => setModal('remove')}>Remove generated data</Button>
-      <Button size="sm" variant="danger" icon={<RotateCcw size={13} />} onClick={() => setModal('reset')}>Reset</Button>
+    <div className="flex items-center gap-1.5">
+      <div className="hidden items-center gap-1.5 min-[1366px]:flex">{buttons('row')}</div>
+      <FilterMenu className="min-[1366px]:hidden" label="Actions" icon={<Database size={14} />}>
+        <div className="flex flex-col items-stretch gap-1.5">{buttons('menu')}</div>
+      </FilterMenu>
       <input ref={input} type="file" accept="application/json,.json" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
 
       <Modal open={modal === 'remove'} onClose={close} title="Remove generated data?" footer={<><Button onClick={close}>Cancel</Button><Button variant="danger" loading={busy} onClick={remove}>Remove</Button></>}>

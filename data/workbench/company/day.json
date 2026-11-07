@@ -1,0 +1,226 @@
+[
+ {
+  "id": "day_01",
+  "at_min": 0,
+  "kind": "incident_chat",
+  "scenario_id": "slack-noc-handover",
+  "label": "Morning handover at the NOC (RAD-198 cold-morning flap)"
+ },
+ {
+  "id": "day_02",
+  "at_min": 6,
+  "kind": "chat",
+  "scenario_id": "barrier-key-kemijarvi",
+  "label": "Site access: who holds the Kemijarvi barrier key"
+ },
+ {
+  "id": "day_03",
+  "at_min": 14,
+  "kind": "noise",
+  "scenario_id": "noise-chitchat",
+  "label": "Coffee and weekend plans in the NOC channel"
+ },
+ {
+  "id": "day_04",
+  "at_min": 22,
+  "kind": "incident_chat",
+  "scenario_id": "elisa-trn042-chat",
+  "label": "Elisa's TRN-042 SFP chat: traffic lost after an SFP swap"
+ },
+ {
+  "id": "day_05",
+  "at_min": 40,
+  "kind": "chat",
+  "scenario_id": "elisa-trn042-email",
+  "label": "Follow-up email on the TRN-042 SFP case"
+ },
+ {
+  "id": "day_06",
+  "at_min": 55,
+  "kind": "chat",
+  "scenario_id": "layperson-office-manager-humming-cabinet",
+  "label": "Office manager reports a humming cabinet"
+ },
+ {
+  "id": "day_07",
+  "at_min": 70,
+  "kind": "incident_chat",
+  "scenario_id": "slack-breaker-harbour-hut",
+  "label": "Harbour hut radio dead, breaker tripped (RAD-254)"
+ },
+ {
+  "id": "day_08",
+  "at_min": 88,
+  "kind": "incident_chat",
+  "scenario_id": "pattern-trn229-sync-loss-again",
+  "label": "TRN-229 loses sync"
+ },
+ {
+  "id": "day_09",
+  "at_min": 100,
+  "kind": "noise",
+  "scenario_id": "noise-home-router-reboot",
+  "label": "Someone's home router reboot advice"
+ },
+ {
+  "id": "day_10",
+  "at_min": 115,
+  "kind": "incident_chat",
+  "scenario_id": "layperson-caretaker-beeping-cabinet",
+  "label": "Caretaker hears a beeping cabinet (RTR-021)"
+ },
+ {
+  "id": "day_11",
+  "at_min": 132,
+  "kind": "incident_chat",
+  "scenario_id": "pattern-trn131-traffic-drop-again",
+  "label": "TRN-131 drops traffic"
+ },
+ {
+  "id": "day_12",
+  "at_min": 150,
+  "kind": "incident_chat",
+  "scenario_id": "new-unit-trn305",
+  "label": "New unit TRN-305 loses traffic after an SFP swap"
+ },
+ {
+  "id": "day_13",
+  "at_min": 168,
+  "kind": "chat",
+  "scenario_id": "slack-key-moved",
+  "label": "The site key has been moved"
+ },
+ {
+  "id": "day_14",
+  "at_min": 180,
+  "kind": "chat",
+  "scenario_id": "firmware-4-2-rollout",
+  "label": "Firmware 4.2 rollout plan"
+ },
+ {
+  "id": "day_15",
+  "at_min": 198,
+  "kind": "incident_chat",
+  "scenario_id": "similar-trn117",
+  "label": "TRN-117 loses traffic after an SFP swap (same as TRN-042)"
+ },
+ {
+  "id": "day_16",
+  "at_min": 216,
+  "kind": "chat",
+  "scenario_id": "layperson-callcentre-ferry-evenings",
+  "label": "Call centre: ferry customers complain in the evenings"
+ },
+ {
+  "id": "day_17",
+  "at_min": 228,
+  "kind": "incident_chat",
+  "scenario_id": "slack-radio-tilt",
+  "label": "Radio RAD-221 low throughput after the storm"
+ },
+ {
+  "id": "day_18",
+  "at_min": 250,
+  "kind": "incident_chat",
+  "scenario_id": "hunch-to-verified",
+  "label": "TRN-176 low optics after a module swap"
+ },
+ {
+  "id": "day_19",
+  "at_min": 268,
+  "kind": "chat",
+  "scenario_id": "pattern-trn117-clock-module",
+  "label": "TRN-117 clock module cause found"
+ },
+ {
+  "id": "day_20",
+  "at_min": 282,
+  "kind": "chat",
+  "scenario_id": "layperson-salesrep-flooded-road",
+  "label": "Sales rep sees a flooded road near a site"
+ },
+ {
+  "id": "day_21",
+  "at_min": 296,
+  "kind": "incident_chat",
+  "scenario_id": "expert-disagreement",
+  "label": "Two experts disagree about TRN-088"
+ },
+ {
+  "id": "day_22",
+  "at_min": 318,
+  "kind": "incident_chat",
+  "scenario_id": "pattern-harbour-breaker-again",
+  "label": "Harbour breaker trips again (RAD-254)"
+ },
+ {
+  "id": "day_23",
+  "at_min": 332,
+  "kind": "chat",
+  "scenario_id": "ambiguous-two-turku",
+  "label": "Which Turku? Two sites share the name"
+ },
+ {
+  "id": "day_24",
+  "at_min": 350,
+  "kind": "noise",
+  "scenario_id": "adversarial-rant-sodankyla-key",
+  "label": "Rant about the Sodankyla key, mostly noise"
+ },
+ {
+  "id": "day_25",
+  "at_min": 362,
+  "kind": "chat",
+  "scenario_id": "slack-needle-in-noise",
+  "label": "A useful tip buried in a noisy channel"
+ },
+ {
+  "id": "day_26",
+  "at_min": 385,
+  "kind": "incident_chat",
+  "scenario_id": "pattern-trn229-sync-loss-evening",
+  "label": "TRN-229 loses sync again"
+ },
+ {
+  "id": "day_27",
+  "at_min": 398,
+  "kind": "incident_chat",
+  "scenario_id": "pattern-trn131-traffic-drop-evening",
+  "label": "TRN-131 drops traffic again"
+ },
+ {
+  "id": "day_28",
+  "at_min": 412,
+  "kind": "noise",
+  "scenario_id": "adversarial-unparseable-slang-mixed",
+  "label": "Garbled slang report: SFP failed on TRN-117"
+ },
+ {
+  "id": "day_29",
+  "at_min": 425,
+  "kind": "incident_chat",
+  "scenario_id": "slack-vendor-secondhand",
+  "label": "Second-hand vendor tip about TRN-229"
+ },
+ {
+  "id": "day_30",
+  "at_min": 438,
+  "kind": "incident_chat",
+  "scenario_id": "pattern-harbour-breaker-third",
+  "label": "Harbour breaker, third time"
+ },
+ {
+  "id": "day_31",
+  "at_min": 448,
+  "kind": "noise",
+  "scenario_id": "adversarial-layperson-cleaning-lady",
+  "label": "Cleaner reports a flapping interface (TRN-208)"
+ },
+ {
+  "id": "day_32",
+  "at_min": 458,
+  "kind": "incident_chat",
+  "scenario_id": "agent-outcome-followup",
+  "label": "Technician reports back after the agent's advice on TRN-117"
+ }
+]

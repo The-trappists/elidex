@@ -15,7 +15,12 @@ from .. import config
 from . import loop_agents
 from .processor import install_llm_sinks
 from .routes import emit_clock, router
+from .routes_export import router as export_router
+from .llm_compact import LlmCompactor
 from .sources import router as sources_router
+from .routes_knowledge import router as knowledge_router
+from .archive import Archive
+from .company import CompanyDay
 from .simulator import Simulator
 from .slack_bridge import SlackBridge
 from .state import Workbench
@@ -57,10 +62,16 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         loop_agents.install_all()
 
         app.state.simulator = Simulator(wb)
+        cloud = state_file is None  # tests pass a state file: they never reach Atlas or Tiger
+        archive = Archive((Path(state_file).parent if state_file else config.WORKBENCH_DIR) / "archive", atlas=cloud, tiger=cloud)
+        app.state.company = CompanyDay(wb, app.state.simulator, archive=archive)
         app.state.slack = None
+        app.state.llm_compactor = LlmCompactor(wb)
         tasks = [loop.create_task(_clock_ticks(wb))]
         if background:
             tasks.append(loop.create_task(_guarded(wb, "simulator", app.state.simulator.run_forever())))
+            tasks.append(loop.create_task(_guarded(wb, "company day", app.state.company.run_forever())))
+            tasks.append(loop.create_task(_guarded(wb, "llm log compaction", app.state.llm_compactor.run_forever())))
         if config.slack_configured():
             slack = SlackBridge(wb, config.SLACK_BOT_TOKEN, config.SLACK_APP_TOKEN, config.SLACK_CHANNEL_ID)
             app.state.slack, wb.slack = slack, slack
@@ -86,7 +97,9 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         allow_headers=["*"],
     )
     app.include_router(router)
+    app.include_router(export_router)
     app.include_router(sources_router)
+    app.include_router(knowledge_router)
     _serve_web(app)
     return app
 

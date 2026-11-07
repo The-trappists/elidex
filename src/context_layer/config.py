@@ -101,6 +101,9 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
 # Only used with EMBEDDING_MODEL; calibrate with `ctx patterns --check-meaning`. 0.78 is calibrated on
 # gemini-embedding-001 (2026-11-07): same problem >= 0.80, look-alikes <= 0.76. Another model needs its own value.
 PATTERNS_SAME_MEANING = float(os.getenv("PATTERNS_SAME_MEANING", "0.78"))
+# Dedupe (docs/workbench.md): minimum similarity (words or embedding) to fold a new assertion into an older one.
+# Calibrate with `uv run ctx dedupe-check`.
+DEDUPE_THRESHOLD = float(os.getenv("DEDUPE_THRESHOLD", "0.90"))
 DATASET_DIR = Path(os.getenv("DATASET_DIR", OUT_DIR / "dataset" / "demo"))
 
 
