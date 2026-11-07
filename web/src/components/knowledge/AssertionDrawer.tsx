@@ -1,11 +1,12 @@
-import { Trash2 } from 'lucide-react'
+import { History, Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { ContextAssertion } from '../../api/types'
 import { fmtDateTime } from '../../lib/format'
 import { Button, Drawer, IdChip, JsonView, Modal, withToast } from '../ui'
-import { assertionHref, BindingChips, TrustBadge, TypeBadge, threadHref } from './bits'
+import { assertionHref, BindingChips, isOperatorEdited, OperatorChip, TrustBadge, TypeBadge, threadHref } from './bits'
+import { AssertionEditor } from './AssertionEditor'
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mt-5">
@@ -16,6 +17,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 
 export function AssertionDrawer({ assertion, id, onClose }: { assertion: ContextAssertion | undefined; id: string | null; onClose: () => void }) {
   const [confirm, setConfirm] = useState(false)
+  const [editing, setEditing] = useState<'form' | 'history' | null>(null)
   const a = assertion
 
   const remove = async () => {
@@ -29,14 +31,16 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
   }
 
   return (
+    <>
     <Drawer
       open={!!id}
-      onClose={onClose}
+      onClose={editing ? () => undefined : onClose}
       width="max-w-xl"
       title={
         a ? (
           <div className="flex items-center gap-2">
             <TypeBadge type={a.type} /> <span className="truncate">{a.topic}</span> <IdChip>{a.id}</IdChip>
+            {isOperatorEdited(a) && <OperatorChip />}
           </div>
         ) : (
           'Assertion'
@@ -47,6 +51,17 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
         <div className="text-sm text-muted">Knowledge "{id}" not found. It may have been deleted.</div>
       ) : (
         <div className="text-sm">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>
+            {isOperatorEdited(a) && (
+              <button
+                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                onClick={() => setEditing('history')}
+              >
+                <History size={13} /> Edited by operator. View history
+              </button>
+            )}
+          </div>
           <p>{a.summary}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted">
             <TrustBadge level={a.trust.level} />
@@ -147,6 +162,8 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
         </div>
       )}
     </Drawer>
+    <AssertionEditor id={editing && a ? a.id : null} focusHistory={editing === 'history'} onClose={() => setEditing(null)} />
+    </>
   )
 }
 

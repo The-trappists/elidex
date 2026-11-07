@@ -2,6 +2,7 @@
 // Pages read from this store with selectors, e.g. `const threads = useLive(s => s.threads)`.
 import { create } from 'zustand'
 import { api } from '../api/client'
+import { fixtureSnapshot } from '../api/fixtures/review'
 import type {
   ClockState,
   ContextAssertion,
@@ -25,6 +26,8 @@ import type {
 const MAX_JOBS = 200
 const MAX_LLM_CALLS = 500
 const MAX_LOG = 200
+
+let snapshotIsFixture = false
 
 export type Connection = 'connecting' | 'live' | 'offline'
 
@@ -97,7 +100,21 @@ export const useLive = create<LiveState>((set, get) => ({
   lastEventId: 0,
 
   load: async () => {
-    const s: StateSnapshot = await api.state()
+    let s: StateSnapshot
+    try {
+      s = await api.state()
+    } catch (e) {
+      // VITE_REVIEW_FIXTURES=1: the console works with the backend down, on sample data.
+      if (import.meta.env.VITE_REVIEW_FIXTURES !== '1') throw e
+      s = fixtureSnapshot()
+      snapshotIsFixture = true
+    }
+    if (import.meta.env.VITE_REVIEW_FIXTURES === '1' && !snapshotIsFixture) {
+      // Real backend without the review data: add the sample cases next to the real state.
+      const fx = fixtureSnapshot()
+      const add = <T extends { id: string }>(xs: T[], extra: T[]) => [...xs, ...extra.filter((e) => !xs.some((x) => x.id === e.id))]
+      s = { ...s, threads: add(s.threads, fx.threads), jobs: add(s.jobs, fx.jobs), assertions: add(s.assertions, fx.assertions), classes: add(s.classes, fx.classes), elements: add(s.elements, fx.elements), sites: add(s.sites, fx.sites) }
+    }
     set({
       ready: true,
       clock: s.clock,
@@ -218,6 +235,11 @@ export function connectLive(): () => void {
       useLive.setState({ connection: 'offline' })
       setTimeout(open, retry)
       retry = Math.min(retry * 2, 15000)
+      return
+    }
+    if (snapshotIsFixture) {
+      // Backend down in fixtures mode: stay on the sample snapshot, no stream, no refetch loop.
+      useLive.setState({ connection: 'offline' })
       return
     }
     es = new EventSource(api.streamUrl)
