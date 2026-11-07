@@ -1,15 +1,16 @@
 import type cytoscape from 'cytoscape'
-import { Maximize2, Search, Waypoints, SlidersHorizontal, Plus, Minus } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { Search, Waypoints, SlidersHorizontal } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { KgElement, KgKind } from '../api/types'
 import { useGraphQuery } from '../components/graph/useGraphQuery'
-import { KgCanvas, type KgCanvasHandle } from '../components/kg/KgCanvas'
+import { KgCanvas } from '../components/kg/KgCanvas'
 import { KgDetails } from '../components/kg/KgDetails'
 import { EDGE_LABEL, KIND, KIND_ORDER, title } from '../components/kg/kgStyle'
 import { Button, EmptyState, Input, Toggle } from '../components/ui'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
+import { GraphKey, Swatch } from '../components/graph/GraphLegend'
 import { cn } from '../lib/cn'
 
 type Data = KgElement['data']
@@ -26,7 +27,6 @@ export default function GraphPage() {
   const [q, setQ] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [retry, setRetry] = useState(0)
-  const canvas = useRef<KgCanvasHandle | null>(null)
 
   const { data, error } = useGraphQuery(() => api.knowledgeGraph(), `kg-${retry}`)
 
@@ -44,7 +44,7 @@ export default function GraphPage() {
   }, [data])
 
   // What is drawn: the chosen kinds; when messages are hidden, their edges are moved onto their conversation.
-  const { defs, hidden } = useMemo(() => {
+  const { defs } = useMemo(() => {
     const visible = (d: Data | undefined) =>
       !!d && kinds.has(d.kind as KgKind) && (showOutdated || d.kind !== 'Assertion' || d.valid !== false)
     const threadOf = new Map(edges.filter((e) => e.type === 'PART_OF').map((e) => [String(e.source), String(e.target)]))
@@ -68,11 +68,9 @@ export default function GraphPage() {
       linked.add(s).add(t)
     }
     // A node with no visible connection is noise (e.g. equipment once sites are hidden); keep it only when selected.
-    let hidden = 0
     for (const d of nodes.values()) {
       if (!visible(d)) continue
       if (!linked.has(d.id) && d.id !== selectedId) {
-        hidden++
         continue
       }
       out.push({
@@ -86,7 +84,7 @@ export default function GraphPage() {
         },
       })
     }
-    return { defs: [...out, ...edgeDefs], hidden }
+    return { defs: [...out, ...edgeDefs] }
   }, [nodes, edges, kinds, showOutdated, selectedId])
 
   const matches = useMemo(() => {
@@ -164,6 +162,14 @@ export default function GraphPage() {
           )}
         </>
       }
+      legend={
+        <GraphKey
+          items={KIND_ORDER.filter((k) => kinds.has(k)).map((k) => ({
+            label: KIND[k].plural,
+            swatch: <Swatch color={KIND[k].color} radius={k === 'Person' ? 99 : 3} dashed={k === 'Class' || k === 'Site'} />,
+          }))}
+        />
+      }
       canvas={
         <>
           {error && !data ? (
@@ -188,16 +194,8 @@ export default function GraphPage() {
               }
             />
           ) : (
-            <KgCanvas defs={defs} selectedId={selectedId} matchIds={matches} onSelect={selectNode} handle={canvas} />
+            <KgCanvas defs={defs} selectedId={selectedId} matchIds={matches} onSelect={selectNode} />
           )}
-          <div className="graph-zoom" role="group" aria-label="Graph zoom">
-            <Button aria-label="Zoom in" icon={<Plus size={16} />} onClick={() => canvas.current?.zoom(1.3)} />
-            <Button aria-label="Zoom out" icon={<Minus size={16} />} onClick={() => canvas.current?.zoom(1 / 1.3)} />
-            <Button icon={<Maximize2 size={15} />} onClick={() => canvas.current?.fit()}>
-              Fit
-            </Button>
-          </div>
-          {hidden > 0 && <span className="graph-caption">{hidden} items without visible connections · available in Browse</span>}
         </>
       }
       browse={

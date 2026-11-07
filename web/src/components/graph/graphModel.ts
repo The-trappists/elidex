@@ -80,7 +80,7 @@ export function buildGraph(g: GraphInput): BuiltGraph {
         id: nodeIds.element(e.id),
         rawId: e.id,
         kind: 'element',
-        label: `${e.type.replace(/_/g, ' ')}\n${e.id}`,
+        label: `${e.id}\n${e.type.replace(/_/g, ' ')}`,
         etype: e.type,
         parent,
         incident: openIncident.has(e.id),
@@ -99,7 +99,7 @@ export function buildGraph(g: GraphInput): BuiltGraph {
   if (g.knowledge) {
     for (const c of g.classes) {
       structure.push(nodeIds.class(c.id))
-      defs.push({ data: { id: nodeIds.class(c.id), rawId: c.id, kind: 'class', label: `Equipment group\n${c.label}` }, classes: 'klass' })
+      defs.push({ data: { id: nodeIds.class(c.id), rawId: c.id, kind: 'class', label: c.label }, classes: 'klass' })
       for (const m of classMembers(c, g.elements)) {
         defs.push({
           data: { id: `mo:${c.id}>${m.id}`, source: nodeIds.class(c.id), target: nodeIds.element(m.id), kind: 'member' },
@@ -115,7 +115,7 @@ export function buildGraph(g: GraphInput): BuiltGraph {
       const color = TYPE_STYLE[a.type].hex
       const aid = nodeIds.assertion(a.id)
       defs.push({
-        data: { id: aid, rawId: a.id, kind: 'assertion', label: `Knowledge\n${a.topic.replace(/-/g, ' ')}`, title: a.topic, color, faded: !valid },
+        data: { id: aid, rawId: a.id, kind: 'assertion', label: a.topic.replace(/-/g, ' ').replace(/^./, (ch) => ch.toUpperCase()), title: a.topic, color, faded: !valid },
         classes: 'assertion',
       })
       for (const b of a.bound_to) {

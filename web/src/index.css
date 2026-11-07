@@ -58,6 +58,16 @@
   --g-assertion: #7c5cd6;
   --g-incident: #c0262d;
   --g-link: #9aa1b2;
+
+  /* knowledge graph: one hue per kind of item */
+  --k-knowledge: #315ce7;
+  --k-person: #0f8a7e;
+  --k-equipment: #4b5568;
+  --k-site: #8a93a6;
+  --k-group: #7c5cd6;
+  --k-event: #c27a12;
+  --k-conversation: #c2417a;
+  --k-message: #a3a9b6;
 }
 
 .dark {
@@ -98,7 +108,17 @@
   --g-element: #c9cedb;
   --g-site: #1c1f27;
   --g-class: #a78bfa;
+  --g-assertion: #a78bfa;
   --g-link: #4a5163;
+
+  --k-knowledge: #7b9bff;
+  --k-person: #34c7b4;
+  --k-equipment: #aab2c2;
+  --k-site: #6b7385;
+  --k-group: #a78bfa;
+  --k-event: #f0b046;
+  --k-conversation: #f07aa8;
+  --k-message: #5c6375;
 }
 
 @theme inline {
@@ -316,9 +336,6 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   .sidebar-links { padding: 16px 10px; }
   .sidebar-links a { justify-content: center; position: relative; min-height: 44px; padding: 12px; }
   .sidebar-links a > span:last-child:not(.nav-label) { position: absolute; top: 0; right: 0; font-size: 9px; }
-  .graph-layout { flex-direction: column; overflow: auto; }
-  .graph-layout > section { flex: none; min-height: 420px; height: 65%; }
-  .graph-inspector { width: 100%; min-height: 220px; border-left: 0; border-top: 1px solid var(--line); }
 }
 @media (max-width: 767px) {
   .app-topbar { padding: 12px; gap: 10px; }
@@ -349,18 +366,20 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   .conversation-messages > header > button { margin-top: 4px; }
 }
 
-/* Graph explorers share a canvas and a readable, keyboard-accessible item list. */
+/* Graph explorers: a canvas that always fits its box, next to a readable, keyboard-accessible item list. */
 .diagram-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: 24px; gap: 20px; }
 .diagram-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; }
-.diagram-body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; flex: 1; min-height: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.diagram-body { display: grid; grid-template-columns: minmax(0, 1fr) clamp(260px, 26vw, 340px); flex: 1; min-height: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
 .diagram-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
 .diagram-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--line); }
-.diagram-canvas { position: relative; flex: 1; min-height: 260px; background-color: var(--bg); background-image: radial-gradient(var(--line) .8px, transparent .8px); background-size: 20px 20px; }
+.diagram-toolbar:empty { display: none; }
+.diagram-canvas { position: relative; flex: 1; min-height: 260px; background-color: var(--bg); }
 .diagram-details { min-width: 0; overflow: auto; border-left: 1px solid var(--line); overscroll-behavior: contain; }
-.diagram-help { padding: 10px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); }
+.diagram-key { padding: 10px 14px; border-top: 1px solid var(--line); }
 .diagram-view-switch { display: none; gap: 6px; }
-.graph-zoom { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
-.graph-caption { position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); border-radius: 6px; background: var(--surface); padding: 6px 10px; font-size: 10px; color: var(--muted); pointer-events: none; }
+.graph-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--muted); }
+.graph-key li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.graph-caption { flex-shrink: 0; padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); }
 @media (max-width: 1100px) {
  .diagram-workspace { padding: 16px; gap: 12px; }
  .diagram-body { grid-template-columns: minmax(0, 1fr); }
@@ -369,12 +388,13 @@ button:not(:disabled):active { transform: translateY(0.5px); }
  .diagram-details { display: none; border: 0; }
  .diagram-workspace[data-view='list'] .diagram-main, .diagram-workspace[data-view='details'] .diagram-main { display: none; }
  .diagram-workspace[data-view='list'] .diagram-details, .diagram-workspace[data-view='details'] .diagram-details { display: block; }
- .diagram-help { display: none; }
 }
 @media (max-width: 600px) {
  .diagram-workspace { padding: 10px; overflow: auto; }
+ .diagram-workspace[data-view='map'] .diagram-canvas { min-height: max(360px, 58vh); }
  .diagram-heading h2 { font-size: 21px; }
  .diagram-heading p { font-size: 12px; }
  .diagram-body { min-height: 360px; }
  .diagram-toolbar > div:first-child { flex-basis: 100%; }
+ .graph-key { gap: 4px 12px; font-size: 10px; }
 }

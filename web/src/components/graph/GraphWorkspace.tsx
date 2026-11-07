@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { Button } from '../ui'
 import { cn } from '../../lib/cn'
 
-/** The same navigation works by pointer, keyboard and touch; the canvas is never the only entry point. */
+/** The canvas fits its box and the Browse list reaches every item, so the graph needs no controls of its own. */
 export function GraphWorkspace({
   title,
   description,
@@ -11,6 +11,7 @@ export function GraphWorkspace({
   canvas,
   browse,
   details,
+  legend,
   selected,
   onClear,
 }: {
@@ -20,10 +21,11 @@ export function GraphWorkspace({
   canvas: ReactNode
   browse: ReactNode
   details: ReactNode
+  legend?: ReactNode
   selected: boolean
   onClear: () => void
 }) {
-  const [view, setView] = useState<'map' | 'list' | 'details'>(() => (matchMedia('(max-width: 1100px)').matches ? 'list' : 'map'))
+  const [view, setView] = useState<'map' | 'list' | 'details'>('map')
   const [previousSelection, setPreviousSelection] = useState(selected)
   if (selected !== previousSelection) {
     setPreviousSelection(selected)
@@ -68,7 +70,7 @@ export function GraphWorkspace({
         <section className="diagram-main" aria-label={title}>
           <div className="diagram-toolbar">{toolbar}</div>
           <div className="diagram-canvas">{canvas}</div>
-          <p className="diagram-help">Select an item to follow its connections. Drag to move · pinch or use zoom controls.</p>
+          {legend && <div className="diagram-key">{legend}</div>}
         </section>
         <aside
           className={cn('diagram-details', selected && 'is-selected')}

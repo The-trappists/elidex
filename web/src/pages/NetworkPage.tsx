@@ -5,8 +5,8 @@ import { Inspector } from '../components/graph/Inspector'
 import { NetworkGraph } from '../components/graph/NetworkGraph'
 import type { NodeKind } from '../components/graph/graphModel'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
-import { Input } from '../components/ui'
-import { Button } from '../components/ui'
+import { NetworkKey } from '../components/graph/GraphLegend'
+import { Button, Input } from '../components/ui'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
 
@@ -19,7 +19,6 @@ export default function NetworkPage() {
   const now = useMemo(() => new Date(nowSec * 1000), [nowSec])
   const [t, setT] = useState<Date | null>(null) // null = follow sim now
   const [q, setQ] = useState('')
-  const [knowledge, setKnowledge] = useState(true)
   const assertions = useLive((s) => s.assertions)
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
@@ -82,16 +81,9 @@ export default function NetworkPage() {
           </div>
         </>
       }
+      legend={<NetworkKey />}
       canvas={
-        <>
-          <NetworkGraph
-            at={at}
-            layers={{ knowledge }}
-            onLayersChange={(l) => setKnowledge(l.knowledge)}
-            selectedId={selectedId}
-            onSelect={(id) => select(id)}
-          />
-        </>
+        <NetworkGraph at={at} selectedId={selectedId} onSelect={(id) => select(id)} />
       }
       browse={
         <div className="p-4">

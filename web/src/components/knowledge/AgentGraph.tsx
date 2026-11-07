@@ -1,13 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type cytoscape from 'cytoscape'
-import { Maximize2, Plus, Minus } from 'lucide-react'
 import { api } from '../../api/client'
 import type { KgElement, KgKind } from '../../api/types'
 import { useGraphQuery } from '../graph/useGraphQuery'
-import { KgCanvas, type KgCanvasHandle } from '../kg/KgCanvas'
+import { KgCanvas } from '../kg/KgCanvas'
 import { EDGE_LABEL, KIND, title } from '../kg/kgStyle'
 import { KgDetails } from '../kg/KgDetails'
-import { Button, Drawer } from '../ui'
+import { Drawer } from '../ui'
 
 const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Event', 'Thread']
 const short = (s: string, n = 26) => (s.length > n ? `${s.slice(0, n - 1)}…` : s)
@@ -17,7 +16,6 @@ type Data = KgElement['data']
 export function AgentGraph({ targetId, evidenceIds }: { targetId: string; evidenceIds: string[] }) {
   const { data, error } = useGraphQuery(() => api.knowledgeGraph(), 'kg-agent-tester')
   const [selected, setSelected] = useState<string | null>(null)
-  const canvas = useRef<KgCanvasHandle | null>(null)
 
   const defs = useMemo(() => {
     const nodes = new Map<string, Data>()
@@ -80,24 +78,10 @@ export function AgentGraph({ targetId, evidenceIds }: { targetId: string; eviden
         targetHighlightId={targetId}
         evidenceIds={evidenceIds}
         onSelect={setSelected}
-        handle={canvas}
       />
-      <div className="graph-zoom">
-        <Button aria-label="Zoom in" icon={<Plus size={16} />} onClick={() => canvas.current?.zoom(1.3)} />
-        <Button aria-label="Zoom out" icon={<Minus size={16} />} onClick={() => canvas.current?.zoom(1 / 1.3)} />
-      </div>
       <Drawer open={!!node} onClose={() => setSelected(null)} title="Why this context matters">
         {node && <KgDetails node={node} nodes={nodes} edges={edges} onSelect={setSelected} />}
       </Drawer>
-      <Button
-        size="sm"
-        variant="ghost"
-        icon={<Maximize2 size={13} />}
-        className="absolute right-2 top-2 bg-surface/90"
-        onClick={() => canvas.current?.fit()}
-      >
-        Fit
-      </Button>
     </div>
   )
 }
