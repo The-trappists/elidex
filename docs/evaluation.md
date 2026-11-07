@@ -74,3 +74,5 @@ Prefer a model with few missed and high link precision: a wrong link is worse th
 - Facts have no action, so any two facts with the same scope match. Scope and type carry the signal there.
 - One run per model: LLM output varies between runs, and latency depends on the provider's load.
 - The script scores single-thread extraction only, with no known topics and no lifecycle or review agents.
+
+See [model-improvements.md](model-improvements.md) for the first real comparison run (Gemini, Mistral Large and Medium) and the suggested improvements.
