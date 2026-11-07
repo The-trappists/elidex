@@ -26,7 +26,7 @@ function Chips({ scope, sites, max }: { scope: FlagScope; sites: WbSite[]; max?:
   return (
     <div className="flex flex-wrap items-center gap-1.5" aria-label="Equipment and sites involved">
       {shown.map((e) => (
-        <Link key={e} to={networkHref(e)} title="Show on the Network page" onClick={(ev) => ev.stopPropagation()}><IdChip className="hover:border-accent">{e}</IdChip></Link>
+        <Link key={e} to={networkHref(e)} title="Show on the Network page" onClick={(ev) => ev.stopPropagation()}><IdChip className="min-h-6 hover:border-accent">{e}</IdChip></Link>
       ))}
       {max && els.length > max && <span className="text-xs text-muted">+{els.length - max} more</span>}
       {siteIds.map((id) => <Badge key={id} className="bg-surface-2 text-muted">{sites.find((s) => s.id === id)?.name ?? id}</Badge>)}

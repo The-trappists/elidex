@@ -418,7 +418,10 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 
 /* Insights keeps its list under the map on narrow screens (it has no Browse/Details switch). */
 @media (max-width: 1100px) {
-  .diagram-details.insights-list { display: flex; border-top: 1px solid var(--line); max-height: 50vh; }
+  .diagram-details.insights-list { display: flex; border-top: 1px solid var(--line); max-height: none; }
+  /* The list is the main content here: the map shrinks to a strip, the list gets most of the height. */
+  .diagram-body:has(> .insights-list) { grid-template-rows: minmax(100px, 1fr) minmax(0, 2.4fr); }
+  .diagram-body:has(> .insights-list) .diagram-canvas { min-height: 100px; }
 }
 
 /* Company day: a status dot that flashes once when its element changes state. */
@@ -437,7 +440,7 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   .app-topbar p { display: none; }
 }
 /* Overview on short screens: the two feeds keep the room. */
-@media (max-height: 759px) {
+@media (max-height: 819px) {
   .overview-page { gap: 10px; padding: 12px; }
   .overview-intro p { display: none; }
   .overview-intro h2 { font-size: 20px; }
@@ -461,3 +464,4 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   button, [role='tab'], select, summary, input:not([type='checkbox']):not([type='radio']):not([type='range']) { min-height: 32px; }
   button { min-width: 32px; }
 }
+summary { padding-block: 4px; }

@@ -31,7 +31,7 @@ function Sources({ label, children, count }: { label: string; children: React.Re
   if (!count) return null
   return (
     <div className="mt-1.5">
-      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex items-center gap-1 text-xs font-medium text-muted hover:text-text">
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex min-h-6 items-center gap-1 text-xs font-medium text-muted hover:text-text">
         {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />} {label} ({count})
       </button>
       {open && <div className="mt-1.5">{children}</div>}

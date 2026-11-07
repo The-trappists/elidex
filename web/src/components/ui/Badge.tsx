@@ -18,7 +18,7 @@ export function IdChip({ children, className, onClick }: { children: ReactNode; 
   return (
     <span
       onClick={onClick}
-      className={cn('inline-flex items-center rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-text transition', onClick && 'cursor-pointer hover:border-accent hover:text-accent', className)}
+      className={cn('inline-flex items-center rounded-md border border-line bg-surface-2 px-1.5 py-1 font-mono text-xs text-text transition', onClick && 'cursor-pointer hover:border-accent hover:text-accent', className)}
     >
       {children}
     </span>
