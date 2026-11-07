@@ -2,6 +2,27 @@
 
 > **Status: proposal.** Nothing here is decided until it is logged in [decisions.md](decisions.md). Written from a full read of `src/context_layer/` (core, workbench, eval, patterns, graph, dataset), the docs, a run of the tests and the offline evaluations, and offline probes on the real code. Every "confirmed" item below is reproduced by [`scripts/review_probes.py`](../scripts/review_probes.py), which prints `PRESENT` or `fixed` per item.
 
+## Applied so far (2026-11-07)
+
+Steps 1–3 of the [recommended order](#recommended-order) and the parse-error repair of finding 7 are implemented. The probes print `fixed` for L1–L4, R1, S1, O1, O2 and U1; A1 and A2 (MCP, step 5) are still `PRESENT`. Regression tests: [`tests/test_backend_review_fixes.py`](../tests/test_backend_review_fixes.py).
+
+| Finding | What changed | Where |
+| --- | --- | --- |
+| 1 Linking | Ids and sites must be named in the thread (same matcher as the graph; a site also by its id without prefix or a name word only it has). A class needs a known type or a model; the type is normalised to snake_case and filled from the model; a class that leaves out a unit the thread is about is dropped and the unit kept. `stated_by` must have written in the thread (exact, case, first name), else the author of the quoted message, else the single author of the cited messages, else abstain | `link.py` |
+| 2 Time | `ContextStore.reach(a)`: the elements and sites an assertion is served for by scope. An invalidation closes a rule when `reach(rule) ⊆ reach(invalidation)`; a partial overlap stays open with an event | `store.py`, `mvp/lifecycle.py` |
+| 4 Trust | `Trust.confirmed_by` (optional, backward compatible) and `Trust.add_confirmation`: the outcome loop, the judge's `supports` and the store merges keep `stated_by` and add the confirmer. `/agent/run` creates applications only for `cited_assertion_ids` | `models.py`, `outcome.py`, `judge.py`, `store.py`, `workbench/routes.py` |
+| 5 Facts | With no action on either side, `same_knowledge` compares the facts; `reconcile` flags two different facts from two people | `store.py`, `mvp/lifecycle.py` |
+| 6 Outcome | Failure phrases first ("still no", "no traffic", "not fixed", "nope", "same as before"); no bare "back", no "is up"; a message that says both is unclear | `outcome.py` |
+| 7 Parse | An answer that fails validation is retried once on the same provider with the error, then the next provider | `llm.py` |
+
+Where it differs from the proposals above:
+- **Invalidations still need the same topic.** Dropping it would let one "fixed by firmware" close every rule on the same elements, whatever the problem. The judge (workbench) already matches by meaning.
+- **Only lifecycle uses the shared reach.** `KnowledgeGraph.reach`, `patterns._Net.reach` and `review._over_reach` keep their own code for now.
+- **The vague-word option (a)/(b) is not changed**: still open in [plan.md](plan.md).
+- **"Binding exact" cannot move with these fixes**: the eval scores the extracted item before linking. Retrieval accuracy is what the linker changes.
+
+Measured on the recorded LLM extraction (`ctx eval --extractor cache`, same `out/eval/extractions.json`, before → after): accuracy plain 35% → 42%, with conditions 62% → 65%, correct silence (plain) 14% → 43%, noise items 27 → 24 and 14 → 13, solution found 95% → 95% (none lost). `sfp-after-firmware-trn117` now passes. With labels as the extractor nothing changes (100%). `ctx dataset bench` on a `tiny` dataset: 40/40 linked, 0 over-bound, as before. The linker's checks cost about 1 ms on a 40-message thread.
+
 ## Summary
 
 The pipeline covers every "must" line of the [scope checklist](challenge.md#scope-checklist), the tests pass (247), and the offline numbers are good (100% retrieval accuracy with conditions, labels as extractor). The gaps are where the **real LLM** feeds the deterministic stages, which is what a judge trying a live case will hit:
