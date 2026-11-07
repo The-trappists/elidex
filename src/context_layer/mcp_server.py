@@ -65,6 +65,22 @@ def get_rule_reach(assertion_id: str) -> dict:
 
 
 @mcp.tool()
+def get_patterns(entity_id: str | None = None, at: str | None = None) -> dict:
+    """Problems that keep coming back, or that hit several elements at the same time and share a neighbour, site or
+    firmware, with hypotheses about a common cause. These are leads for a human or for further checks, NOT rules:
+    never act on a hypothesis as if someone had stated it. Pass entity_id to keep only patterns involving it.
+    Returns {at, meaning, patterns}."""
+    from .listen import discover_threads
+    from .mvp.patterns import analyze
+    from .workbench.seed import load_seed
+
+    links = [(lk.id, lk.a, lk.b, lk.kind) for lk in load_seed().links]
+    times = {t.id: t.started_at for t in discover_threads()}
+    report = analyze(_store(), links, times, datetime.fromisoformat(at) if at else None, entity_id=entity_id)
+    return report.model_dump(mode="json")
+
+
+@mcp.tool()
 def check_action(action: str, entity_id: str, at: str | None = None, observations: dict[str, Any] | None = None) -> dict:
     """Before acting on an element (reboot, replace, dispatch...), check it against human knowledge.
     Returns decision 'go' or 'adapt' with the steps to take first and the cited sources."""

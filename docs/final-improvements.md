@@ -116,6 +116,8 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 
 ### 10. Recurring problems: "fix it once" view
 
+> **Done** on `feat/pattern-recognition`, extended to problems on several elements at the same time: see [patterns.md](patterns.md).
+
 - **Why the judges care:** a judge confirmed this idea when the team pitched it (2026-11-07, reported by the team). Some problems keep coming back on the same unit, model or site because of something that could be fixed once: a lock that freezes every winter, an SFP model that keeps dying, a firmware bug. Showing the repeats lets the operator fix the cause once instead of applying the same workaround forever. It turns captured know-how into a business case.
 - **Scope:** stays in scope only if it is built from **human knowledge already captured**, not from telemetry. It counts how often people raise the same problem and apply the same workaround, and it shows the cause and the permanent fix that *people* stated. It does not detect faults or find root causes: Elisa's AI already does that, and [challenge.md](challenge.md) lists it as out of scope. Call it "recurring workarounds", not "root-cause analysis".
 - **Evidence:** nothing groups or counts repeats today. The building blocks exist:

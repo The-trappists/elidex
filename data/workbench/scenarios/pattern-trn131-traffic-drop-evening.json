@@ -1,0 +1,98 @@
+{
+  "id": "pattern-trn131-traffic-drop-evening",
+  "title": "Pattern: TRN-131 drops traffic in the evening",
+  "description": "In Rovaniemi, TRN-131 drops traffic around 21:30 and the radios behind it flap; a line card reboot fixes it. Half of a linked pattern with pattern-trn229-sync-loss-evening: different site, model, team and channel, same evening, and both are linked to TRN-117, which nobody mentions.",
+  "channel": "teams",
+  "subject": "TRN-131 traffic drop",
+  "incident": {
+    "entity_id": "TRN-131",
+    "kind": "traffic-drop",
+    "severity": "major",
+    "summary": "TRN-131 dropped traffic, radios behind it flapping",
+    "observations": {
+      "interface_status": "UP",
+      "traffic_counters": 0,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "liisa",
+    "raimo"
+  ],
+  "messages": [
+    {
+      "persona": "raimo",
+      "delay_s": 5,
+      "text": "Liisa, TRN-131 in Rovaniemi stopped passing traffic at 21:30 and the radios hanging off it are flapping. Can someone look?"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 90,
+      "text": "On it remotely. Ports are up, counters at zero. Rebooting the line card."
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 150,
+      "text": "Line card is back and traffic too. Radios stable again."
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 40,
+      "text": "Thanks! Weird timing, it was fine all day."
+    }
+  ],
+  "resolves_incident_at_seq": 3,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "evening-traffic-drop-line-card-reboot",
+        "summary": "When TRN-131 stops passing traffic in the evening with its ports UP and counters at zero, rebooting the line card brings traffic back.",
+        "scope": {
+          "instance_ids": [
+            "TRN-131"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "ports UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "counters at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": null,
+        "action": "Reboot the line card.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 3: 'Line card is back and traffic too'",
+        "stated_by": "Liisa Lappi",
+        "cited_seq": [
+          2,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "pattern",
+    "linked",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

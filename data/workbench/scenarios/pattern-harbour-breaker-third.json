@@ -1,0 +1,131 @@
+{
+  "id": "pattern-harbour-breaker-third",
+  "title": "Pattern: third breaker trip, a lasting fix is proposed",
+  "description": "Third time F3 trips at the harbour hut this autumn. Liisa proposes a lasting fix (the dehumidifier on its own circuit) but the workaround is applied again. The recurring pattern shows the proposal as not yet done.",
+  "channel": "slack",
+  "subject": "#field-ops",
+  "incident": {
+    "entity_id": "RAD-254",
+    "kind": "radio-dead-no-link",
+    "severity": "major",
+    "summary": "RAD-254 down for the third time",
+    "observations": {
+      "interface_status": "DOWN",
+      "traffic_counters": 0,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "jaakko",
+    "sanna",
+    "liisa"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "RAD-254 down. F3 tripped. Third time this autumn I think?"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 40,
+      "text": "↳ reset F3 and empty the tray, you know the drill"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 90,
+      "text": "↳ we keep doing this. someone should rewire the dehumidifier onto its own circuit so it can't take F3 down. I'll raise it with facilities"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 60,
+      "text": "↳ F3 reset, tray emptied, radio up ✅"
+    }
+  ],
+  "resolves_incident_at_seq": 4,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "harbour-hut-breaker-trip",
+        "summary": "When RAD-254 at the Turku harbour hut is completely dead, breaker F3 has usually tripped; reset it and empty the dehumidifier tray before replacing the radio.",
+        "scope": {
+          "instance_ids": [
+            "RAD-254"
+          ],
+          "site_ids": [
+            "SITE-TKU-009"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "radio completely dead, no link",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "DOWN"
+            }
+          },
+          {
+            "text": "no traffic",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "the dehumidifier trips breaker F3 in heavy sea fog",
+        "action": "Reset breaker F3 in the cabinet left of the door and empty the dehumidifier tray; check that the radio comes back before replacing it.",
+        "avoid": [
+          "replacing the radio unit"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 4: 'F3 reset, tray emptied, radio up'",
+        "stated_by": "Sanna Salminen",
+        "cited_seq": [
+          1,
+          2,
+          4
+        ],
+        "confidence": 0.85
+      },
+      {
+        "type": "workaround",
+        "topic": "harbour-hut-dehumidifier-circuit",
+        "summary": "Proposed lasting fix at the Turku harbour hut: put the dehumidifier on its own circuit so it cannot trip breaker F3 and take RAD-254 down.",
+        "scope": {
+          "instance_ids": [
+            "RAD-254"
+          ],
+          "site_ids": [
+            "SITE-TKU-009"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [],
+        "diagnosis": "the dehumidifier shares breaker F3 with the radio",
+        "action": "Rewire the dehumidifier onto its own circuit so it cannot trip F3.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "hunch",
+        "evidence": null,
+        "stated_by": "Liisa Lappi",
+        "cited_seq": [
+          3
+        ],
+        "confidence": 0.6
+      }
+    ]
+  },
+  "tags": [
+    "pattern",
+    "recurring",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

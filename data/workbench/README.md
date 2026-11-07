@@ -26,6 +26,7 @@ Facts about the Elisa items that are our guesses, not Elisa's: TRN-042 model `TX
 - `scenarios/*.json`: one `Scenario` per file (25), each with `tags` and a one-sentence `description` of what it tests. `delay_s` is in simulated seconds (8 to 180; 8-15 s is a burst from one person).
   - Slack scenarios (6): `slack-radio-tilt`, `slack-noc-handover`, `slack-breaker-harbour-hut`, `slack-key-moved`, `slack-needle-in-noise`, `slack-vendor-secondhand`. Thread replies start with `↳ ` (a stand-in for real Slack threads).
   - Run `barrier-key-kemijarvi` before `slack-key-moved` to see the old access closed by the correction.
+  - Pattern scenarios (7, added 2026-11-07, tag `pattern`): `pattern-trn229-*` and `pattern-trn131-*` (two evenings where TRN-229 and TRN-131 drop in separate conversations; both are linked to TRN-117, which nobody mentions), `pattern-trn117-clock-module` (the cause is found and fixed), `pattern-harbour-breaker-again` and `-third` (breaker F3 trips again; a lasting fix is proposed, not applied). Their replay dates are in `data/eval/patterns_timeline.json`, not in the eval timeline. See [docs/patterns.md](../../docs/patterns.md).
 
 ## Writing style of the scenarios
 

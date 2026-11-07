@@ -626,3 +626,74 @@ export interface KgGraph {
   at: string
   elements: KgElement[]
 }
+
+// ---------------------------------------------------------------- patterns (GET /patterns, see docs/patterns.md)
+
+export type PatternLevel = 'watch' | 'insight' | 'resolved'
+export type PatternStrength = 'strong' | 'medium' | 'weak'
+
+export interface PatternOccurrence {
+  element: string
+  at: string
+  topic: string
+  problem: string // topics that name the same problem share it
+  assertion_id: string
+  kind: 'reported' | 'applied'
+  sources: string[]
+  by: string | null
+  action: string | null
+  worked: boolean | null
+}
+
+export interface PatternFactor {
+  kind: 'dependency' | 'link' | 'site' | 'firmware' | 'model'
+  entity: string
+  strength: PatternStrength
+  covers: string[]
+  detail: string
+  reported: boolean | null // dependency: false = nobody mentioned it (hidden suspect)
+}
+
+export interface PatternFix {
+  assertion_id: string
+  action: string
+  stated_by: string
+  at: string
+  kind: 'temporary' | 'lasting' | 'unknown'
+  applied: number
+}
+
+export interface PatternHypothesis {
+  text: string
+  basis: string[]
+  strength: PatternStrength
+}
+
+/** A recurring or linked problem found in captured knowledge. Hypotheses only: never used as rules by the agent. */
+export interface Pattern {
+  id: string
+  kind: 'recurring' | 'linked'
+  level: PatternLevel
+  title: string
+  elements: string[]
+  topics: string[]
+  first_seen: string
+  last_seen: string
+  count: number
+  occurrences: PatternOccurrence[]
+  factors: PatternFactor[]
+  fixes: PatternFix[]
+  lasting_fixes: PatternFix[]
+  hypotheses: PatternHypothesis[]
+  status_note: string | null
+  resolved_by: string | null
+  people: string[]
+  grouped: string[] // why differently named topics were counted as one problem
+  note: string
+}
+
+export interface PatternReport {
+  at: string
+  meaning: string // how differently worded topics were compared: words only, or words + an embedding model
+  patterns: Pattern[]
+}

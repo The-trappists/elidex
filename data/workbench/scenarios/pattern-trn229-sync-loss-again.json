@@ -1,0 +1,94 @@
+{
+  "id": "pattern-trn229-sync-loss-again",
+  "title": "Pattern: TRN-229 loses sync again",
+  "description": "Two weeks later, TRN-229 loses sync again in the evening; the same timing port reset fixes it. With pattern-trn131-traffic-drop-again the same evening, the linked pattern is seen twice and becomes an insight.",
+  "channel": "slack",
+  "subject": "#noc-night",
+  "incident": {
+    "entity_id": "TRN-229",
+    "kind": "sync-loss",
+    "severity": "major",
+    "summary": "TRN-229 lost sync again",
+    "observations": {
+      "interface_status": "UP",
+      "traffic_counters": 0,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "niko",
+    "matias"
+  ],
+  "messages": [
+    {
+      "persona": "niko",
+      "delay_s": 5,
+      "text": "TRN-229 again 🙄 lost sync 21:05, same as two weeks ago"
+    },
+    {
+      "persona": "matias",
+      "delay_s": 45,
+      "text": "timing port reset?"
+    },
+    {
+      "persona": "niko",
+      "delay_s": 100,
+      "text": "yep, reset the timing port, sync back, traffic ok"
+    }
+  ],
+  "resolves_incident_at_seq": 3,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "evening-sync-loss-timing-port-reset",
+        "summary": "When TRN-229 loses sync in the evening (interfaces UP, no traffic), resetting the timing port brings sync back within minutes.",
+        "scope": {
+          "instance_ids": [
+            "TRN-229"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "interfaces UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "no traffic",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "lost timing sync",
+        "action": "Reset the timing port; sync comes back within a minute or two.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 3: 'reset the timing port, sync back, traffic ok'",
+        "stated_by": "Niko Nörtti",
+        "cited_seq": [
+          1,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "pattern",
+    "linked",
+    "recurring",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

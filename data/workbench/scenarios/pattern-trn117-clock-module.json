@@ -1,0 +1,72 @@
+{
+  "id": "pattern-trn117-clock-module",
+  "title": "Pattern resolved: TRN-117 clock module replaced",
+  "description": "Erkki finds the cause of the evening drops: the clock module on TRN-117 drifts when the site cooling cycles, and TRN-131 and TRN-229 take their timing from it. He replaces the module. A lasting fix bound to the shared neighbour: the linked pattern closes on its own, with no confirmation step.",
+  "channel": "teams",
+  "subject": "Evening drops on TRN-131 / TRN-229",
+  "participants": [
+    "erkki",
+    "aino"
+  ],
+  "messages": [
+    {
+      "persona": "aino",
+      "delay_s": 5,
+      "text": "Erkki, the night shift keeps resetting TRN-229 and rebooting TRN-131 in the evenings. Any idea?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 120,
+      "text": "Found it. The clock module on TRN-117 drifts when the cooling at Linnanmaa cycles around 21:00, and both TRN-131 and TRN-229 take their timing over TRN-117. The resets only hid it."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 90,
+      "text": "Replaced the clock module on TRN-117 this morning. Timing has been stable since."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 40,
+      "text": "Great, thanks. I'll tell the night shift."
+    }
+  ],
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "trn117-clock-module-drift",
+        "summary": "The clock module on TRN-117 drifted when the site cooling cycled in the evening, taking timing down for TRN-131 and TRN-229; it was replaced.",
+        "scope": {
+          "instance_ids": [
+            "TRN-117"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [],
+        "diagnosis": "clock module drift on TRN-117 when the cooling cycles",
+        "action": "Replace the clock module on TRN-117.",
+        "avoid": [
+          "resetting the timing port or rebooting line cards on the downstream nodes as a fix"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 3: 'Timing has been stable since.'",
+        "stated_by": "Erkki Expert",
+        "cited_seq": [
+          2,
+          3
+        ],
+        "confidence": 0.85
+      }
+    ]
+  },
+  "tags": [
+    "pattern",
+    "linked",
+    "lifecycle",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

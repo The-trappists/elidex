@@ -1,0 +1,94 @@
+{
+  "id": "pattern-trn131-traffic-drop-again",
+  "title": "Pattern: TRN-131 drops traffic again",
+  "description": "Two weeks later, TRN-131 drops traffic again in the evening and a line card reboot fixes it, 35 minutes after TRN-229 lost sync in another conversation. Second sighting of the linked pattern.",
+  "channel": "teams",
+  "subject": "TRN-131 again",
+  "incident": {
+    "entity_id": "TRN-131",
+    "kind": "traffic-drop",
+    "severity": "major",
+    "summary": "TRN-131 dropped traffic again",
+    "observations": {
+      "interface_status": "UP",
+      "traffic_counters": 0,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "raimo",
+    "liisa"
+  ],
+  "messages": [
+    {
+      "persona": "raimo",
+      "delay_s": 5,
+      "text": "TRN-131 dropped again, 21:40. Radios flapping like last time."
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 70,
+      "text": "Same as before then. Rebooting the line card."
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 140,
+      "text": "Back up, traffic flowing. That's twice now in the evening, odd."
+    }
+  ],
+  "resolves_incident_at_seq": 3,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "evening-traffic-drop-line-card-reboot",
+        "summary": "When TRN-131 stops passing traffic in the evening with its ports UP and counters at zero, rebooting the line card brings traffic back.",
+        "scope": {
+          "instance_ids": [
+            "TRN-131"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "ports UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "counters at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": null,
+        "action": "Reboot the line card.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 3: 'Back up, traffic flowing'",
+        "stated_by": "Liisa Lappi",
+        "cited_seq": [
+          2,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "pattern",
+    "linked",
+    "recurring",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
