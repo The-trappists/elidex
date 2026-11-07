@@ -21,6 +21,9 @@ from .bus import EventBus
 from .clock import SimClock
 from .contracts import (
     AssertionEdit,
+    MAX_ELEMENTS,
+    MAX_PERSONAS,
+    MAX_SITES,
     REMOVABLE_ORIGINS,
     Incident,
     IncidentSpec,
@@ -377,6 +380,19 @@ class Workbench:
         self.emit("thread.deleted", {"id": thread_id})
         self.emit_changes(before)
 
+    def evict_thread(self, thread_id: str) -> None:
+        """Drop a thread from memory but keep what was learned from it: the assertions and their sources stay
+        (the caller has archived the thread first, see `workbench/archive.py`)."""
+        self.processor.forget(thread_id)
+        del self.threads[thread_id]
+        self.emit("thread.deleted", {"id": thread_id})
+
+    def retract_archived_thread(self, thread_id: str) -> None:
+        """delete_thread for a thread that only lives in the archive: remove the sources it gave to assertions."""
+        before = self.assertion_snapshot()
+        self.processor.retract(thread_id)
+        self.emit_changes(before)
+
     # ------------------------------------------------------------ incidents
 
     def open_incident(
@@ -634,6 +650,9 @@ class Workbench:
         `process_on_import` (optional list of thread ids, e.g. the hand-written seed threads of a dataset sample) is
         processed right away, as the seed is at first start."""
         elements, sites = (data.get("elements") or []), (data.get("sites") or [])
+        for what, n, cap in (("elements", len(elements), MAX_ELEMENTS), ("sites", len(sites), MAX_SITES), ("personas", len(data.get("personas") or []), MAX_PERSONAS)):
+            if n > cap:
+                raise ValueError(f"{n} {what}: a small company has at most {cap} {what} in the Workbench")
         problems = persistence.validate_refs(
             [WbElement.model_validate(x) for x in elements], [WbSite.model_validate(x) for x in sites],
             [TopologyLink.model_validate(x) for x in data.get("links") or []],

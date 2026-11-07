@@ -51,6 +51,7 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
+        aria-label={typeof title === 'string' ? title : undefined}
         className={cn('flex max-h-[90vh] w-full flex-col rounded-lg border border-line bg-surface shadow-[var(--shadow-lg)]', closing ? 'animate-slide-out' : 'animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
         onMouseDown={(e) => e.stopPropagation()}
       >

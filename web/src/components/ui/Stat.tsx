@@ -42,6 +42,7 @@ export function Stat({
   tone = 'neutral',
   onClick,
   suffix,
+  text,
 }: {
   icon: ReactNode
   label: string
@@ -50,6 +51,8 @@ export function Stat({
   tone?: Tone
   onClick?: () => void
   suffix?: string
+  /** shown instead of the number (e.g. a dash when there is no data) */
+  text?: string
 }) {
   const t = TONES[tone]
   return (
@@ -67,8 +70,8 @@ export function Stat({
       <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-md transition-transform', t.chip)}>{icon}</span>
       <span className="min-w-0">
         <span className="block text-2xl font-semibold leading-none tracking-tight tabular-nums">
-          <AnimatedNumber value={value} />
-          {suffix && <span className="ml-0.5 text-sm font-medium text-muted">{suffix}</span>}
+          {text ?? <AnimatedNumber value={value} />}
+          {!text && suffix && <span className="ml-0.5 text-sm font-medium text-muted">{suffix}</span>}
         </span>
         <span className="mt-1.5 block truncate text-xs font-medium">{label}</span>
         {hint && <span className="block truncate text-xs text-muted">{hint}</span>}

@@ -1,4 +1,4 @@
-import { Activity, BookOpenCheck, Bot, Database, Eye, LogOut, MessagesSquare, Network, Presentation, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, LogOut, MessagesSquare, Network, Presentation, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { recentProblems } from '../llm/status'
@@ -6,6 +6,7 @@ import { useWallNow } from '../../lib/useNow'
 import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
 import { useOpenFlagCount } from '../../store/review'
+import { useUi } from '../../store/ui'
 
 export interface NavItem {
   to: string
@@ -17,6 +18,12 @@ export interface NavItem {
 }
 
 export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: 'Scenario',
+    items: [
+      { to: '/company', label: 'Company day', title: 'Company day', subtitle: 'A simulated working day: chats, incidents, the growing graph and the autonomous network system', icon: Building2 },
+    ],
+  },
   {
     label: 'Observe',
     items: [
@@ -45,6 +52,8 @@ export function Sidebar() {
   const openIncidents = useLive((s) => Object.values(s.incidents).filter((i) => i.status === 'open').length)
   const llmCalls = useLive((s) => s.llmCalls)
   const needLook = useOpenFlagCount()
+  const headerVisible = useUi((s) => s.headerVisible)
+  const toggleHeader = useUi((s) => s.toggleHeader)
   const now = useWallNow()
   const llmErrors = useMemo(() => recentProblems(llmCalls, now.getTime()).length, [llmCalls, now])
   // Only things that need action get a badge.
@@ -86,6 +95,16 @@ export function Sidebar() {
           </div>
         ))}
       </div>
+      <button
+        type="button"
+        onClick={toggleHeader}
+        aria-pressed={headerVisible}
+        title={headerVisible ? 'Hide the top header' : 'Show the top header (page title, clock, run scenario)'}
+        className="sidebar-footer mx-2 mt-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text"
+      >
+        <PanelTop size={16} />
+        {headerVisible ? 'Hide header' : 'Show header'}
+      </button>
       <Link to="/" className="sidebar-footer m-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text" title="Return to ElidEx home">
         <LogOut size={16} />
         Exit to Home

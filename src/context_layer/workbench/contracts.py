@@ -364,6 +364,10 @@ EventType = Literal[
     "llm.call",  # data: LlmCall
     "review.flag",  # data: ReviewFlag (created, refreshed, dismissed or undismissed)
     "application.upserted",  # data: RuleApplication (created or outcome decided)
+    "company.state",  # data: CompanyState without cycles/calls/health (status, clock, timeline)
+    "company.cycle",  # data: CompanyCycle (one autonomous-system sync, every cycle_minutes of sim time)
+    "agent.call",  # data: AgentCall (the autonomous system asked the context layer about one element)
+    "network.status",  # data: ElementHealth (one element changed status)
     "state.reset",  # data: {} -> clients refetch GET /api/state
     "log",  # data: {"level": "info" | "warning" | "error", "text": str}
 ]
@@ -452,10 +456,13 @@ class ResetBody(BaseModel):
     mode: Literal["seed", "empty"] = "seed"
 
 
+MAX_PERSONAS, MAX_ELEMENTS, MAX_SITES = 100, 600, 80  # a small company: keeps memory and the graph light
+
+
 class LoadDatasetBody(BaseModel):
     """POST /data/load-dataset: replace the state with a connected sample of the company dataset."""
 
-    sites: int = Field(40, ge=9, le=150)  # the Elisa seed alone has 9 sites
+    sites: int = Field(40, ge=9, le=MAX_SITES)  # the Elisa seed alone has 9 sites
     threads: int = Field(300, ge=0, le=1000)
     seed: int = 42
 
@@ -503,3 +510,110 @@ class OperatorEdit(BaseModel):
     valid_to: datetime | None = None
     trust_level: TrustLevel | None = None
     note: str | None = None
+
+
+# ---------------------------------------------------------------- company day (the "big boss" scenario)
+# A simulated working day of the whole company: many chats in parallel, incidents opening and closing, and every
+# `cycle_minutes` of sim time Elisa's autonomous network system takes the knowledge package, asks the context layer
+# about each affected element and updates the network status. Incidents stay scripted ground truth (no detection).
+
+HealthStatus = Literal["healthy", "degraded", "down", "recovering"]
+CompanyStatus = Literal["idle", "running", "paused", "finished"]
+
+
+class ElementHealth(BaseModel):
+    element_id: str
+    status: HealthStatus = "healthy"
+    since: datetime  # sim
+    incident_id: str | None = None
+    reason: str = ""  # plain language: why this status
+    applied_assertion_ids: list[str] = Field(default_factory=list)  # knowledge the autonomous system used
+    recommendation: str | None = None
+
+
+class AgentCall(BaseModel):
+    """One question of the autonomous system to the context layer, about one element, in one cycle."""
+
+    id: str  # "call_0001"
+    cycle: int
+    at: datetime  # sim
+    entity_id: str
+    incident_id: str | None = None
+    thread_id: str | None = None
+    observations: dict[str, Any] = Field(default_factory=dict)
+    hit_ids: list[str] = Field(default_factory=list)  # assertions retrieved
+    skipped: int = 0  # retrieved but dropped (conditions not met)
+    cited_assertion_ids: list[str] = Field(default_factory=list)
+    recommendation: str = ""
+    verdict: str | None = None  # guard decision, when a planned action was checked
+    status_before: HealthStatus = "healthy"
+    status_after: HealthStatus = "healthy"
+    used_llm: bool = False
+
+
+class KnowledgePackage(BaseModel):
+    """What the context layer hands over at each sync. Light summary; the full content is
+    GET /api/company/package?cycle=N."""
+
+    cycle: int
+    at: datetime  # sim
+    total: int  # assertions in the store
+    valid: int  # valid at `at`
+    new_ids: list[str] = Field(default_factory=list)  # created since the previous cycle
+    closed_ids: list[str] = Field(default_factory=list)  # closed or superseded since the previous cycle
+    classes: int = 0
+    trust: dict[str, int] = Field(default_factory=dict)  # trust level -> count (valid ones)
+
+
+class StatusChange(BaseModel):
+    element_id: str
+    from_status: HealthStatus
+    to_status: HealthStatus
+    reason: str = ""
+
+
+class CompanyCycle(BaseModel):
+    n: int  # 1-based
+    at: datetime  # sim
+    package: KnowledgePackage
+    agent_call_ids: list[str] = Field(default_factory=list)
+    status_changes: list[StatusChange] = Field(default_factory=list)
+    open_incidents: int = 0
+    health_counts: dict[str, int] = Field(default_factory=dict)  # status -> number of elements (healthy included)
+
+
+class CompanyTimelineEntry(BaseModel):
+    """One planned event of the day. `at_min` is sim minutes since the start of the day."""
+
+    id: str
+    at_min: float
+    kind: Literal["chat", "incident_chat", "noise", "generated"]
+    scenario_id: str
+    label: str
+    started: bool = False
+    run_id: str | None = None
+
+
+class CompanyState(BaseModel):
+    status: CompanyStatus = "idle"
+    started_at: datetime | None = None  # sim
+    ends_at: datetime | None = None  # sim
+    day_minutes: int = 480  # 0 when endless
+    endless: bool = False  # no end: chats are generated in real time after the scripted timeline
+    generated_count: int = 0  # chats produced by the generator so far
+    cycle_minutes: int = 10
+    speed: float = 120  # sim seconds per wall second while the day runs
+    use_llm: bool = False  # agent calls with the LLM recommendation
+    next_cycle_at: datetime | None = None  # sim
+    cycles: list[CompanyCycle] = Field(default_factory=list)  # last 60
+    calls: list[AgentCall] = Field(default_factory=list)  # last 200
+    health: list[ElementHealth] = Field(default_factory=list)  # every element that ever left "healthy"
+    timeline: list[CompanyTimelineEntry] = Field(default_factory=list)
+
+
+class CompanyStartBody(BaseModel):
+    speed: float = Field(120, ge=1, le=3600)
+    day_minutes: int = Field(480, ge=0, le=1440)  # 0 = endless (run until stopped)
+    cycle_minutes: int = Field(10, ge=1, le=60)
+    reset: Literal["empty", "keep"] = "empty"  # "empty": drop threads/knowledge first so the graph grows from scratch
+    use_llm: bool = False

@@ -18,11 +18,14 @@ from ..mvp import feedback, guard
 from ..models import Message
 from . import generator, persistence
 from .contracts import (
+    MAX_PERSONAS,
     AssertionEdit,
     AgentRunBody,
     AgentRunResult,
     ClockBody,
     ClockState,
+    CompanyStartBody,
+    CompanyState,
     GenerateBody,
     GuardBody,
     Incident,
@@ -199,6 +202,8 @@ def _crud(path: str, kind: str, model: type, label: str) -> None:
         if body.id in getattr(wb, kind):
             raise HTTPException(409, f"{label} {body.id} already exists")
         _check_refs(wb, kind, body)
+        if kind == "personas" and len(wb.personas) >= MAX_PERSONAS:
+            raise HTTPException(422, f"a small company has at most {MAX_PERSONAS} personas")
         body.origin = "manual"
         wb.upsert_item(kind, body)
         return body
@@ -272,7 +277,12 @@ async def process_thread(thread_id: str, request: Request) -> dict:
 @router.delete("/threads/{thread_id:path}", status_code=204)
 async def delete_thread(thread_id: str, request: Request) -> Response:
     wb = get_wb(request)
-    _thread(wb, thread_id)
+    if thread_id not in wb.threads:
+        archive = get_company(request).archive
+        if archive.get_thread(thread_id) is None:
+            raise HTTPException(404, f"unknown thread {thread_id}")
+        wb.retract_archived_thread(thread_id)  # evicted from memory: only its knowledge sources are left to remove
+        return Response(status_code=204)
     wb.delete_thread(thread_id)
     return Response(status_code=204)
 
@@ -517,15 +527,23 @@ async def agent_outcome(body: OutcomeBody, request: Request) -> dict:
 # ---------------------------------------------------------------- knowledge graph (see docs/knowledge-graph.md)
 
 
-def _kg(request: Request):
+def _kg(request: Request, with_archived: bool = False):
     """The graph, rebuilt from the live store and the live threads (a view: cheap at this size).
 
     A thread without messages has no start time yet, so it is left out until its first message.
+    `with_archived`: threads that assertions cite but the endless run moved to the cold archive are read back from it.
     """
     from ..graph import KnowledgeGraph
 
     wb = get_wb(request)
     threads = [t.to_thread() for t in wb.threads.values() if t.messages]
+    if with_archived:
+        archive = get_company(request).archive
+        missing = {s.file for a in wb.store.assertions.values() for s in a.sources if s.file not in wb.threads}
+        for tid in sorted(missing):
+            doc = archive.get_thread(tid)
+            if doc:
+                threads.append(LiveThread.model_validate(doc).to_thread())
     return wb, KnowledgeGraph.build(wb.store, threads)
 
 
@@ -560,7 +578,7 @@ async def graph_stats(request: Request) -> dict:
 
 @router.get("/graph/provenance/{assertion_id}")
 async def graph_provenance(assertion_id: str, request: Request) -> list[dict]:
-    return _kg(request)[1].provenance(assertion_id)
+    return _kg(request, with_archived=True)[1].provenance(assertion_id)
 
 
 @router.get("/graph/reach/{assertion_id}")
@@ -845,3 +863,79 @@ async def export_session(request: Request) -> JSONResponse:
     data["jobs"] = [j.model_dump(mode="json") for j in wb.jobs.values()]
     data["llm_calls"] = [c.model_dump(mode="json") for c in reversed(all_llm_calls(wb))]
     return JSONResponse(data, headers={"Content-Disposition": 'attachment; filename="session.json"'})
+
+
+# ---------------------------------------------------------------- company day (docs/workbench.md)
+
+
+def get_company(request: Request):
+    return request.app.state.company
+
+
+@router.get("/company")
+async def company_state(request: Request) -> CompanyState:
+    return get_company(request).state()
+
+
+@router.post("/company/start")
+async def company_start(body: CompanyStartBody, request: Request) -> CompanyState:
+    try:
+        return get_company(request).start(body)
+    except RuntimeError as e:
+        raise HTTPException(409, str(e)) from e
+
+
+@router.post("/company/pause")
+async def company_pause(request: Request) -> CompanyState:
+    return get_company(request).pause()
+
+
+@router.post("/company/resume")
+async def company_resume(request: Request) -> CompanyState:
+    return get_company(request).resume()
+
+
+@router.post("/company/stop")
+async def company_stop(request: Request) -> CompanyState:
+    return get_company(request).stop()
+
+
+@router.get("/company/archive/stats")
+async def company_archive_stats(request: Request) -> dict:
+    return get_company(request).archive.stats()
+
+
+@router.get("/company/archive/threads/{thread_id:path}")
+async def company_archive_thread(thread_id: str, request: Request) -> dict:
+    doc = get_company(request).archive.get_thread(thread_id)
+    if doc is None:
+        raise HTTPException(404, f"thread {thread_id} is not in the archive")
+    return doc
+
+
+@router.get("/company/package")
+async def company_package(request: Request, cycle: int | None = None) -> dict:
+    pkg = get_company(request).package(cycle)
+    if pkg is None:
+        raise HTTPException(404, f"unknown cycle {cycle}")
+    return pkg
+
+
+@router.get("/company/export")
+async def company_export(request: Request, format: str = "json", valid_only: bool = True) -> Response:
+    from . import company as company_mod
+
+    if format not in ("json", "markdown"):
+        raise HTTPException(422, "format must be json or markdown")
+    wb = get_wb(request)
+    data = company_mod.export_package(wb, valid_only=valid_only)
+    stamp = wb.now().strftime("%Y%m%d-%H%M")
+    if format == "json":
+        return Response(
+            json.dumps(data, indent=2, ensure_ascii=False) + "\n", media_type="application/json",
+            headers={"Content-Disposition": f'attachment; filename="knowledge-{stamp}.json"'},
+        )
+    return Response(
+        company_mod.render_markdown(data), media_type="text/markdown",
+        headers={"Content-Disposition": f'attachment; filename="knowledge-{stamp}.md"'},
+    )

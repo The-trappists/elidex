@@ -26,6 +26,8 @@ export interface ForceNode {
   knowledge?: { total: number; own: number }
   /** No longer valid: drawn faint. */
   faded?: boolean
+  /** Just added: a pulsing accent ring for a few seconds. */
+  fresh?: boolean
 }
 
 export interface ForceLink {
@@ -625,6 +627,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
           ctx.setLineDash([])
         }
         if (n.alert) ring(3 + pulse * 3, color('--bad'), 2.2, 0.55 + pulse * 0.45)
+        if (n.fresh) ring(4 + pulse * 6, accent, 2.4, 0.5 + pulse * 0.5)
         const tone = s.tones.get(n.id)
         if (tone) {
           ctx.globalAlpha = alpha * (0.18 + pulse * 0.12)
@@ -743,7 +746,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
       }
       const moved = physics()
       const framing = camera()
-      const pulsing = !calm.matches && (s.tones.size > 0 || s.nodes.some((n) => n.alert))
+      const pulsing = !calm.matches && (s.tones.size > 0 || s.nodes.some((n) => n.alert || n.fresh))
       if (moved || framing || pulsing || s.dirty) draw(time)
       s.dirty = false
       frame = requestAnimationFrame(loop)

@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
+import CompanyPage from './pages/CompanyPage'
 import ConversationsPage from './pages/ConversationsPage'
 import DataPage from './pages/DataPage'
 import KnowledgePage from './pages/KnowledgePage'
@@ -18,18 +19,20 @@ import ReviewPage from './pages/ReviewPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
 import { connectReview } from './store/review'
+import { useUi } from './store/ui'
 
 function DashboardLayout() {
   const ready = useLive((s) => s.ready)
   const { pathname } = useLocation()
   const section = pathname.split('/')[1] ?? ''
+  const headerVisible = useUi((s) => s.headerVisible)
 
   return (
     <div className="app-shell flex h-full animate-fade-in [animation-duration:300ms]">
       <a href="#workbench-content" className="skip-link">Skip to workspace</a>
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar />
+        {headerVisible && <TopBar />}
         <LlmErrorBanner />
         <main id="workbench-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">
           {!ready ? (
@@ -42,6 +45,7 @@ function DashboardLayout() {
               <Routes>
                 <Route path="/" element={<LivePage />} />
                 <Route path="/overview" element={<LivePage />} />
+                <Route path="/company" element={<CompanyPage />} />
                 <Route path="/conversations" element={<ConversationsPage />} />
                 <Route path="/conversations/:threadId" element={<ConversationsPage />} />
                 <Route path="/review" element={<ReviewPage />} />

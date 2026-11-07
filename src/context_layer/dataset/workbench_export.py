@@ -26,7 +26,7 @@ from .. import config
 from ..link import Inventory, Linker
 from ..models import ExtractedItem, Message, NetworkElement, Site, Thread
 from ..workbench import seed as wb_seed
-from ..workbench.contracts import LiveThread, Persona, TopologyLink, WbElement, WbSite
+from ..workbench.contracts import MAX_ELEMENTS, MAX_PERSONAS, MAX_SITES, LiveThread, Persona, TopologyLink, WbElement, WbSite
 from ..workbench.persistence import validate_refs
 from .source import MENTION, load_alias_map, mentions
 
@@ -198,6 +198,8 @@ def build_personas(root: Path, seed: wb_seed.SeedData, authors: set[str]) -> lis
     personas = {p.id: p for p in seed.personas}
     seed_names = {p.name for p in seed.personas}
     for u in _jsonl(root / "people" / "users.jsonl"):
+        if len(personas) >= MAX_PERSONAS:
+            break  # a small company: at most MAX_PERSONAS people
         if u["id"] in personas or u["name"] in seed_names or u["name"] not in authors:
             continue
         personas[u["id"]] = Persona(
@@ -257,6 +259,8 @@ def link_facts(root: Path, elements: dict[str, WbElement], sites: dict[str, WbSi
 
 def export_workbench(root: Path, n_sites: int = 40, n_threads: int = 300, seed: int = 42) -> dict:
     """The Workbench export JSON (see `persistence.state_to_dict`) for a connected sample of the dataset at `root`."""
+    if n_sites > MAX_SITES:
+        raise ValueError(f"{n_sites} sites requested: the Workbench takes at most {MAX_SITES}")
     if not (root / "network" / "sites.csv").exists():
         raise FileNotFoundError(f"No dataset at {root}. Run `ctx dataset generate --scale tiny` first.")
     seed_data = wb_seed.load_seed()
@@ -265,6 +269,8 @@ def export_workbench(root: Path, n_sites: int = 40, n_threads: int = 300, seed: 
     problems = validate_refs(elements.values(), sites.values(), links.values())
     if problems:
         raise ValueError("; ".join(problems[:5]))
+    if len(elements) > MAX_ELEMENTS:
+        raise ValueError(f"{len(sites)} sites hold {len(elements)} elements: the Workbench takes at most {MAX_ELEMENTS}. Lower the number of sites.")
 
     picked, kinds = sample_threads(root, set(elements), n_threads, seed)
     threads = [_to_live(t) for t in picked]

@@ -480,6 +480,10 @@ export type WbEvent =
   | Ev<'llm.call', LlmCall>
   | Ev<'review.flag', ReviewFlag>
   | Ev<'application.upserted', RuleApplication>
+  | Ev<'company.state', CompanyState>
+  | Ev<'company.cycle', CompanyCycle>
+  | Ev<'agent.call', AgentCall>
+  | Ev<'network.status', ElementHealth>
   | Ev<'state.reset', Record<string, never>>
   | Ev<'log', { level: 'info' | 'warning' | 'error'; text: string }>
 
@@ -755,4 +759,99 @@ export interface PatternReport {
   at: string
   meaning: string // how differently worded topics were compared: words only, or words + an embedding model
   patterns: Pattern[]
+}
+
+// ---- company day (mirror of workbench/contracts.py, "company day" section)
+export type HealthStatus = 'healthy' | 'degraded' | 'down' | 'recovering'
+export type CompanyStatus = 'idle' | 'running' | 'paused' | 'finished'
+
+export interface ElementHealth {
+  element_id: string
+  status: HealthStatus
+  since: string
+  incident_id: string | null
+  reason: string
+  applied_assertion_ids: string[]
+  recommendation: string | null
+}
+
+export interface AgentCall {
+  id: string
+  cycle: number
+  at: string
+  entity_id: string
+  incident_id: string | null
+  thread_id: string | null
+  observations: Record<string, unknown>
+  hit_ids: string[]
+  skipped: number
+  cited_assertion_ids: string[]
+  recommendation: string
+  verdict: string | null
+  status_before: HealthStatus
+  status_after: HealthStatus
+  used_llm: boolean
+}
+
+export interface KnowledgePackage {
+  cycle: number
+  at: string
+  total: number
+  valid: number
+  new_ids: string[]
+  closed_ids: string[]
+  classes: number
+  trust: Record<string, number>
+}
+
+export interface StatusChange {
+  element_id: string
+  from_status: HealthStatus
+  to_status: HealthStatus
+  reason: string
+}
+
+export interface CompanyCycle {
+  n: number
+  at: string
+  package: KnowledgePackage
+  agent_call_ids: string[]
+  status_changes: StatusChange[]
+  open_incidents: number
+  health_counts: Record<string, number>
+}
+
+export interface CompanyTimelineEntry {
+  id: string
+  at_min: number
+  kind: 'chat' | 'incident_chat' | 'noise' | 'generated'
+  scenario_id: string
+  label: string
+  started: boolean
+  run_id: string | null
+}
+
+export interface CompanyState {
+  status: CompanyStatus
+  started_at: string | null
+  ends_at: string | null
+  day_minutes: number // 0 when endless
+  endless: boolean
+  generated_count: number
+  cycle_minutes: number
+  speed: number
+  use_llm: boolean
+  next_cycle_at: string | null
+  cycles: CompanyCycle[]
+  calls: AgentCall[]
+  health: ElementHealth[]
+  timeline: CompanyTimelineEntry[]
+}
+
+export interface CompanyStartBody {
+  speed?: number
+  day_minutes?: number
+  cycle_minutes?: number
+  reset?: 'empty' | 'keep'
+  use_llm?: boolean
 }

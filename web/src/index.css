@@ -409,3 +409,8 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 @media (max-width: 1100px) {
   .diagram-details.insights-list { display: flex; border-top: 1px solid var(--line); max-height: 50vh; }
 }
+
+/* Company day: a status dot that flashes once when its element changes state. */
+@keyframes status-flash { 0% { box-shadow: 0 0 0 0 currentColor; transform: scale(1.7); } 100% { box-shadow: 0 0 0 8px transparent; transform: scale(1); } }
+.status-flash { color: var(--accent); animation: status-flash 1.6s ease-out 1; }
+@media (prefers-reduced-motion: reduce) { .status-flash { animation: none; } }

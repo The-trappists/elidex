@@ -34,7 +34,25 @@ import type {
   StateSnapshot,
   TopologyLink,
   WbElement,
-  WbSite, KgGraph } from './types'
+  WbSite, KgGraph,
+  CompanyState,
+  CompanyStartBody,
+  ContextAssertion,
+  ElementClass } from './types'
+
+/** GET /company/package: what the autonomous system was handed at one cycle. */
+export interface CompanyPackage {
+  cycle: number
+  at: string
+  assertions: ContextAssertion[]
+  classes: ElementClass[]
+}
+
+/** GET /company/archive/stats: where the knowledge is archived and how much is in it. */
+export interface ArchiveStats {
+  backend: 'files' | 'atlas' | 'tiger-sink'
+  counts: Record<string, number>
+}
 
 export class ApiError extends Error {
   status: number
@@ -153,6 +171,16 @@ export const api = {
     req<LlmCall[]>('GET', `/llm/calls${qs(f)}`),
   llmCall: (id: string) => req<LlmCall>('GET', `/llm/calls/${enc(id)}`),
   llmCheck: () => req<LlmCheckResult[]>('POST', '/llm/check'),
+
+  // company day
+  company: () => req<CompanyState>('GET', '/company'),
+  companyStart: (body: CompanyStartBody) => req<CompanyState>('POST', '/company/start', body),
+  companyPause: () => req<CompanyState>('POST', '/company/pause'),
+  companyResume: () => req<CompanyState>('POST', '/company/resume'),
+  companyStop: () => req<CompanyState>('POST', '/company/stop'),
+  companyArchiveStats: () => req<ArchiveStats>('GET', '/company/archive/stats'),
+  companyPackage: (cycle?: number) => req<CompanyPackage>('GET', `/company/package${qs({ cycle })}`),
+  companyExportUrl: (format: 'json' | 'markdown', validOnly = true) => `/api/company/export${qs({ format, valid_only: validOnly })}`,
 
   // exports (plain links: use <a href download>)
   exportLlmCallsUrl: '/api/export/llm-calls.jsonl',
