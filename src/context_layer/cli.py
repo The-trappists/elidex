@@ -201,7 +201,7 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         from .dataset import tiger
 
         with tiger.connect() as conn:
-            tiger.setup(conn)
+            print(f"Table mode: {tiger.setup(conn)}")
             if args.drop:
                 with conn.cursor() as cur:
                     cur.execute("TRUNCATE messages;")

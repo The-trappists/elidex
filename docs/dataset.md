@@ -94,6 +94,8 @@ uv run ctx dataset threads --source files --element TRN-042             # same, 
 uv run ctx dataset activity TRN-042                      # Tiger Data: messages and people per month
 ```
 
+Tiger Data service type matters: a **Time-series and analytics** service gives a TimescaleDB hypertable (`load-tiger` prints `Table mode: hypertable`); a plain **PostgreSQL** service works too (`Table mode: plain`: same table with a BRIN index on the date, and `activity` uses `date_trunc`). For the "Best Use of Tiger Data" prize, prefer the time-series type so the demo really uses TimescaleDB.
+
 Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. Not done yet: the Workbench still keeps its own threads in memory and does not read these sources.
 
 Status: the pure parts (mentions, documents, rows, file source) are tested offline. The loaders and queries against real Atlas and Tiger Data were **not run by the assistant** (AI agents must not use `.env` credentials), so the first run is yours: start with `db-check`.

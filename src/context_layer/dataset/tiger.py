@@ -37,6 +37,10 @@ ACTIVITY = """
 SELECT time_bucket(%s::interval, sent_at) AS bucket, count(*) AS messages, count(DISTINCT author_id) AS people
 FROM messages WHERE mentions @> ARRAY[%s] GROUP BY 1 ORDER BY 1
 """
+ACTIVITY_PLAIN = """
+SELECT date_trunc('{unit}', sent_at) AS bucket, count(*) AS messages, count(DISTINCT author_id) AS people
+FROM messages WHERE mentions @> ARRAY[%s] GROUP BY 1 ORDER BY 1
+"""
 
 
 def connect():
@@ -47,17 +51,41 @@ def connect():
     return psycopg.connect(config.TIGER_DATABASE_URL, connect_timeout=15)
 
 
-def setup(conn) -> None:
+def has_timescale(conn) -> bool:
     with conn.cursor() as cur:
-        try:
+        cur.execute("SELECT 1 FROM pg_extension WHERE extname = 'timescaledb';")
+        return cur.fetchone() is not None
+
+
+def setup(conn) -> str:
+    """Create the table. Returns "hypertable" on a Time-series and analytics service, "plain" on a PostgreSQL service
+    (same table, a BRIN index on the date instead of time partitioning: slower for big ranges, same answers)."""
+    import psycopg
+
+    try:
+        with conn.cursor() as cur:
             cur.execute("CREATE EXTENSION IF NOT EXISTS timescaledb;")
-        except Exception:  # noqa: BLE001 - already installed or not allowed: the next statement tells
-            conn.rollback()
+        conn.commit()
+    except psycopg.Error:  # a plain PostgreSQL service does not offer it
+        conn.rollback()
+    with conn.cursor() as cur:
         cur.execute(SCHEMA)
-        cur.execute(HYPERTABLE)
+    conn.commit()
+    mode = "plain"
+    try:
+        with conn.cursor() as cur:
+            cur.execute(HYPERTABLE)
+        conn.commit()
+        mode = "hypertable"
+    except psycopg.Error:  # FeatureNotSupported / UndefinedFunction: not a time-series service
+        conn.rollback()
+    with conn.cursor() as cur:
         for stmt in INDEXES:
             cur.execute(stmt)
+        if mode == "plain":
+            cur.execute("CREATE INDEX IF NOT EXISTS messages_sent_at ON messages USING BRIN (sent_at);")
     conn.commit()
+    return mode
 
 
 def check(conn) -> dict:
@@ -66,9 +94,14 @@ def check(conn) -> dict:
         version = cur.fetchone()[0]
         cur.execute("SELECT to_regclass('messages') IS NOT NULL;")
         has_table = cur.fetchone()[0]
-        out = {"server": version, "messages_table": has_table}
+        out = {"server": version, "timescaledb": has_timescale(conn), "messages_table": has_table}
         if has_table:
-            cur.execute("SELECT count(*), pg_size_pretty(hypertable_size('messages')) FROM messages;")
+            size_fn = "hypertable_size" if out["timescaledb"] else "pg_total_relation_size"
+            try:
+                cur.execute(f"SELECT count(*), pg_size_pretty({size_fn}('messages')) FROM messages;")
+            except Exception:  # noqa: BLE001 - a plain table on a service that has the extension
+                conn.rollback()
+                cur.execute("SELECT count(*), pg_size_pretty(pg_total_relation_size('messages')) FROM messages;")
             n, size = cur.fetchone()
             out |= {"messages": n, "size": size}
     return out
@@ -95,5 +128,11 @@ def load(root: Path, conn, log=print, batch_threads: int = 5000) -> int:
 def activity(conn, element: str, bucket: str = "1 month") -> list[tuple]:
     """Messages and distinct people per time bucket that name the element."""
     with conn.cursor() as cur:
-        cur.execute(ACTIVITY, (bucket, element))
+        if has_timescale(conn):
+            cur.execute(ACTIVITY, (bucket, element))
+        else:  # plain PostgreSQL: date_trunc takes a unit (day, week, month), not an interval
+            unit = bucket.split()[-1].rstrip("s")
+            if unit not in ("hour", "day", "week", "month", "year"):
+                raise SystemExit(f"Unsupported bucket '{bucket}': use e.g. '1 day', '1 week' or '1 month'.")
+            cur.execute(ACTIVITY_PLAIN.format(unit=unit), (element,))
         return cur.fetchall()
