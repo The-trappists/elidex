@@ -232,6 +232,7 @@ export default function LlmLogPage() {
             rowKey={(c) => c.id}
             selectedKey={openId}
             onRowClick={(c) => setParams({ call: c.id })}
+            rowClassName={(c) => !!(c.error ?? c.parse_error) && 'bg-bad/10 shadow-[inset_3px_0_0_var(--bad)]'}
             empty={<EmptyState icon={<ScrollText size={26} />} title={calls.length ? 'No request matches these filters' : 'No request to the AI yet'} hint="Each time a conversation is read by the language model, a line appears here with what it did, how long it took and whether it worked." action={calls.length ? <Button size="sm" onClick={() => { setStatus(''); setPurpose(''); setModel(''); setQ('') }}>Clear filters</Button> : undefined} />}
           />
         </div>

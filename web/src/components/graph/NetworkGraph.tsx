@@ -27,12 +27,14 @@ export interface NetworkGraphProps {
 const aKey = (n: cytoscape.NodeSingular) => String(n.data('rawId'))
 
 function layoutOptions(animate: boolean) {
+  // randomize is off: nodes start from seeded positions (see seedPositions), so the layout is the
+  // same on every visit instead of a new random arrangement each time.
   return {
     name: 'fcose',
     animate,
     animationDuration: 600,
-    randomize: !animate,
-    fit: !animate,
+    randomize: false,
+    fit: false,
     padding: 30,
     quality: 'default',
     nodeDimensionsIncludeLabels: true,
@@ -69,6 +71,23 @@ function sync(cy: cytoscape.Core, defs: cytoscape.ElementDefinition[]) {
   return added
 }
 
+const hash = (s: string) => {
+  let h = 0
+  for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return h
+}
+
+/** Deterministic start positions for new leaf nodes (a hash-based spiral), so fcose is reproducible. */
+function seedPositions(nodes: cytoscape.NodeSingular[]) {
+  for (const n of nodes) {
+    if (n.isParent()) continue
+    const h = hash(n.id())
+    const ang = ((h % 360) * Math.PI) / 180
+    const rad = 60 + (h % 997) / 2
+    n.position({ x: Math.cos(ang) * rad, y: Math.sin(ang) * rad })
+  }
+}
+
 /** Put new assertion nodes next to the first thing they are bound to (no layout needed). */
 function placeNear(cy: cytoscape.Core, nodes: cytoscape.NodeSingular[]) {
   for (const n of nodes) {
@@ -97,6 +116,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
   const cyRef = useRef<cytoscape.Core | null>(null)
   const structureRef = useRef<string | null>(null)
   const prevAssertions = useRef<Record<string, ContextAssertion> | null>(null)
+  const userMoved = useRef(false)
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
@@ -138,16 +158,20 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     })
     const mo = new MutationObserver(() => cy.style(buildStyle()))
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    // Fit once the container has a real size (the first layout may run while it is 0 px tall).
-    let fitted = false
+    // Keep the graph fitted to its box until the user pans or zooms by hand.
+    const el = host.current
+    const markUser = () => (userMoved.current = true)
+    el.addEventListener('wheel', markUser, { passive: true })
+    cy.on('tapstart', (ev) => ev.target === cy && markUser()) // background drag = pan
+    let raf = 0
     const ro = new ResizeObserver(() => {
-      cy.resize()
-      if (!fitted && host.current && host.current.clientHeight > 0 && cy.nodes().length) {
-        fitted = true
-        cy.fit(undefined, 30)
-      }
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        cy.resize()
+        if (!userMoved.current && el.clientHeight > 0 && cy.nodes().length) cy.fit(undefined, 30)
+      })
     })
-    ro.observe(host.current)
+    ro.observe(el)
     let on = false
     const pulse = setInterval(() => {
       on = !on
@@ -155,6 +179,8 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     }, 700)
     return () => {
       clearInterval(pulse)
+      cancelAnimationFrame(raf)
+      el.removeEventListener('wheel', markUser)
       mo.disconnect()
       ro.disconnect()
       cy.destroy()
@@ -173,8 +199,11 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     const changed = structureRef.current !== built.structure
     structureRef.current = built.structure
     if (changed && cy.nodes().length) {
+      seedPositions(added)
       const layout = cy.layout(layoutOptions(!first))
-      if (first) layout.one('layoutstop', () => cy.height() > 0 && cy.fit(undefined, 30))
+      layout.one('layoutstop', () => {
+        if (!userMoved.current && cy.height() > 0) cy.animate({ fit: { eles: cy.elements(), padding: 30 } }, { duration: first ? 0 : 300 })
+      })
       layout.run()
     } else {
       placeNear(cy, added)
@@ -206,7 +235,10 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     })
   }, [selectedId, hlKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fit = () => cyRef.current?.animate({ fit: { eles: cyRef.current.elements(), padding: 30 } }, { duration: 300 })
+  const fit = () => {
+    userMoved.current = false
+    cyRef.current?.animate({ fit: { eles: cyRef.current.elements(), padding: 30 } }, { duration: 300 })
+  }
 
   return (
     <div className={cn('absolute inset-0 overflow-hidden', className)}>

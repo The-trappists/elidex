@@ -15,6 +15,7 @@ export function Table<T>({
   onRowClick,
   selectedKey,
   empty,
+  rowClassName,
 }: {
   columns: Column<T>[]
   rows: T[]
@@ -22,6 +23,8 @@ export function Table<T>({
   onRowClick?: (row: T) => void
   selectedKey?: string | null
   empty?: ReactNode
+  /** Extra classes per row, e.g. to flag failed rows. */
+  rowClassName?: (row: T) => string | false | undefined
 }) {
   if (!rows.length && empty) return <>{empty}</>
   return (
@@ -42,7 +45,7 @@ export function Table<T>({
             <tr
               key={k}
               onClick={onRowClick ? () => onRowClick(r) : undefined}
-              className={cn('animate-fade-in border-b border-line/50 transition-colors last:border-0', onRowClick && 'cursor-pointer hover:bg-surface-2', selectedKey === k && 'bg-accent-soft shadow-[inset_3px_0_0_var(--accent)]')}
+              className={cn('animate-fade-in border-b border-line/50 transition-colors last:border-0', rowClassName?.(r), onRowClick && 'cursor-pointer hover:bg-surface-2', selectedKey === k && 'bg-accent-soft shadow-[inset_3px_0_0_var(--accent)]')}
             >
               {columns.map((c) => (
                 <td key={c.key} className={cn('px-3 py-3 align-top', c.className)}>

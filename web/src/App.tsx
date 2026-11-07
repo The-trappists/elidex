@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { Sidebar } from './components/layout/Sidebar'
+import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
 import ConversationsPage from './pages/ConversationsPage'
@@ -41,6 +42,7 @@ export default function App() {
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar />
+          <LlmErrorBanner />
           <main className="min-h-0 flex-1 overflow-hidden">
             {!ready ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">

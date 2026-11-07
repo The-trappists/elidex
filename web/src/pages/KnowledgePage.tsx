@@ -75,7 +75,7 @@ export default function KnowledgePage() {
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-auto bg-bg">
-        {tab === 'table' && <div className="bg-surface"><AssertionTable rows={rows} selected={openId} onOpen={open} /></div>}
+        {tab === 'table' && <div className="min-h-full bg-surface"><AssertionTable rows={rows} selected={openId} onOpen={open} /></div>}
         {tab === 'timeline' && <Timeline rows={rows} now={now} onOpen={open} />}
         {tab === 'agent' && <AgentTester />}
       </div>

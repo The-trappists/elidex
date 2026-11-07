@@ -44,5 +44,6 @@ A first code base (core of idea A + starters for B, C, D) exists; its stack choi
 - Don't invent facts about the challenge (dates, data, judging criteria). Unknowns are listed in `docs/plan.md`.
 - Prefer the simplest thing that works end to end; a hackathon demo beats a perfect component.
 - Never commit secrets; config goes in `.env` (not committed) with placeholders in `.env.example`.
+- **AI agents are strictly forbidden from touching `.env` files**: no reading, grepping, sourcing, parsing, editing or using the keys in them, even masked or for a test. Use `.env.example` to know the variable names, and ask a human when a real value or a live API check is needed.
 - When a decision is taken during a conversation, offer to add it to `docs/decisions.md`.
 - Several people and several AI tools work on this repo in parallel: keep changes small and focused, and don't rewrite files outside the task.
