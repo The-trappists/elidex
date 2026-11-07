@@ -1,0 +1,377 @@
+{
+  "sites": [
+    {
+      "id": "SITE-TKU-004",
+      "name": "Turku Kupittaa exchange",
+      "region": "Southwest Finland",
+      "origin": "synthetic",
+      "lat": 60.449,
+      "lon": 22.295
+    },
+    {
+      "id": "SITE-TKU-009",
+      "name": "Turku harbour hut",
+      "region": "Southwest Finland",
+      "origin": "synthetic",
+      "lat": 60.435,
+      "lon": 22.22
+    },
+    {
+      "id": "SITE-OUL-011",
+      "name": "Oulu Linnanmaa exchange",
+      "region": "North Ostrobothnia",
+      "origin": "synthetic",
+      "lat": 65.06,
+      "lon": 25.47
+    },
+    {
+      "id": "SITE-TMP-002",
+      "name": "Tampere Hervanta exchange",
+      "region": "Pirkanmaa",
+      "origin": "synthetic",
+      "lat": 61.45,
+      "lon": 23.85
+    },
+    {
+      "id": "SITE-NF-017",
+      "name": "Kemijärvi hill mast",
+      "region": "Lapland",
+      "origin": "synthetic",
+      "lat": 66.713,
+      "lon": 27.43
+    },
+    {
+      "id": "SITE-HEL-001",
+      "name": "Helsinki Pasila exchange",
+      "region": "Uusimaa",
+      "origin": "synthetic",
+      "lat": 60.199,
+      "lon": 24.934
+    },
+    {
+      "id": "SITE-JKL-006",
+      "name": "Jyväskylä Kangas exchange",
+      "region": "Central Finland",
+      "origin": "synthetic",
+      "lat": 62.242,
+      "lon": 25.76
+    },
+    {
+      "id": "SITE-ROV-008",
+      "name": "Rovaniemi Ounasvaara exchange",
+      "region": "Lapland",
+      "origin": "synthetic",
+      "lat": 66.49,
+      "lon": 25.76
+    },
+    {
+      "id": "SITE-NF-021",
+      "name": "Sodankylä fell mast",
+      "region": "Lapland",
+      "origin": "synthetic",
+      "lat": 67.416,
+      "lon": 26.59
+    }
+  ],
+  "elements": [
+    {
+      "id": "TRN-063",
+      "type": "transmission_node",
+      "model": "TX-3000",
+      "install_year": 2016,
+      "firmware": "3.8",
+      "site_id": "SITE-HEL-001",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-088",
+      "type": "transmission_node",
+      "model": "TX-3000",
+      "install_year": 2017,
+      "firmware": "3.8",
+      "site_id": "SITE-JKL-006",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-131",
+      "type": "transmission_node",
+      "model": "TX-3000",
+      "install_year": 2019,
+      "firmware": "3.8",
+      "site_id": "SITE-ROV-008",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-154",
+      "type": "transmission_node",
+      "model": "TX-3000",
+      "install_year": 2021,
+      "firmware": "4.0",
+      "site_id": "SITE-HEL-001",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-176",
+      "type": "transmission_node",
+      "model": "TX-3000",
+      "install_year": 2022,
+      "firmware": "4.0",
+      "site_id": "SITE-TMP-002",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-229",
+      "type": "transmission_node",
+      "model": "TX-5000",
+      "install_year": 2023,
+      "firmware": "5.0",
+      "site_id": "SITE-OUL-011",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-240",
+      "type": "transmission_node",
+      "model": "TX-5000",
+      "install_year": 2022,
+      "firmware": "5.0",
+      "site_id": "SITE-JKL-006",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "TRN-312",
+      "type": "transmission_node",
+      "model": "TX-5000",
+      "install_year": 2024,
+      "firmware": "5.1",
+      "site_id": "SITE-HEL-001",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RAD-198",
+      "type": "radio_unit",
+      "model": "RU-200",
+      "install_year": 2020,
+      "firmware": "2.3",
+      "site_id": "SITE-NF-021",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RAD-233",
+      "type": "radio_unit",
+      "model": "RU-400",
+      "install_year": 2022,
+      "firmware": "2.5",
+      "site_id": "SITE-NF-021",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RAD-254",
+      "type": "radio_unit",
+      "model": "RU-400",
+      "install_year": 2023,
+      "firmware": "2.5",
+      "site_id": "SITE-TKU-009",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RAD-176",
+      "type": "radio_unit",
+      "model": "RU-200",
+      "install_year": 2019,
+      "firmware": "2.3",
+      "site_id": "SITE-ROV-008",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RTR-010",
+      "type": "router",
+      "model": "RT-9",
+      "install_year": 2018,
+      "firmware": "7.2",
+      "site_id": "SITE-HEL-001",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RTR-021",
+      "type": "aggregation_switch",
+      "model": "AGG-7",
+      "install_year": 2020,
+      "firmware": "3.4",
+      "site_id": "SITE-OUL-011",
+      "aliases": [],
+      "origin": "synthetic"
+    },
+    {
+      "id": "RTR-033",
+      "type": "router",
+      "model": "RT-9",
+      "install_year": 2021,
+      "firmware": "7.4",
+      "site_id": "SITE-TKU-004",
+      "aliases": [],
+      "origin": "synthetic"
+    }
+  ],
+  "links": [
+    {
+      "id": "LNK-001",
+      "a": "TRN-063",
+      "b": "TRN-042",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-002",
+      "a": "TRN-042",
+      "b": "TRN-208",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-003",
+      "a": "TRN-208",
+      "b": "TRN-088",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-004",
+      "a": "TRN-088",
+      "b": "TRN-117",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-005",
+      "a": "TRN-117",
+      "b": "TRN-240",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-006",
+      "a": "TRN-240",
+      "b": "TRN-312",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-007",
+      "a": "TRN-312",
+      "b": "TRN-063",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-008",
+      "a": "TRN-117",
+      "b": "TRN-131",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-009",
+      "a": "TRN-208",
+      "b": "TRN-176",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-010",
+      "a": "TRN-063",
+      "b": "TRN-154",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-011",
+      "a": "TRN-117",
+      "b": "TRN-229",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-012",
+      "a": "TRN-042",
+      "b": "TRN-305",
+      "kind": "fiber",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-013",
+      "a": "TRN-131",
+      "b": "RAD-221",
+      "kind": "microwave",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-014",
+      "a": "TRN-131",
+      "b": "RAD-198",
+      "kind": "microwave",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-015",
+      "a": "RAD-198",
+      "b": "RAD-233",
+      "kind": "microwave",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-016",
+      "a": "TRN-131",
+      "b": "RAD-176",
+      "kind": "microwave",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-017",
+      "a": "TRN-305",
+      "b": "RAD-254",
+      "kind": "microwave",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-018",
+      "a": "TRN-063",
+      "b": "RTR-010",
+      "kind": "backhaul",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-019",
+      "a": "TRN-154",
+      "b": "RTR-010",
+      "kind": "backhaul",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-020",
+      "a": "TRN-229",
+      "b": "RTR-021",
+      "kind": "backhaul",
+      "origin": "synthetic"
+    },
+    {
+      "id": "LNK-021",
+      "a": "TRN-042",
+      "b": "RTR-033",
+      "kind": "backhaul",
+      "origin": "synthetic"
+    }
+  ]
+}

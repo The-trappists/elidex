@@ -1,0 +1,47 @@
+[
+  {
+    "id": "similar-old-node",
+    "title": "Similar case on another old node",
+    "entity_id": "TRN-117",
+    "at": "2026-10-20T07:50",
+    "description": "SFP replaced on TRN-117 (2018). Link UP, alarms cleared, no traffic.",
+    "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+    "planned_action": "Reboot TRN-117"
+  },
+  {
+    "id": "new-unit",
+    "title": "Same symptoms on a new unit (no overlinking)",
+    "entity_id": "TRN-305",
+    "at": "2026-10-20T07:50",
+    "description": "SFP replaced on TRN-305 (2024). Link UP, no traffic.",
+    "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+    "planned_action": "Replace the SFP on TRN-305"
+  },
+  {
+    "id": "counters-moving",
+    "title": "Old node, but traffic counters are moving (rule must not fire)",
+    "entity_id": "TRN-117",
+    "at": "2026-10-20T07:50",
+    "description": "SFP replaced on TRN-117. Link UP, counters increasing, customer still reports slowness.",
+    "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 1250, "alarms": "cleared"},
+    "planned_action": "Reboot TRN-117"
+  },
+  {
+    "id": "after-firmware",
+    "title": "Old node after the firmware 4.2 rollout",
+    "entity_id": "TRN-117",
+    "at": "2026-11-05T10:00",
+    "description": "SFP replaced on TRN-117 in November. Link UP, no traffic.",
+    "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+    "planned_action": "Reboot TRN-117"
+  },
+  {
+    "id": "dispatch-north",
+    "title": "Dispatch to the Kemijärvi site",
+    "entity_id": "RAD-221",
+    "at": "2026-11-05T06:30",
+    "description": "Elisa's AI flags RAD-221 as faulty; an engineer is about to be dispatched.",
+    "observations": {},
+    "planned_action": "Dispatch field engineer to RAD-221"
+  }
+]

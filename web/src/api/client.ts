@@ -1,0 +1,137 @@
+// Typed client for every /api route (see docs/workbench.md). Errors throw ApiError with the
+// backend's `detail` message, ready for a toast.
+import type {
+  AgentRunBody,
+  AgentRunResult,
+  ClockState,
+  ContextHit,
+  GuardBody,
+  GuardVerdict,
+  Incident,
+  IncidentSpec,
+  LiveThread,
+  LlmCall,
+  LlmCheckResult,
+  Message,
+  NewThreadBody,
+  Persona,
+  PostMessageBody,
+  Scenario,
+  ScenarioRun,
+  Settings,
+  SettingsPatch,
+  SlackStatus,
+  StateSnapshot,
+  TopologyLink,
+  WbElement,
+  WbSite,
+} from './types'
+
+export class ApiError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
+async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`/api${path}`, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  if (!res.ok) {
+    let msg = `${res.status} ${res.statusText}`
+    try {
+      const j = await res.json()
+      if (j?.detail) msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)
+    } catch {
+      /* not JSON */
+    }
+    throw new ApiError(res.status, msg)
+  }
+  if (res.status === 204) return undefined as T
+  return (await res.json()) as T
+}
+
+const enc = encodeURIComponent
+const qs = (params: Record<string, string | number | boolean | null | undefined>) => {
+  const p = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+  return p.length ? '?' + p.map(([k, v]) => `${k}=${enc(String(v))}`).join('&') : ''
+}
+
+export const api = {
+  // state
+  state: () => req<StateSnapshot>('GET', '/state'),
+  streamUrl: '/api/stream',
+
+  // simulation
+  simStart: () => req<ClockState>('POST', '/sim/start'),
+  simPause: () => req<ClockState>('POST', '/sim/pause'),
+  simSpeed: (speed: number) => req<ClockState>('POST', '/sim/speed', { speed }),
+  simClock: (at: string) => req<ClockState>('POST', '/sim/clock', { at }),
+  scenarios: () => req<Scenario[]>('GET', '/sim/scenarios'),
+  saveScenario: (s: Scenario) => req<Scenario>('POST', '/sim/scenarios', s),
+  deleteScenario: (id: string) => req<void>('DELETE', `/sim/scenarios/${enc(id)}`),
+  runScenario: (id: string) => req<ScenarioRun>('POST', `/sim/scenarios/${enc(id)}/run`),
+  generateScenario: (body: { entity_id?: string | null; hint?: string | null }) =>
+    req<Scenario>('POST', '/sim/generate', body),
+
+  // inventory
+  createElement: (e: WbElement) => req<WbElement>('POST', '/elements', e),
+  updateElement: (id: string, e: WbElement) => req<WbElement>('PUT', `/elements/${enc(id)}`, e),
+  deleteElement: (id: string) => req<void>('DELETE', `/elements/${enc(id)}`),
+  createSite: (s: WbSite) => req<WbSite>('POST', '/sites', s),
+  updateSite: (id: string, s: WbSite) => req<WbSite>('PUT', `/sites/${enc(id)}`, s),
+  deleteSite: (id: string) => req<void>('DELETE', `/sites/${enc(id)}`),
+  createLink: (l: TopologyLink) => req<TopologyLink>('POST', '/links', l),
+  updateLink: (id: string, l: TopologyLink) => req<TopologyLink>('PUT', `/links/${enc(id)}`, l),
+  deleteLink: (id: string) => req<void>('DELETE', `/links/${enc(id)}`),
+
+  // personas
+  createPersona: (p: Persona) => req<Persona>('POST', '/personas', p),
+  updatePersona: (id: string, p: Persona) => req<Persona>('PUT', `/personas/${enc(id)}`, p),
+  deletePersona: (id: string) => req<void>('DELETE', `/personas/${enc(id)}`),
+
+  // threads
+  createThread: (body: NewThreadBody) => req<LiveThread>('POST', '/threads', body),
+  postMessage: (threadId: string, body: PostMessageBody) =>
+    req<Message>('POST', `/threads/${enc(threadId)}/messages`, body),
+  processThread: (threadId: string) => req<void>('POST', `/threads/${enc(threadId)}/process`),
+  deleteThread: (threadId: string) => req<void>('DELETE', `/threads/${enc(threadId)}`),
+
+  // incidents
+  createIncident: (spec: IncidentSpec) => req<Incident>('POST', '/incidents', spec),
+  resolveIncident: (id: string) => req<Incident>('POST', `/incidents/${enc(id)}/resolve`),
+  deleteIncident: (id: string) => req<void>('DELETE', `/incidents/${enc(id)}`),
+
+  // knowledge
+  context: (entity: string, at?: string | null, includeExpired = false) =>
+    req<ContextHit[]>('GET', `/context/${enc(entity)}${qs({ at, include_expired: includeExpired })}`),
+  deleteAssertion: (id: string) => req<void>('DELETE', `/assertions/${enc(id)}`),
+  guard: (body: GuardBody) => req<GuardVerdict>('POST', '/guard', body),
+  agentRun: (body: AgentRunBody) => req<AgentRunResult>('POST', '/agent/run', body),
+
+  // data
+  reset: (mode: 'seed' | 'empty') => req<void>('POST', '/data/reset', { mode }),
+  deleteGenerated: () => req<{ removed: Record<string, number> }>('DELETE', '/data/generated'),
+  exportUrl: '/api/data/export',
+  import: (data: unknown) => req<void>('POST', '/data/import', data),
+
+  // settings
+  settings: () => req<Settings>('GET', '/settings'),
+  updateSettings: (patch: SettingsPatch) => req<Settings>('PUT', '/settings', patch),
+  slackStatus: () => req<SlackStatus>('GET', '/slack/status'),
+
+  // LLM
+  llmCalls: (f: { purpose?: string; thread_id?: string; limit?: number } = {}) =>
+    req<LlmCall[]>('GET', `/llm/calls${qs(f)}`),
+  llmCall: (id: string) => req<LlmCall>('GET', `/llm/calls/${enc(id)}`),
+  llmCheck: () => req<LlmCheckResult[]>('POST', '/llm/check'),
+
+  // exports (plain links: use <a href download>)
+  exportLlmCallsUrl: '/api/export/llm-calls.jsonl',
+  exportTranscriptUrl: (threadId?: string) => `/api/export/transcript.md${qs({ thread_id: threadId })}`,
+  exportSessionUrl: '/api/export/session.json',
+}

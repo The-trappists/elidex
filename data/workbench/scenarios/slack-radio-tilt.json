@@ -1,0 +1,112 @@
+{
+  "id": "slack-radio-tilt",
+  "title": "Slack: antenna tilt drifts after storms",
+  "description": "A radio specialist explains a site-specific quirk on Slack. Tests the slack channel and a narrow binding to the instance RAD-221 and its site; swapping the unit is the thing to avoid.",
+  "channel": "slack",
+  "subject": "#field-north",
+  "incident": {
+    "entity_id": "RAD-221",
+    "kind": "low-throughput-after-storm",
+    "severity": "minor",
+    "summary": "Low throughput on RAD-221 after last night's storm",
+    "observations": {
+      "interface_status": "UP",
+      "traffic_counters": 120,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "jaakko",
+    "liisa",
+    "raimo"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "RAD-221 on Kemijärvi hill has had poor throughput since last night's storm. I'm planning to swap the unit tomorrow and will bring a spare RU-200."
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 60,
+      "text": "Remember the barrier key from the service station!"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 45,
+      "text": "Got it already 👍"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 90,
+      "text": "Hold on before you swap it. After storms the antenna tilt on RAD-221 drifts, that mast is very exposed. Check the antenna alignment first. I have fixed it three times with a ten minute re-tilt."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 60,
+      "text": "So the unit itself is fine? Why do you think so?"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 75,
+      "text": "The RU-200 has been solid. It's the mount that moves in strong wind. A new unit would drift too."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 180,
+      "text": "Re-aligned the antenna. Throughput is back to normal 🎉"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 30,
+      "text": "Good. Note it down: check the tilt after every storm."
+    }
+  ],
+  "resolves_incident_at_seq": 7,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "antenna-tilt-drift-after-storm",
+        "summary": "After storms the antenna tilt on RAD-221 drifts; check and correct the alignment before replacing the radio unit.",
+        "scope": {
+          "instance_ids": [
+            "RAD-221"
+          ],
+          "site_ids": [
+            "SITE-NF-017"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "after a storm",
+            "check": null
+          }
+        ],
+        "diagnosis": "antenna mount drifts in strong wind, the radio unit is fine",
+        "action": "Check the antenna alignment and re-tilt it before replacing the radio unit.",
+        "avoid": [
+          "replacing the radio unit first"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 7: 'Re-aligned the antenna. Throughput is back to normal'",
+        "stated_by": "Raimo Rantanen",
+        "cited_seq": [
+          4,
+          6,
+          7
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "radio",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

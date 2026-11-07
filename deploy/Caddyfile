@@ -1,0 +1,21 @@
+# Caddy: automatic HTTPS + one shared team password in front of the Workbench.
+# DOMAIN, BASIC_AUTH_USER and BASIC_AUTH_HASH come from .env (see docs/deploy-vultr.md).
+# DOMAIN=localhost uses Caddy's own internal CA (browser warning, use curl -k).
+
+{$DOMAIN} {
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+
+	# No compression on the SSE stream, it would delay events.
+	@compressible not path /api/stream
+	encode @compressible {
+		zstd
+		gzip
+	}
+
+	reverse_proxy app:8000 {
+		# Send bytes as they arrive: required for Server-Sent Events.
+		flush_interval -1
+	}
+}

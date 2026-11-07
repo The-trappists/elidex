@@ -26,9 +26,17 @@ The AI supports the team; the team decides.
 | `docs/decisions.md` | What the team decided; the only source of truth for choices |
 | `docs/elisa/` | Elisa's challenge brief (PDF) and pitch slides |
 | `data/elisa/` | Elisa's example material: chat, email, use case, architecture |
+| `docs/mvps.md` | What the code does now, one starter per idea |
+| `src/context_layer/` | Core pipeline: listen, understand, link, store, agent, API, MCP |
+| `src/context_layer/mvp/` | Starters for ideas B, C, D |
+| `data/synthetic/` | Our synthetic data and how it was made |
+| `docs/workbench.md` | Workbench (team test bench): contract, API, processing rules |
+| `src/context_layer/workbench/`, `web/` | Workbench backend and UI |
+| `data/workbench/` | Workbench seed: topology, personas, scenarios |
+| `deploy/`, `docs/deploy-vultr.md`, `docs/slack-setup.md` | Deployment and Slack bridge |
 | `CONTRIBUTING.md` | Git workflow and conventions |
 
-No code structure exists yet; it will be defined once an idea is chosen.
+A first code base (core of idea A + starters for B, C, D) exists; its stack choices are proposals until logged in `docs/decisions.md`. The shared contract is `src/context_layer/models.py`.
 
 ## Rules
 

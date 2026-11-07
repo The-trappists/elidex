@@ -1,0 +1,129 @@
+@import 'tailwindcss';
+
+/* Dark mode follows the .dark class on <html> (set from the theme toggle, default: system). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Use the Tailwind names (bg-surface, text-muted, border-line, bg-accent...)
+ * rather than raw colors, so light and dark stay consistent.
+ */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --line: #e3e6eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+
+  /* channels */
+  --teams: #5b5fc7;
+  --email: #0ea5e9;
+  --slack: #e01e5a;
+
+  /* assertion types */
+  --t-workaround: #8b5cf6;
+  --t-access: #f59e0b;
+  --t-fact: #0ea5e9;
+  --t-invalidation: #64748b;
+
+  /* trust */
+  --trust-hunch: #f59e0b;
+  --trust-stated: #3b82f6;
+  --trust-verified: #10b981;
+
+  /* status */
+  --ok: #10b981;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+  --info: #3b82f6;
+
+  /* graph */
+  --g-element: #334155;
+  --g-site: #e2e8f0;
+  --g-class: #a78bfa;
+  --g-assertion: #8b5cf6;
+  --g-incident: #ef4444;
+  --g-link: #94a3b8;
+}
+
+.dark {
+  --bg: #0b0d12;
+  --surface: #12151c;
+  --surface-2: #1a1e27;
+  --line: #262b36;
+  --text: #e5e7eb;
+  --muted: #8b93a3;
+  --accent: #818cf8;
+  --accent-soft: #1e1b4b;
+
+  --g-element: #cbd5e1;
+  --g-site: #1e2430;
+  --g-class: #a78bfa;
+  --g-link: #475569;
+}
+
+@theme inline {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-teams: var(--teams);
+  --color-email: var(--email);
+  --color-slack: var(--slack);
+
+  --color-workaround: var(--t-workaround);
+  --color-access: var(--t-access);
+  --color-fact: var(--t-fact);
+  --color-invalidation: var(--t-invalidation);
+
+  --color-hunch: var(--trust-hunch);
+  --color-stated: var(--trust-stated);
+  --color-verified: var(--trust-verified);
+
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-info: var(--info);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin scrollbars everywhere */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* Shared animations */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--bad) 60%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+.animate-pulse-ring { animation: pulse-ring 1.4s ease-out infinite; }
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-slide-in { animation: slide-in 0.25s ease-out; }

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "erkki",
+    "name": "Erkki Expert",
+    "role": "Network Expert",
+    "team": "Transmission",
+    "avatar_color": "#2563eb",
+    "expertise": "Transmission nodes, TX-3000 behaviour, years of field lore.",
+    "style": "Calm, short sentences, answers with what to do and what not to do. Occasional emoji.",
+    "origin": "elisa"
+  },
+  {
+    "id": "veikko",
+    "name": "Veikko Vikkelä",
+    "role": "Field Engineer",
+    "team": "Field team",
+    "avatar_color": "#16a34a",
+    "expertise": "On-site work: optics, cabling, interface checks.",
+    "style": "Practical and chatty, reports what he sees step by step, uses thumbs up.",
+    "origin": "elisa"
+  },
+  {
+    "id": "aino",
+    "name": "Aino Arkkitehti",
+    "role": "Network Architect",
+    "team": "Architecture",
+    "avatar_color": "#9333ea",
+    "expertise": "Network design, firmware rollouts, vendor documentation.",
+    "style": "Precise, announces changes with 'Heads up', cites release notes.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "liisa",
+    "name": "Liisa Lappi",
+    "role": "Field Team Lead North",
+    "team": "Field team North",
+    "avatar_color": "#ea580c",
+    "expertise": "Northern sites, access routes, keys and logistics.",
+    "style": "Friendly and practical, shares lessons learned the hard way.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "helmi",
+    "name": "Helmi Hakkarainen",
+    "role": "NOC Operator",
+    "team": "NOC",
+    "avatar_color": "#0891b2",
+    "expertise": "Dashboards and alarms. Sees the network from the operations room, not on site.",
+    "style": "Quick and informal, asks short questions, hedges when unsure ('I think', 'not sure').",
+    "origin": "synthetic"
+  },
+  {
+    "id": "jaakko",
+    "name": "Jaakko Junnila",
+    "role": "Junior Field Engineer",
+    "team": "Field team",
+    "avatar_color": "#db2777",
+    "expertise": "New in the job, knows the procedures but not the tricks.",
+    "style": "Eager, asks a lot of questions, writes long first messages and thanks everyone.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "sanna",
+    "name": "Sanna Salminen",
+    "role": "Site Access Coordinator",
+    "team": "Logistics",
+    "avatar_color": "#ca8a04",
+    "expertise": "Site permits, keys, barriers, road conditions.",
+    "style": "Organised, bullet-like messages, reminds people about keys and permits.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "raimo",
+    "name": "Raimo Rantanen",
+    "role": "Radio Specialist",
+    "team": "Radio",
+    "avatar_color": "#dc2626",
+    "expertise": "Radio units, antennas, alignment and weather effects on masts.",
+    "style": "Dry humour, gives one concrete tip at a time, mentions how often he has seen it.",
+    "origin": "synthetic"
+  }
+]

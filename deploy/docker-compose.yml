@@ -1,0 +1,38 @@
+# Run from the repo root:
+#   docker compose -f deploy/docker-compose.yml --env-file .env up -d --build
+name: context-workbench
+
+services:
+  app:
+    build:
+      context: ..
+    image: context-workbench:latest
+    env_file: ../.env
+    volumes:
+      - workbench-data:/app/out
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER in .env}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  workbench-data:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,93 @@
+{
+  "id": "elisa-trn042-email",
+  "title": "Elisa: TRN-042 email from Erkki",
+  "description": "Elisa's email word for word. Tests the email channel and merging with the chat: same topic, a second source, trust stated.",
+  "channel": "email",
+  "subject": "RE: TRN-042 traffic not recovering after SFP replacement",
+  "incident": null,
+  "participants": [
+    "erkki"
+  ],
+  "messages": [
+    {
+      "persona": "erkki",
+      "delay_s": 5,
+      "text": "Hi Veikko,\n\nThat sounds like the behaviour we have seen with some of the older transmission units.\n\nThe confusing part is that everything can look normal after replacing the optical module:\n\n- interface status = UP\n- optical levels = OK\n- alarms = cleared\n\n...but traffic still doesn't recover.\n\nBefore replacing the SFP again or rebooting the unit, check the traffic counters.\n\nIf the interface is UP but the counters remain at zero, try disabling and enabling the interface once.\n\nThis has solved the issue in several cases I've seen.\n\nI don't think this is written in the normal field instructions. It is one of those things we have learned from experience.\n\nRegards,\nErkki"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "scope": {
+          "instance_ids": [
+            "TRN-042"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "install_year_max": 2019
+          },
+          "trigger": "sfp-replacement"
+        },
+        "conditions": [
+          {
+            "text": "after SFP replacement",
+            "check": {
+              "field": "sfp_replaced",
+              "op": "==",
+              "value": true
+            }
+          },
+          {
+            "text": "interface UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "optical levels normal",
+            "check": {
+              "field": "optical_levels",
+              "op": "==",
+              "value": "normal"
+            }
+          },
+          {
+            "text": "traffic counters stay at zero",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "forwarding-state issue, not a faulty SFP",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "avoid": [
+          "replace the SFP again",
+          "reboot the unit (unless the interface bounce fails)"
+        ],
+        "fact": null,
+        "stated_by": "Erkki Expert",
+        "trust_level": "stated",
+        "evidence": "'This has solved the issue in several cases I've seen.'",
+        "cited_seq": [
+          1
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "elisa",
+    "core",
+    "email"
+  ],
+  "origin": "elisa"
+}

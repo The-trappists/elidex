@@ -1,0 +1,53 @@
+{
+  "id": "barrier-key-kemijarvi",
+  "title": "Barrier key for the Kemijärvi mast",
+  "description": "An email about a locked barrier and where the key is. Tests the access type bound to a site, not an element.",
+  "channel": "email",
+  "subject": "RE: Access to SITE-NF-017 (Kemijärvi hill mast)",
+  "incident": null,
+  "participants": [
+    "liisa"
+  ],
+  "messages": [
+    {
+      "persona": "liisa",
+      "delay_s": 5,
+      "text": "Hi all,\n\nFor anyone heading to SITE-NF-017: the private road up to the mast is closed by a locked barrier about 2 km before the site.\n\nThe key is kept at the Kemijärvi service station on the main road. Ask at the counter and sign it out in their log book.\n\nLearned that the hard way last week, lost two hours.\n\nLiisa"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "access",
+        "topic": "site-access-barrier-key",
+        "summary": "The private road to SITE-NF-017 is closed by a locked barrier; the key is at the Kemijärvi service station.",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [
+            "SITE-NF-017"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [],
+        "diagnosis": null,
+        "action": "Collect the barrier key at the Kemijärvi service station (sign it out at the counter) before driving to the site.",
+        "avoid": [],
+        "fact": "A locked barrier closes the private road about 2 km before the mast; the key is kept at the Kemijärvi service station on the main road.",
+        "trust_level": "stated",
+        "evidence": "'Learned that the hard way last week'",
+        "stated_by": "Liisa Lappi",
+        "cited_seq": [
+          1
+        ],
+        "confidence": 0.9
+      }
+    ]
+  },
+  "tags": [
+    "access",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

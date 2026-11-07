@@ -1,0 +1,71 @@
+{
+  "id": "firmware-4-2-rollout",
+  "title": "Firmware 4.2 makes the bounce trick obsolete",
+  "description": "An architect announces a firmware fix. Tests lifecycle: an invalidation closes the validity of the older workaround for the same class.",
+  "channel": "teams",
+  "subject": null,
+  "incident": null,
+  "participants": [
+    "aino",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "aino",
+      "delay_s": 5,
+      "text": "Heads up team: the firmware 4.2 rollout to all transmission nodes installed 2019 or earlier finished last night. Release notes say it fixes the forwarding-state bug after optical module replacement."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 120,
+      "text": "So no more disable/enable trick after SFP swaps?"
+    },
+    {
+      "persona": "aino",
+      "delay_s": 180,
+      "text": "Correct, it shouldn't be needed anymore on those units. If you still see zero counters after a swap, it's something else."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 60,
+      "text": "👍"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "invalidation",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "Firmware 4.2, now on all transmission nodes installed 2019 or earlier, fixes the forwarding-state bug after optical module replacement: the interface bounce is no longer needed.",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "install_year_max": 2019
+          },
+          "trigger": null
+        },
+        "conditions": [],
+        "diagnosis": null,
+        "action": null,
+        "avoid": [],
+        "fact": "Firmware 4.2 fixes the forwarding-state bug on these units; zero counters after a swap now point to something else.",
+        "trust_level": "stated",
+        "evidence": "seq 1: release notes",
+        "stated_by": "Aino Arkkitehti",
+        "cited_seq": [
+          1,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "lifecycle",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
