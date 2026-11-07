@@ -2,6 +2,7 @@ import { ChevronDown, ChevronRight, Play, ScanSearch } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '../../api/client'
 import type { ContextAssertion, LiveThread, PipelineJob } from '../../api/types'
+import { formatDistanceToNowStrict } from 'date-fns'
 import { fmtDateTime } from '../../lib/format'
 import { EmptyState, Button, withToast } from '../ui'
 import { JobSteps } from '../pipeline/JobSteps'
@@ -46,7 +47,7 @@ export function ParserOutput({
       ) : (
         <>
           <div className="mb-3 flex items-center gap-2 text-xs text-muted">
-            <span>Run of {fmtDateTime(latest.started_at)}</span>
+            <span title={`${fmtDateTime(latest.started_at)} (real time)`}>Processed {formatDistanceToNowStrict(new Date(latest.started_at), { addSuffix: true })}</span>
           </div>
           <JobSteps job={latest} thread={thread} assertions={assertions} hoverItem={hoverItem} onHoverItem={onHoverItem} />
           {previous.length > 0 && (

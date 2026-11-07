@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { validAt } from '../components/graph/graphModel'
 import { IncidentFeed } from '../components/incidents/IncidentFeed'
 import { PipelineLane } from '../components/pipeline/PipelineLane'
+import { recentProblems } from '../components/llm/status'
 import { Panel } from '../components/ui'
 import { cn } from '../lib/cn'
 import { useSimNow } from '../lib/useNow'
@@ -31,7 +32,7 @@ export default function LivePage() {
       open: Object.values(incidents).filter((i) => i.status === 'open').length,
       live: Object.values(threads).filter((t) => t.status === 'active' || t.status === 'processing').length,
       valid: Object.values(assertions).filter((a) => validAt(a, now)).length,
-      llmErr: llmCalls.filter((c) => c.error || c.parse_error || c.parsed_ok === false).length,
+      llmErr: recentProblems(llmCalls).length,
     }),
     [incidents, threads, assertions, llmCalls, now],
   )
@@ -42,7 +43,7 @@ export default function LivePage() {
         <Metric label="open incidents" value={k.open} tone="bad" />
         <Metric label="conversations in progress" value={k.live} onClick={() => nav('/conversations')} />
         <Metric label="pieces of knowledge in force" value={k.valid} onClick={() => nav('/knowledge')} />
-        {k.llmErr > 0 && <Metric label="AI problems" value={k.llmErr} tone="warn" onClick={() => nav('/llm')} />}
+        {k.llmErr > 0 && <Metric label="AI problems in the last hour" value={k.llmErr} tone="warn" onClick={() => nav('/llm')} />}
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">

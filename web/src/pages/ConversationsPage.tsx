@@ -1,5 +1,5 @@
 import { Download, MessageSquare, Play, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { Composer } from '../components/chat/Composer'
@@ -20,7 +20,17 @@ export default function ConversationsPage() {
   const assertions = useLive((s) => s.assertions)
   const personas = useLive((s) => s.personas)
   const idle = useLive((s) => s.settings?.idle_seconds ?? null)
+  const threads = useLive((s) => s.threads)
   const [hoverItem, setHoverItem] = useState<number | null>(null)
+
+  // No thread in the URL: open the most recent one instead of an empty pane.
+  const latestId = useMemo(
+    () => Object.values(threads).sort((a, b) => (b.last_message_at ?? b.created_at).localeCompare(a.last_message_at ?? a.created_at))[0]?.id,
+    [threads],
+  )
+  useEffect(() => {
+    if (!threadId && latestId) nav(`/conversations/${encodeURIComponent(latestId)}`, { replace: true })
+  }, [threadId, latestId, nav])
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const latestJob = useMemo(() => {

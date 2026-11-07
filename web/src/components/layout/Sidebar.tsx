@@ -1,5 +1,8 @@
 import { Activity, BookOpenCheck, Bot, Database, MessagesSquare, Network, Presentation, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
+import { recentProblems } from '../llm/status'
+import { useWallNow } from '../../lib/useNow'
 import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
 
@@ -37,7 +40,9 @@ export const ALL_NAV = NAV_GROUPS.flatMap((g) => g.items)
 
 export function Sidebar() {
   const openIncidents = useLive((s) => Object.values(s.incidents).filter((i) => i.status === 'open').length)
-  const llmErrors = useLive((s) => s.llmCalls.filter((c) => c.error || c.parsed_ok === false).length)
+  const llmCalls = useLive((s) => s.llmCalls)
+  const now = useWallNow()
+  const llmErrors = useMemo(() => recentProblems(llmCalls, now.getTime()).length, [llmCalls, now])
   // Only things that need action get a badge.
   const badge: Record<string, number> = { '/': openIncidents, '/llm': llmErrors }
   return (

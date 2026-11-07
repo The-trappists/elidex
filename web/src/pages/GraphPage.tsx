@@ -41,17 +41,12 @@ export default function GraphPage() {
   }, [data])
 
   // What is drawn: the chosen kinds; when messages are hidden, their edges are moved onto their conversation.
-  const defs = useMemo(() => {
+  const { defs, hidden } = useMemo(() => {
     const visible = (d: Data | undefined) => !!d && kinds.has(d.kind as KgKind) && (showOutdated || d.kind !== 'Assertion' || d.valid !== false)
     const threadOf = new Map(edges.filter((e) => e.type === 'PART_OF').map((e) => [String(e.source), String(e.target)]))
     const out: cytoscape.ElementDefinition[] = []
-    for (const d of nodes.values()) {
-      if (!visible(d)) continue
-      out.push({
-        group: 'nodes',
-        data: { id: d.id, kind: d.kind, color: KIND[d.kind as KgKind]?.color ?? '#999', short: d.kind === 'Message' ? '' : short(title(d)), expired: d.kind === 'Assertion' && d.valid === false },
-      })
-    }
+    const linked = new Set<string>()
+    const edgeDefs: cytoscape.ElementDefinition[] = []
     const seen = new Set<string>()
     for (const e of edges) {
       let s = String(e.source)
@@ -65,10 +60,24 @@ export default function GraphPage() {
       const id = `${s}|${e.type}|${t}`
       if (seen.has(id)) continue
       seen.add(id)
-      out.push({ group: 'edges', data: { id, source: s, target: t, type: e.type, name: EDGE_LABEL[String(e.type)] ?? e.type } })
+      edgeDefs.push({ group: 'edges', data: { id, source: s, target: t, type: e.type, name: EDGE_LABEL[String(e.type)] ?? e.type } })
+      linked.add(s).add(t)
     }
-    return out
-  }, [nodes, edges, kinds, showOutdated])
+    // A node with no visible connection is noise (e.g. equipment once sites are hidden); keep it only when selected.
+    let hidden = 0
+    for (const d of nodes.values()) {
+      if (!visible(d)) continue
+      if (!linked.has(d.id) && d.id !== selectedId) {
+        hidden++
+        continue
+      }
+      out.push({
+        group: 'nodes',
+        data: { id: d.id, kind: d.kind, color: KIND[d.kind as KgKind]?.color ?? '#999', short: d.kind === 'Message' ? '' : short(title(d)), expired: d.kind === 'Assertion' && d.valid === false },
+      })
+    }
+    return { defs: [...out, ...edgeDefs], hidden }
+  }, [nodes, edges, kinds, showOutdated, selectedId])
 
   const matches = useMemo(() => {
     const ql = q.trim().toLowerCase()
@@ -139,6 +148,7 @@ export default function GraphPage() {
           ) : (
             <KgCanvas defs={defs} selectedId={selectedId} matchIds={matches} onSelect={selectNode} handle={canvas} />
           )}
+          {hidden > 0 && !q && <div className="pointer-events-none absolute bottom-3 left-3 text-xs text-muted">{hidden} unconnected {hidden === 1 ? 'node' : 'nodes'} hidden</div>}
           {q && <div className="pointer-events-none absolute left-3 top-3 rounded-md border border-line bg-surface px-2 py-1 text-xs text-muted">{matches.length ? `${matches.length} found · Enter to select the first` : 'No match'}</div>}
         </div>
       </section>

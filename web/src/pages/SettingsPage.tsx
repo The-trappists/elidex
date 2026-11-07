@@ -17,9 +17,7 @@ function Section({ title, intro, icon: Icon, children }: { title: string; intro?
   return (
     <Card className="p-5">
       <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent">
-          <Icon size={17} />
-        </span>
+        <Icon size={17} className="mt-0.5 shrink-0 text-muted" />
         <div>
           <h2 className="font-semibold tracking-tight">{title}</h2>
           {intro && <p className="mt-0.5 text-xs text-muted">{intro}</p>}
@@ -73,7 +71,7 @@ export default function SettingsPage() {
         <Section icon={Sparkles} title="Reading conversations" intro="How a conversation is turned into knowledge.">
           <div className="grid gap-2">
             {MODES.map((m) => (
-              <label key={m.id} className={cn('flex cursor-pointer gap-3 rounded-md border p-3.5 transition-all duration-200', st.extractor_mode === m.id ? 'border-accent bg-accent-soft' : 'border-line hover:border-accent/40 hover:bg-surface-2')}>
+              <label key={m.id} className={cn('flex cursor-pointer gap-3 rounded-md border p-3.5 transition-colors', st.extractor_mode === m.id ? 'border-accent' : 'border-line hover:bg-surface-2')}>
                 <input type="radio" name="mode" className="mt-1 accent-[var(--accent)]" checked={st.extractor_mode === m.id} onChange={() => save({ extractor_mode: m.id })} />
                 <span>
                   <span className="text-sm font-medium">{m.title}</span>
