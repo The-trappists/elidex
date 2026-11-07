@@ -21,6 +21,7 @@ We are tackling **Elisa's challenge "Capturing and Linking Human-Generated Conte
 | [MVPs](docs/mvps.md) | What the code does now, one starter per idea |
 | [Knowledge graph](docs/knowledge-graph.md) | Graph over network, assertions and provenance; agent queries; Neo4j mirror |
 | [Evaluation](docs/evaluation.md) | Accuracy: right solution retrieved? right information kept? What confidence means |
+| [Final improvements](docs/final-improvements.md) | Ranked gaps and retrieval upgrades for the final push (for ultra mode, after current tasks are merged) |
 | [Decisions](docs/decisions.md) | What we chose and why |
 | [Contributing](CONTRIBUTING.md) | Language, git workflow, shared contracts |
 | [AGENTS.md](AGENTS.md) | Instructions for every AI assistant |
