@@ -96,20 +96,10 @@ def _scope_key(item: ExtractedItem, inv) -> tuple:
 
 
 def evaluate(items: list[ExtractedItem], expected: list[ExtractedItem], inv) -> EvalResult:
-    """Match on (type, topic). Same scope: matched. Different scope: a note in binding_diffs."""
-    result = EvalResult()
-    got = {(i.type, i.topic): i for i in items}
-    want = {(i.type, i.topic): i for i in expected}
-    for key, w in want.items():
-        g = got.get(key)
-        if g is None:
-            result.missed.append(key[1])
-        elif _scope_key(g, inv) == _scope_key(w, inv):
-            result.matched.append(key[1])
-        else:
-            result.binding_diffs.append(f"{key[1]}: expected {_scope_key(w, inv)}, got {_scope_key(g, inv)}")
-    result.unexpected = [k[1] for k in got if k not in want]
-    return result
+    """Match on (type, scope, action similarity), not on the topic slug. See evaluation.match_items."""
+    from ..evaluation import match_items
+
+    return EvalResult(**match_items(items, expected, lambda i: _scope_key(i, inv)))
 
 
 class Processor:

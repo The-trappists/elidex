@@ -1,0 +1,18 @@
+{
+  "candidates": [
+    {
+      "name": "model-a",
+      "base_url": "https://api.example.com/v1",
+      "model": "model-a-name",
+      "json_mode": "json_object",
+      "api_key_env": "EVAL_KEY_MODEL_A"
+    },
+    {
+      "name": "model-b",
+      "base_url": "https://api.other-provider.example/v1",
+      "model": "model-b-name",
+      "json_mode": "json_schema",
+      "api_key_env": "EVAL_KEY_MODEL_B"
+    }
+  ]
+}
