@@ -50,33 +50,35 @@ export function Sidebar() {
   // Only things that need action get a badge.
   const badge: Record<string, number> = { '/overview': openIncidents, '/llm': llmErrors, '/review': needLook }
   return (
-    <nav className="flex w-52 shrink-0 flex-col border-r border-line bg-surface">
-      <div className="flex h-14 items-center gap-2.5 px-4">
-        <img src="/elidex-logo.png" alt="ElidEx" className="size-7 object-contain" />
+    <nav aria-label="Workbench" className="app-sidebar flex shrink-0 flex-col border-r border-line bg-surface">
+      <Link to="/" aria-label="ElidEx home" className="sidebar-brand flex h-20 items-center gap-3 px-5">
+        <img src="/elidex-logo.png" alt="ElidEx" className="size-9 object-contain" />
         <div className="flex flex-col">
-          <span className="text-sm font-bold tracking-tight">Elid<span className="text-accent">Ex</span></span>
+          <span className="font-display text-xl font-semibold tracking-tight">Elid<span className="text-accent">Ex</span></span>
           <span className="text-[10px] text-muted -mt-0.5">Context Layer</span>
         </div>
-      </div>
-      <div className="flex flex-1 flex-col gap-5 overflow-auto px-2 py-2">
+      </Link>
+      <div className="sidebar-links flex flex-1 flex-col gap-7 overflow-auto px-3 py-5">
         {NAV_GROUPS.map((g) => (
           <div key={g.label}>
-            <div className="mb-1 px-2.5 text-xs font-medium text-muted">{g.label}</div>
+            <div className="nav-group-label mb-3 px-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">{g.label}</div>
             <div className="flex flex-col gap-0.5">
               {g.items.map(({ to, label, icon: Icon, end }) => (
                 <NavLink
+                  title={label}
+                  aria-label={label}
                   key={to}
                   to={to}
                   end={end}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
-                      isActive ? 'bg-surface-2 font-medium text-text' : 'text-muted hover:bg-surface-2 hover:text-text',
+                      'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                      isActive ? 'bg-accent-soft font-semibold text-accent' : 'text-muted hover:bg-surface-2 hover:text-text',
                     )
                   }
                 >
-                  <Icon size={16} />
-                  {label}
+                  <Icon size={18} className="shrink-0" />
+                  <span className="nav-label">{label}</span>
                   {!!badge[to] && <span className={cn('ml-auto rounded px-1.5 text-xs font-medium tabular-nums', to === '/review' ? 'bg-surface-3 text-text' : 'bg-bad/10 text-bad')}>{badge[to]}</span>}
                 </NavLink>
               ))}
@@ -84,11 +86,11 @@ export function Sidebar() {
           </div>
         ))}
       </div>
-      <Link to="/" className="m-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text" title="Return to ElidEx home">
+      <Link to="/" className="sidebar-footer m-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text" title="Return to ElidEx home">
         <LogOut size={16} />
         Exit to Home
       </Link>
-      <a href="/demo/" className="mx-2 mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text">
+      <a href="/demo/" className="sidebar-footer mx-2 mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text">
         <Presentation size={16} />
         Product demo
       </a>

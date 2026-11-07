@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { api } from '../api/client'
 import { fixtureSnapshot } from '../api/fixtures/review'
+import { backoffDelay, subscribeStream } from './stream'
 import type {
   ClockState,
   ContextAssertion,
@@ -220,51 +221,46 @@ export const useLive = create<LiveState>((set, get) => ({
   },
 }))
 
-/** Connect once (called from App). Reconnects with backoff and refetches the snapshot. */
+/** Connect once (called from App): load the snapshot, then follow the shared stream. */
 export function connectLive(): () => void {
-  let es: EventSource | null = null
   let stopped = false
-  let retry = 1000
+  let timer: number | undefined
+  let attempt = 0
+  let unsub: (() => void) | null = null
 
-  const open = async () => {
+  const start = async () => {
     if (stopped) return
     useLive.setState({ connection: 'connecting' })
     try {
       await useLive.getState().load()
     } catch {
       useLive.setState({ connection: 'offline' })
-      setTimeout(open, retry)
-      retry = Math.min(retry * 2, 15000)
+      timer = window.setTimeout(start, backoffDelay(attempt++))
       return
     }
+    if (stopped) return
     if (snapshotIsFixture) {
       // Backend down in fixtures mode: stay on the sample snapshot, no stream, no refetch loop.
       useLive.setState({ connection: 'offline' })
       return
     }
-    es = new EventSource(api.streamUrl)
-    es.onopen = () => {
-      retry = 1000
-      useLive.setState({ connection: 'live' })
-    }
-    es.onmessage = (msg) => {
-      try {
-        useLive.getState().apply(JSON.parse(msg.data) as WbEvent)
-      } catch (err) {
-        console.error('bad event', err, msg.data)
-      }
-    }
-    es.onerror = () => {
-      es?.close()
-      useLive.setState({ connection: 'offline' })
-      setTimeout(open, retry)
-      retry = Math.min(retry * 2, 15000)
-    }
+    unsub = subscribeStream({
+      onStatus: (st) => useLive.setState({ connection: st }),
+      onReconnect: () => void useLive.getState().load().catch(() => undefined),
+      onMessage: (data) => {
+        try {
+          useLive.getState().apply(JSON.parse(data) as WbEvent)
+        } catch (err) {
+          console.error('bad event', err, data)
+        }
+      },
+    })
   }
-  void open()
+  void start()
   return () => {
     stopped = true
-    es?.close()
+    window.clearTimeout(timer)
+    unsub?.()
   }
 }
 

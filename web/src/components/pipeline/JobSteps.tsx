@@ -7,8 +7,8 @@ import { explainError, plural, STAGE_HELP } from '../../lib/explain'
 import { fmtMs } from '../../lib/format'
 import { STAGE_LABEL } from '../../lib/semantic'
 import { assertionHref, TypeBadge, Validity } from '../knowledge/bits'
-import { ErrorNote, IdChip } from '../ui'
-import { extractorLabel } from './jobUtils'
+import { ErrorNote, IdChip, InProgress } from '../ui'
+import { extractorLabel, isRunning } from './jobUtils'
 import { ItemCard } from './ItemCard'
 import { ItemEditor } from './ItemEditor'
 import { CriticVerdicts, JudgeVerdicts } from './Verdicts'
@@ -49,13 +49,15 @@ export function JobSteps({
   const [editing, setEditing] = useState<number | null>(null)
   const ev = job.eval
   const cited = new Set(job.items.flatMap((i) => i.cited_seq))
+  const running = isRunning(job)
+  const busy = (st: StageName) => running && ['running', 'pending'].includes(job.stages.find((s) => s.stage === st)?.status ?? 'done')
 
   const summary: Record<StageName, string> = {
     listen: plural(thread?.messages.length ?? 0, 'message'),
-    understand: plural(job.items.length, 'finding') + (job.critic.some((v) => v.verdict === 'reject') ? ` · ${job.critic.filter((v) => v.verdict === 'reject').length} rejected` : ''),
-    link: job.notes.length ? plural(job.notes.length, 'note') : 'no remark',
-    store: `${job.assertion_ids.length} saved${job.removed_assertion_ids.length ? ` · ${job.removed_assertion_ids.length} replaced` : ''}`,
-    reconcile: job.judge.filter((v) => v.verdict !== 'unrelated').length ? plural(job.judge.filter((v) => v.verdict !== 'unrelated').length, 'verdict') : job.events.length ? plural(job.events.length, 'event') : 'nothing to change',
+    understand: busy('understand') ? 'In progress…' : plural(job.items.length, 'finding') + (job.critic.some((v) => v.verdict === 'reject') ? ` · ${job.critic.filter((v) => v.verdict === 'reject').length} rejected` : ''),
+    link: busy('link') ? 'In progress…' : job.notes.length ? plural(job.notes.length, 'note') : 'no remark',
+    store: busy('store') ? 'In progress…' : `${job.assertion_ids.length} saved${job.removed_assertion_ids.length ? ` · ${job.removed_assertion_ids.length} replaced` : ''}`,
+    reconcile: busy('reconcile') ? 'In progress…' : job.judge.filter((v) => v.verdict !== 'unrelated').length ? plural(job.judge.filter((v) => v.verdict !== 'unrelated').length, 'verdict') : job.events.length ? plural(job.events.length, 'event') : 'nothing to change',
   }
 
   const body: Record<StageName, ReactNode> = {
@@ -90,17 +92,19 @@ export function JobSteps({
           ))}
         </div>
         <Label>Produced · {plural(job.items.length, 'finding')}</Label>
-        {job.items.length === 0 ? (
+        {busy('understand') ? (
+          <InProgress>Reading the conversation…</InProgress>
+        ) : job.items.length === 0 ? (
           <Empty>Nothing worth keeping was found in this conversation.</Empty>
         ) : (
           <div className="space-y-2">
             {job.items.map((it, i) => (
-              <ItemCard key={i} item={it} active={hoverItem === i} onHover={onHoverItem ? (on) => onHoverItem(on ? i : null) : undefined} verdict={job.critic.find((v) => v.item_topic === it.topic)} onEdit={() => setEditing(i)} />
+              <ItemCard key={i} item={it} stored={job.assertion_ids.map((id) => assertions[id]).find((a) => a?.topic === it.topic)} active={hoverItem === i} onHover={onHoverItem ? (on) => onHoverItem(on ? i : null) : undefined} verdict={job.critic.find((v) => v.item_topic === it.topic)} onEdit={() => setEditing(i)} />
             ))}
           </div>
         )}
         <Label>Second check: why each finding was kept, lowered or rejected</Label>
-        <CriticVerdicts job={job} thread={thread} />
+        {running && !job.critic.length ? <InProgress>Second check in progress…</InProgress> : <CriticVerdicts job={job} thread={thread} />}
         {ev && (
           <>
             <Label>Compared with the expected answer</Label>
@@ -119,13 +123,15 @@ export function JobSteps({
         <Label>Received</Label>
         <p className="text-[13px]">{plural(job.items.length, 'finding')}. Each one is matched to equipment, sites or a class of equipment.</p>
         <Label>Remarks from the linker</Label>
-        {job.notes.length ? <ul className="list-disc space-y-1 pl-4 text-[13px]">{job.notes.map((n, i) => <li key={i}>{n}</li>)}</ul> : <Empty>The linker had nothing to flag.</Empty>}
+        {busy('link') ? <InProgress>Matching findings to equipment…</InProgress> : job.notes.length ? <ul className="list-disc space-y-1 pl-4 text-[13px]">{job.notes.map((n, i) => <li key={i}>{n}</li>)}</ul> : <Empty>The linker had nothing to flag.</Empty>}
       </>
     ),
     store: (
       <>
         <Label>Saved as knowledge · {job.assertion_ids.length}</Label>
-        {job.assertion_ids.length === 0 ? (
+        {busy('store') ? (
+          <InProgress>Saving…</InProgress>
+        ) : job.assertion_ids.length === 0 ? (
           <Empty>Nothing was created or merged.</Empty>
         ) : (
           <div className="divide-y divide-line rounded-md border border-line">
@@ -162,7 +168,9 @@ export function JobSteps({
     reconcile: (
       <>
         <Label>Changes to older knowledge</Label>
-        {job.stages.find((s) => s.stage === 'reconcile')?.status === 'skipped' ? (
+        {busy('reconcile') ? (
+          <InProgress>Comparing with stored knowledge…</InProgress>
+        ) : job.stages.find((s) => s.stage === 'reconcile')?.status === 'skipped' ? (
           <Empty>Skipped: lifecycle handling is switched off in Settings.</Empty>
         ) : job.events.length ? (
           <ul className="list-disc space-y-1 pl-4 text-[13px]">{job.events.map((n, i) => <li key={i}>{n}</li>)}</ul>
@@ -170,7 +178,7 @@ export function JobSteps({
           <Empty>No older knowledge was closed, and no conflict was found.</Empty>
         )}
         <Label>Comparison with stored knowledge: why</Label>
-        <JudgeVerdicts job={job} />
+        {busy('reconcile') || (running && !job.judge.length) ? <InProgress>Comparison in progress…</InProgress> : <JudgeVerdicts job={job} />}
       </>
     ),
   }

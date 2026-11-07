@@ -8,12 +8,13 @@ import { useLive } from '../../store/live'
 import { useContextHits } from '../incidents/useContextHits'
 import { Badge, Button, EmptyState, IdChip, Toggle } from '../ui'
 import { ContextCard } from './ContextCard'
+import { HumanActivity } from './HumanActivity'
 import { Experts, Provenance, Reach, Timeline } from './GraphSections'
 import { classMembers, classesOf, type NodeKind } from './graphModel'
 
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
   <section className="border-b border-line px-4 py-3 last:border-0">
-    <div className="mb-2 flex items-center gap-1.5">
+    <div className="mb-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
       <h4 className="text-xs font-medium text-muted">{title}</h4>
       {count !== undefined && <span className="rounded bg-surface-2 px-1 text-xs text-muted">{count}</span>}
       <div className="ml-auto">{action}</div>
@@ -77,19 +78,19 @@ function ElementInfo({ id, at, onSelect }: P) {
   const its = classesOf(el, Object.values(classes))
   return (
     <div>
-      <Title kind="Element" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
+      <Title kind="Equipment" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
       <Section title="Details">
-        <Row k="Type" v={el.type} />
+        <Row k="Type" v={el.type.replace(/_/g, ' ')} />
         <Row k="Model" v={el.model} />
         <Row k="Installed" v={el.install_year} />
         <Row k="Firmware" v={el.firmware ?? '—'} />
         <Row k="Site" v={site ? <button className="text-accent hover:underline" onClick={() => onSelect(site.id, 'site')}>{site.name}</button> : (el.site_id ?? '—')} />
         {el.aliases.length > 0 && <Row k="Aliases" v={el.aliases.join(', ')} />}
       </Section>
-      <Section title="Classes" count={its.length}>
+      <Section title="Equipment groups" count={its.length}>
         {its.length ? <div className="flex flex-wrap gap-1.5">{its.map((c) => <IdChip key={c.id} onClick={() => onSelect(c.id, 'class')}>{c.label}</IdChip>)}</div> : <None>Not in any known class.</None>}
       </Section>
-      <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>
+      <Section title="Context at the selected time" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>
         {hits === null || (loading && !hits.length) ? (
           <div className="h-16 animate-pulse rounded-md bg-surface-2" />
         ) : hits.length ? (
@@ -97,6 +98,13 @@ function ElementInfo({ id, at, onSelect }: P) {
         ) : (
           <None>Nothing known about {id} at this time.</None>
         )}
+      </Section>
+      <Section title="Human activity">
+        <HumanActivity
+          id={id}
+          defaultQuery={`${el.type.replace(/_/g, ' ')} ${el.model} installed ${el.install_year}`}
+          onSelectKnowledge={(aid) => { if (useLive.getState().assertions[aid]) onSelect(aid, 'assertion') }}
+        />
       </Section>
       <Section title="History of advice">
         <Timeline entityId={id} at={at} onSelect={(aid) => onSelect(aid, 'assertion')} />

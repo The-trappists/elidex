@@ -50,7 +50,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
           </Button>
         </div>
         <div className="grid grid-cols-3 gap-1.5">
-          <Select className="h-8 !px-1.5 text-xs" value={source} onChange={(e) => setSource(e.target.value as ThreadSource | '')}>
+          <Select className="h-8 !px-1.5 text-[13px]" value={source} onChange={(e) => setSource(e.target.value as ThreadSource | '')}>
             <option value="">All sources</option>
             {Object.entries(SOURCE_STYLE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -58,7 +58,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
               </option>
             ))}
           </Select>
-          <Select className="h-8 !px-1.5 text-xs" value={origin} onChange={(e) => setOrigin(e.target.value as Origin | '')}>
+          <Select className="h-8 !px-1.5 text-[13px]" value={origin} onChange={(e) => setOrigin(e.target.value as Origin | '')}>
             <option value="">All origins</option>
             {Object.entries(ORIGIN_STYLE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -66,7 +66,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
               </option>
             ))}
           </Select>
-          <Select className="h-8 !px-1.5 text-xs" value={status} onChange={(e) => setStatus(e.target.value as ThreadStatus | '')}>
+          <Select className="h-8 !px-1.5 text-[13px]" value={status} onChange={(e) => setStatus(e.target.value as ThreadStatus | '')}>
             <option value="">All status</option>
             {Object.entries(THREAD_STATUS_STYLE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -89,16 +89,17 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
             return (
               <button
                 key={t.id}
+                data-thread-select
                 onClick={() => nav(`/conversations/${encodeURIComponent(t.id)}`)}
-                className={cn('flex w-full gap-2.5 border-b border-line/60 px-3 py-2.5 text-left transition hover:bg-surface-2', selectedId === t.id && 'bg-accent-soft')}
+                className={cn('animate-item-in flex w-full gap-2.5 border-b border-line/60 px-3 py-2.5 text-left transition hover:bg-surface-2', selectedId === t.id && 'bg-accent-soft')}
               >
                 <SourceIcon source={t.source} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
                     <span className="truncate text-sm font-medium">{threadTitle(t)}</span>
-                    <span className="ml-auto shrink-0 text-xs text-muted">{t.last_message_at ? fmtDateTime(t.last_message_at).slice(5) : ''}</span>
+                    <span className="ml-auto shrink-0 text-[13px] text-muted">{t.last_message_at ? fmtDateTime(t.last_message_at).slice(5) : ''}</span>
                   </div>
-                  <div className="truncate text-xs text-muted">{last ? `${last.author}: ${last.text}` : 'No messages yet'}</div>
+                  <div className="truncate text-[13px] text-muted">{last ? `${last.author}: ${last.text}` : 'No messages yet'}</div>
                   <div className="mt-1 flex gap-1">
                     <Badge className={THREAD_STATUS_STYLE[t.status].cls}>{THREAD_STATUS_STYLE[t.status].label}</Badge>
                     <Badge className={ORIGIN_STYLE[t.origin].cls}>{ORIGIN_STYLE[t.origin].label}</Badge>

@@ -124,6 +124,7 @@ export function describeCall(c: LlmCall, threadName?: string): string {
 /** Plain-language outcome of a pipeline job. */
 export function describeJob(job: PipelineJob): string {
   if (job.error) return explainError(job.error)?.title ?? 'Failed'
+  if (!job.finished_at || job.stages.some((s) => s.status === 'running')) return 'In progress…'
   const n = job.assertion_ids.length
   if (n === 0) return 'Nothing worth keeping was found'
   const extra: string[] = []

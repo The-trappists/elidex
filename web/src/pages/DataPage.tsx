@@ -1,3 +1,4 @@
+import { PageIntro } from '../components/layout/PageIntro'
 import { useState } from 'react'
 import { DataActions } from '../components/data/DataActions'
 import { IncidentsTab } from '../components/data/IncidentsTab'
@@ -20,15 +21,16 @@ export default function DataPage() {
   }
   return (
     <div className="flex h-full flex-col">
+      <PageIntro title="Build a useful demonstration" description="Manage the equipment, people and scenarios used by this workbench." />
       <div className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
         <Tabs<Tab>
           value={tab}
           onChange={setTab}
           items={[
-            { id: 'elements', label: 'Elements', count: n.elements },
+            { id: 'elements', label: 'Equipment', count: n.elements },
             { id: 'sites', label: 'Sites', count: n.sites },
-            { id: 'links', label: 'Links', count: n.links },
-            { id: 'personas', label: 'Personas', count: n.personas },
+            { id: 'links', label: 'Connections', count: n.links },
+            { id: 'personas', label: 'People', count: n.personas },
             { id: 'scenarios', label: 'Scenarios', count: n.scenarios },
             { id: 'incidents', label: 'Incidents', count: n.incidents },
           ]}

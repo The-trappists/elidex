@@ -1,3 +1,4 @@
+import { PageIntro } from '../components/layout/PageIntro'
 import { CheckCircle2, Keyboard, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -113,6 +114,7 @@ export default function ReviewPage() {
 
   return (
     <div className="flex h-full flex-col">
+      <PageIntro title="A closer look, when you need it" description="Explore uncertainty and conflicting advice. Knowledge is already in use; these observations never wait for approval." />
       <div className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
         <div className="mr-1 text-sm">
           <b className="font-semibold tabular-nums">{openTotal}</b> <span className="text-muted">{openTotal === 1 ? 'thing' : 'things'} the loop wants you to know about</span>
@@ -124,16 +126,16 @@ export default function ReviewPage() {
         <Toggle checked={showDismissed} onChange={setShowDismissed} label="Show dismissed" />
         {threadFilter && (
           <button
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2 text-xs hover:border-accent"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2 text-[13px] hover:border-accent"
             onClick={() => setParams({})}
             aria-label="Clear the conversation filter"
           >
             {threads[threadFilter]?.subject ?? threadFilter} <X size={12} />
           </button>
         )}
-        <div className="ml-auto flex items-center gap-3 text-xs text-muted">
+        <div className="ml-auto flex items-center gap-3 text-[13px] text-muted">
           {sample && <Badge title="The review service is not connected yet: these are sample cases">Sample data</Badge>}
-          <span className="flex items-center gap-1.5" aria-label="Keyboard shortcuts: j and k move, d dismisses, e edits, Enter opens the thread">
+          <span className="hidden items-center gap-1.5 lg:flex" aria-label="Keyboard shortcuts: j and k move, d dismisses, e edits, Enter opens the thread">
             <Keyboard size={14} aria-hidden />
             <kbd className="rounded border border-line bg-surface-2 px-1 font-mono">j</kbd><kbd className="rounded border border-line bg-surface-2 px-1 font-mono">k</kbd> move
             <kbd className="rounded border border-line bg-surface-2 px-1 font-mono">d</kbd> dismiss
@@ -165,8 +167,8 @@ export default function ReviewPage() {
                 <section key={g.kind} aria-labelledby={`grp-${g.kind}`} className="mb-2">
                   <div className="sticky top-0 z-10 -mx-4 flex items-baseline gap-2 bg-bg/95 px-4 pb-2 pt-4 backdrop-blur">
                     <h2 id={`grp-${g.kind}`} className="text-sm font-semibold">{meta.title}</h2>
-                    <span className="text-xs tabular-nums text-muted">{g.rows.length}</span>
-                    <span className="min-w-0 truncate text-xs text-muted">{meta.hint}</span>
+                    <span className="text-[13px] tabular-nums text-muted">{g.rows.length}</span>
+                    <span className="min-w-0 truncate text-[13px] text-muted">{meta.hint}</span>
                   </div>
                   <div className="space-y-3">
                     {g.rows.map((f) => (

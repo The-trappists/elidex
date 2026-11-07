@@ -628,9 +628,26 @@ class Workbench:
         self.emit("state.reset", {})
 
     def replace_state(self, data: dict[str, Any]) -> None:
-        """Import: replace everything with an exported state."""
+        """Import: replace everything with an exported state.
+
+        Raises ValueError (the HTTP layer answers 422) on dangling references, like POST /elements and /links.
+        `process_on_import` (optional list of thread ids, e.g. the hand-written seed threads of a dataset sample) is
+        processed right away, as the seed is at first start."""
+        elements, sites = (data.get("elements") or []), (data.get("sites") or [])
+        problems = persistence.validate_refs(
+            [WbElement.model_validate(x) for x in elements], [WbSite.model_validate(x) for x in sites],
+            [TopologyLink.model_validate(x) for x in data.get("links") or []],
+        )
+        if problems:
+            raise ValueError("; ".join(problems[:5]) + (f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""))
         self.processor.reset()
         persistence.apply_state(self, data)
+        boot = [tid for tid in data.get("process_on_import") or [] if tid in self.threads]
+        if boot:
+            self.processor.bootstrap_threads = set(boot)
+            for tid in sorted(boot, key=lambda i: self.threads[i].created_at):
+                self.threads[tid].status = "processing"
+                self.request_processing(tid, immediate=True)
         self.emit("state.reset", {})
 
     def remove_generated(self) -> dict[str, int]:

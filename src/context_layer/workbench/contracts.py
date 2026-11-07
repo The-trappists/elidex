@@ -452,6 +452,14 @@ class ResetBody(BaseModel):
     mode: Literal["seed", "empty"] = "seed"
 
 
+class LoadDatasetBody(BaseModel):
+    """POST /data/load-dataset: replace the state with a connected sample of the company dataset."""
+
+    sites: int = Field(40, ge=9, le=150)  # the Elisa seed alone has 9 sites
+    threads: int = Field(300, ge=0, le=1000)
+    seed: int = 42
+
+
 class SettingsPatch(BaseModel):
     extractor_mode: ExtractorMode | None = None
     lifecycle: bool | None = None

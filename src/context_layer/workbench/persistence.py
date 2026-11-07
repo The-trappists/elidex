@@ -59,6 +59,15 @@ def state_to_dict(wb: Workbench) -> dict[str, Any]:
     }
 
 
+def validate_refs(elements, sites, links) -> list[str]:
+    """Dangling references, with the same rules as the REST API (422): an element's site, a link's two ends."""
+    site_ids, element_ids = {s.id for s in sites}, {e.id for e in elements}
+    problems = [f"element {e.id}: unknown site {e.site_id}" for e in elements if e.site_id is not None and e.site_id not in site_ids]
+    for link in links:
+        problems += [f"link {link.id}: unknown element {end}" for end in (link.a, link.b) if end not in element_ids]
+    return problems
+
+
 def apply_state(wb: Workbench, data: dict[str, Any]) -> None:
     """Replace the whole state of `wb` with `data` (validates everything first)."""
 

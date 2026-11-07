@@ -72,7 +72,7 @@ export function IncidentsTab() {
         onDelete={(i) => api.deleteIncident(i.id)}
         rowActions={(i) =>
           i.status === 'open' ? (
-            <IconButton title="Resolve" className="hover:!text-ok" onClick={() => withToast(() => api.resolveIncident(i.id), 'Incident resolved')}>
+            <IconButton aria-label="Resolve" className="hover:!text-ok" onClick={() => withToast(() => api.resolveIncident(i.id), 'Incident resolved')}>
               <Check size={14} />
             </IconButton>
           ) : null

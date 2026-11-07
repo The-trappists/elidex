@@ -2,6 +2,10 @@
 // backend's `detail` message, ready for a toast.
 import type {
   AgentRunBody,
+  DatasetSample,
+  SourceFreshness,
+  SourceSimilar,
+  SourceThreads,
   AgentRunResult,
   ClockState,
   ContextHit,
@@ -134,6 +138,10 @@ export const api = {
   deleteGenerated: () => req<{ removed: Record<string, number> }>('DELETE', '/data/generated'),
   exportUrl: '/api/data/export',
   import: (data: unknown) => req<void>('POST', '/data/import', data),
+  sourceThreads: (el: string, offset = 0, limit = 8) => req<SourceThreads>('GET', `/sources/elements/${encodeURIComponent(el)}/threads?offset=${offset}&limit=${limit}`),
+  sourceFreshness: (el: string) => req<SourceFreshness>('GET', `/sources/elements/${encodeURIComponent(el)}/freshness`),
+  sourceSimilar: (q: string, entity: string) => req<SourceSimilar>('GET', `/sources/similar?q=${encodeURIComponent(q)}&entity=${encodeURIComponent(entity)}&limit=4`),
+  loadDataset: (body: { sites: number; threads: number; seed?: number }) => req<DatasetSample>('POST', '/data/load-dataset', body),
 
   // settings
   settings: () => req<Settings>('GET', '/settings'),
