@@ -16,10 +16,11 @@ import { useLive } from '../store/live'
 
 const STATUS_ICON: Record<CallStatus, typeof CheckCircle2> = { ok: CheckCircle2, api_error: XCircle, parse_error: XCircle }
 
-/** A thin bar that shows how slow a call was compared with the slowest one on screen. */
+/** A thin bar that shows how slow a call was compared with the slowest one on screen (log scale). */
 function SpeedBar({ ms, max }: { ms: number | null; max: number }) {
   if (ms == null) return <span className="text-muted">—</span>
-  const pct = Math.max(6, Math.round((ms / Math.max(max, 1)) * 100))
+  // Log scale so one very slow call does not flatten every other bar.
+  const pct = Math.max(6, Math.round((Math.log10(ms + 1) / Math.log10(Math.max(max, 10) + 1)) * 100))
   const tone = ms < 3000 ? 'bg-ok' : ms < 10000 ? 'bg-warn' : 'bg-bad'
   return (
     <div className="w-28">
