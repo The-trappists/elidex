@@ -120,12 +120,19 @@ class Linker:
                 bindings.append(Binding(entity=el.id, role=instance_role))
             else:
                 notes.append(f"unknown element '{raw}': not bound")
+        # A site is the scope only when nothing narrower carries it (site access, a local quirk). When a class
+        # or an element already scopes the advice, the site is just where it was seen: binding it as scope would
+        # reach every other element there (e.g. a TX-5000 next to the TX-3000 the thread is about).
+        scoped = any(b.role == "applies_to" for b in bindings)
         for raw in item.scope.site_ids:
             site = self.inventory.resolve_site(raw)
-            if site:
-                bindings.append(Binding(entity=site.id, role="applies_to"))
-            else:
+            if not site:
                 notes.append(f"unknown site '{raw}': not bound")
+            elif scoped:
+                bindings.append(Binding(entity=site.id, role="observed_on"))
+                notes.append(f"site {site.id} kept as where it was seen, not as scope")
+            else:
+                bindings.append(Binding(entity=site.id, role="applies_to"))
         if item.scope.trigger:
             bindings.append(Binding(entity=f"event:{item.scope.trigger}", role="trigger"))
 
