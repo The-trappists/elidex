@@ -21,12 +21,16 @@ export function KgCanvas({
   defs,
   selectedId,
   matchIds,
+  targetHighlightId,
+  evidenceIds = [],
   onSelect,
   handle,
 }: {
   defs: cytoscape.ElementDefinition[]
   selectedId: string | null
   matchIds: string[]
+  targetHighlightId?: string | null
+  evidenceIds?: string[]
   onSelect: (id: string | null) => void
   handle?: React.MutableRefObject<KgCanvasHandle | null>
 }) {
@@ -62,6 +66,44 @@ export function KgCanvas({
   useEffect(() => {
     const cy = cyRef.current
     if (!cy) return
+    const evidence = new Set(evidenceIds)
+    const agentMode = !!targetHighlightId || evidence.size > 0
+    const usedNodes = new Set<string>([...evidence, ...(targetHighlightId ? [targetHighlightId] : [])])
+    const usedEdges = new Set<string>()
+    const scopeEdges = new Map<string, string>()
+    for (const d of defs) {
+      if (d.group !== 'edges') continue
+      const source = String(d.data.source)
+      const target = String(d.data.target)
+      const edgeId = String(d.data.id)
+      const type = String(d.data.type)
+      if ((type === 'MEMBER_OF' || type === 'LOCATED_AT') && (source === targetHighlightId || target === targetHighlightId)) {
+        const scope = source === targetHighlightId ? target : source
+        scopeEdges.set(scope, edgeId)
+      }
+    }
+    for (const d of defs) {
+      if (d.group !== 'edges') continue
+      const source = String(d.data.source)
+      const target = String(d.data.target)
+      const edgeId = String(d.data.id)
+      const type = String(d.data.type)
+      for (const assertionId of evidence) {
+        if (type !== 'APPLIES_TO' && type !== 'OBSERVED_ON') continue
+        const scope = source === assertionId ? target : target === assertionId ? source : null
+        if (!scope) continue
+        if (scope === targetHighlightId) {
+          usedEdges.add(edgeId)
+          continue
+        }
+        const targetEdge = scopeEdges.get(scope)
+        if (targetEdge) {
+          usedEdges.add(edgeId)
+          usedEdges.add(targetEdge)
+          usedNodes.add(scope)
+        }
+      }
+    }
     const wanted = new Map(defs.map((d) => [d.data.id as string, d]))
     cy.batch(() => {
       cy.elements().forEach((e) => {
@@ -76,7 +118,18 @@ export function KgCanvas({
       cy.add(fresh.filter((d) => d.group === 'edges'))
       for (const d of defs) {
         const ele = cy.getElementById(d.data.id as string)
-        if (!ele.empty()) ele.data(d.data)
+        if (!ele.empty()) {
+          ele.data(d.data)
+          if (d.group === 'nodes' && targetHighlightId === d.data.id) ele.addClass('agent-target')
+          else ele.removeClass('agent-target')
+          if (d.group === 'nodes' && evidence.has(d.data.id as string)) ele.addClass('agent-evidence')
+          else ele.removeClass('agent-evidence')
+          if (d.group === 'edges' && usedEdges.has(String(d.data.id))) ele.addClass('agent-evidence-edge')
+          else ele.removeClass('agent-evidence-edge')
+          const unused = d.group === 'nodes' ? !usedNodes.has(d.data.id as string) : !usedEdges.has(String(d.data.id))
+          if (agentMode && unused) ele.addClass('agent-dim')
+          else ele.removeClass('agent-dim')
+        }
       }
     })
     const key = cy
@@ -100,7 +153,7 @@ export function KgCanvas({
         gravity: 0.25,
       } as unknown as cytoscape.LayoutOptions).run()
     }
-  }, [defs])
+  }, [defs, targetHighlightId, evidenceIds])
 
   // focus on the selection and its neighbourhood
   const matchKey = matchIds.join('|')

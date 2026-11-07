@@ -339,6 +339,8 @@ class AgentRunResult(BaseModel):
     hits: list[dict[str, Any]]  # {"matched_via": str, **assertion}
     skipped: list[dict[str, Any]]  # {"assertion_id": str, "reason": str}
     verdict: dict[str, Any] | None = None  # {"decision", "action", "steps", "reasons"}
+    cited_assertion_ids: list[str] = Field(default_factory=list)
+    evidence_confidence: float | None = None
 
 
 class ResetBody(BaseModel):

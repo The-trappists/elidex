@@ -97,6 +97,11 @@ export function kgStyle(): cytoscape.StylesheetJson {
     { selector: 'node.focus', style: { 'border-color': accent, 'border-width': 3, color: text } },
     { selector: 'edge.focus', style: { opacity: 1, width: 1.6, 'line-color': accent, 'target-arrow-color': accent, label: 'data(name)' } },
     { selector: 'node.match', style: { 'border-color': accent, 'border-width': 3 } },
+    { selector: 'node.agent-evidence', style: { 'background-color': '#fef9c3', 'border-color': '#eab308', 'border-width': 3, color: '#713f12', opacity: 0.82 } },
+    { selector: 'edge.agent-evidence-edge', style: { 'line-color': '#facc15', 'target-arrow-color': '#facc15', opacity: 0.95, width: 2 } },
+    { selector: 'node.agent-dim', style: { opacity: 0.1 } },
+    { selector: 'edge.agent-dim', style: { opacity: 0.06 } },
+    { selector: 'node.agent-target', style: { 'background-color': '#facc15', 'border-color': '#854d0e', 'border-width': 4, color: '#422006', 'font-weight': 700, width: 30, height: 26 } },
     { selector: 'core', style: { 'active-bg-color': line } },
   ] as unknown as cytoscape.StylesheetJson
 }

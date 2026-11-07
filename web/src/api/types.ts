@@ -482,6 +482,8 @@ export interface AgentRunResult {
   hits: ContextHit[]
   skipped: { assertion_id: string; reason: string }[]
   verdict: GuardVerdict | null
+  cited_assertion_ids: string[]
+  evidence_confidence: number | null
 }
 
 export interface LlmCheckResult {
