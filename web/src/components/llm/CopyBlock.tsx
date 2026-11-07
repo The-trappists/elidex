@@ -19,7 +19,7 @@ export function CopyBlock({ title, text, collapsible, extra, tone }: { title: st
     <div className="mb-3">
       <div className="mb-1 flex items-center gap-2">
         {collapsible ? (
-          <button className="flex items-center gap-1 text-xs font-semibold text-muted hover:text-text" onClick={() => setOpen(!open)}>
+          <button className="flex min-h-6 items-center gap-1 text-xs font-semibold text-muted hover:text-text" onClick={() => setOpen(!open)}>
             {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />} {title}
           </button>
         ) : (
@@ -27,7 +27,7 @@ export function CopyBlock({ title, text, collapsible, extra, tone }: { title: st
         )}
         <span className="text-xs text-muted">{text.length.toLocaleString()} chars</span>
         {extra}
-        <button className="ml-auto flex items-center gap-1 text-xs text-muted hover:text-text" onClick={copy}>
+        <button className="ml-auto flex min-h-6 items-center gap-1 px-1 text-xs text-muted hover:text-text" onClick={copy}>
           {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? 'Copied' : 'Copy'}
         </button>
       </div>

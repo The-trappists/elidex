@@ -14,7 +14,7 @@ export function ExportButtons() {
     <div className="flex items-center gap-1.5" role="group" aria-label="Export knowledge">
       <span className="text-xs text-muted">Export knowledge</span>
       {(['json', 'markdown'] as const).map((f) => (
-        <a key={f} href={api.companyExportUrl(f)} download className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
+        <a key={f} href={api.companyExportUrl(f)} download className="inline-flex h-7 items-center max-md:h-8 gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
           <Download size={13} />
           {f === 'json' ? 'JSON' : 'Markdown'}
         </a>
@@ -43,7 +43,7 @@ export function PackageDrawer({ open, cycle, onClose }: { open: boolean; cycle: 
   }, [open, cycle])
 
   return (
-    <Drawer open={open} onClose={onClose} title={`Handed over at cycle #${cycle ?? '?'}${pkg ? ` · ${fmtHM(pkg.at)}` : ''}`} width="max-w-xl">
+    <Drawer open={open} onClose={onClose} title={`Handed over at cycle #${cycle ?? '?'}${(pkg?.package?.at ?? pkg?.at) ? ` · ${fmtHM(pkg?.package?.at ?? pkg?.at ?? '')}` : ''}`} width="max-w-xl">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted">The knowledge the autonomous system could ask about at that moment.</p>
         <ExportButtons />

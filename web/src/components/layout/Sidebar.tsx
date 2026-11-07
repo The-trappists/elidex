@@ -138,7 +138,7 @@ export function Sidebar() {
 export function MobileBar() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
-  const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? ALL_NAV[0]
+  const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? { title: 'Page not found' }
   const badge = useBadges()
   const total = Object.values(badge).reduce((a, b) => a + b, 0)
   return (

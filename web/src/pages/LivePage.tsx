@@ -61,7 +61,7 @@ export default function LivePage() {
             Follow what specialists share, what the network remembers, and what agents can reuse.
           </p>
         </div>
-        <Link to="/graph" className="flex items-center gap-2 text-sm font-medium text-accent">
+        <Link to="/graph" className="flex h-8 items-center gap-2 text-sm font-medium text-accent">
           Explore the knowledge graph <ArrowRight size={16} />
         </Link>
       </div>

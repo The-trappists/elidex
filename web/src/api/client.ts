@@ -49,8 +49,9 @@ const FX = import.meta.env.VITE_REVIEW_FIXTURES === '1'
 
 /** GET /company/package: what the autonomous system was handed at one cycle. */
 export interface CompanyPackage {
-  cycle: number
-  at: string
+  cycle?: number
+  at?: string // fixtures only; the real endpoint nests it in `package`
+  package?: { cycle: number; at: string } | null // null before the first sync
   assertions: ContextAssertion[]
   classes: ElementClass[]
 }

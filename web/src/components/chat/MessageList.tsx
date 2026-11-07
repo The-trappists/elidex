@@ -75,7 +75,7 @@ export function MessageList({
                         <span style={{ color: TYPE_STYLE[c.type].hex }}>→ {c.topic}</span>
                         {c.assertionId && (
                           <Link to={assertionHref(c.assertionId)}>
-                            <IdChip className="hover:border-accent">{c.assertionId}</IdChip>
+                            <IdChip className="hover:border-accent max-md:py-2">{c.assertionId}</IdChip>
                           </Link>
                         )}
                       </div>
