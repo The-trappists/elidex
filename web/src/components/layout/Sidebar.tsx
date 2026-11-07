@@ -1,4 +1,4 @@
-import { Activity, BookOpenCheck, Bot, Database, MessagesSquare, Network, Settings as SettingsIcon, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpenCheck, Bot, Database, MessagesSquare, Network, Presentation, Settings as SettingsIcon, type LucideIcon } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
@@ -86,6 +86,13 @@ export function Sidebar() {
           </div>
         ))}
       </div>
+      <a
+        href="/demo/"
+        className="mx-3 flex items-center gap-3 rounded-xl border border-line px-3 py-2 text-sm font-medium text-muted transition hover:bg-surface-2 hover:text-text"
+      >
+        <Presentation size={17} />
+        Product demo
+      </a>
       <div className="m-3 rounded-xl border border-line bg-surface-2/60 p-3 text-xs leading-snug text-muted">
         <div className="font-semibold text-text">Since AI 2026</div>
         Elisa challenge · capturing human knowledge for autonomous networks
