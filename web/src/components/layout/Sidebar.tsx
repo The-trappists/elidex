@@ -1,4 +1,4 @@
-import { Activity, BookOpenCheck, Bot, Database, Eye, LogOut, MessagesSquare, Network, Presentation, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpenCheck, Bot, Database, Eye, LogOut, MessagesSquare, Network, Presentation, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { recentProblems } from '../llm/status'
@@ -26,6 +26,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: '/network', label: 'Network', title: 'Network', subtitle: 'Equipment and the knowledge attached to it', icon: Network },
       { to: '/graph', label: 'Graph', title: 'Knowledge graph', subtitle: 'People, messages, knowledge and equipment, and how they connect', icon: Waypoints },
       { to: '/knowledge', label: 'Knowledge', title: 'Knowledge', subtitle: 'Everything the team has learned so far', icon: BookOpenCheck },
+      { to: '/patterns', label: 'Patterns', title: 'Patterns', subtitle: 'Problems that keep coming back, or hit several elements at once', icon: Radar },
     ],
   },
   {

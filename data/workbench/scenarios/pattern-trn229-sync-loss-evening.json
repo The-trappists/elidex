@@ -1,0 +1,98 @@
+{
+  "id": "pattern-trn229-sync-loss-evening",
+  "title": "Pattern: TRN-229 loses sync in the evening",
+  "description": "Night NOC in Oulu sees TRN-229 lose sync around 21:10 and fixes it by resetting the timing port. Half of a linked pattern: TRN-131 in Rovaniemi drops traffic the same evening in another conversation (pattern-trn131-traffic-drop-evening). Neither mentions TRN-117, which both are linked to.",
+  "channel": "slack",
+  "subject": "#noc-night",
+  "incident": {
+    "entity_id": "TRN-229",
+    "kind": "sync-loss",
+    "severity": "major",
+    "summary": "TRN-229 lost sync, traffic stopped",
+    "observations": {
+      "interface_status": "UP",
+      "traffic_counters": 0,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "matias",
+    "niko"
+  ],
+  "messages": [
+    {
+      "persona": "matias",
+      "delay_s": 5,
+      "text": "TRN-229 just lost sync, 21:10. Interfaces are UP but nothing passes. Anyone seen this on the Oulu TX-5000?"
+    },
+    {
+      "persona": "niko",
+      "delay_s": 60,
+      "text": "had that last week too. reset the timing port on it, sync comes back in a minute or two"
+    },
+    {
+      "persona": "matias",
+      "delay_s": 120,
+      "text": "Reset the timing port. Sync is back, traffic flowing again 👍"
+    },
+    {
+      "persona": "niko",
+      "delay_s": 30,
+      "text": "classic. no idea why it does that in the evening"
+    }
+  ],
+  "resolves_incident_at_seq": 3,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "evening-sync-loss-timing-port-reset",
+        "summary": "When TRN-229 loses sync in the evening (interfaces UP, no traffic), resetting the timing port brings sync back within minutes.",
+        "scope": {
+          "instance_ids": [
+            "TRN-229"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "interfaces UP",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "UP"
+            }
+          },
+          {
+            "text": "no traffic",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "lost timing sync",
+        "action": "Reset the timing port; sync comes back within a minute or two.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 3: 'Sync is back, traffic flowing again'",
+        "stated_by": "Niko Nörtti",
+        "cited_seq": [
+          2,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "pattern",
+    "linked",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

@@ -95,6 +95,8 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 | `GET /graph/mentions/{entity}`, `/graph/stats` | | Raw messages naming the entity; node and edge counts |
 
 The `/graph/*` views are rebuilt on each call from the live store and live threads. The Network page Inspector shows them: "Where it comes from" and "What it reaches" on knowledge, "History of advice" and "Who to ask" on an element.
+| `GET /patterns?at=&entity_id=` | | `{at, meaning, patterns: Pattern[]}`: recurring and linked problems with hypotheses, at `at` (default sim now); `meaning` says whether topics were also compared with the embedding model. Never used as rules (see [patterns.md](patterns.md)) |
+| `GET /patterns/report.md?at=` | | The same as a Markdown report (attachment) |
 | `DELETE /assertions/{id}` | | 204 |
 | `PATCH /assertions/{id}` | `OperatorEdit` | `{assertion, edit: AssertionEdit}`. Adds source `operator`; `stated_by` becomes `operator` only when `trust_level` is edited; an explicit `valid_to: null` reopens; 404 unknown, 422 nothing to change. Survives re-processing of the thread |
 | `GET /assertions/{id}/history` | | `AssertionEdit[]`, newest first |

@@ -23,6 +23,7 @@ The AI supports the team; the team decides.
 | `docs/design.md` | Pipeline and context-assertion schema options |
 | `docs/plan.md` | 48h plan, demo, risks, open questions |
 | `docs/tech-stack.md` | Stack options and event tools |
+| `docs/final-improvements.md` | Final-push backlog (ranked gaps, retrieval upgrades); run in ultra mode only after current tasks are merged |
 | `docs/decisions.md` | What the team decided; the only source of truth for choices |
 | `docs/elisa/` | Elisa's challenge brief (PDF) and pitch slides |
 | `data/elisa/` | Elisa's example material: chat, email, use case, architecture |
@@ -32,6 +33,7 @@ The AI supports the team; the team decides.
 | `data/synthetic/` | Our synthetic data and how it was made |
 | `docs/dataset.md`, `src/context_layer/dataset/` | Company-sized synthetic dataset generator (network, staff, conversations, ground truth), `ctx dataset` |
 | `docs/workbench.md` | Workbench (team test bench): contract, API, processing rules |
+| `docs/patterns.md` | Recurring and linked problems, with hypotheses (`ctx patterns`, Patterns page) |
 | `src/context_layer/workbench/`, `web/` | Workbench backend and UI |
 | `data/workbench/` | Workbench seed: topology, personas, scenarios |
 | `deploy/`, `docs/deploy-vultr.md`, `docs/slack-setup.md` | Deployment and Slack bridge |

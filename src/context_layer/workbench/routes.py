@@ -586,6 +586,46 @@ async def graph_mentions(entity_id: str, request: Request) -> list[dict]:
     return _kg(request)[1].mentions(entity_id)
 
 
+# ---------------------------------------------------------------- patterns (see docs/patterns.md)
+
+
+async def _patterns(wb: Workbench, at: datetime | None, entity_id: str | None):
+    """Snapshot the live state on the loop thread, then analyze it in a worker (an embedding call can take a while)."""
+    from ..mvp.patterns import analyze
+    from ..store import ContextStore
+
+    when = at or wb.now()
+    store = ContextStore(wb.store.inventory)
+    for c in wb.store.classes.values():
+        store.add_class(c)
+    for a in wb.store.assertions.values():
+        store._index(a.model_copy(deep=True))
+    links = [(lk.id, lk.a, lk.b, lk.kind) for lk in wb.links.values()]
+    times = {t.id: (t.messages[0].sent_at if t.messages else t.created_at) for t in wb.threads.values()}
+    return await asyncio.to_thread(analyze, store, links, times, when, None, entity_id)
+
+
+@router.get("/patterns")
+async def patterns(request: Request, at: datetime | None = None, entity_id: str | None = None) -> dict:
+    """Recurring and linked problems in the captured knowledge, with hypotheses. Never used as rules by the agent.
+
+    Returns {at, meaning, patterns}: `meaning` says whether differently worded topics were also compared by meaning.
+    """
+    return (await _patterns(get_wb(request), at, entity_id)).model_dump(mode="json")
+
+
+@router.get("/patterns/report.md")
+async def patterns_report(request: Request, at: datetime | None = None) -> PlainTextResponse:
+    from ..mvp.patterns import render_markdown
+
+    report = await _patterns(get_wb(request), at, None)
+    return PlainTextResponse(
+        render_markdown(report.patterns, report.at, meaning=report.meaning),
+        media_type="text/markdown",
+        headers={"Content-Disposition": 'attachment; filename="patterns-report.md"'},
+    )
+
+
 # ---------------------------------------------------------------- data, settings, slack
 
 

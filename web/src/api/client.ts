@@ -23,6 +23,7 @@ import type {
   LlmCheckResult,
   Message,
   NewThreadBody,
+  PatternReport,
   Persona,
   PostMessageBody,
   Scenario,
@@ -126,6 +127,9 @@ export const api = {
   timeline: (entityId: string, at?: string | null) =>
     req<GraphTimelineRow[]>('GET', `/graph/timeline/${enc(entityId)}${qs({ at })}`),
   mentions: (entityId: string) => req<GraphMention[]>('GET', `/graph/mentions/${enc(entityId)}`),
+  patterns: (entityId?: string | null, at?: string | null) =>
+    req<PatternReport>('GET', `/patterns${qs({ entity_id: entityId, at })}`),
+  patternsReportUrl: (at?: string | null) => `/api/patterns/report.md${qs({ at })}`,
   guard: (body: GuardBody) => req<GuardVerdict>('POST', '/guard', body),
   agentRun: (body: AgentRunBody) => req<AgentRunResult>('POST', '/agent/run', body),
 

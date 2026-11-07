@@ -13,6 +13,7 @@ import LlmLogPage from './pages/LlmLogPage'
 import GraphPage from "./pages/GraphPage"
 import NetworkPage from './pages/NetworkPage'
 import NotFoundPage from './pages/NotFoundPage'
+import PatternsPage from './pages/PatternsPage'
 import ReviewPage from './pages/ReviewPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
@@ -47,6 +48,7 @@ function DashboardLayout() {
                 <Route path="/network" element={<NetworkPage />} />
                 <Route path="/graph" element={<GraphPage />} />
                 <Route path="/knowledge" element={<KnowledgePage />} />
+                <Route path="/patterns" element={<PatternsPage />} />
                 <Route path="/llm" element={<LlmLogPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

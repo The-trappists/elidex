@@ -1,4 +1,5 @@
-"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx serve`, `ctx mcp`, `ctx workbench`, `ctx llm-check`."""
+"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx patterns`, `ctx serve`, `ctx mcp`, `ctx workbench`,
+`ctx llm-check`."""
 
 import argparse
 import json
@@ -155,6 +156,51 @@ def cmd_eval(args: argparse.Namespace) -> None:
     else:
         print(render(result))
         print(f"Saved out/eval/report-{args.extractor}.md and .json")
+
+
+def cmd_patterns(args: argparse.Namespace) -> None:
+    from .mvp.patterns import analyze, render_markdown, replay_history
+
+    if args.check_meaning:
+        return _check_meaning()
+    try:
+        store, links, times = replay_history(args.extractor)
+    except FileNotFoundError as e:
+        sys.exit(str(e))
+    at = datetime.fromisoformat(args.at) if args.at else datetime.now()
+    result = analyze(store, links, times, at, entity_id=args.entity)
+    out = config.OUT_DIR / "patterns"
+    out.mkdir(parents=True, exist_ok=True)
+    data = result.model_dump(mode="json")
+    (out / "patterns.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    report = render_markdown(result.patterns, at, meaning=result.meaning)
+    (out / "report.md").write_text(report + "\n", encoding="utf-8")
+    print(json.dumps(data, indent=2, ensure_ascii=False) if args.json else report)
+    print("Saved out/patterns/report.md and patterns.json", file=sys.stderr)
+
+
+def _check_meaning() -> None:
+    """Does the embedding model keep look-alikes apart and group the same problem told in other words?"""
+    from .mvp.patterns import check_meaning, model_embedder
+
+    embedder = model_embedder()
+    if embedder is None:
+        sys.exit("EMBEDDING_MODEL is empty: patterns compare words only. Set it in .env (see .env.example), then rerun.")
+    r = check_meaning(embedder, config.PATTERNS_SAME_MEANING)
+    print(f"Model {config.EMBEDDING_MODEL}, threshold PATTERNS_SAME_MEANING={r['threshold']}\n")
+    for row in sorted(r["rows"], key=lambda x: -x["similarity"]):
+        tag = "same     " if row["same"] else "different"
+        verdict = "stop " if row["stopped_by_place"] else ("ok   " if row["ok"] else "WRONG")
+        print(f"  {row['similarity']:.3f}  {tag}  {verdict}  {row['why']}")
+    print("\n  stop = shares only a model: meaning is never compared for it, not counted for the threshold")
+    print(f"\nLowest 'same' pair: {r['lowest_same']:.3f}; highest 'different' pair that reaches meaning: "
+          f"{r['highest_different']:.3f}")
+    if r["separable"]:
+        print(f"The model separates them. Suggested PATTERNS_SAME_MEANING={r['suggested']} "
+              f"(now {r['threshold']}: {r['wrong_merges']} wrong merge(s), {r['missed']} missed).")
+    else:
+        print("No threshold separates them on this model: keep words only (leave EMBEDDING_MODEL empty for patterns) "
+              f"or raise PATTERNS_SAME_MEANING above {r['highest_different']:.2f} to never merge a look-alike.")
 
 
 def cmd_serve(args: argparse.Namespace) -> None:
@@ -389,6 +435,16 @@ def main(argv: list[str] | None = None) -> None:
                     help="scripted = labels (offline); llm = real extractor; cache = replay the last llm run")
     ev.add_argument("--json", action="store_true")
     ev.set_defaults(func=cmd_eval)
+
+    pa = sub.add_parser("patterns", help="recurring and linked problems in captured knowledge, with hypotheses (report)")
+    pa.add_argument("--at", help="ISO datetime (default: now), e.g. 2026-10-31T12:00")
+    pa.add_argument("--entity", help="only patterns that involve this element, e.g. TRN-117")
+    pa.add_argument("--extractor", choices=["scripted", "cache"], default="scripted",
+                    help="scripted = scenario labels (offline); cache = replay the last `ctx eval --extractor llm` run")
+    pa.add_argument("--json", action="store_true")
+    pa.add_argument("--check-meaning", action="store_true",
+                    help="score labelled pairs with EMBEDDING_MODEL and suggest PATTERNS_SAME_MEANING (calls the model)")
+    pa.set_defaults(func=cmd_patterns)
 
     srv = sub.add_parser("serve", help="REST API (FastAPI)")
     srv.add_argument("--host", default="127.0.0.1")

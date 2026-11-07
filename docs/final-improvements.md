@@ -114,6 +114,28 @@ More advanced retrieval only helps where it fixes a measured failure and is show
   - make the slides and record a backup video.
 - **Effort:** ~2h.
 
+### 10. Recurring problems: "fix it once" view
+
+> **Done** on `feat/pattern-recognition`, extended to problems on several elements at the same time: see [patterns.md](patterns.md).
+
+- **Why the judges care:** a judge confirmed this idea when the team pitched it (2026-11-07, reported by the team). Some problems keep coming back on the same unit, model or site because of something that could be fixed once: a lock that freezes every winter, an SFP model that keeps dying, a firmware bug. Showing the repeats lets the operator fix the cause once instead of applying the same workaround forever. It turns captured know-how into a business case.
+- **Scope:** stays in scope only if it is built from **human knowledge already captured**, not from telemetry. It counts how often people raise the same problem and apply the same workaround, and it shows the cause and the permanent fix that *people* stated. It does not detect faults or find root causes: Elisa's AI already does that, and [challenge.md](challenge.md) lists it as out of scope. Call it "recurring workarounds", not "root-cause analysis".
+- **Evidence:** nothing groups or counts repeats today. The building blocks exist:
+  - each assertion has a `topic`, `applies_to` and `outcomes` ([models.py](../src/context_layer/models.py));
+  - `track_record` in [mvp/feedback.py](../src/context_layer/mvp/feedback.py) already counts worked/failed per assertion;
+  - `find_experts` in [mcp_server.py](../src/context_layer/mcp_server.py);
+  - `RuleApplication` on `worktree-loop-v2`.
+- **Fix:**
+  - group assertions and their outcomes by topic and by the elements they reach (element, class, site; reuse the reach from item 2);
+  - count over a time window: threads that raised it, times the workaround was applied, on which elements;
+  - flag a group as "recurring: candidate for a permanent fix" above a threshold (for example 3 times in 30 days). Show the count, the elements, the cited messages, and the cause or permanent fix someone stated ("replace the brass lock", "upgrade to 4.2"), if anyone did;
+  - add a workbench endpoint and a "Recurring" view in the UI. An MCP tool `recurring_problems` is optional;
+  - when a permanent fix is recorded (firmware 4.2, a new lock), lifecycle closes the workaround (items 2–3) and the entry shows "resolved".
+- **Data:** add or extend seed scenarios where the same problem repeats over weeks (for example TRN-117 SFP three times, the Sodankylä lock freezing again).
+- **Effort:** ~2–3h (grouping and endpoint ~1h, UI view ~1h, seed data ~30 min).
+- **Done when:** after replaying the seed, the Recurring view lists at least one problem with its count, elements, cited messages and stated cause; a test covers the grouping; a problem with a recorded permanent fix shows as resolved.
+- **Demo line:** "This workaround was applied 7 times on TX-3000 units in two months. Erkki says firmware 4.2 fixes it for good."
+
 ### Bugs from `failed-tests-log.md`, checked against the code
 
 | Bug | Verdict |
@@ -212,6 +234,7 @@ Constraints to keep in mind:
 
 1. Items 1 and 2 (linking fix and reach-based reconcile), then rerun `ctx eval --extractor llm` (a human, with the key).
 2. Technique A (corrective read loop) and item 4 (`observations` on MCP).
+   - Item 10 (recurring problems, confirmed by a judge) right after, since it reuses the reach from item 2.
 3. Technique C (baseline and ablation slide).
 4. Item 3 (firmware per element), if time allows.
 5. Technique B (hybrid reconcile), once `worktree-loop-v2` is merged.

@@ -97,6 +97,10 @@ TIGER_DATABASE_URL = os.getenv("TIGER_DATABASE_URL", "")
 # Embeddings for the vector search: an OpenAI-compatible embedding model on the primary LLM provider.
 # Empty = offline fallback (hashed words: finds similar wording, not similar meaning).
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
+# Patterns (docs/patterns.md): cosine similarity from which two differently worded topics are the same problem.
+# Only used with EMBEDDING_MODEL; calibrate with `ctx patterns --check-meaning`. 0.78 is calibrated on
+# gemini-embedding-001 (2026-11-07): same problem >= 0.80, look-alikes <= 0.76. Another model needs its own value.
+PATTERNS_SAME_MEANING = float(os.getenv("PATTERNS_SAME_MEANING", "0.78"))
 DATASET_DIR = Path(os.getenv("DATASET_DIR", OUT_DIR / "dataset" / "demo"))
 
 
