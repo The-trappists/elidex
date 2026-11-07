@@ -1,0 +1,113 @@
+{
+  "id": "ambiguous-number-clash-176",
+  "title": "'176' is two different elements",
+  "description": "TRN-176 (Hervanta node) and RAD-176 (Rovaniemi radio) share a number. A NOC operator says '176' and a radio specialist answers about the other one. Tests the over-linking guard: the tip belongs to RAD-176 and must not be attached to TRN-176 nor to the Rovaniemi exchange.",
+  "channel": "slack",
+  "subject": "#radio-field",
+  "incident": null,
+  "participants": [
+    "helmi",
+    "raimo",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "random q. 176 keeps showing a link margin warning on cold mornings, is that known?"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 40,
+      "text": "176 is the one in Rovaniemi?"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 25,
+      "text": "no, Hervanta. the node, TRN-176"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 30,
+      "text": "hm. then I was thinking of the other 176"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 9,
+      "text": "RAD-176. the RU-200 at Ounasvaara"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 25,
+      "text": "oh there are two 176s 😅 go on"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 35,
+      "text": "on that RU-200 the margin dips on hard frost mornings. below minus 25"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 10,
+      "text": "it comes back on its own when the heater has warmed the unit, about 20 min. don't go up and realign the antenna. ask me how I know. three times"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 60,
+      "text": "+1 for not realigning. wasted a trip to Ounasvaara in January 😅"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 30,
+      "text": "good to know. so for the Hervanta 176 I need to look elsewhere. will check the dashboard"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "frost-margin-dip-self-recovers",
+        "summary": "On RAD-176 (RU-200, Ounasvaara) the link margin dips on hard frost mornings (below -25 C) and recovers by itself in about 20 minutes once the heater has warmed the unit; do not realign the antenna.",
+        "scope": {
+          "instance_ids": [
+            "RAD-176"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "hard frost morning, below minus 25",
+            "check": null
+          }
+        ],
+        "diagnosis": "cold unit, margin recovers after the heater warms it",
+        "action": "Wait about 20 minutes and re-check the link margin.",
+        "avoid": [
+          "realign the antenna"
+        ],
+        "fact": null,
+        "trust_level": "stated",
+        "evidence": "seq 7-8: 'comes back on its own when the heater has warmed the unit, about 20 min'",
+        "stated_by": "Raimo Rantanen",
+        "cited_seq": [
+          5,
+          7,
+          8,
+          9
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "ambiguity",
+    "same-number",
+    "no-overlink",
+    "slack",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

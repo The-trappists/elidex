@@ -78,5 +78,45 @@
     "expertise": "Radio units, antennas, alignment and weather effects on masts.",
     "style": "Dry humour, gives one concrete tip at a time, often in separate short messages ('wait', then the reason). Mentions how often he has seen it ('three times'), says 'joo'.",
     "origin": "synthetic"
+  },
+  {
+    "id": "tiina",
+    "name": "Tiina Toimisto",
+    "role": "Office Manager",
+    "team": "Facilities",
+    "avatar_color": "#4d7c0f",
+    "expertise": "Runs the office in a building that also hosts an exchange. Knows the cleaners' schedule, not the equipment.",
+    "style": "Polite and a bit worried, writes long emails in full sentences, describes things by colour, noise and location ('the grey cabinet', 'the box underneath'), reads stickers wrongly, thanks everyone with 'Kiitos'.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "matti",
+    "name": "Matti Myynti",
+    "role": "Sales Representative",
+    "team": "Sales",
+    "avatar_color": "#475569",
+    "expertise": "Visits business customers all over the country by car. Sees sites from the road, never from inside.",
+    "style": "Cheerful, always on the move, says 'not my area but' and then reports exactly what he saw, in everyday words ('the mast with the red and white tower'). Uses 😬 and offers to help.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "outi",
+    "name": "Outi Asiakaspalvelu",
+    "role": "Customer Service Agent",
+    "team": "Customer service",
+    "avatar_color": "#c026d3",
+    "expertise": "Takes customer calls. Hears symptoms in customers' words, knows no network vocabulary.",
+    "style": "Friendly, relays what customers said almost word for word ('crawling', 'the big ship'), admits what she does not know ('I don't know what a mast is'), apologises with 🙈, answers questions with the customer's street or times.",
+    "origin": "synthetic"
+  },
+  {
+    "id": "heikki",
+    "name": "Heikki Huolto",
+    "role": "Building Caretaker",
+    "team": "Property maintenance",
+    "avatar_color": "#78716c",
+    "expertise": "Looks after the building: breakers, doors, heating. Knows the rooms and the labels, not what the equipment does.",
+    "style": "Practical and apologetic ('sorry to bother the network people'), describes sounds and lights ('two short beeps', 'a yellow light on the thing with lots of cables'), reads stickers aloud, asks before touching anything.",
+    "origin": "synthetic"
   }
 ]

@@ -1,0 +1,117 @@
+{
+  "id": "layperson-salesrep-flooded-road",
+  "title": "A salesman drives past the Sodankylä mast",
+  "description": "A sales rep who has never been inside a site reports what he saw from the road: half-flooded track, 'the mast with the red-white tower'. Colleagues identify the site, then a team lead gives the real access knowledge. Tests a lay observation turning into an access assertion bound to the site, not to an element.",
+  "channel": "slack",
+  "subject": "#field-north",
+  "incident": null,
+  "participants": [
+    "matti",
+    "sanna",
+    "liisa",
+    "jaakko"
+  ],
+  "messages": [
+    {
+      "persona": "matti",
+      "delay_s": 5,
+      "text": "hei, not my area but I drove past the Sodankylä mast road on my way to a customer and the track is half under water 😬"
+    },
+    {
+      "persona": "matti",
+      "delay_s": 10,
+      "text": "huge puddle where the road turns to gravel. my car almost didn't make it"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 45,
+      "text": "which mast? we have Kemijärvi and Sodankylä"
+    },
+    {
+      "persona": "matti",
+      "delay_s": 20,
+      "text": "Sodankylä, the one on the fell with the red and white tower"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 30,
+      "text": "ok that's NF-021. thanks Matti!"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 40,
+      "text": "heavy rain or thaw, it does that every year. only the 4x4 gets through, regular vans get stuck. ask me how I know 😅"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 15,
+      "text": "and if it's really bad, park at the fork 800 m before the gate and walk the rest"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 50,
+      "text": "I'm going there on Thursday with the van!! should I swap?"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 25,
+      "text": "yes take the 4x4 from the Rovaniemi pool, I'll book it ✅"
+    },
+    {
+      "persona": "matti",
+      "delay_s": 40,
+      "text": "happy to help 🙂 I'll drive past again tomorrow and tell you if it dries up"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "access",
+        "topic": "site-access-flooded-road-4x4",
+        "summary": "After heavy rain or thaw the access road to SITE-NF-021 (Sodankylä fell mast) floods; use a 4x4, and if it is very bad park at the fork 800 m before the gate and walk.",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [
+            "SITE-NF-021"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "after heavy rain or thaw",
+            "check": null
+          }
+        ],
+        "diagnosis": null,
+        "action": "Take a 4x4 (Rovaniemi pool); in bad conditions park at the fork 800 m before the gate and walk.",
+        "avoid": [
+          "go in with a regular van"
+        ],
+        "fact": "The track to SITE-NF-021 floods where the road turns to gravel.",
+        "trust_level": "stated",
+        "evidence": "seq 6-7: 'only the 4x4 gets through' / 'park at the fork 800 m before the gate'",
+        "stated_by": "Liisa Lappi",
+        "cited_seq": [
+          1,
+          2,
+          5,
+          6,
+          7,
+          9
+        ],
+        "confidence": 0.85
+      }
+    ]
+  },
+  "tags": [
+    "layperson",
+    "observation",
+    "access",
+    "site-level",
+    "slack",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

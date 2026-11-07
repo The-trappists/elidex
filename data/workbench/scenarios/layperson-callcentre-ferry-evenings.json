@@ -1,0 +1,124 @@
+{
+  "id": "layperson-callcentre-ferry-evenings",
+  "title": "'It's slow when the big ship is in'",
+  "description": "A call-centre agent relays customer complaints in her own words (crawling, only some evenings, the big ship). Nobody names a mast. The radio specialist guesses ship radar, hedged, and the NOC maps the street to RAD-254. Tests hedged knowledge from a lay description: trust must stay 'hunch', and it binds to RAD-254 only.",
+  "channel": "teams",
+  "subject": "Customer calls: harbour area slow in the evenings",
+  "incident": null,
+  "participants": [
+    "outi",
+    "helmi",
+    "raimo"
+  ],
+  "messages": [
+    {
+      "persona": "outi",
+      "delay_s": 5,
+      "text": "Hei! not sure who to ask. I had six calls this week from people living by the harbour in Turku, they say the mobile internet is 'crawling' in the evenings"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 10,
+      "text": "but not every evening. one lady says it's only when 'the big ship is in'"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 12,
+      "text": "I told her it's probably her phone 😅 but she called twice"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 45,
+      "text": "hmm. the harbour area is served from the hut on the quay, RAD-254 I think. what's the street?"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 30,
+      "text": "Linnankatu. I don't know what a mast is, sorry 🙈"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 55,
+      "text": "big ship... the ferry? ferries have radar"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 15,
+      "text": "I saw something like this in Hamina years ago, a ship radar sweeping into a RU-400 sector. not sure it's the same here"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 12,
+      "text": "check what time it docks"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 70,
+      "text": "customers said around 18 and again around 21"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 40,
+      "text": "hm that fits. no promise. if someone is at the hut, try moving the RAD-254 sector to the other channel and see if the evenings get better"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 30,
+      "text": "I'll note it for the hut. Outi can you ask the lady the exact time next time she calls?"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 25,
+      "text": "of course 🙂"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "evening-slowdown-ship-radar",
+        "summary": "Evening slowdowns around the Turku harbour (about 18:00 and 21:00, when the ferry docks) may come from ship radar hitting the RAD-254 sector; unverified hunch. Try moving the sector to the other channel.",
+        "scope": {
+          "instance_ids": [
+            "RAD-254"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "evening, when the ferry is in the harbour",
+            "check": null
+          }
+        ],
+        "diagnosis": "possible ship radar interference in the RU-400 sector",
+        "action": "At the hut, move the RAD-254 sector to the other channel and compare the evenings.",
+        "avoid": [],
+        "fact": null,
+        "trust_level": "hunch",
+        "evidence": "seq 7: 'not sure it's the same here' / seq 10: 'no promise'",
+        "stated_by": "Raimo Rantanen",
+        "cited_seq": [
+          2,
+          4,
+          6,
+          7,
+          9,
+          10
+        ],
+        "confidence": 0.6
+      }
+    ]
+  },
+  "tags": [
+    "layperson",
+    "guess-the-problem",
+    "hunch",
+    "customer-relay",
+    "teams",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

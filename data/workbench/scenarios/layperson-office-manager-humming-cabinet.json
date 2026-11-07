@@ -1,0 +1,83 @@
+{
+  "id": "layperson-office-manager-humming-cabinet",
+  "title": "Email: the humming cabinet in the corridor",
+  "description": "An office manager writes a rambling email: loud humming, a red light on the 'box underneath', a sticker she half reads (TRN42, 'R and a 3'). The red light is on RTR-033, not on TRN-042, which is only a distractor. Tests that the sticker she names is not the element that gets the knowledge, and that the reply (not the question) is the source.",
+  "channel": "email",
+  "subject": "Humming cabinet in the corridor, Kupittaa building",
+  "incident": null,
+  "participants": [
+    "tiina",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "tiina",
+      "delay_s": 5,
+      "text": "Hei! I'm the office manager in the Kupittaa building. Since the cleaners came on Monday the grey cabinet in the corridor on the second floor makes a loud humming noise and one light on it is red. I don't know what any of it is. The sticker on the front says TRN42, but the red light is on the box underneath, which has another sticker I can't read, something with an R and a 3. Is it dangerous? Do I need to call someone? Nobody ever told us what to do. Kiitos, Tiina"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 150,
+      "text": "Hei Tiina, thanks for writing! The box underneath is RTR-033, the router, not the transmission node on top. Loud hum + a red fan light means the fan filter is clogged. It usually happens when somebody vacuums next to the cabinet and the dust gets sucked in. It's not dangerous and the router keeps working. Please don't switch it off and don't open it. I'll come by on Thursday and swap the filter. Could you ask the cleaners to keep the vacuum at least a metre away from the cabinet?"
+    },
+    {
+      "persona": "tiina",
+      "delay_s": 170,
+      "text": "Thank you!! The cleaners said they plug the vacuum cleaner into the socket right next to the cabinet, so maybe that is it? I'll ask them to use the other socket."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 120,
+      "text": "That would help ✅ Thursday I'll swap the filter and the red light should go off. If it doesn't, I'll tell the team."
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "loud-hum-red-fan-light-clogged-filter",
+        "summary": "A loud hum with a red fan light on RTR-033 (Kupittaa) means a clogged fan filter, typically after vacuuming next to the cabinet; the router keeps working. Swap the filter, keep vacuums a metre away, do not switch it off or open it.",
+        "scope": {
+          "instance_ids": [
+            "RTR-033"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "loud humming and a red fan light",
+            "check": null
+          }
+        ],
+        "diagnosis": "fan filter clogged by dust from a vacuum cleaner used next to the cabinet",
+        "action": "Swap the fan filter; keep vacuum cleaners at least a metre from the cabinet.",
+        "avoid": [
+          "switch the router off",
+          "open the cabinet"
+        ],
+        "fact": null,
+        "trust_level": "stated",
+        "evidence": "seq 2: 'red fan light means the fan filter is clogged'",
+        "stated_by": "Veikko Vikkelä",
+        "cited_seq": [
+          1,
+          2,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "layperson",
+    "guess-the-problem",
+    "wrong-sticker",
+    "distractor",
+    "email",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
