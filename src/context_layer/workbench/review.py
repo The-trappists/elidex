@@ -45,6 +45,30 @@ def _flag(
     )
 
 
+def _short(text: str | None, limit: int = 80) -> str:
+    text = " ".join((text or "").split())
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "..."
+
+
+def _conflict_flag(job: PipelineJob, wb: Workbench, pair: tuple[str, ...]) -> ReviewFlag:
+    """The flag for two assertions that disagree; names both pieces of advice. assertion_id is the first id
+    of the sorted pair and detail carries both ids."""
+    found = [wb.store.assertions[i] for i in pair if i in wb.store.assertions]
+    first = found[0] if found else None
+    topic = first.topic if first else None
+    detail = f"{pair[0]} conflicts with {pair[1]}" if len(pair) > 1 else f"{pair[0]} conflicts with another piece of advice"
+    if len(found) == 2:
+        a, b = found
+        text = lambda x: _short(x.action or x.summary)  # noqa: E731
+        message = (
+            f"Two people gave different advice about '{a.topic}': {a.trust.stated_by} says '{text(a)}', "
+            f"{b.trust.stated_by} says '{text(b)}'. Both are kept and the agent sees both."
+        )
+    else:
+        message = f"Two people gave different advice about '{topic}'. Both are kept and the agent sees both."
+    return _flag(job, "conflict", message, pair[0], detail, topic)
+
+
 def _named_in_thread(wb: Workbench, thread_id: str):
     """The graph over the live threads, and the elements and sites the given thread names."""
     threads = [t.to_thread() for t in wb.threads.values() if t.messages]
@@ -111,21 +135,22 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
                 )
 
         stored_ids = {a.id for a in stored}
-        conflicted = {a.id: ", ".join(a.conflicts_with) for a in stored if a.conflicts_with}
+        partners: dict[str, set[str]] = {a.id: set(a.conflicts_with) for a in stored if a.conflicts_with}
         for ev in [*job.events, *(j.reason for j in job.judge if j.verdict == "contradicts")]:
             if _CONFLICT_WORDS.search(ev):
-                for aid in _ASSERTION_ID.findall(ev):
+                ids = _ASSERTION_ID.findall(ev)
+                for aid in ids:
                     if aid in stored_ids:
-                        conflicted.setdefault(aid, ev)
-        for a in stored:
-            if a.id in conflicted:
-                candidates.append(
-                    _flag(
-                        job, "conflict",
-                        f"Two people gave different advice about '{a.topic}'. Both are kept and the agent sees both.",
-                        a.id, f"conflicts with {conflicted[a.id]}", a.topic,
-                    )
-                )
+                        partners.setdefault(aid, set()).update(i for i in ids if i != aid)
+        # One flag per unordered pair, not one per assertion: both sides see the same card.
+        pairs: set[tuple[str, ...]] = set()
+        for aid, others in partners.items():
+            if others:
+                pairs.update(tuple(sorted((aid, o))) for o in others)
+            else:
+                pairs.add((aid,))
+        for pair in sorted(pairs):
+            candidates.append(_conflict_flag(job, wb, pair))
 
         try:
             candidates += _over_reach(wb, job, stored)

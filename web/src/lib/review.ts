@@ -69,6 +69,8 @@ export interface FlagContext {
   item: ExtractedItem | undefined
   /** Messages that back the flag, verbatim. */
   quotes: Message[]
+  /** Conflict flags: the assertions that disagree (those still in the store), in id order. */
+  pair: ContextAssertion[]
 }
 
 /**
@@ -91,7 +93,14 @@ export function flagContext(flag: ReviewFlag, jobs: PipelineJob[], threads: Reco
   else if (assertion) seqs = assertion.sources.filter((s) => s.file === flag.thread_id).flatMap((s) => s.seq)
   else if (thread) seqs = thread.messages.slice(0, 2).map((m) => m.seq) // an abstention: where it started
   const quotes = thread ? thread.messages.filter((m) => seqs.includes(m.seq)).slice(0, 3) : []
-  return { job, thread, assertion, item, quotes }
+  const pair =
+    flag.kind === 'conflict'
+      ? [...new Set([flag.assertion_id ?? '', ...(flag.detail?.match(/ctx_\d{4,}/g) ?? [])])]
+          .sort()
+          .map((id) => assertions[id])
+          .filter((a): a is ContextAssertion => !!a)
+      : []
+  return { job, thread, assertion, item, quotes, pair }
 }
 
 /** Messages cited by a finding or an assertion in a thread, verbatim. */

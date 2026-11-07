@@ -1,5 +1,8 @@
 """Review backend (loop v2, lot L4): flags, re-run, operator edits. Offline, scripted extractor."""
 
+import re
+from datetime import datetime
+
 from context_layer.models import ClassCriteria, ExtractedItem, ExtractionResult, Scope
 from context_layer.workbench import review
 from context_layer.workbench.contracts import Scenario, ScenarioMessage
@@ -98,13 +101,42 @@ def test_review_flag_event_is_published(client):
     assert events and events[-1].data["kind"] == "low_confidence"
 
 
-def test_conflict_flag(client):
+def test_conflict_flag_is_one_per_pair(client):
     seeded(client)
     run_thread(client, [item("shared-topic", action="Restart the unit")], sid="c1")
     other = item("shared-topic", action="Never restart the unit")
     other.stated_by = "Mikko"
     tid, job = run_thread(client, [other], sid="c2")
-    assert "conflict" in {f["kind"] for f in flags(client, thread_id=tid)}
+    conflicts = [f for f in flags(client) if f["kind"] == "conflict" and f["thread_id"] == tid]
+    assert len(conflicts) == 1
+    c = conflicts[0]
+    wb = client.app.state.wb
+    a, b = wb.store.assertions[c["assertion_id"]], None
+    ids = sorted(set(re.findall(r"ctx_\d{4,}", c["detail"])))
+    assert len(ids) == 2 and c["assertion_id"] == ids[0]
+    b = wb.store.assertions[ids[1]]
+    assert {a.trust.stated_by, b.trust.stated_by} == {"Erkki", "Mikko"}
+    assert "Restart the unit" in c["message"] and "Never restart the unit" in c["message"]
+    assert c["item_topic"] == "shared-topic"
+    # a re-run of the same thread does not add a second card for the pair
+    process(client, tid)
+    assert len([f for f in flags(client) if f["kind"] == "conflict" and f["thread_id"] == tid]) == 1
+
+
+def test_conflict_flag_dedupes_legacy_per_assertion_flags(client):
+    seeded(client)
+    wb = client.app.state.wb
+    run_thread(client, [item("legacy-topic", action="Restart the unit")], sid="l1")
+    other = item("legacy-topic", action="Never restart the unit")
+    other.stated_by = "Mikko"
+    tid, _ = run_thread(client, [other], sid="l2")
+    (flag,) = [f for f in wb.flags.values() if f.kind == "conflict" and f.thread_id == tid]
+    first, second = sorted(re.findall(r"ctx_\d{4,}", flag.detail))
+    # an old store held one flag per assertion: the same pair seen from the other side is not new
+    from context_layer.workbench.contracts import ReviewFlag
+    old = ReviewFlag(id="", kind="conflict", thread_id=tid, job_id=flag.job_id, assertion_id=second,
+                     message="old", detail=f"conflicts with {first}", created_at=datetime.now())
+    assert wb.add_flag(old) is None
 
 
 def test_over_reach_flag(client, monkeypatch):

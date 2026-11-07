@@ -1,10 +1,10 @@
 import { ExternalLink, EyeOff, MessageSquare, Pencil } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { ElementClass, ReviewFlag, WbSite } from '../../api/types'
+import type { ContextAssertion, ElementClass, ReviewFlag, WbSite } from '../../api/types'
 import { cn } from '../../lib/cn'
 import { fmtAgo } from '../../lib/format'
 import { FLAG_META, type FlagContext } from '../../lib/review'
-import { STAGE_LABEL } from '../../lib/semantic'
+import { STAGE_LABEL, TRUST_STYLE } from '../../lib/semantic'
 import { STAGES } from '../../api/types'
 import { criteriaText } from '../chat/ItemCard'
 import { assertionHref, threadHref } from '../knowledge/bits'
@@ -40,8 +40,29 @@ function Chips({ ctx, sites, classes }: { ctx: FlagContext; sites: WbSite[]; cla
   )
 }
 
+/** One side of a disagreement: who said it, what they advise, how sure the system is, and how to act on it. */
+function Advice({ a, canEdit, onEdit }: { a: ContextAssertion; canEdit: boolean; onEdit: () => void }) {
+  return (
+    <div className="flex min-w-0 flex-col rounded-md border border-line bg-surface-2 p-3" aria-label={`Advice from ${a.trust.stated_by}`}>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <b className="font-semibold text-text">{a.trust.stated_by} says</b>
+        <Badge className={TRUST_STYLE[a.trust.level].cls}>{TRUST_STYLE[a.trust.level].label}</Badge>
+        <IdChip>{a.id}</IdChip>
+      </div>
+      <p className="mt-1.5 text-[13px] leading-snug">{a.action ?? a.summary}</p>
+      {a.avoid.length > 0 && <p className="mt-1 text-xs leading-snug text-muted">Avoid: {a.avoid.join('; ')}</p>}
+      <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2.5">
+        <Link to={assertionHref(a.id)} onClick={(e) => e.stopPropagation()}>
+          <Button size="sm" icon={<ExternalLink size={13} />}>Open knowledge item</Button>
+        </Link>
+        <Button size="sm" icon={<Pencil size={13} />} disabled={!canEdit} onClick={(e) => { e.stopPropagation(); onEdit() }}>Edit</Button>
+      </div>
+    </div>
+  )
+}
+
 export function FlagCard({
-  flag, ctx, sites, classes, now, selected, dismissed, fresh, canEdit, onSelect, onDismiss, onEdit,
+  flag, ctx, sites, classes, now, selected, dismissed, fresh, canEdit, onSelect, onDismiss, onEdit, onEditAssertion,
 }: {
   flag: ReviewFlag
   ctx: FlagContext
@@ -55,11 +76,13 @@ export function FlagCard({
   onSelect: () => void
   onDismiss: () => void
   onEdit: () => void
+  onEditAssertion: (id: string) => void
 }) {
   const meta = FLAG_META[flag.kind]
   const Icon = meta.icon
   const stepNo = STAGES.indexOf(meta.step) + 1
   const call = ctx.job?.llm_call_ids[0]
+  const sideBySide = flag.kind === 'conflict' && ctx.pair.length === 2
   return (
     <article
       data-flag={flag.id}
@@ -85,6 +108,11 @@ export function FlagCard({
 
       <div className="mt-2.5 space-y-2.5 pl-7">
         <Chips ctx={ctx} sites={sites} classes={classes} />
+        {sideBySide && (
+          <div className="grid gap-2.5 md:grid-cols-2">
+            {ctx.pair.map((a) => <Advice key={a.id} a={a} canEdit onEdit={() => onEditAssertion(a.id)} />)}
+          </div>
+        )}
         <QuotedMessages messages={ctx.quotes} />
         <dl className="grid grid-cols-[3.5rem_1fr] gap-x-3 gap-y-1 text-xs">
           <dt className="text-muted">Step</dt>
@@ -104,14 +132,14 @@ export function FlagCard({
           <Link to={threadHref(flag.thread_id)} onClick={(e) => e.stopPropagation()}>
             <Button size="sm" icon={<MessageSquare size={13} />}>Open thread <Kbd>↵</Kbd></Button>
           </Link>
-          {flag.assertion_id && (
+          {flag.assertion_id && !sideBySide && (
             <Link to={assertionHref(flag.assertion_id)} onClick={(e) => e.stopPropagation()}>
               <Button size="sm" icon={<ExternalLink size={13} />}>Open knowledge item</Button>
             </Link>
           )}
-          <Button size="sm" icon={<Pencil size={13} />} disabled={!canEdit} title={canEdit ? undefined : 'There is nothing saved to edit for this one'} onClick={(e) => { e.stopPropagation(); onEdit() }}>
+          {!sideBySide && <Button size="sm" icon={<Pencil size={13} />} disabled={!canEdit} title={canEdit ? undefined : 'There is nothing saved to edit for this one'} onClick={(e) => { e.stopPropagation(); onEdit() }}>
             Edit <Kbd>e</Kbd>
-          </Button>
+          </Button>}
           {!dismissed && (
             <Button size="sm" variant="ghost" className="ml-auto" icon={<EyeOff size={13} />} onClick={(e) => { e.stopPropagation(); onDismiss() }}>
               Dismiss <Kbd>d</Kbd>

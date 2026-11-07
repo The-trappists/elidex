@@ -6,6 +6,7 @@ The simulator and the Slack bridge code against the public signatures below.
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -67,6 +68,15 @@ class WbStore(ContextStore):
         a.id = self._new_id()
         self._index(a)
         return a, True
+
+
+def _flag_key(flag: ReviewFlag) -> tuple:
+    """Identity of a flag. Conflicts are keyed by the unordered pair of assertions (the detail holds the
+    other id, also in flags saved before pairs existed); flags without an assertion also compare the message."""
+    if flag.kind == "conflict" and flag.assertion_id:
+        ids = frozenset({flag.assertion_id, *re.findall(r"ctx_\d{4,}", flag.detail or "")})
+        return (flag.kind, flag.thread_id, ids)
+    return (flag.kind, flag.thread_id, flag.assertion_id, flag.message if flag.assertion_id is None else None)
 
 
 def _next_id(prefix: str, existing) -> str:
@@ -443,12 +453,12 @@ class Workbench:
     # ------------------------------------------------------------ review flags and operator edits
 
     def add_flag(self, flag: ReviewFlag, refresh: bool = False) -> ReviewFlag | None:
-        """Store a flag unless the same (kind, thread, assertion) exists already (no duplicates across reruns;
+        """Store a flag unless the same (kind, thread, assertion; for conflicts, the same pair) exists already (no duplicates across reruns;
         flags without an assertion also compare their message). Returns the new flag, or None when it existed.
         refresh=True updates the existing flag instead (message, job, time) and reopens it. Emits review.flag."""
-        key = (flag.kind, flag.thread_id, flag.assertion_id, flag.message if flag.assertion_id is None else None)
+        key = _flag_key(flag)
         for old in self.flags.values():
-            if (old.kind, old.thread_id, old.assertion_id, old.message if old.assertion_id is None else None) == key:
+            if _flag_key(old) == key:
                 if refresh:
                     old.message, old.detail, old.job_id = flag.message, flag.detail, flag.job_id
                     old.item_topic = flag.item_topic or old.item_topic

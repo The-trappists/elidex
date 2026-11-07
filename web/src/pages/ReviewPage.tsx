@@ -184,6 +184,7 @@ export default function ReviewPage() {
                         onSelect={() => setSel(f.id)}
                         onDismiss={() => dismiss(f.id)}
                         onEdit={() => { setSel(f.id); edit(f.id) }}
+                        onEditAssertion={(aid) => { setSel(f.id); setEditAssertion(aid) }}
                       />
                     ))}
                   </div>

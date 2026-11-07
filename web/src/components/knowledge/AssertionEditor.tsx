@@ -81,8 +81,19 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
     }
   }
 
+  const reset = () => {
+    setDraft(toDraft(a))
+    setNote('')
+  }
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && dirty && !emptySummary && !saving) {
+      e.preventDefault()
+      void apply()
+    }
+  }
+
   return (
-    <div className="space-y-5 text-sm">
+    <div className="space-y-5 text-sm" onKeyDown={onKeyDown}>
       <div>
         <div className="flex items-center gap-2">
           <TypeBadge type={a.type} />
@@ -162,15 +173,19 @@ function EditorBody({ a, focusHistory }: { a: ContextAssertion; focusHistory?: b
             <ReachSummary a={a} reach={reach} />
           </PreviewBlock>
         </div>
-        <div className="flex items-center gap-2 border-t border-line px-3 py-2.5">
-          <Button variant="primary" disabled={!dirty || emptySummary} loading={saving} onClick={apply}>Apply edit</Button>
-          <Button variant="ghost" disabled={!dirty || saving} icon={<RotateCcw size={13} />} onClick={() => { setDraft(toDraft(a)); setNote('') }}>Reset</Button>
-          {emptySummary && <span className="text-xs text-bad">The summary cannot be empty.</span>}
-        </div>
       </section>
 
       <div ref={histRef}>
         <EditHistory assertionId={a.id} />
+      </div>
+
+      {/* Sticky footer: the buttons stay in view however long the preview grows. */}
+      <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex items-center gap-2 border-t border-line bg-surface px-5 py-3">
+        <Button variant="primary" disabled={!dirty || emptySummary} loading={saving} onClick={apply} title="Apply edit (Ctrl or Cmd + Enter)">Apply edit</Button>
+        <Button variant="ghost" disabled={!dirty || saving} icon={<RotateCcw size={13} />} onClick={reset}>Reset</Button>
+        <span className={cn('ml-1 text-xs', emptySummary ? 'text-bad' : 'text-muted')} aria-live="polite">
+          {emptySummary ? 'The summary cannot be empty.' : dirty ? `${changes.length} ${changes.length === 1 ? 'change' : 'changes'}` : 'No changes'}
+        </span>
       </div>
     </div>
   )
