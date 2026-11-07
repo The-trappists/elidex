@@ -1,6 +1,6 @@
 import type cytoscape from 'cytoscape'
 import { Maximize2, Search, Waypoints } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { KgElement, KgKind } from '../api/types'
@@ -8,12 +8,14 @@ import { useGraphQuery } from '../components/graph/useGraphQuery'
 import { KgCanvas, type KgCanvasHandle } from '../components/kg/KgCanvas'
 import { KgDetails, KgOverview } from '../components/kg/KgDetails'
 import { EDGE_LABEL, KIND, KIND_ORDER, title } from '../components/kg/kgStyle'
-import { Button, EmptyState, Input, Toggle } from '../components/ui'
-import { cn } from '../lib/cn'
+import { Button, Chip, EmptyState, Input, LoadingState, Toggle, Toolbar } from '../components/ui'
 
 type Data = KgElement['data']
 
 const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Event', 'Thread']
+// With a company-sized dataset (hundreds of conversations) people and threads bury the knowledge: start on what the rules reach.
+const LARGE_GRAPH = 400
+const LARGE_KINDS: KgKind[] = ['Assertion', 'Element', 'Class', 'Event']
 const short = (s: string, n = 26) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
 
 export default function GraphPage() {
@@ -26,6 +28,12 @@ export default function GraphPage() {
   const canvas = useRef<KgCanvasHandle | null>(null)
 
   const { data, error } = useGraphQuery(() => api.knowledgeGraph(), 'kg')
+  const sizedFor = useRef(false)
+  useEffect(() => {
+    if (!data || sizedFor.current) return
+    sizedFor.current = true
+    if (data.elements.filter((e) => e.group === 'nodes').length > LARGE_GRAPH) setKinds(new Set(LARGE_KINDS))
+  }, [data])
 
   const { nodes, edges, counts } = useMemo(() => {
     const nodes = new Map<string, Data>()
@@ -105,9 +113,9 @@ export default function GraphPage() {
   return (
     <div className="flex h-full min-h-0">
       <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2.5">
+        <Toolbar className="gap-x-4">
           <div className="relative w-56">
-            <Search size={14} className="absolute left-2.5 top-2 text-muted" />
+            <Search size={14} className="absolute left-2.5 top-2.5 text-muted" />
             <Input
               className="pl-8"
               placeholder="Find a node"
@@ -119,19 +127,10 @@ export default function GraphPage() {
           </div>
           <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Node types shown">
             {KIND_ORDER.map((k) => {
-              const on = kinds.has(k)
               return (
-                <button
-                  key={k}
-                  onClick={() => toggleKind(k)}
-                  aria-pressed={on}
-                  title={KIND[k].help}
-                  className={cn('flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors', on ? 'border-line bg-surface text-text' : 'border-transparent text-muted/70 hover:text-text')}
-                >
-                  <span className={cn('size-2 rounded-full', !on && 'opacity-40')} style={{ background: KIND[k].color }} />
+                <Chip key={k} selected={kinds.has(k)} onClick={() => toggleKind(k)} dot={KIND[k].color} count={counts[k] ?? 0} title={KIND[k].help}>
                   {KIND[k].plural}
-                  <span className="tabular-nums text-muted">{counts[k] ?? 0}</span>
-                </button>
+                </Chip>
               )
             })}
           </div>
@@ -141,10 +140,14 @@ export default function GraphPage() {
               Fit
             </Button>
           </div>
-        </div>
+        </Toolbar>
         <div className="relative min-h-0 flex-1 bg-bg">
           {error && !data ? (
             <EmptyState icon={<Waypoints size={28} />} title="Could not load the graph" hint={error} />
+          ) : !data ? (
+            <LoadingState label="Building the knowledge graph…" />
+          ) : nodes.size === 0 ? (
+            <EmptyState icon={<Waypoints size={28} />} title="The graph is empty" hint="It fills in as conversations are read and knowledge is linked to equipment. Run a scenario from the top bar." />
           ) : (
             <KgCanvas defs={defs} selectedId={selectedId} matchIds={matches} onSelect={selectNode} handle={canvas} />
           )}

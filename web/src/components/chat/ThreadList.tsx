@@ -18,7 +18,13 @@ export const SourceIcon = ({ source, size = 14 }: { source: ThreadSource; size?:
   )
 }
 
-export const threadTitle = (t: LiveThread) => t.subject || t.id
+/** Subject when there is one; otherwise the opening words (dataset threads only have a path as id). */
+export const threadTitle = (t: LiveThread) => {
+  if (t.subject) return t.subject
+  const first = t.messages[0]?.text.replace(/\s+/g, ' ').trim()
+  if (first && /[/_]\d/.test(t.id)) return first.length > 60 ? `${first.slice(0, 59)}…` : first
+  return t.id
+}
 
 export function ThreadList({ selectedId }: { selectedId: string | null }) {
   const threadsMap = useLive((s) => s.threads)

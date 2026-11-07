@@ -1,22 +1,14 @@
+import { AlertTriangle, BookOpenCheck, Eye, MessagesSquare } from 'lucide-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { validAt } from '../components/graph/graphModel'
 import { IncidentFeed } from '../components/incidents/IncidentFeed'
 import { PipelineLane } from '../components/pipeline/PipelineLane'
 import { recentProblems } from '../components/llm/status'
-import { Panel } from '../components/ui'
-import { cn } from '../lib/cn'
+import { Panel, Stat } from '../components/ui'
+import { useOpenFlagCount } from '../store/review'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
-
-function Metric({ label, value, tone, onClick }: { label: string; value: number; tone?: 'bad' | 'warn'; onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className="group flex items-baseline gap-2 text-left" disabled={!onClick}>
-      <span className={cn('text-2xl font-semibold tabular-nums', tone === 'bad' && value > 0 && 'text-bad', tone === 'warn' && value > 0 && 'text-warn')}>{value}</span>
-      <span className="text-sm text-muted group-hover:text-text">{label}</span>
-    </button>
-  )
-}
 
 export default function LivePage() {
   const nav = useNavigate()
@@ -26,6 +18,7 @@ export default function LivePage() {
   const threads = useLive((s) => s.threads)
   const assertions = useLive((s) => s.assertions)
   const llmCalls = useLive((s) => s.llmCalls)
+  const needLook = useOpenFlagCount()
 
   const k = useMemo(
     () => ({
@@ -39,11 +32,15 @@ export default function LivePage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 p-5">
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-8 gap-y-1">
-        <Metric label="open incidents" value={k.open} tone="bad" />
-        <Metric label="conversations in progress" value={k.live} onClick={() => nav('/conversations')} />
-        <Metric label="pieces of knowledge in force" value={k.valid} onClick={() => nav('/knowledge')} />
-        {k.llmErr > 0 && <Metric label="AI problems in the last hour" value={k.llmErr} tone="warn" onClick={() => nav('/llm')} />}
+      <div className="grid shrink-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat icon={<AlertTriangle size={18} />} label="Open incidents" hint="Scripted, never detected" value={k.open} tone={k.open > 0 ? 'bad' : 'neutral'} />
+        <Stat icon={<MessagesSquare size={18} />} label="Conversations in progress" hint="Waiting to be read" value={k.live} tone="accent" onClick={() => nav('/conversations')} />
+        <Stat icon={<BookOpenCheck size={18} />} label="Knowledge in force" hint="Captured and linked" value={k.valid} tone="ok" onClick={() => nav('/knowledge')} />
+        {k.llmErr > 0 ? (
+          <Stat icon={<AlertTriangle size={18} />} label="AI problems, last hour" hint="Open AI activity" value={k.llmErr} tone="warn" onClick={() => nav('/llm')} />
+        ) : (
+          <Stat icon={<Eye size={18} />} label="Needs a look" hint="Optional, nothing waits" value={needLook} onClick={() => nav('/review')} />
+        )}
       </div>
 
       <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-2">

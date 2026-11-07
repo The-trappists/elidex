@@ -7,7 +7,7 @@ import { AssertionDrawer } from '../components/knowledge/AssertionDrawer'
 import { AssertionTable } from '../components/knowledge/AssertionTable'
 import { ASSERTION_TYPES, isValidAt, TRUST_LEVELS } from '../components/knowledge/bits'
 import { Timeline } from '../components/knowledge/Timeline'
-import { Input, Select, Tabs, Toggle } from '../components/ui'
+import { Input, Select, Tabs, Toggle, Toolbar } from '../components/ui'
 import { TRUST_STYLE, TYPE_STYLE } from '../lib/semantic'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
@@ -42,7 +42,7 @@ export default function KnowledgePage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-4 py-2.5">
+      <Toolbar>
         <Tabs<Tab>
           value={tab}
           onChange={setTab}
@@ -73,7 +73,7 @@ export default function KnowledgePage() {
             <Toggle checked={validNow} onChange={setValidNow} label="Valid now" />
           </>
         )}
-      </div>
+      </Toolbar>
       <div className="min-h-0 flex-1 overflow-auto bg-bg">
         {tab === 'table' && <div className="min-h-full bg-surface"><AssertionTable rows={rows} selected={openId} onOpen={open} /></div>}
         {tab === 'timeline' && <Timeline rows={rows} now={now} onOpen={open} />}

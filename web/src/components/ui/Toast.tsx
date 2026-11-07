@@ -15,16 +15,25 @@ interface ToastItem {
   kind: Kind
   text: string
   action?: ToastOptions['action']
+  /** True while the exit animation plays. */
+  leaving?: boolean
 }
 
-const useToasts = create<{ items: ToastItem[]; push: (kind: Kind, text: string, opts?: ToastOptions) => void; close: (id: number) => void }>((set) => ({
+const EXIT_MS = 180
+
+const useToasts = create<{ items: ToastItem[]; push: (kind: Kind, text: string, opts?: ToastOptions) => void; close: (id: number) => void }>((set, get) => ({
   items: [],
   push: (kind, text, opts) => {
     const id = Date.now() + Math.random()
     set((s) => ({ items: [...s.items, { id, kind, text, action: opts?.action }] }))
-    setTimeout(() => set((s) => ({ items: s.items.filter((t) => t.id !== id) })), opts?.duration ?? (kind === 'error' ? 7000 : 3500))
+    setTimeout(() => get().close(id), opts?.duration ?? (kind === 'error' ? 7000 : 3500))
   },
-  close: (id) => set((s) => ({ items: s.items.filter((t) => t.id !== id) })),
+  // Mark as leaving first so the toast can fade out, then remove it.
+  close: (id) => {
+    if (!get().items.some((t) => t.id === id && !t.leaving)) return
+    set((s) => ({ items: s.items.map((t) => (t.id === id ? { ...t, leaving: true } : t)) }))
+    setTimeout(() => set((s) => ({ items: s.items.filter((t) => t.id !== id) })), EXIT_MS)
+  },
 }))
 
 /** toast.success('Saved'), toast.error(err), toast.info('...') from anywhere. */
@@ -56,7 +65,11 @@ export function Toaster() {
       {items.map((t) => {
         const Icon = ICON[t.kind]
         return (
-          <div key={t.id} className="flex items-start gap-2 rounded-md border border-line bg-surface p-3 text-sm shadow-[var(--shadow-md)] animate-slide-in">
+          <div
+            key={t.id}
+            role={t.kind === 'error' ? 'alert' : 'status'}
+            className={cn('flex items-start gap-2 rounded-md border border-line bg-surface p-3 text-sm shadow-[var(--shadow-md)]', t.leaving ? 'animate-slide-out' : 'animate-slide-in')}
+          >
             <Icon size={16} className={cn('mt-0.5 shrink-0', COLOR[t.kind])} />
             <span className="flex-1 break-words">{t.text}</span>
             {t.action && (
@@ -65,12 +78,12 @@ export function Toaster() {
                   t.action?.onClick()
                   close(t.id)
                 }}
-                className="h-7 rounded-md px-2 text-sm font-medium text-accent hover:bg-accent-soft"
+                className="h-8 rounded-md px-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
               >
                 {t.action.label}
               </button>
             )}
-            <IconButton onClick={() => close(t.id)} aria-label="Dismiss notification" className="!size-7">
+            <IconButton onClick={() => close(t.id)} aria-label="Dismiss notification">
               <X size={14} />
             </IconButton>
           </div>

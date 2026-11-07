@@ -336,7 +336,7 @@ export default function HomePage() {
                   </span>
                   <div>
                     <h3 className="text-xs font-bold text-text sm:text-sm">Original Elisa Example: The SFP Forwarding Trap</h3>
-                    <p className="text-[11px] text-muted">Transmission Node TRN-042 • SFP replacement with 0 traffic counters</p>
+                    <p className="text-xs text-muted">Transmission Node TRN-042 • SFP replacement with 0 traffic counters</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-medium text-ok">
@@ -395,7 +395,7 @@ export default function HomePage() {
                         <MessagesSquare size={13} className="text-accent" />
                         <span>Original Teams Discussion</span>
                       </div>
-                      <span className="text-[10px] font-mono text-muted">data/elisa/teams_chat.json</span>
+                      <span className="text-xs font-mono text-muted">data/elisa/teams_chat.json</span>
                     </div>
 
                     <div className="space-y-2 font-sans text-xs">
@@ -493,10 +493,10 @@ export default function HomePage() {
                       ) : (
                         <div className="flex flex-col items-center justify-center text-muted">
                           <Users size={32} className="text-accent/60 transition-transform group-hover:scale-110" />
-                          <span className="text-[10px] font-mono mt-1 text-muted">Member</span>
+                          <span className="text-xs font-mono mt-1 text-muted">Member</span>
                         </div>
                       )}
-                      <div className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-surface text-[10px] font-black text-accent shadow">
+                      <div className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-surface text-xs font-black text-accent shadow">
                         0{idx + 1}
                       </div>
                     </div>
@@ -523,7 +523,7 @@ export default function HomePage() {
                         )}
                       </div>
                       {member.badge && (
-                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] font-mono text-muted">
+                        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-xs font-mono text-muted">
                           {member.badge}
                         </span>
                       )}
@@ -546,7 +546,7 @@ export default function HomePage() {
                             alt={uni.name}
                             className="h-3.5 w-auto max-w-[46px] object-contain"
                           />
-                          <span className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-100">
+                          <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                             {uni.name}
                           </span>
                         </div>
@@ -554,7 +554,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Region */}
-                    <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium text-muted">
+                    <div className="mt-2.5 flex items-center gap-1.5 text-xs font-medium text-muted">
                       <img
                         src={member.flag}
                         alt={`${member.region} flag`}
@@ -564,7 +564,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 border-t border-line/60 pt-3 flex items-center justify-between text-[11px] text-muted">
+                  <div className="mt-4 border-t border-line/60 pt-3 flex items-center justify-between text-xs text-muted">
                     <span>The Trappists</span>
                     <span className="font-mono text-accent">Since AI &apos;26</span>
                   </div>

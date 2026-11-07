@@ -6,21 +6,16 @@ import { fmtAgo } from '../../lib/format'
 import { ORIGIN_STYLE, SEVERITY_STYLE, TYPE_STYLE } from '../../lib/semantic'
 import { useLive } from '../../store/live'
 import { useContextHits } from '../incidents/useContextHits'
-import { Badge, Button, EmptyState, IdChip, Toggle } from '../ui'
+import { Badge, Button, EmptyState, IdChip, Section as UiSection, Toggle } from '../ui'
 import { ContextCard } from './ContextCard'
 import { HumanActivity } from './HumanActivity'
 import { Experts, Provenance, Reach, Timeline } from './GraphSections'
 import { classMembers, classesOf, type NodeKind } from './graphModel'
 
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
-  <section className="border-b border-line px-4 py-3 last:border-0">
-    <div className="mb-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-      <h4 className="text-xs font-medium text-muted">{title}</h4>
-      {count !== undefined && <span className="rounded bg-surface-2 px-1 text-xs text-muted">{count}</span>}
-      <div className="ml-auto">{action}</div>
-    </div>
+  <UiSection variant="flat" title={title} count={count} actions={action}>
     {children}
-  </section>
+  </UiSection>
 )
 
 const None = ({ children }: { children: ReactNode }) => <p className="text-xs text-muted">{children}</p>

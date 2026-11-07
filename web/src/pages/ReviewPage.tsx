@@ -6,7 +6,7 @@ import { AssertionEditor } from '../components/knowledge/AssertionEditor'
 import { threadHref } from '../components/knowledge/bits'
 import { ItemEditor } from '../components/pipeline/ItemEditor'
 import { FlagCard } from '../components/review/FlagCard'
-import { Badge, EmptyState, Select, Toggle, toast } from '../components/ui'
+import { Badge, EmptyState, Select, Toggle, Toolbar, toast } from '../components/ui'
 import { FLAG_META, FLAG_ORDER, flagContext } from '../lib/review'
 import { useWallNow } from '../lib/useNow'
 import { useLive } from '../store/live'
@@ -113,7 +113,7 @@ export default function ReviewPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
+      <Toolbar>
         <div className="mr-1 text-sm">
           <b className="font-semibold tabular-nums">{openTotal}</b> <span className="text-muted">{openTotal === 1 ? 'thing' : 'things'} the loop wants you to know about</span>
         </div>
@@ -124,7 +124,7 @@ export default function ReviewPage() {
         <Toggle checked={showDismissed} onChange={setShowDismissed} label="Show dismissed" />
         {threadFilter && (
           <button
-            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2 text-[13px] hover:border-accent"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2.5 text-[13px] hover:border-accent"
             onClick={() => setParams({})}
             aria-label="Clear the conversation filter"
           >
@@ -141,7 +141,7 @@ export default function ReviewPage() {
             <kbd className="rounded border border-line bg-surface-2 px-1 font-mono">↵</kbd> open
           </span>
         </div>
-      </div>
+      </Toolbar>
 
       <div ref={listRef} className="min-h-0 flex-1 overflow-auto bg-bg">
         <p aria-live="polite" className="sr-only">{openTotal} items need a look</p>

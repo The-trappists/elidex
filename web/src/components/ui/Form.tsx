@@ -8,7 +8,7 @@ const BASE =
   'rounded-md border border-line bg-surface px-2.5 text-sm text-text transition placeholder:text-muted/70 hover:border-muted/40 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(BASE, width(className), 'h-8', className)} {...rest} />
+  return <input className={cn(BASE, width(className), 'h-9', className)} {...rest} />
 }
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -17,7 +17,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(BASE, width(className), 'h-8 pr-8', className)} {...rest}>
+    <select className={cn(BASE, width(className), 'h-9 pr-8', className)} {...rest}>
       {children}
     </select>
   )
@@ -35,7 +35,7 @@ export function Field({ label, hint, children, className }: { label: ReactNode; 
 
 export function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label?: ReactNode; disabled?: boolean }) {
   return (
-    <label className={cn('inline-flex cursor-pointer items-center gap-2 text-sm', disabled && 'pointer-events-none opacity-50')}>
+    <label className={cn('inline-flex min-h-8 cursor-pointer items-center gap-2 text-sm', disabled && 'pointer-events-none opacity-50')}>
       <button
         type="button"
         role="switch"

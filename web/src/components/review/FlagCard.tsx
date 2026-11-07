@@ -12,7 +12,7 @@ import { Badge, Button, IdChip } from '../ui'
 import { QuotedMessages } from './Quote'
 
 const Kbd = ({ children }: { children: string }) => (
-  <kbd aria-hidden className="ml-0.5 rounded border border-line bg-surface-2 px-1 font-mono text-[10px] leading-4 text-muted">{children}</kbd>
+  <kbd aria-hidden className="ml-0.5 rounded border border-line bg-surface-2 px-1 font-mono text-xs leading-4 text-muted">{children}</kbd>
 )
 
 function Chips({ ctx, sites, classes }: { ctx: FlagContext; sites: WbSite[]; classes: Record<string, ElementClass> }) {

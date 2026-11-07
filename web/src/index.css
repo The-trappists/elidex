@@ -288,3 +288,8 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Cards that respond to hover: a small lift and a soft shadow. */
+.lift { transition: transform 150ms ease-out, box-shadow 150ms ease-out, border-color 150ms ease-out; }
+.lift:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.lift:active { transform: none; }

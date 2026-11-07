@@ -1,32 +1,17 @@
-import { Bot, Hash, Sparkles, SlidersHorizontal, type LucideIcon } from 'lucide-react'
+import { Bot, Hash, Sparkles, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
 import { api } from '../api/client'
 import type { ExtractorMode, Settings, SettingsPatch } from '../api/types'
 import { cn } from '../lib/cn'
 import { useLive } from '../store/live'
-import { Badge, Card, Field, Input, Toggle, withToast } from '../components/ui'
+import { Badge, Field, Input, PageHeader, Section, Toggle, withToast } from '../components/ui'
 
 const MODES: { id: ExtractorMode; title: string; text: string }[] = [
   { id: 'auto', title: 'Auto', text: 'Uses the LLM when a key is configured, scripted answers otherwise. A good default.' },
   { id: 'llm', title: 'LLM', text: 'Always asks the language model to read the thread. Fails if no key is configured.' },
   { id: 'scripted', title: 'Scripted', text: 'Uses the expected answers stored with each scenario or in the cache. Fast, free and repeatable, but only works for known threads.' },
 ]
-
-function Section({ title, intro, icon: Icon, children }: { title: string; intro?: string; icon: LucideIcon; children: ReactNode }) {
-  return (
-    <Card className="p-5">
-      <div className="flex items-start gap-3">
-        <Icon size={17} className="mt-0.5 shrink-0 text-muted" />
-        <div>
-          <h2 className="font-semibold tracking-tight">{title}</h2>
-          {intro && <p className="mt-0.5 text-xs text-muted">{intro}</p>}
-        </div>
-      </div>
-      <div className="mt-5 space-y-4">{children}</div>
-    </Card>
-  )
-}
 
 const Row = ({ label, text, children }: { label: string; text: string; children: ReactNode }) => (
   <div className="flex items-start justify-between gap-6 rounded-md px-3 py-2 transition-colors hover:bg-surface-2/70">
@@ -63,12 +48,13 @@ export default function SettingsPage() {
 
   return (
     <div className="h-full overflow-auto p-6">
-      <div className=" mx-auto max-w-3xl space-y-5">
-        <p className="flex items-center gap-2 text-sm text-muted">
-          <span className="size-1.5 rounded-full bg-ok" /> Changes are saved as soon as you make them.
-        </p>
+      <div className="mx-auto max-w-3xl space-y-5">
+        <PageHeader
+          title="How the workbench reads conversations"
+          description="Changes are saved as soon as you make them."
+        />
 
-        <Section icon={Sparkles} title="Reading conversations" intro="How a conversation is turned into knowledge.">
+        <Section className="space-y-4" icon={Sparkles} title="Reading conversations" description="How a conversation is turned into knowledge.">
           <div className="grid gap-2">
             {MODES.map((m) => (
               <label key={m.id} className={cn('flex cursor-pointer gap-3 rounded-md border p-3.5 transition-colors', st.extractor_mode === m.id ? 'border-accent' : 'border-line hover:bg-surface-2')}>
@@ -97,7 +83,7 @@ export default function SettingsPage() {
           </Row>
         </Section>
 
-        <Section icon={SlidersHorizontal} title="Simulation" intro="Scripted conversations that play on their own.">
+        <Section className="space-y-4" icon={SlidersHorizontal} title="Simulation" description="Scripted conversations that play on their own.">
           <Row label="Auto-run scenarios" text="Starts a random scenario at a regular interval so the workbench is never empty.">
             <Toggle checked={st.auto_sim} onChange={(v) => save({ auto_sim: v })} />
           </Row>
@@ -106,7 +92,7 @@ export default function SettingsPage() {
           </Row>
         </Section>
 
-        <Section icon={Hash} title="Slack" intro="Slack stands in for Teams, to show that the listening works on tools people already use.">
+        <Section className="space-y-4" icon={Hash} title="Slack" description="Slack stands in for Teams, to show that the listening works on tools people already use.">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge className={slack.connected ? 'bg-ok/15 text-ok' : 'bg-surface-2 text-muted'}>{slack.connected ? 'Connected' : 'Not connected'}</Badge>
             {slack.channel && <span className="font-mono text-xs">#{slack.channel.replace(/^#/, '')}</span>}
@@ -118,7 +104,7 @@ export default function SettingsPage() {
           {!slack.connected && <p className="text-xs text-muted">To connect: create the Slack app from the manifest in <code>deploy/slack-manifest.yml</code>, add the bot and app tokens to <code>.env</code>, invite the bot to a channel and restart. Full steps in <code>docs/slack-setup.md</code>.</p>}
         </Section>
 
-        <Section icon={Bot} title="AI model" intro="Which language models read the conversations. Set on the server, read-only here.">
+        <Section className="space-y-4" icon={Bot} title="AI model" description="Which language models read the conversations. Set on the server, read-only here.">
           <div className="grid grid-cols-[10rem_1fr] gap-y-2 text-sm">
             <span className="text-muted">Ready to use</span>
             <span><Badge className={st.llm_configured ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'}>{st.llm_configured ? 'Yes' : 'No'}</Badge></span>

@@ -54,7 +54,7 @@ export function Sidebar() {
         <img src="/elidex-logo.png" alt="ElidEx" className="size-7 object-contain" />
         <div className="flex flex-col">
           <span className="text-sm font-bold tracking-tight">Elid<span className="text-accent">Ex</span></span>
-          <span className="text-[10px] text-muted -mt-0.5">Context Layer</span>
+          <span className="text-xs text-muted -mt-0.5">Context Layer</span>
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-5 overflow-auto px-2 py-2">
@@ -69,7 +69,7 @@ export function Sidebar() {
                   end={end}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+                      'flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors',
                       isActive ? 'bg-surface-2 font-medium text-text' : 'text-muted hover:bg-surface-2 hover:text-text',
                     )
                   }
@@ -83,11 +83,11 @@ export function Sidebar() {
           </div>
         ))}
       </div>
-      <Link to="/" className="m-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text" title="Return to ElidEx home">
+      <Link to="/" className="m-2 flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text" title="Return to ElidEx home">
         <LogOut size={16} />
         Exit to Home
       </Link>
-      <a href="/demo/" className="mx-2 mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text">
+      <a href="/demo/" className="mx-2 mb-2 flex h-9 items-center gap-2.5 rounded-md px-2.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text">
         <Presentation size={16} />
         Product demo
       </a>

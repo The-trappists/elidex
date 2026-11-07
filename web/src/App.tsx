@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { Sidebar } from './components/layout/Sidebar'
+import { ALL_NAV, Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
@@ -22,6 +22,10 @@ function DashboardLayout() {
   const ready = useLive((s) => s.ready)
   const { pathname } = useLocation()
   const section = pathname.split('/')[1] ?? ''
+  const known = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? (pathname === '/' ? ALL_NAV[0] : undefined)
+  useEffect(() => {
+    document.title = known ? `${known.title} · Context Workbench` : 'Page not found · Context Workbench'
+  }, [known])
 
   return (
     <div className="flex h-full animate-fade-in [animation-duration:300ms]">
@@ -36,7 +40,7 @@ function DashboardLayout() {
               Connecting to the workbench…
             </div>
           ) : (
-            <div key={section} className="h-full">
+            <div key={section} className="h-full animate-page-in">
               <Routes>
                 <Route path="/" element={<LivePage />} />
                 <Route path="/overview" element={<LivePage />} />

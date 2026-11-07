@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Inspector } from '../components/graph/Inspector'
 import { NetworkGraph } from '../components/graph/NetworkGraph'
 import type { NodeKind } from '../components/graph/graphModel'
-import { Button } from '../components/ui'
+import { Button, Toolbar } from '../components/ui'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
 
@@ -49,7 +49,7 @@ export default function NetworkPage() {
   return (
     <div className="flex h-full min-h-0">
       <section className="flex min-w-0 flex-1 flex-col">
-        <div className="flex shrink-0 items-center gap-4 border-b border-line bg-surface px-4 py-2.5">
+        <Toolbar className="flex-nowrap gap-4">
           <div className="shrink-0 leading-tight">
             <div className="text-xs text-muted">Situation on</div>
             <div className="text-sm font-semibold tabular-nums">
@@ -71,7 +71,7 @@ export default function NetworkPage() {
           <Button size="sm" disabled={!t} onClick={() => setT(null)}>
             Back to now
           </Button>
-        </div>
+        </Toolbar>
         <div className="relative min-h-0 flex-1 bg-bg">
           <NetworkGraph at={at} layers={{ knowledge }} onLayersChange={(l) => setKnowledge(l.knowledge)} selectedId={selectedId} onSelect={(id) => select(id)} />
         </div>

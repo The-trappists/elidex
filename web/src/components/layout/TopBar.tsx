@@ -112,12 +112,12 @@ export function TopBar() {
             <div className="font-mono text-sm tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) : '—'}</div>
             <div className="text-xs text-muted">Simulated time{clock?.running ? '' : ' · paused'}</div>
           </div>
-          <div className="flex rounded-md border border-line p-0.5">
+          <div className="flex rounded-md border border-line p-0.5" role="group" aria-label="Simulation speed">
             {SPEEDS.map((s) => (
               <button
                 key={s}
                 onClick={() => void withToast(() => api.simSpeed(s))}
-                className={cn('rounded px-2 py-1 font-mono text-xs transition-colors', clock?.speed === s ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
+                className={cn('h-7 min-w-8 rounded px-2 font-mono text-xs transition-colors', clock?.speed === s ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
               >
                 ×{s}
               </button>
@@ -153,7 +153,7 @@ export function TopBar() {
         <ScenarioLauncher />
         <Link
           to="/"
-          className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-surface-2 hover:text-text"
+          className="flex h-9 items-center gap-1.5 rounded-md border border-line px-3 text-sm font-medium text-muted transition-colors hover:border-accent/40 hover:bg-surface-2 hover:text-text"
           title="Exit to ElidEx home page"
         >
           <LogOut size={14} />

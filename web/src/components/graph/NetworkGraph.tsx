@@ -235,6 +235,30 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     })
   }, [selectedId, hlKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // A selection from a link (or the demo guide) can sit in a huge graph where labels are unreadable:
+  // center on the node. A click on an already readable graph does not move the camera.
+  const focusedRef = useRef<string | null>(null)
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || !selectedId) {
+      focusedRef.current = null
+      return
+    }
+    if (focusedRef.current === selectedId) return
+    // Wait for the first layout to settle so the node has its final position.
+    const t = setTimeout(() => {
+      const n = cy.nodes().filter((x) => aKey(x) === selectedId)
+      if (n.empty()) return
+      focusedRef.current = selectedId
+      const { x, y } = n.position()
+      const ext = cy.extent()
+      if (cy.zoom() >= 0.9 && x > ext.x1 && x < ext.x2 && y > ext.y1 && y < ext.y2) return
+      userMoved.current = true
+      cy.animate({ center: { eles: n }, zoom: Math.max(cy.zoom(), 1.1) }, { duration: 450 })
+    }, 700)
+    return () => clearTimeout(t)
+  }, [selectedId, built])
+
   const fit = () => {
     userMoved.current = false
     cyRef.current?.animate({ fit: { eles: cyRef.current.elements(), padding: 30 } }, { duration: 300 })

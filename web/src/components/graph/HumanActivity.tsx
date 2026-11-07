@@ -89,7 +89,7 @@ function Months({ rows }: { rows: SourceFreshness['by_month'] }) {
           />
         ))}
       </div>
-      <div className="mt-0.5 flex justify-between text-[10px] text-muted">
+      <div className="mt-0.5 flex justify-between text-xs text-muted">
         <span>{last[0]?.month}</span>
         <span>{last[last.length - 1]?.month}</span>
       </div>
@@ -227,7 +227,7 @@ function Similar({ id, defaultQuery, onSelect }: { id: string; defaultQuery: str
           ) : (
             <p className="text-xs text-muted">No similar knowledge yet.</p>
           )}
-          <p className="mt-1.5 text-[11px] leading-snug text-muted">
+          <p className="mt-1.5 text-xs leading-snug text-muted">
             <SourceTag a={d} /> {d.detail ?? (d.mode.startsWith('hash') ? 'Matches shared words.' : `Embeddings: ${d.mode}.`)}
           </p>
         </div>

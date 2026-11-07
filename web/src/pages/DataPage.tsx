@@ -3,7 +3,7 @@ import { DataActions } from '../components/data/DataActions'
 import { IncidentsTab } from '../components/data/IncidentsTab'
 import { ElementsTab, LinksTab, PersonasTab, SitesTab } from '../components/data/InventoryTabs'
 import { ScenariosTab } from '../components/data/ScenariosTab'
-import { Tabs } from '../components/ui'
+import { Tabs, Toolbar } from '../components/ui'
 import { useLive } from '../store/live'
 
 type Tab = 'elements' | 'sites' | 'links' | 'personas' | 'scenarios' | 'incidents'
@@ -20,7 +20,7 @@ export default function DataPage() {
   }
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
+      <Toolbar>
         <Tabs<Tab>
           value={tab}
           onChange={setTab}
@@ -34,7 +34,7 @@ export default function DataPage() {
           ]}
         />
         <div className="ml-auto"><DataActions /></div>
-      </div>
+      </Toolbar>
       <div className="min-h-0 flex-1 bg-surface">
         {tab === 'elements' && <ElementsTab />}
         {tab === 'sites' && <SitesTab />}
