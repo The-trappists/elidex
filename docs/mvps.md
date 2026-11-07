@@ -1,6 +1,6 @@
 # MVP options on top of the core
 
-> **Status: proposal.** The code base ships the shared core plus a thin, working starter for each idea in [ideas.md](ideas.md). The team picks the angle and logs it in [decisions.md](decisions.md); the others can stay as extras or be deleted.
+> **Status: all four starters work and are wired into the Workbench.** The code base ships the shared core plus a thin, working starter for each idea in [ideas.md](ideas.md). In the Workbench, lifecycle (D), conditions (C) and guard (B) are on by default (Settings). The team has not logged a single "chosen angle" in [decisions.md](decisions.md) yet; the others can stay as extras or be deleted. Diagrams: [architecture.md](architecture.md).
 
 ## The core (idea A): runs today
 
@@ -11,10 +11,10 @@ listen.py  understand.py  link.py  store.py  api.py, mcp_server.py, agent.py
 
 | Stage | What it does now | Where to add your touch |
 | --- | --- | --- |
-| Listen | Loads `teams*.json` and `email*.txt` from `data/elisa/` and `data/synthetic/` | Live replay, Microsoft Graph connector |
+| Listen | Loads `teams*.json` and `email*.txt` from `data/elisa/` and `data/synthetic/`; live messages from the Workbench chat and Slack | Live replay, Microsoft Graph connector |
 | Understand | LLM (any OpenAI-compatible API) or cached extractions | Better prompt, few-shot for implicit knowledge (😄, hedges) |
 | Link | Exact ID / alias match, class from type + model + install years, abstains on unknown or too broad | Alias table, embeddings, vaguer scopes |
-| Store | NetworkX graph + JSON file; chat and email of the same case merge into one assertion | Neo4j, Graphiti, MongoDB Atlas |
+| Store | NetworkX graph + JSON file; chat and email of the same case merge into one assertion; two authors' different advice stay apart | Neo4j, Graphiti, MongoDB Atlas |
 | Serve | `GET /context/{id}`, `POST /guard` (FastAPI); `get_context`, `check_action` (MCP) | Google ADK agent calling the MCP tools |
 | Reuse | Demo agent on `data/synthetic/cases.json`: template or LLM | Real tool-calling agent |
 
@@ -35,7 +35,7 @@ Combinations from [ideas.md](ideas.md) work by combining flags: `ctx run --lifec
 | A | Run `--llm` on more synthetic threads; eval set + precision/recall of linking |
 | B | Richer action vocabulary than the verb list in `guard.py`; show the guard inside an agent loop |
 | C | Ask the LLM for checks on more observable fields (`OBSERVABLE_FIELDS` in `models.py`) |
-| D | Synthetic thread where two experts disagree (the code flags conflicts, no data shows it yet); hunch upgraded to verified by a later message |
+| D | Done in the Workbench: scenarios `expert-disagreement` (both kept and flagged), `hunch-to-verified`, `firmware-4-2-rollout` and `slack-key-moved` (closing). Missing: the same synthetic threads in `data/synthetic/` for the offline `ctx run` path, and an eval on them |
 
 ## Scope check
 

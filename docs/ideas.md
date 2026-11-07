@@ -1,6 +1,6 @@
 # Idea directions
 
-> **Status: exploring.** No idea is chosen yet. Record the choice in [decisions.md](decisions.md).
+> **Status: exploring, but all four are implemented.** No single idea is formally chosen: the code base has the core (A) and a working starter for B, C and D, combinable by flags (see [mvps.md](mvps.md)). Record the choice of the pitch angle in [decisions.md](decisions.md).
 
 Every idea shares the same core, which is the base of the demo Elisa describes: **capture** from chat and email → **link** to graph entities with validity → **reuse** by an agent on a similar case. The ideas differ in where the original angle sits. Each one below passes the [scope checklist](challenge.md#scope-checklist).
 

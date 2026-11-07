@@ -4,7 +4,7 @@ Guidance for every AI coding assistant working in this repo (Claude Code, GitHub
 
 ## Context
 
-Hackathon team at Since AI 2026, working on **Elisa's "Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations"** challenge. The team is still choosing its original idea. Read `docs/challenge.md` (scope) and `docs/ideas.md` (directions) before answering design questions.
+Hackathon team at Since AI 2026, working on **Elisa's "Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations"** challenge. The core and the Workbench are built; the team has not yet logged which angle (A–D) it pitches. Read `docs/challenge.md` (scope), `docs/ideas.md` (directions) and `docs/architecture.md` (how it works) before answering design questions.
 
 ## Your role
 
@@ -20,7 +20,8 @@ The AI supports the team; the team decides.
 | --- | --- |
 | `docs/challenge.md` | Challenge facts, material and the scope checklist |
 | `docs/ideas.md` | Candidate idea directions |
-| `docs/design.md` | Pipeline and context-assertion schema options |
+| `docs/architecture.md` | Mermaid diagrams of the code as it is: pipeline, data model, workbench, deployment |
+| `docs/design.md` | Pipeline and context-assertion schema |
 | `docs/plan.md` | 48h plan, demo, risks, open questions |
 | `docs/tech-stack.md` | Stack options and event tools |
 | `docs/decisions.md` | What the team decided; the only source of truth for choices |
@@ -34,9 +35,10 @@ The AI supports the team; the team decides.
 | `src/context_layer/workbench/`, `web/` | Workbench backend and UI |
 | `data/workbench/` | Workbench seed: topology, personas, scenarios |
 | `deploy/`, `docs/deploy-vultr.md`, `docs/slack-setup.md` | Deployment and Slack bridge |
+| `docs/img/` | Screenshots of the deployed Workbench used in the README |
 | `CONTRIBUTING.md` | Git workflow and conventions |
 
-A first code base (core of idea A + starters for B, C, D) exists; its stack choices are proposals until logged in `docs/decisions.md`. The shared contract is `src/context_layer/models.py`.
+The code base exists and runs: core of idea A, starters for B, C, D, and the deployed Workbench (see `README.md` and `docs/architecture.md`). Stack choices count as decided only when logged in `docs/decisions.md` (Workbench stack, Vultr, Slack and the LLM providers are). The pitch angle among A–D is not logged yet. The shared contract is `src/context_layer/models.py`.
 
 ## Rules
 

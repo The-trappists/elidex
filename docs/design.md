@@ -1,6 +1,6 @@
 # Design options
 
-> **Status: proposal.** A pipeline and a schema to react to. Freeze them only once an idea is chosen; then every workstream codes against them.
+> **Status: implemented, not formally frozen.** The schema below is what `src/context_layer/models.py` implements, with a few additions made while coding (see "Fields added in the code"). The pipeline gained a fifth step, **reconcile**. Diagrams of the current pipeline, data model and lifecycle: [architecture.md](architecture.md).
 
 ## Pipeline
 
@@ -96,8 +96,20 @@ Elisa gives no email or key location for the barrier: this one is synthetic data
 | `sources[]` | Traceability | Chat and email of the same case = one assertion, two sources |
 | `conditions`, `action`, `avoid` | Agent-ready | An agent can act without reading free text |
 
-## Open points
+## Fields added in the code
 
-- Atomic assertions only, or also a per-entity profile built on request?
-- How to choose the class ("older units" → install year? model?) when the text is vague?
-- Does a contradiction close the old assertion, or keep both with a conflict flag?
+| Field | Why |
+| --- | --- |
+| `topic` | Short slug of the problem the knowledge is about; the store and the lifecycle match on it |
+| `summary` | One line for UIs and logs |
+| `closed_by` | The invalidation assertion that set `valid_to`; lets a re-processed thread reopen it |
+| `link_notes` | Why the linker bound, skipped or abstained; shown in the Workbench |
+| `conditions[].check` | A machine check `{field, op, value}` on an observable field (`OBSERVABLE_FIELDS`); `null` when the condition is free text |
+| `type: invalidation` | A message saying earlier knowledge no longer holds; it is applied by the lifecycle step and is not itself served |
+| `source: slack` | Third channel, standing in for Teams |
+
+## Open points: how the code answers them today
+
+- **Atomic assertions only, or also a per-entity profile?** Atomic only. A profile is just `get_context(entity)`.
+- **How to choose the class when the text is vague?** The extractor fills only what the text supports; a bare type ("all transmission nodes") is too broad and is not bound; a class matching no element is not bound; with no `applies_to` left the linker abstains.
+- **Does a contradiction close the old assertion, or keep both?** Both are kept and flagged (`conflicts_with`) when two authors give different advice on the same scope; only an explicit invalidation closes knowledge.

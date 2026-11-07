@@ -1,6 +1,6 @@
 # Tech stack options
 
-> **Status: proposal.** A quick-start default per layer. Pick what the team knows best; log choices in [decisions.md](decisions.md).
+> **Status: options below are the original proposals; "What we actually use" shows the current state.** Log choices in [decisions.md](decisions.md).
 
 | Layer | Default (quick start) | Alternatives | Decide based on |
 | --- | --- | --- | --- |
@@ -13,6 +13,22 @@
 | Demo UI | Streamlit | Gradio, small web page | Time |
 | Synthetic data | LLM-generated chats, emails + CSV of network elements | — | Must be documented |
 | Evaluation | Hand-labelled set + precision/recall script | LLM-as-judge on top | Credibility |
+
+## What we actually use
+
+| Layer | In the code today | Logged in [decisions.md](decisions.md)? |
+| --- | --- | --- |
+| Language | Python 3.12 (`uv`), TypeScript for the UI | No (default) |
+| LLM | Gemini via AI Studio (OpenAI-compatible), Featherless fallback, provider-agnostic client, `scripted` mode without a key | Yes |
+| Structured output | Pydantic models + JSON mode chosen per provider (`ctx llm-check`) | No |
+| Graph store | NetworkX in memory + JSON file | No (Neo4j, Graphiti, MongoDB not used) |
+| Agent interface | FastAPI REST and an MCP server (`get_context`, `check_action`) | No |
+| Demo agent | Template or LLM-phrased plan, with guard and conditions; no Google ADK | No |
+| UIs | Workbench: React, Vite, Tailwind, Cytoscape, REST + SSE. Pitch-style demo: Streamlit | Yes (Workbench) |
+| Chat sources | Simulated in-app chat, optional Slack bridge (Socket Mode) | Yes |
+| Hosting | Vultr VM, Docker Compose, Caddy (HTTPS, team password) | Yes |
+| CI | GitHub Actions: `pytest`, web typecheck and build | No |
+| Evaluation | In-Workbench comparison with a scenario's `expected` items; no precision/recall script yet | No |
 
 ## Event tools that fit
 

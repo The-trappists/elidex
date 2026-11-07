@@ -1,6 +1,6 @@
 # Context Workbench
 
-> Status: in progress on branch `feat/workbench`. Tool choices (React, Vultr, Slack) are proposals until they are logged in [decisions.md](decisions.md).
+> **Status: built, merged on `main` and deployed on the team's Vultr VM.** The choices (React, Vultr, Slack, Gemini, UI redesign) are logged in [decisions.md](decisions.md). Diagrams: [architecture.md](architecture.md#7-the-workbench). Screenshots and a tour of each page: [README](../README.md#the-context-workbench).
 
 The Workbench is the team's real-time test bench. It is not the pitch demo. It lets us:
 - watch fake employees talk, in an in-app chat or in a real Slack;
@@ -149,7 +149,9 @@ Everything except Elisa's chat and email is synthetic and documented in `data/wo
 - Sim time comes from `useSimNow()`, and dates are formatted with `src/lib/format.ts`.
 - English only in the UI. Every list has an empty state, and every destructive action asks for confirmation (use a Modal, never `window.confirm`).
 
-## Who owns what (parallel build, Phase 1)
+## Who owns what (history of the parallel build, Phase 1)
+
+This is how the first build was split between parallel contributors. It is kept for orientation in the code; ownership is no longer enforced.
 
 | Owner | Files |
 | --- | --- |

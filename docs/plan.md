@@ -2,6 +2,18 @@
 
 > **Status: proposal.** Hours count from the official start. **Hard deadline:** demo, slides, docs and repo on [sinceai.app](https://sinceai.app) by **Sunday 8 November 2026, 10:00**.
 
+## Where we are (7 November 2026)
+
+| Gate | State |
+| --- | --- |
+| Idea logged | **Not formally.** Core (A) plus starters for B, C and D are built and combinable ([mvps.md](mvps.md)); the pitch angle is still to be logged in [decisions.md](decisions.md) |
+| Schema frozen | Implemented in `models.py`, in practice stable ([design.md](design.md)) |
+| Runs end to end | Yes: CLI, REST, MCP, and the deployed Workbench with live chat, Slack and a network graph ([architecture.md](architecture.md)) |
+| Differentiate | Lifecycle, conflicts, trust, conditions and guard exist; 15 scenarios test them |
+| Still open | Eval set with precision/recall numbers on labelled threads; pitch slides and script; backup video; the mentor questions below |
+
+The plan below is the original one, kept for reference.
+
 ## 48h plan
 
 | Phase | Hours | Goals | Gate |
