@@ -351,3 +351,30 @@ def test_disagreement_keeps_both_assertions_and_flags_the_conflict():
         stored.append(a)
     assert len(store.assertions) == 2
     assert stored[0].conflicts_with == [stored[1].id] and stored[1].conflicts_with == [stored[0].id]
+
+
+def test_same_topic_replacement_in_the_same_message_stays_open():
+    """The LLM gave the invalidation and the new key the same topic: only the older key may be closed."""
+    from context_layer.mvp.lifecycle import reconcile
+    from context_layer.store import ContextStore
+
+    linker, store = Linker(INVENTORY), ContextStore(INVENTORY)
+    old = SCENARIOS["barrier-key-kemijarvi"]
+    moved = SCENARIOS["slack-key-moved"]
+    items = [(old, old.expected.items[0])] + [(moved, i.model_copy(update={"topic": "site-access-barrier-key"})) for i in moved.expected.items]
+    stored = []
+    for s, item in items:
+        a, _ = store.add_assertion(linker.link(item, _thread(s)).assertion)
+        reconcile(store, a)
+        stored.append(a)
+    old_key, invalidation, new_key = stored
+    assert old_key.valid_to is not None and old_key.closed_by == invalidation.id
+    assert new_key.valid_to is None and new_key.closed_by is None
+    assert not new_key.conflicts_with and not old_key.conflicts_with  # closed knowledge is not in conflict
+
+
+def test_extractor_prompt_pins_disagreement_topic_and_replacement():
+    from context_layer.understand import SYSTEM_PROMPT
+
+    assert "exact same topic slug" in SYSTEM_PROMPT
+    assert "the replacement with its own, different topic slug" in SYSTEM_PROMPT
