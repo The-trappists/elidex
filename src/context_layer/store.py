@@ -116,11 +116,16 @@ class ContextStore:
         """What humans know about this entity, valid at time `at` (default: now)."""
         at = at or datetime.now()
         hits: dict[str, ContextHit] = {}
-        for target, via in self.scope_of(self.resolve(entity_id)):
+        entity = self.resolve(entity_id)
+        for target, via in self.scope_of(entity):
             if target not in self.g:
                 continue
             for src, _, data in self.g.in_edges(target, data=True):
                 if self.g.nodes[src].get("kind") != "assertion" or data["role"] == "trigger":
+                    continue
+                # "observed_on" is evidence, not scope: it counts for the entity itself, never for the other
+                # members of its class or the other elements of its site.
+                if data["role"] == "observed_on" and target != entity:
                     continue
                 a = self.assertions[src]
                 if (include_expired or a.is_valid_at(at)) and src not in hits:
