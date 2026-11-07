@@ -110,6 +110,17 @@ Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes t
 
 Status: the pure parts (mentions, documents, rows, file source) are tested offline. The loaders and queries against real Atlas and Tiger Data were **not run by the assistant** (AI agents must not use `.env` credentials), so the first run is yours: start with `db-check`.
 
+### Measured on the real services (`large`, 2026-11-07, loaded from a laptop)
+
+| | MongoDB Atlas (10 GB cluster, 0.08 $/h) | Tiger Data (Time-series service, PostgreSQL 18, TimescaleDB) |
+| --- | --- | --- |
+| Loaded | 3,000,000 threads (+ sites, links, elements, users, facts) | 13,772,400 messages |
+| Time | 466 s for the threads, then the index build | 735 s including the analytics layer |
+| Size | indexed and queried; sizes to add from `db-check` | 4,913 MB right after the load (compression of chunks older than 30 days runs later as a background job) |
+| `demo` for comparison | 150,000 threads in 34 s | 687,697 messages |
+
+`tiger-verify` passed on `demo` (hypertable, indexes, compression policy, `message_mentions`, `daily_mentions`, real query). Run it again on `large`. Elements named per message average 0.07: most messages are noise, which is the point of the haystack.
+
 ## Using it
 
 - Core and bench: `Inventory.load(root / "network")`; `ctx dataset bench` feeds the linker with the true extractions, so it measures linking and storing, **not the LLM**. For the LLM, read threads of `conversations/` and score the output against `facts.jsonl`.
