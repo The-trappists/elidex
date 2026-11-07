@@ -10,3 +10,7 @@ __pycache__/
 
 # Pipeline output
 out/
+
+# Demo frontend
+demo/node_modules/
+demo/dist/
