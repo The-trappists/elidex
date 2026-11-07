@@ -1,0 +1,123 @@
+{
+  "id": "slack-vendor-secondhand",
+  "title": "Slack: advice from vendor support, second hand",
+  "description": "An architect relays what vendor support told them, with a caveat, and an expert doubts it. Nobody confirms it in the chat. Tests provenance and trust: the knowledge must stay at the hunch level and name who said it.",
+  "channel": "slack",
+  "subject": "#transmission",
+  "incident": {
+    "entity_id": "TRN-229",
+    "kind": "link-down-after-power-dip",
+    "severity": "major",
+    "summary": "TRN-229 link down after a short power dip",
+    "observations": {
+      "interface_status": "DOWN",
+      "optical_levels": "normal",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "veikko",
+    "erkki",
+    "aino"
+  ],
+  "messages": [
+    {
+      "persona": "veikko",
+      "delay_s": 5,
+      "text": "morning! TRN-229 at Linnanmaa lost power for a few seconds about an hour ago (mains blip, the UPS didn't hold). node is back but the link is DOWN and alarms are still on. optics look ok. I'm thinking reboot?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 60,
+      "text": "Hm. Reboot is my usual answer. Is the power definitely stable now?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 30,
+      "text": "yep, stable for 40 min"
+    },
+    {
+      "persona": "aino",
+      "delay_s": 70,
+      "text": "wait before you reboot"
+    },
+    {
+      "persona": "aino",
+      "delay_s": 10,
+      "text": "I asked vendor support about exactly this last week for the TX-5000s. they said after even a short power dip the node needs about 15 min to get sync back, and a reboot just restarts that clock"
+    },
+    {
+      "persona": "aino",
+      "delay_s": 20,
+      "text": "caveat: that's only their word, I haven't seen it happen myself 🤷"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 50,
+      "text": "Never seen it on any of mine. But waiting costs nothing, so fine by me."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 40,
+      "text": "ok, I'll wait 15 and see. will report back"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "conditions": [
+          {
+            "text": "after a short power dip",
+            "check": null
+          },
+          {
+            "text": "link down",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "DOWN"
+            }
+          }
+        ],
+        "diagnosis": "the node needs about 15 minutes to re-establish sync",
+        "action": "Wait about 15 minutes for sync to come back before rebooting.",
+        "avoid": [
+          "rebooting the node straight away"
+        ],
+        "fact": null,
+        "type": "workaround",
+        "topic": "tx5000-sync-after-power-dip",
+        "summary": "According to vendor support (second hand), a TX-5000 needs about 15 minutes to regain sync after a short power dip; rebooting restarts the wait.",
+        "scope": {
+          "instance_ids": [
+            "TRN-229"
+          ],
+          "site_ids": [],
+          "element_class": {
+            "type": "transmission_node",
+            "model": "TX-5000",
+            "install_year_min": 2022
+          },
+          "trigger": null
+        },
+        "trust_level": "hunch",
+        "evidence": "seq 5-6: 'vendor support said...', 'only their word, I haven't seen it happen myself'",
+        "stated_by": "Aino Arkkitehti",
+        "cited_seq": [
+          4,
+          5,
+          6
+        ],
+        "confidence": 0.5
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "trust",
+    "provenance",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

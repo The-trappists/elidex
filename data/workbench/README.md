@@ -17,7 +17,13 @@ Facts about the Elisa items that are our guesses, not Elisa's: TRN-042 model `TX
 - `topology.json`: 9 sites with lat/lon (the 5 of `data/synthetic/sites.csv`, same ids and names, plus 4 more), 15 extra elements (20 in total with the CSV), and 21 links. The CSV elements are not repeated here.
   - Links: a fibre ring between exchanges, fibre spurs, microwave links to remote radio sites in Lapland, backhaul to routers. The wiring is plausible, not real.
 - `personas.json`: 8 people. Aino Arkkitehti and Liisa Lappi come from `data/synthetic/`. Helmi Hakkarainen (NOC), Jaakko Junnila (junior field engineer), Sanna Salminen (site access) and Raimo Rantanen (radio) are new, in the playful alliterative spirit of the existing names.
-- `scenarios/*.json`: one `Scenario` per file, each with `tags` and a one-sentence `description` of what it tests. `delay_s` is in simulated seconds.
+- `scenarios/*.json`: one `Scenario` per file (15), each with `tags` and a one-sentence `description` of what it tests. `delay_s` is in simulated seconds (8 to 180; 8-15 s is a burst from one person).
+  - Slack scenarios (6): `slack-radio-tilt`, `slack-noc-handover`, `slack-breaker-harbour-hut`, `slack-key-moved`, `slack-needle-in-noise`, `slack-vendor-secondhand`. Thread replies start with `↳ ` (a stand-in for real Slack threads).
+  - Run `barrier-key-kemijarvi` before `slack-key-moved` to see the old access closed by the correction.
+
+## Writing style of the scenarios
+
+Rewritten on 2026-11-07 (Claude Code) to sound less robotic, reviewed by the team: one thought per message and bursts of short messages, each persona in their own voice (`style` in `personas.json`), no one saying "note this down", hedges, interruptions, side topics, corrections, and a few light Finnish words (hei, moi, joo, kiitos, kahvi). The LLM generator follows the same guide (`generator.py`). The ground truth in `expected` did not change for the rewritten scenarios, only `cited_seq` and `evidence`.
 
 ## Assumptions
 

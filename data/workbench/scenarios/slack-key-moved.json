@@ -1,0 +1,118 @@
+{
+  "id": "slack-key-moved",
+  "title": "Slack: the barrier key is not where Liisa said",
+  "description": "A colleague corrects outdated access knowledge in #field-north. Tests lifecycle on Slack: an invalidation closes the old barrier-key assertion (run barrier-key-kemijarvi first) and a new access assertion records the new place.",
+  "channel": "slack",
+  "subject": "#field-north",
+  "incident": null,
+  "participants": [
+    "jaakko",
+    "liisa",
+    "sanna"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "going up to the Kemijärvi hill mast tomorrow morning (NF-017). barrier key is at the service station, right? just want to be sure before I drive two hours"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 40,
+      "text": "that's what I wrote before, yes 🙂"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 70,
+      "text": "wait wait wait"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 8,
+      "text": "NOT anymore! the service station stopped lending keys in October, new owners"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 15,
+      "text": "key is at the municipal depot now, Teollisuustie 4. ask for Pekka at the front desk, open 7-15 on weekdays"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 30,
+      "text": "ahh 😬 I didn't know. my message was from before October, sorry Jaakko!"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 45,
+      "text": "phew, thank you both!! so depot, Teollisuustie 4, before 15:00, got it 👍"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 40,
+      "text": "joo. I'll update the pinned note too"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "conditions": [],
+        "diagnosis": null,
+        "action": null,
+        "avoid": [],
+        "fact": "Since October the Kemijärvi service station does not hand out the barrier key any more.",
+        "type": "invalidation",
+        "topic": "site-access-barrier-key",
+        "summary": "The Kemijärvi service station no longer lends the barrier key for SITE-NF-017 (since October).",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [
+            "SITE-NF-017"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "trust_level": "stated",
+        "evidence": "seq 4: 'the service station stopped lending keys in October'",
+        "stated_by": "Sanna Salminen",
+        "cited_seq": [
+          4
+        ],
+        "confidence": 0.85
+      },
+      {
+        "conditions": [],
+        "diagnosis": null,
+        "action": "Collect the barrier key at the municipal depot, Teollisuustie 4, front desk (ask for Pekka), on weekdays between 07:00 and 15:00.",
+        "avoid": [],
+        "fact": "Since October the barrier key for SITE-NF-017 is kept at the municipal depot, Teollisuustie 4.",
+        "type": "access",
+        "topic": "site-access-barrier-key-depot",
+        "summary": "The barrier key for SITE-NF-017 is now kept at the municipal depot, Teollisuustie 4, weekdays 07:00-15:00.",
+        "scope": {
+          "instance_ids": [],
+          "site_ids": [
+            "SITE-NF-017"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "trust_level": "stated",
+        "evidence": "seq 5: 'key is at the municipal depot now, Teollisuustie 4'",
+        "stated_by": "Sanna Salminen",
+        "cited_seq": [
+          4,
+          5
+        ],
+        "confidence": 0.85
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "lifecycle",
+    "access",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

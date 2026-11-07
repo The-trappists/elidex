@@ -1,0 +1,125 @@
+{
+  "id": "slack-breaker-harbour-hut",
+  "title": "Slack: the breaker that kills the harbour hut radio",
+  "description": "A junior engineer asks a long question and the answers arrive in a Slack thread (replies start with an arrow, a stand-in for real threads). Tests site-specific tribal knowledge (breaker F3, dehumidifier), a ✅ as validation, and 'it is never the unit'.",
+  "channel": "slack",
+  "subject": "#field-ops",
+  "incident": {
+    "entity_id": "RAD-254",
+    "kind": "radio-dead-no-link",
+    "severity": "major",
+    "summary": "RAD-254 completely down at the Turku harbour hut",
+    "observations": {
+      "interface_status": "DOWN",
+      "traffic_counters": 0,
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "jaakko",
+    "sanna",
+    "liisa"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "Hei kaikki! I'm at the Turku harbour hut now. RAD-254 is completely dead, no link, no traffic, alarm is on. I checked the cables and they look fine. I'm about to start swapping the radio unit but wanted to ask here first in case I'm missing something obvious. Thanks in advance!"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 60,
+      "text": "oh, the hut 🙄"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 10,
+      "text": "↳ have you looked in the breaker cabinet? left of the door"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 40,
+      "text": "↳ there's a grey cabinet, yes. F1, F2, F3, F4. F3 is down!"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 25,
+      "text": "↳ that's the one. the dehumidifier trips it whenever the sea fog gets really bad, it's happened to me twice. flip F3 back up and the radio comes back on its own, no need to touch the unit"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 50,
+      "text": "↳ yep, same thing in the autumn. also check the dehumidifier tray, if it's full it'll trip again in a day or two"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 90,
+      "text": "↳ flipped F3. radio is booting... link is up and traffic is coming back!! 🎉 emptied the tray too"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 30,
+      "text": "↳ ✅ nice. don't replace the unit, it's never the unit at that hut"
+    }
+  ],
+  "resolves_incident_at_seq": 7,
+  "expected": {
+    "items": [
+      {
+        "conditions": [
+          {
+            "text": "radio completely dead, no link",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "DOWN"
+            }
+          },
+          {
+            "text": "no traffic",
+            "check": {
+              "field": "traffic_counters",
+              "op": "==",
+              "value": 0
+            }
+          }
+        ],
+        "diagnosis": "the dehumidifier trips breaker F3 in heavy sea fog",
+        "action": "Reset breaker F3 in the cabinet left of the door and empty the dehumidifier tray; check that the radio comes back before replacing it.",
+        "avoid": [
+          "replacing the radio unit"
+        ],
+        "fact": null,
+        "type": "workaround",
+        "topic": "harbour-hut-breaker-trip",
+        "summary": "When RAD-254 at the Turku harbour hut is completely dead, breaker F3 has usually tripped; reset it and empty the dehumidifier tray before replacing the radio.",
+        "scope": {
+          "instance_ids": [
+            "RAD-254"
+          ],
+          "site_ids": [
+            "SITE-TKU-009"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "trust_level": "verified",
+        "evidence": "seq 7: 'flipped F3. radio is booting... link is up and traffic is coming back'",
+        "stated_by": "Sanna Salminen",
+        "cited_seq": [
+          5,
+          6,
+          7
+        ],
+        "confidence": 0.85
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "thread",
+    "site-specific",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

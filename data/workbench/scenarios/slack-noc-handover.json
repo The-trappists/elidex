@@ -1,0 +1,115 @@
+{
+  "id": "slack-noc-handover",
+  "title": "Slack: NOC handover note about a cold-morning flap",
+  "description": "A NOC operator leaves a casual handover note in #noc-handover. The knowledge (do not dispatch, it clears by itself) sits inside shift chatter, and a radio specialist backs it up. Tests knowledge given in passing, a time and temperature condition, and a verified outcome the next morning.",
+  "channel": "slack",
+  "subject": "#noc-handover",
+  "incident": {
+    "entity_id": "RAD-198",
+    "kind": "link-flap-cold-morning",
+    "severity": "minor",
+    "summary": "RAD-198 flapping since early morning",
+    "observations": {
+      "interface_status": "UP",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "helmi",
+    "raimo",
+    "liisa"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "ok handover for whoever has the morning 🌙 quiet night except RAD-198 at Sodankylä, it's been flapping since 5am. I'm NOT dispatching anyone, it does that when it's really cold (below -20 or so) and it calms down by itself around 10. at least that's what I've seen the last two winters? 🥶"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 50,
+      "text": "joo. ice on the dish, then the sun gets to it. seen it five or six times since that radio went up"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 40,
+      "text": "do you want me to send someone? my guys are in Rovaniemi anyway"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 25,
+      "text": "nope, wait till 10 first. if it's still flapping after that then yes please"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 20,
+      "text": "👍 ok"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 180,
+      "text": "update: it cleared by itself, link is stable. no dispatch needed ✅"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 30,
+      "text": "as expected ☃️"
+    }
+  ],
+  "resolves_incident_at_seq": 6,
+  "expected": {
+    "items": [
+      {
+        "conditions": [
+          {
+            "text": "very cold morning, below about -20",
+            "check": null
+          },
+          {
+            "text": "alarm active",
+            "check": {
+              "field": "alarms",
+              "op": "==",
+              "value": "active"
+            }
+          }
+        ],
+        "diagnosis": "ice on the dish that melts once the sun reaches it",
+        "action": "Do not dispatch a crew; wait until about 10:00 and dispatch only if the link is still flapping.",
+        "avoid": [
+          "dispatching a crew straight away"
+        ],
+        "fact": null,
+        "type": "workaround",
+        "topic": "cold-morning-link-flap",
+        "summary": "On very cold mornings RAD-198 flaps until about 10:00 and recovers by itself; do not dispatch a crew before then.",
+        "scope": {
+          "instance_ids": [
+            "RAD-198"
+          ],
+          "site_ids": [
+            "SITE-NF-021"
+          ],
+          "element_class": null,
+          "trigger": null
+        },
+        "trust_level": "verified",
+        "evidence": "seq 6: 'it cleared by itself, link is stable'",
+        "stated_by": "Helmi Hakkarainen",
+        "cited_seq": [
+          1,
+          2,
+          6
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "noc",
+    "handover",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

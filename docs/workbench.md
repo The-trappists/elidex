@@ -137,7 +137,7 @@ Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show 
 
 - `personas.json`: Elisa's two people (Erkki, Veikko) plus synthetic colleagues.
 - `topology.json`: extra elements, sites with lat/lon, and links between elements. It is merged with `data/synthetic/*.csv`.
-- `scenarios/*.json`: one `Scenario` per file. Elisa's chat replayed word for word is `elisa-trn042-chat.json`.
+- `scenarios/*.json`: one `Scenario` per file (15, six of them on Slack). Elisa's chat replayed word for word is `elisa-trn042-chat.json`.
 
 Everything except Elisa's chat and email is synthetic and documented in `data/workbench/README.md`.
 

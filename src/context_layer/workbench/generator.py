@@ -18,12 +18,21 @@ Rules:
 - Humans state knowledge in passing, as they would in a real chat. Keep noise around it (greetings, jokes, small talk).
 - Never diagnose from telemetry: the incident only gives what people observe. Do not invent a fault detector.
 - Use only the persona ids, element ids and site ids given below.
-- Messages are short and chatty. delay_s is in simulated seconds, 20 to 180 between messages.
+- delay_s is in simulated seconds: 8 to 15 between two messages of the same person (a burst), 20 to 180 otherwise.
 - `expected` is the ground truth extraction. Every item must bind to real ids (instance_ids, site_ids) and use conservative class criteria: model plus install year range, never a bare type.
 - Condition checks may only use these observable fields: {fields}.
 - trust_level: "hunch" (hedged), "stated" (someone says it), "verified" (an outcome in the chat confirms it). stated_by is the exact persona name. cited_seq is 1-based message numbers.
 - If the chat has no reusable knowledge, set expected to {{"items": []}}.
-- Set origin to "generated". Reply with one JSON object that follows the schema, nothing else."""
+- Set origin to "generated". Reply with one JSON object that follows the schema, nothing else.
+
+Make it sound human, not like a report:
+- Write each persona in their own voice (their `style` below). Do not give everybody the same polite full sentences.
+- Messages are chat messages: lower case starts, "ok", "hmm", "tho", "lol", emoji, a single word on its own line ("wait"), sometimes two or three short messages in a row from the same person instead of one long one.
+- Nobody announces "note this down" or summarises the lesson for the pipeline. The knowledge comes out as a reaction ("it's the mount, not the radio"), an objection or a side remark.
+- Use at least three of these realistic moves: someone hedges or is unsure; someone interrupts or answers a question nobody asked; a side topic (coffee, key, parking, weather) appears and fades; a correction ("no wait, I meant..."); a disagreement that stays polite; a short reaction only (👍, ✅); a long first message from a junior who thanks everyone.
+- A few Finnish interjections are welcome and must stay light and understandable: Hei, Moi, joo, kiitos, kahvi, hyvä. Everything else is English.
+- Slack channels: set `subject` to a channel like "#field-north" and, to mimic a thread, start each reply of the thread with "↳ ". Teams chats keep a plain subject.
+- The knowledge must come from something a person says or sees, with a concrete detail (a breaker label, a time of day, a firmware version), not a generic best practice."""
 
 USER = """Personas (id, name, role, style):
 {personas}
@@ -31,7 +40,7 @@ USER = """Personas (id, name, role, style):
 Target element: {element}
 Its site: {site}
 {hint}
-Format example (Elisa's chat as a scenario):
+Format examples (two scenarios already in the seed, note how loose the wording is):
 {example}
 
 JSON schema of a scenario:
@@ -105,14 +114,14 @@ def generate_scenario(wb: Workbench, entity_id: str | None = None, hint: str | N
     el = _pick_element(wb, entity_id)
     site = wb.sites.get(el.site_id) if el.site_id else None
     personas = "\n".join(f"- {p.id} | {p.name} | {p.role} | {p.style}" for p in wb.personas.values())
-    example = wb.scenarios.get("elisa-trn042-chat")
+    examples = [wb.scenarios.get(i) for i in ("elisa-trn042-chat", "slack-radio-tilt")]
     system = SYSTEM.format(fields="; ".join(f"{k} ({v})" for k, v in OBSERVABLE_FIELDS.items()))
     user = USER.format(
         personas=personas,
         element=json.dumps(el.model_dump(), ensure_ascii=False),
         site=json.dumps(site.model_dump(), ensure_ascii=False) if site else "none",
         hint=f"Hint from the team: {hint}\n" if hint else "",
-        example=example.model_dump_json(exclude_none=True) if example else "(not available)",
+        example="\n\n".join(e.model_dump_json(exclude_none=True) for e in examples if e) or "(not available)",
         schema=json.dumps(Scenario.model_json_schema()),
     )
     text, _traces = llm.complete_traced(

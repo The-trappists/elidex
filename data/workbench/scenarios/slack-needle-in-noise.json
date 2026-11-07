@@ -1,0 +1,122 @@
+{
+  "id": "slack-needle-in-noise",
+  "title": "Slack: one useful tip in a Friday channel",
+  "description": "A busy #general-ops with lunch plans, sauna jokes and printer complaints, and one passing tip about RAD-233. Tests precision: exactly one item, bound to the instance only, no invented knowledge from the chatter.",
+  "channel": "slack",
+  "subject": "#general-ops",
+  "incident": null,
+  "participants": [
+    "helmi",
+    "sanna",
+    "jaakko",
+    "liisa",
+    "raimo",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "happy friday!! who's up for lunch? 🍜"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 45,
+      "text": "ramen again? I had it on Tuesday 😅"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 30,
+      "text": "I'm in for anything, I'm still new so I don't know any good places yet. Kiitos for the invite!"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 50,
+      "text": "come to the sauna on Thursday instead, much better introduction to the team"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 40,
+      "text": "is that... a real thing?? 😳"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 20,
+      "text": "joo 😄"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 70,
+      "text": "btw for whoever is at Sodankylä next. a soft reboot on RAD-233 hangs it since the 2.5 update, I've had to pull the power at the PDU twice now. so skip the reboot button"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 40,
+      "text": "oh good to know!!"
+    },
+    {
+      "persona": "sanna",
+      "delay_s": 60,
+      "text": "also the printer on the 2nd floor is dead again. Veikko please stop sending the big PDFs 😂"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 40,
+      "text": "it was ONE pdf"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 90,
+      "text": "ok ramen at 12 then? 🍜 decided"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 30,
+      "text": "👍 see you there"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "conditions": [
+          {
+            "text": "the radio needs a reboot",
+            "check": null
+          }
+        ],
+        "diagnosis": null,
+        "action": "Pull the power at the PDU instead of using the soft reboot.",
+        "avoid": [
+          "soft reboot"
+        ],
+        "fact": null,
+        "type": "workaround",
+        "topic": "rad233-soft-reboot-hangs",
+        "summary": "Since the 2.5 update a soft reboot hangs RAD-233; power-cycle it at the PDU instead.",
+        "scope": {
+          "instance_ids": [
+            "RAD-233"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "trust_level": "stated",
+        "evidence": "seq 7: 'a soft reboot on RAD-233 hangs it since the 2.5 update'",
+        "stated_by": "Raimo Rantanen",
+        "cited_seq": [
+          7
+        ],
+        "confidence": 0.7
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "noise",
+    "precision",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
