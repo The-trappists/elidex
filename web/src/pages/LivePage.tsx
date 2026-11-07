@@ -27,7 +27,6 @@ export default function LivePage() {
     const today = new Date().toDateString() // job timestamps are wall time
     return {
       open: Object.values(incidents).filter((i) => i.status === 'open').length,
-      total: Object.keys(threads).length,
       live: Object.values(threads).filter((t) => t.status === 'active' || t.status === 'processing').length,
       valid: Object.values(assertions).filter((a) => validAt(a, now)).length,
       jobsToday: jobs.filter((j) => new Date(j.started_at).toDateString() === today).length,
