@@ -55,6 +55,24 @@ Extras if time allows, one per hard point:
 | Scope drift (workflows, tickets, fault detection) | Check every feature against the [scope checklist](challenge.md#scope-checklist) |
 | Demo breaks live | Recorded backup video; cached LLM results |
 
+### Over-linking: a case from the deployed workbench (2026-11-07)
+
+On the deployed workbench (Gemini), the thread "TRN-088 first step after SFP swap" gave `ctx_0001` (Erkki: bounce first). It reached 9 elements, 4 of them wrongly:
+
+- **TRN-240, a TX-5000** at the same site. The thread names the site ("Kangas"), and the linker bound every site as scope (`applies_to`), so the advice reached everything there. **Fixed:** when a class or an element already carries the scope, the site is bound as `observed_on` (where it was seen), and `get_context` counts `observed_on` only for the entity itself (`link.py`, `store.py`, tests in `tests/test_link.py`). Site-only knowledge (site access) is unchanged.
+- **TRN-154, TRN-176, TRN-208, TX-3000s from 2020–2022.** Erkki said "the old TX-3000s"; the extractor kept the model and dropped "old", so the class covers every TX-3000. **Not fixed**, options below.
+
+Possible improvements (proposals, not decided):
+
+| Proposal | Effort | Trade-off |
+| --- | --- | --- |
+| Prompt rule: a class narrowed only by a vague word ("old", "legacy", "older units") with no year range is not filled; bind the instance only | ~10 min | More precise, but the advice no longer reaches the other old units until someone states years. Changes LLM behaviour: re-check the eval scenarios |
+| Let the extractor return the qualifier (`scope.qualifier: "old"`) and have the linker turn it into a note "class wider than stated" plus a lower confidence | ~45 min | Keeps reach but makes the doubt visible; contract change in `models.Scope` |
+| Linker note when a rule reaches an element of another model or type than the one cited in the thread | ~20 min | Detection only, no fix; cheap guard for the demo |
+| Show the reach ("reaches 9 elements") on each knowledge card and in the pipeline Store step, with the elements the thread did not name highlighted | ~30 min | UI only; makes over-linking visible to a human reviewer at once |
+| Eval scenario for this case (vague "old" + site name in text) with the expected reach | ~20 min | Prevents regressions; needs an agreed expected answer |
+| Topic naming: the scenario expects `sfp-swap-first-step`, the LLM gave `tx-3000-post-sfp-swap-zero-counters`, so the eval counts one miss and one unexpected for the same knowledge. Compare on (type, scope, action) or give known topics to the prompt | ~30 min | Fairer eval; touches `processor.py` eval or the prompt |
+
 ## Open questions for the Elisa mentors
 
 Joni or Matti, at the Elisa stand or on Discord.
