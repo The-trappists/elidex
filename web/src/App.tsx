@@ -11,8 +11,10 @@ import LivePage from './pages/LivePage'
 import LlmLogPage from './pages/LlmLogPage'
 import GraphPage from "./pages/GraphPage"
 import NetworkPage from './pages/NetworkPage'
+import ReviewPage from './pages/ReviewPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
+import { connectReview } from './store/review'
 
 function AnimatedRoutes() {
   const { pathname } = useLocation()
@@ -24,6 +26,7 @@ function AnimatedRoutes() {
         <Route path="/" element={<LivePage />} />
         <Route path="/conversations" element={<ConversationsPage />} />
         <Route path="/conversations/:threadId" element={<ConversationsPage />} />
+        <Route path="/review" element={<ReviewPage />} />
         <Route path="/network" element={<NetworkPage />} />
         <Route path="/graph" element={<GraphPage />} />
         <Route path="/knowledge" element={<KnowledgePage />} />
@@ -37,6 +40,7 @@ function AnimatedRoutes() {
 
 export default function App() {
   useEffect(() => connectLive(), [])
+  useEffect(() => connectReview(), [])
   const ready = useLive((s) => s.ready)
   return (
     <BrowserRouter>

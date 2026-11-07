@@ -39,7 +39,7 @@ export class ApiError extends Error {
   }
 }
 
-async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
+export async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`/api${path}`, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -60,7 +60,7 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
 }
 
 const enc = encodeURIComponent
-const qs = (params: Record<string, string | number | boolean | null | undefined>) => {
+export const qs = (params: Record<string, string | number | boolean | null | undefined>) => {
   const p = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
   return p.length ? '?' + p.map(([k, v]) => `${k}=${enc(String(v))}`).join('&') : ''
 }
