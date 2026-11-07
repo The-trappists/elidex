@@ -32,6 +32,21 @@ LLM_FALLBACK_API_KEY = os.getenv("LLM_FALLBACK_API_KEY", "")
 LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "")
 LLM_FALLBACK_JSON_MODE = os.getenv("LLM_FALLBACK_JSON_MODE", LLM_JSON_MODE)
 
+
+def _default_reasoning_effort(base_url: str) -> str:
+    # Gemini "thinks" by default, which makes extraction calls slow; other providers may reject the parameter.
+    return "low" if "generativelanguage.googleapis.com" in base_url else ""
+
+
+def _reasoning_effort(env_name: str, base_url: str) -> str:
+    """"minimal", "low", "medium" or "high" are sent as `reasoning_effort`; "off" or empty sends nothing."""
+    value = os.getenv(env_name, _default_reasoning_effort(base_url)).strip().lower()
+    return "" if value in ("off", "none", "false", "0") else value
+
+
+LLM_REASONING_EFFORT = _reasoning_effort("LLM_REASONING_EFFORT", LLM_BASE_URL)
+LLM_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_FALLBACK_REASONING_EFFORT", LLM_FALLBACK_BASE_URL)
+
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
 
 
