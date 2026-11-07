@@ -337,6 +337,53 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
     )
 
 
+# ---------------------------------------------------------------- knowledge graph (see docs/knowledge-graph.md)
+
+
+def _kg(request: Request):
+    """The graph, rebuilt from the live store and the live threads (a view: cheap at this size).
+
+    A thread without messages has no start time yet, so it is left out until its first message.
+    """
+    from ..graph import KnowledgeGraph
+
+    wb = get_wb(request)
+    threads = [t.to_thread() for t in wb.threads.values() if t.messages]
+    return wb, KnowledgeGraph.build(wb.store, threads)
+
+
+@router.get("/graph/stats")
+async def graph_stats(request: Request) -> dict:
+    return _kg(request)[1].stats()
+
+
+@router.get("/graph/provenance/{assertion_id}")
+async def graph_provenance(assertion_id: str, request: Request) -> list[dict]:
+    return _kg(request)[1].provenance(assertion_id)
+
+
+@router.get("/graph/reach/{assertion_id}")
+async def graph_reach(assertion_id: str, request: Request) -> dict:
+    return _kg(request)[1].reach(assertion_id)
+
+
+@router.get("/graph/experts")
+async def graph_experts(request: Request, entity_id: str | None = None, at: datetime | None = None) -> list[dict]:
+    wb, kg = _kg(request)
+    return kg.experts(entity_id, at=at or wb.now())
+
+
+@router.get("/graph/timeline/{entity_id}")
+async def graph_timeline(entity_id: str, request: Request, at: datetime | None = None) -> list[dict]:
+    wb, kg = _kg(request)
+    return kg.timeline(entity_id, at=at or wb.now())
+
+
+@router.get("/graph/mentions/{entity_id}")
+async def graph_mentions(entity_id: str, request: Request) -> list[dict]:
+    return _kg(request)[1].mentions(entity_id)
+
+
 # ---------------------------------------------------------------- data, settings, slack
 
 

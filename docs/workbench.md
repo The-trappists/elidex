@@ -73,6 +73,13 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 | `POST /incidents/{id}/resolve` | | `Incident` |
 | `DELETE /incidents/{id}` | | 204 |
 | `GET /context/{entity}?at=&include_expired=` | | `[{matched_via, ...ContextAssertion}]`; `at` defaults to sim now |
+| `GET /graph/provenance/{assertion_id}` | | Source messages of an assertion, verbatim (see [knowledge-graph.md](knowledge-graph.md)) |
+| `GET /graph/reach/{assertion_id}` | | `{elements: {id: via}, sites}`: what a rule reaches (over-linking check) |
+| `GET /graph/experts?entity_id=&at=` | | People who stated knowledge about the entity, most verified first |
+| `GET /graph/timeline/{entity}?at=` | | Every advice that covered the entity, with status at `at`, closing and conflicts |
+| `GET /graph/mentions/{entity}`, `/graph/stats` | | Raw messages naming the entity; node and edge counts |
+
+The `/graph/*` views are rebuilt on each call from the live store and live threads. The Network page Inspector shows them: "Where it comes from" and "What it reaches" on knowledge, "History of advice" and "Who to ask" on an element.
 | `DELETE /assertions/{id}` | | 204 |
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
 | `POST /agent/run` | `AgentRunBody` | `AgentRunResult` |

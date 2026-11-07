@@ -5,6 +5,11 @@ import type {
   AgentRunResult,
   ClockState,
   ContextHit,
+  GraphExpert,
+  GraphMention,
+  GraphProvenance,
+  GraphReach,
+  GraphTimelineRow,
   GuardBody,
   GuardVerdict,
   Incident,
@@ -110,6 +115,13 @@ export const api = {
   context: (entity: string, at?: string | null, includeExpired = false) =>
     req<ContextHit[]>('GET', `/context/${enc(entity)}${qs({ at, include_expired: includeExpired })}`),
   deleteAssertion: (id: string) => req<void>('DELETE', `/assertions/${enc(id)}`),
+  provenance: (assertionId: string) => req<GraphProvenance[]>('GET', `/graph/provenance/${enc(assertionId)}`),
+  reach: (assertionId: string) => req<GraphReach>('GET', `/graph/reach/${enc(assertionId)}`),
+  experts: (entityId: string, at?: string | null) =>
+    req<GraphExpert[]>('GET', `/graph/experts${qs({ entity_id: entityId, at })}`),
+  timeline: (entityId: string, at?: string | null) =>
+    req<GraphTimelineRow[]>('GET', `/graph/timeline/${enc(entityId)}${qs({ at })}`),
+  mentions: (entityId: string) => req<GraphMention[]>('GET', `/graph/mentions/${enc(entityId)}`),
   guard: (body: GuardBody) => req<GuardVerdict>('POST', '/guard', body),
   agentRun: (body: AgentRunBody) => req<AgentRunResult>('POST', '/agent/run', body),
 

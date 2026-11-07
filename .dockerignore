@@ -13,6 +13,7 @@ out
 .ruff_cache
 .claude
 images
-demo
+demo/dist
+demo/app.py
 tests
 deploy

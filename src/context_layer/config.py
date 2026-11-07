@@ -49,6 +49,12 @@ LLM_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_FALLBACK_REASONING_EFFORT
 
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
 
+# Optional Neo4j mirror of the knowledge graph (`ctx graph push`, docs/knowledge-graph.md).
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE") or None
+
 
 def _key_set(key: str) -> bool:
     return bool(key) and key != "your-key-here"
@@ -72,6 +78,7 @@ WORKBENCH_SEED_DIR = DATA_DIR / "workbench"
 WORKBENCH_SIM_START = os.getenv("WORKBENCH_SIM_START", "2026-10-20T07:30")
 WORKBENCH_IDLE_SECONDS = float(os.getenv("WORKBENCH_IDLE_SECONDS", "8"))
 WEB_DIST_DIR = ROOT / "web" / "dist"
+DEMO_DIST_DIR = ROOT / "demo" / "dist"  # product demo (static, built with --base=/demo/), served at /demo/
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "")
 SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN", "")

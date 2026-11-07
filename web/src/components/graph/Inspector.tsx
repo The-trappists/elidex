@@ -8,6 +8,7 @@ import { useLive } from '../../store/live'
 import { useContextHits } from '../incidents/useContextHits'
 import { Badge, Button, EmptyState, IdChip, Toggle } from '../ui'
 import { ContextCard } from './ContextCard'
+import { Experts, Provenance, Reach, Timeline } from './GraphSections'
 import { classMembers, classesOf, type NodeKind } from './graphModel'
 
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
@@ -97,6 +98,12 @@ function ElementInfo({ id, at, onSelect }: P) {
           <None>Nothing known about {id} at this time.</None>
         )}
       </Section>
+      <Section title="History of advice">
+        <Timeline entityId={id} at={at} onSelect={(aid) => onSelect(aid, 'assertion')} />
+      </Section>
+      <Section title="Who to ask">
+        <Experts entityId={id} at={at} />
+      </Section>
       <Section title="Incidents" count={mine.length}>
         {mine.length ? (
           <ul className="space-y-1.5">
@@ -177,7 +184,7 @@ function ClassInfo({ id, at, onSelect }: P) {
   )
 }
 
-function AssertionInfo({ id, at }: P) {
+function AssertionInfo({ id, at, onSelect }: P) {
   const nav = useNavigate()
   const a = useLive((s) => s.assertions[id])
   if (!a) return <EmptyState title="Knowledge not found" hint={id} />
@@ -188,6 +195,12 @@ function AssertionInfo({ id, at }: P) {
         <ContextCard a={a} at={at} />
         <Button className="mt-3 w-full" onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(a.id)}`)}>Open in Knowledge</Button>
       </div>
+      <Section title="Where it comes from">
+        <Provenance assertionId={a.id} />
+      </Section>
+      <Section title="What it reaches">
+        <Reach assertionId={a.id} onSelect={(el) => onSelect(el, 'element')} />
+      </Section>
     </div>
   )
 }

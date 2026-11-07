@@ -427,6 +427,56 @@ export interface ContextHit extends ContextAssertion {
   matched_via: string
 }
 
+// Knowledge graph views (GET /api/graph/*, see docs/knowledge-graph.md)
+export interface GraphProvenance {
+  message: string | null // null when the thread is known but the message is not loaded
+  file: string | null
+  source: SourceKind | null
+  seq: number | null
+  author: string | null
+  role: string | null
+  sent_at: string | null
+  text: string | null
+}
+
+export interface GraphReach {
+  assertion: string
+  elements: Record<string, string> // element id -> how it is reached ("direct", a class id, "site X")
+  sites: string[]
+}
+
+export interface GraphExpert {
+  person: string
+  role: string | null
+  assertions: string[]
+  verified: number
+}
+
+export interface GraphTimelineRow {
+  id: string
+  type: AssertionType
+  topic: string
+  summary: string
+  matched_via: string
+  valid_from: string
+  valid_to: string | null
+  status: 'future' | 'valid' | 'closed'
+  closed_by: string | null
+  conflicts_with: string[]
+  stated_by: string
+  trust: TrustLevel
+}
+
+export interface GraphMention {
+  message: string
+  file: string
+  seq: number
+  author: string
+  sent_at: string
+  text: string
+  extracted_into: string[] // assertion ids; empty = named in a message but nothing was extracted
+}
+
 export interface AgentRunResult {
   recommendation: string
   hits: ContextHit[]

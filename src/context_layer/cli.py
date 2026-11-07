@@ -1,4 +1,4 @@
-"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx serve`, `ctx mcp`, `ctx workbench`, `ctx llm-check`."""
+"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx serve`, `ctx mcp`, `ctx workbench`, `ctx llm-check`."""
 
 import argparse
 import json
@@ -75,6 +75,47 @@ def cmd_agent(args: argparse.Namespace) -> None:
     print("=" * 80)
 
 
+def cmd_graph(args: argparse.Namespace) -> None:
+    from .graph import KnowledgeGraph, to_cypher, to_cytoscape, to_node_link
+
+    kg = KnowledgeGraph.build(load_store())
+    at = datetime.fromisoformat(args.at) if getattr(args, "at", None) else None
+    g = kg.snapshot(at) if at and args.graph_cmd == "export" else kg.g
+
+    if args.graph_cmd == "stats":
+        out = kg.stats()
+    elif args.graph_cmd == "export":
+        if args.format == "cypher":
+            text = to_cypher(g)
+        else:
+            data = to_cytoscape(g) if args.format == "cytoscape" else to_node_link(g)
+            text = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+        if args.out:
+            with open(args.out, "w", encoding="utf-8") as f:
+                f.write(text)
+            print(f"Wrote {args.out} ({g.number_of_nodes()} nodes, {g.number_of_edges()} edges)")
+        else:
+            sys.stdout.write(text)
+        return
+    elif args.graph_cmd == "push":
+        from .graph.neo4j_sync import push
+
+        if not config.NEO4J_PASSWORD or config.NEO4J_PASSWORD.startswith("your-"):
+            sys.exit("Set NEO4J_PASSWORD in .env (see deploy/docker-compose.neo4j.yml).")
+        out = push(g, config.NEO4J_URI, config.NEO4J_USER, config.NEO4J_PASSWORD, config.NEO4J_DATABASE, wipe=args.wipe)
+    elif args.graph_cmd == "provenance":
+        out = kg.provenance(args.assertion)
+    elif args.graph_cmd == "reach":
+        out = kg.reach(args.assertion)
+    elif args.graph_cmd == "experts":
+        out = kg.experts(args.entity, at=at)
+    elif args.graph_cmd == "timeline":
+        out = kg.timeline(args.entity, at=at)
+    elif args.graph_cmd == "mentions":
+        out = kg.mentions(args.entity)
+    print(json.dumps(out, indent=2, ensure_ascii=False, default=str))
+
+
 def cmd_serve(args: argparse.Namespace) -> None:
     import uvicorn
 
@@ -122,6 +163,25 @@ def main(argv: list[str] | None = None) -> None:
     ag.add_argument("--guard", action="store_true", help="MVP B: check the planned action before acting")
     ag.add_argument("--llm", action="store_true", help="let the LLM phrase the plan")
     ag.set_defaults(func=cmd_agent)
+
+    gr = sub.add_parser("graph", help="knowledge graph: stats, export, Neo4j push, provenance, experts...")
+    gsub = gr.add_subparsers(dest="graph_cmd", required=True)
+    gsub.add_parser("stats", help="node and edge counts by type")
+    ex = gsub.add_parser("export", help="write the graph as JSON, Cytoscape elements or a Cypher script")
+    ex.add_argument("--format", choices=["json", "cytoscape", "cypher"], default="json")
+    ex.add_argument("--at", help="ISO datetime: only assertions valid then")
+    ex.add_argument("--out", help="file to write (default: stdout)")
+    pu = gsub.add_parser("push", help="MERGE the graph into Neo4j (NEO4J_* in .env)")
+    pu.add_argument("--wipe", action="store_true", help="delete our nodes in Neo4j first")
+    for name, helptext in (("provenance", "messages an assertion came from"), ("reach", "elements an assertion reaches")):
+        sp = gsub.add_parser(name, help=helptext)
+        sp.add_argument("assertion", help="assertion id, e.g. ctx_0002")
+    for name, helptext in (("experts", "who knows about an entity"), ("timeline", "an entity's knowledge over time"),
+                           ("mentions", "raw messages naming an entity")):
+        sp = gsub.add_parser(name, help=helptext)
+        sp.add_argument("entity", nargs="?" if name == "experts" else None, help="element or site ID, e.g. TRN-117")
+        sp.add_argument("--at", help="ISO datetime (default: now)")
+    gr.set_defaults(func=cmd_graph)
 
     srv = sub.add_parser("serve", help="REST API (FastAPI)")
     srv.add_argument("--host", default="127.0.0.1")

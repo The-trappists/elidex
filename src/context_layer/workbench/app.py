@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 from .. import config
 from .processor import install_llm_sinks
@@ -87,21 +87,36 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
     return app
 
 
+def _static_response(dist: Path, path: str) -> FileResponse:
+    """A file under `dist`, or its index.html (SPA fallback). Never leaves `dist`."""
+    target = (dist / path).resolve()
+    if path and target.is_file() and dist.resolve() in target.parents:
+        return FileResponse(target)
+    return FileResponse(dist / "index.html")
+
+
 def _serve_web(app: FastAPI) -> None:
-    """Serve the built UI with an SPA fallback, when web/dist exists."""
+    """Serve the built UI with an SPA fallback, when web/dist exists; the product demo at /demo/."""
+    demo = Path(config.DEMO_DIST_DIR)
+    if demo.is_dir():
+
+        @app.get("/demo", include_in_schema=False)
+        async def demo_redirect():
+            return RedirectResponse("/demo/")
+
+        @app.get("/demo/{path:path}", include_in_schema=False)
+        async def demo_app(path: str):
+            return _static_response(demo, path)
+
     dist = Path(config.WEB_DIST_DIR)
     if not dist.is_dir():
         return
-    index = dist / "index.html"
 
     @app.get("/{path:path}", include_in_schema=False)
     async def spa(path: str):
         if path == "api" or path.startswith("api/"):
             raise HTTPException(404, "not found")
-        target = (dist / path).resolve()
-        if path and target.is_file() and dist.resolve() in target.parents:
-            return FileResponse(target)
-        return FileResponse(index)
+        return _static_response(dist, path)
 
 
 app = create_app()
