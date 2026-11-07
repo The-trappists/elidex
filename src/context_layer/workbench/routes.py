@@ -319,7 +319,7 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         observations=body.observations,
         planned_action=body.planned_action,
     )
-    kwargs = dict(use_conditions=wb.settings.use_conditions, use_guard=wb.settings.use_guard, use_llm=body.use_llm)
+    kwargs = dict(use_guard=wb.settings.use_guard, use_llm=body.use_llm)
     try:
         if body.use_llm:
             report = await asyncio.to_thread(agent_mod.run_agent, wb.store, case, **kwargs)
