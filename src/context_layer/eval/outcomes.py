@@ -9,29 +9,30 @@ from __future__ import annotations
 
 from ..agent import Case, run_agent
 from ..mvp import feedback
-from .kb import EvalSpec, KnowledgeBase, key
+from .kb import EvalSpec, KnowledgeBase
 from .retrieval import label_key
 
 
-def replay_outcomes(kb: KnowledgeBase, spec: EvalSpec) -> list[dict]:
-    """Record every labelled outcome on the rule it is about. Returns one row per outcome."""
+def replay_outcomes(kb: KnowledgeBase, spec: EvalSpec, label_of: dict) -> list[dict]:
+    """Record every labelled outcome on the rule it is about (matched through the labels: an LLM names topics its
+    own way). Returns one row per outcome."""
     rows = []
     for o in sorted(spec.outcomes, key=lambda o: o.at):
         targets = [a for a in kb.store.assertions.values()
-                   if key(a.type, a.topic) == o.rule and any(s.file == o.source for s in a.sources)]
+                   if label_key(a, label_of) == o.rule and any(s.file == o.source for s in a.sources)]
         if not targets:
             rows.append({"id": o.id, "expected": o.expect_worked, "got": "rule not found", "right": False})
             continue
-        got = None
-        for a in targets:
-            recorded = feedback.record(a, kb.store.resolve(o.entity_id), o.at, o.after, case_id=o.id)
-            got = recorded.worked if recorded else None
+        # An LLM can split one piece of knowledge into several rules: the verdict is the one recorded, if any.
+        verdicts = [r.worked for a in targets
+                    if (r := feedback.record(a, kb.store.resolve(o.entity_id), o.at, o.after, case_id=o.id))]
+        got = verdicts[0] if len(set(verdicts)) == 1 else (None if not verdicts else "split")
         rows.append({"id": o.id, "expected": o.expect_worked, "got": got, "right": got == o.expect_worked})
     return rows
 
 
 def score_outcomes(kb: KnowledgeBase, spec: EvalSpec, label_of: dict) -> dict:
-    rows = replay_outcomes(kb, spec)
+    rows = replay_outcomes(kb, spec, label_of)
     cases = []
     for c in spec.cases:
         case = Case(id=c.id, title=c.why, entity_id=c.entity_id, at=c.at, description=c.why, observations=c.observations)

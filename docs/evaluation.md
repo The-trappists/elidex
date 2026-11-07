@@ -48,7 +48,16 @@ An LLM's topic slugs rarely match the labels, so items are matched by type and s
 | plain | 73% | 100% | 70% | 9 |
 | with conditions | 100% | 100% | 100% | 0 |
 
-Plain retrieval always finds the solution but adds useless knowledge in 7 of 26 cases. For example, it returns the old-unit SFP rule when counters are moving, or the TX-5000 power-dip advice for an SFP problem. Condition checks remove all of it. With labels as the extractor, extraction scores are 100% by construction, so **the real extractor has not been measured yet**: run `--extractor llm`.
+Plain retrieval always finds the solution but adds useless knowledge in 7 of 26 cases. For example, it returns the old-unit SFP rule when counters are moving, or the TX-5000 power-dip advice for an SFP problem. Condition checks remove all of it. With labels as the extractor, extraction scores are 100% by construction.
+
+### With the real LLM extractor (run 2026-11-07 14:51, re-scored with `--extractor cache`)
+
+| Mode | Accuracy | Solution found | Precision | Noise items |
+| --- | --- | --- | --- | --- |
+| plain | 35% | 95% | 43% | 27 |
+| with conditions | **62%** | 95% | 59% | 14 |
+
+The LLM finds the knowledge (item recall 96%), but binds it too widely: binding exact is only 41%. 15 of its 24 items get an element class, 14 of them on top of the one unit the chat was about, and 7 of those classes have no type (`class:any:ru-200`). Unit-specific advice then reaches every unit of that model. Example: the frost tip stated for RAD-176 comes back for RAD-198 and RAD-221. This, not ranking, is the main accuracy gap. "Fully checked" drops to 83% precision. Field feedback still scores 6/6 with 0 false alarms. The 3 new scenarios are not in the cache yet: rerun `--extractor llm`.
 
 ## 3. Edge cases: what if the agent knows less? (check status)
 
