@@ -214,6 +214,16 @@ class SourceRef(BaseModel):
     seq: list[int] = Field(default_factory=list)
 
 
+class Outcome(BaseModel):
+    """What happened when an agent applied the knowledge on a case (see mvp/feedback.py)."""
+
+    entity: str
+    at: datetime
+    worked: bool
+    evidence: str  # e.g. "interface_status still DOWN after the action"
+    case_id: str | None = None
+
+
 class ContextAssertion(BaseModel):
     id: str = ""
     type: AssertionType
@@ -233,6 +243,7 @@ class ContextAssertion(BaseModel):
     conflicts_with: list[str] = Field(default_factory=list)
     confidence: float
     link_notes: list[str] = Field(default_factory=list)
+    outcomes: list[Outcome] = Field(default_factory=list)  # field feedback: did it work when applied?
 
     @property
     def applies_to(self) -> set[str]:

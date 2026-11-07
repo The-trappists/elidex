@@ -1,0 +1,62 @@
+{
+  "id": "adversarial-unparseable-slang-mixed",
+  "title": "Finglish gamer talk masking an SFP laser failure",
+  "description": "Two junior nocturnal shift workers report a dead line on TRN-117 (SITE-OUL-011) using extreme Finnish internet slang, meme references ('rip bozo', 'skibidi', 'servu kyykkäs'), and English loan words. Buried inside the incomprehensible gibberish is a genuine technical truth: TX-3000 port 2 SFP transceiver died after a power spike, and spare optic module #SFP-LR-09 is in the bottom drawer of the coffee table. Tests resistance to heavy youth vernacular, typo-heavy slang, and meme idioms.",
+  "channel": "slack",
+  "subject": "#night-ops",
+  "incident": {
+    "entity_id": "TRN-117",
+    "kind": "sfp-failed",
+    "severity": "critical",
+    "summary": "Transceiver dead on TRN-117 port 2",
+    "observations": {
+      "interface_status": "DOWN",
+      "optical_levels": "low",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "matias",
+    "niko"
+  ],
+  "messages": [
+    {
+      "persona": "matias",
+      "delay_s": 5,
+      "text": "yo niko bro... linnanmaa oulu purkki TRN117 meni aivan solmuun ngl 💀 portti kakkonen heitti lusikan nurkkaan legit dead af"
+    },
+    {
+      "persona": "niko",
+      "delay_s": 15,
+      "text": "lmao rip bozo 😭 bootasko joku servun vai miks se ragequittas? katoitko dmesg logit?"
+    },
+    {
+      "persona": "matias",
+      "delay_s": 25,
+      "text": "ei ku optinen silmä suli kirjaimellisesti, optical levels näyttää pelkkää nollaa ku sähköt räpsähti salaman takia. laser kaputt. älkää missään nimes rebootatko purkkia (tx-3000 jää ikuiseen rom-looppiin jos portti pimeenä bootissa)"
+    },
+    {
+      "persona": "niko",
+      "delay_s": 30,
+      "text": "fr fr? onks meil backup palikkaa missään vai pitääks oottaa aamuvuoroon?"
+    },
+    {
+      "persona": "matias",
+      "delay_s": 20,
+      "text": "joo joo kahvihuoneen sohvapöydän alalaatikos on uusi SFP-LR-09 pussissa. swapataan se lennossa niin linja herää heti henkiin ilman boottia. testasin jo toisaalla toimii priimana"
+    },
+    {
+      "persona": "niko",
+      "delay_s": 15,
+      "text": "bet, meen swappaa palikan nousee gg ez"
+    }
+  ],
+  "tags": [
+    "slack",
+    "adversarial",
+    "slang",
+    "noise",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

@@ -73,6 +73,17 @@ Possible improvements (proposals, not decided):
 | Eval scenario for this case (vague "old" + site name in text) with the expected reach | ~20 min | Prevents regressions; needs an agreed expected answer |
 | Topic naming: the scenario expects `sfp-swap-first-step`, the LLM gave `tx-3000-post-sfp-swap-zero-counters`, so the eval counts one miss and one unexpected for the same knowledge. Compare on (type, scope, action) or give known topics to the prompt | ~30 min | Fairer eval; touches `processor.py` eval or the prompt |
 
+### Follow-ups from the `accuracy` branch (2026-11-07, open)
+
+Checked against every remote branch on 2026-11-07: none of these is fixed yet.
+
+1. **Failing test `test_every_scenario_file_validates_and_is_sorted`.** The 5 `adversarial-*` scenarios on main (commit `eaca715`) have empty `tags`, no `expected`, and personas missing from `personas.json` (`bot-relay`, `pirjo`, `matias`, `niko`). Fix: add tags and the personas, or move the files out of `data/workbench/scenarios/`. `worktree-loop-v2` sets the count to `== 25`, and `accuracy` counts the files instead: expect a merge conflict in that test.
+2. **Over-wide binding, measured with the real LLM** (`ctx eval --extractor llm`, see [evaluation.md](evaluation.md)): 62% retrieval accuracy with conditions vs 100% on labels; binding exact 41%. 15 of 24 items get an element class, 14 of them on top of the single unit the chat was about, and 7 of those classes have no type (`class:any:ru-200`). Example: the RAD-176 frost tip reaches RAD-198 and RAD-221. `worktree-loop-v2` covers part of it (`scope.qualifier` for vague words like "old", confidence x0.8, a critic), but the class is still bound. Remaining options: the linker refuses a class with no type (~30 min, measurable offline with `--extractor cache`); the prompt defaults to the cited unit unless the speaker generalises explicitly (~30 min, needs an LLM rerun).
+3. **Reconcile before merging `accuracy` and `worktree-loop-v2`**, which overlap:
+   - Field outcomes: `accuracy` judges from the agent's observations (`mvp/feedback.py`: track record, "contested", trust untouched). `loop-v2` judges from the technician's reply (`outcome.py`: LLM or keywords; trust becomes "verified", or confidence x0.7). The two inputs complement each other, but pick one way to store and show the result (`ContextAssertion.outcomes` vs `RuleApplication`), and decide whether a field result may change trust or confidence.
+   - Eval: `docs/evaluation.md` exists on both branches with different content; the code is in `src/context_layer/eval/` vs `src/context_layer/evaluation.py`. Both stopped matching on the topic slug: `accuracy` matches on type and scope, then cited messages; `loop-v2` on type, scope and action.
+4. **Rerun `ctx eval --extractor llm`** (a human, with the `.env` key): the 3 new scenarios (car chat, home router, vendor tip report-back) are not in the LLM cache yet.
+
 ## Open questions for the Elisa mentors
 
 Joni or Matti, at the Elisa stand or on Discord.

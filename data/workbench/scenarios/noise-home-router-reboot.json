@@ -1,0 +1,56 @@
+{
+  "id": "noise-home-router-reboot",
+  "title": "Noise: a home router that needs a reboot, same brand as ours",
+  "description": "A NOC operator and a customer service agent chat about the operator's home Wi-Fi router. It names a reboot fix and jokes that it is the same make as the network's RT-9 routers. Nothing must be extracted, and nothing must bind to the RT-9 class.",
+  "channel": "slack",
+  "subject": "#random",
+  "incident": null,
+  "participants": [
+    "helmi",
+    "outi"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "my home wifi died again last night in the middle of a movie 🙄"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 30,
+      "text": "same router as before?"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 25,
+      "text": "yes. funny thing, it's the same maker as our RT-9s, just the tiny home version"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 20,
+      "text": "pulling the power for 30 seconds fixes it every time. so I just reboot it every evening now"
+    },
+    {
+      "persona": "outi",
+      "delay_s": 40,
+      "text": "lol, I'd just ask the shop for a new one. mine dropped every day until I moved it off the fridge"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 15,
+      "text": "it IS on the fridge... ok trying that tonight"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": []
+  },
+  "tags": [
+    "slack",
+    "noise",
+    "trap",
+    "looks-technical",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

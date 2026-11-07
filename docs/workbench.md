@@ -103,6 +103,7 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
 | `POST /agent/run` | `AgentRunBody` | `AgentRunResult`. With `use_outcome_loop` on and knowledge applied, it also posts the ops agent message and returns the optional `thread_id` and `applications` |
 | `GET /applications?assertion_id=&thread_id=&outcome=` | | `RuleApplication[]`, newest first (outcome loop) |
+| `POST /agent/outcome` | `OutcomeBody` | `{recorded, track_record, line}`: did the knowledge work when applied? Field feedback judged from the agent's own observations (see `docs/evaluation.md` §4). Separate from the outcome loop above, which reads technicians' replies |
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
 | `DELETE /data/generated` | | `{removed: {kind: count}}`, then emits `state.reset` |
 | `GET /data/export` | | the full state JSON (attachment) |

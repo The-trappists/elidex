@@ -97,6 +97,13 @@ export function kgStyle(): cytoscape.StylesheetJson {
     { selector: 'node.focus', style: { 'border-color': accent, 'border-width': 3, color: text } },
     { selector: 'edge.focus', style: { opacity: 1, width: 1.6, 'line-color': accent, 'target-arrow-color': accent, label: 'data(name)' } },
     { selector: 'node.match', style: { 'border-color': accent, 'border-width': 3 } },
+    { selector: 'node.agent-evidence', style: { 'background-color': '#fef08a', 'border-color': '#eab308', 'border-width': 3, color: '#713f12', opacity: 1, 'overlay-color': '#fde047', 'overlay-opacity': 0.12, 'overlay-padding': 3 } },
+    { selector: 'edge.agent-evidence-edge', style: { 'line-color': '#facc15', 'line-outline-color': '#fef08a', 'line-outline-width': 2, 'target-arrow-color': '#facc15', opacity: 1, width: 2.5, 'line-dash-pattern': [9, 7], 'line-dash-offset': 0 } },
+    { selector: 'edge.agent-flow-forward', style: { 'target-arrow-shape': 'triangle', 'source-arrow-shape': 'none' } },
+    { selector: 'edge.agent-flow-reverse', style: { 'source-arrow-shape': 'triangle', 'source-arrow-color': '#facc15', 'target-arrow-shape': 'none' } },
+    { selector: 'node.agent-dim', style: { opacity: 0.1 } },
+    { selector: 'edge.agent-dim', style: { opacity: 0.06 } },
+    { selector: 'node.agent-target', style: { 'background-color': '#facc15', 'border-color': '#854d0e', 'border-width': 4, color: '#422006', 'font-weight': 700, width: 30, height: 26 } },
     { selector: 'core', style: { 'active-bg-color': line } },
   ] as unknown as cytoscape.StylesheetJson
 }

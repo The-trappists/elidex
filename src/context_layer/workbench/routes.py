@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 
 from .. import agent as agent_mod
 from .. import config, llm_check
-from ..mvp import guard
+from ..mvp import feedback, guard
 from ..models import Message
 from . import generator, persistence
 from .contracts import (
@@ -31,7 +31,7 @@ from .contracts import (
     LlmCheckResult,
     NewThreadBody,
     OperatorEdit,
-    UndoBody,
+    OutcomeBody,
     Persona,
     PipelineJob,
     PostMessageBody,
@@ -46,6 +46,7 @@ from .contracts import (
     SpeedBody,
     StateSnapshot,
     TopologyLink,
+    UndoBody,
     WbElement,
     WbSite,
 )
@@ -428,7 +429,11 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         observations=body.observations,
         planned_action=body.planned_action,
     )
-    kwargs = dict(use_conditions=wb.settings.use_conditions, use_guard=wb.settings.use_guard, use_llm=body.use_llm)
+    kwargs = dict(
+        use_conditions=wb.settings.use_conditions,
+        use_guard=wb.settings.use_guard,
+        use_llm=body.use_llm,
+    )
     try:
         if body.use_llm:
             report = await asyncio.to_thread(agent_mod.run_agent, wb.store, case, **kwargs)
@@ -453,10 +458,45 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         thread_id=thread_id,
         applications=applications,
         recommendation=report.recommendation,
-        hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in report.hits],
+        hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json"),
+               "track_record": feedback.track_record(h.assertion, case.at).status,
+               **({"check_status": c.status, "to_read": c.to_read} if (c := report.checks.get(h.assertion.id)) else {})}
+              for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,
+        cited_assertion_ids=agent_mod.cited_assertion_ids(report.recommendation, report.hits),
+        evidence_confidence=_evidence_confidence(
+            report.hits,
+            agent_mod.cited_assertion_ids(report.recommendation, report.hits),
+        ),
     )
+
+
+def _evidence_confidence(hits, cited_ids: list[str]) -> float | None:
+    """Transparent aggregate of cited evidence quality, not a model self-rating."""
+    selected = [h.assertion for h in hits if h.assertion.id in cited_ids]
+    if not selected:
+        return None
+    trust = {"hunch": 0.45, "stated": 0.7, "verified": 1.0}
+    scores = [a.confidence * trust.get(a.trust.level, 0.5) for a in selected]
+    # Independent source records add modest support, capped so duplicates do not dominate.
+    support = min(1.0, 0.75 + 0.1 * max(len({s.file for s in a.sources}) - 1 for a in selected))
+    return round(sum(scores) / len(scores) * support, 2)
+
+
+@router.post("/agent/outcome")
+async def agent_outcome(body: OutcomeBody, request: Request) -> dict:
+    """The agent acted on an assertion: record whether it worked, judged from what it observes now."""
+    wb = get_wb(request)
+    a = wb.store.assertions.get(body.assertion_id)
+    if a is None:
+        raise HTTPException(404, f"Unknown assertion {body.assertion_id}")
+    before = wb.assertion_snapshot()
+    at = body.at or wb.now()
+    outcome = feedback.record(a, wb.store.resolve(body.entity_id), at, body.after, worked=body.worked)
+    wb.emit_changes(before)
+    tr = feedback.track_record(a, at)
+    return {"recorded": outcome.model_dump(mode="json") if outcome else None, "track_record": tr.status, "line": tr.line()}
 
 
 # ---------------------------------------------------------------- knowledge graph (see docs/knowledge-graph.md)

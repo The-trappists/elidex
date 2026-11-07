@@ -581,6 +581,8 @@ export interface AgentRunResult {
   verdict: GuardVerdict | null
   thread_id?: string | null // outcome loop: thread the agent message was posted in
   applications?: RuleApplication[]
+  cited_assertion_ids: string[]
+  evidence_confidence: number | null
 }
 
 export interface LlmCheckResult {

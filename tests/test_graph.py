@@ -93,6 +93,20 @@ def test_neighborhood(kg):
     assert {"TRN-117", CLASS_ID, _rule_id(kg)} <= set(sub)
 
 
+def test_where_it_was_seen_does_not_spread_to_the_site():
+    """RAD-198's advice binds its site as 'observed_on': RAD-233 at the same site must not inherit it."""
+    from context_layer.eval.kb import build_kb, load_spec
+
+    kb = build_kb(load_spec())
+    graph = KnowledgeGraph.build(kb.store, [r.thread for r in kb.runs])
+    at = datetime(2026, 10, 20, 6, 0)
+    graph_topics = {r["topic"] for r in graph.timeline("RAD-233", at)}
+    store_topics = {h.assertion.topic for h in kb.store.get_context("RAD-233", at)}
+    assert "cold-morning-link-flap" not in graph_topics
+    assert graph_topics == store_topics
+    assert "cold-morning-link-flap" in {r["topic"] for r in graph.timeline("RAD-198", at)}
+
+
 def test_exports(kg):
     assert len(to_node_link(kg.g)["nodes"]) == kg.g.number_of_nodes()
     els = to_cytoscape(kg.g)

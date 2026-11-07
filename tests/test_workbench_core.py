@@ -224,3 +224,18 @@ def test_graph_routes_over_live_state(client):
     # a thread without messages must not break the graph
     client.post("/api/threads", json={"source": "teams", "subject": "Empty"})
     assert client.get("/api/graph/stats").status_code == 200
+
+
+def test_agent_outcome_flags_failing_knowledge(client):
+    seeded(client)
+    assert client.post("/api/agent/outcome", json={"assertion_id": "nope", "entity_id": "TRN-117"}).status_code == 404
+    hits = client.post("/api/agent/run", json={"entity_id": "TRN-117", "at": "2026-10-20T08:00:00"}).json()["hits"]
+    assert hits and all("track_record" in h for h in hits)
+    aid = hits[0]["id"]
+    body = {"assertion_id": aid, "entity_id": "TRN-117", "at": "2026-10-20T09:00:00"}
+    assert client.post("/api/agent/outcome", json=body).json()["recorded"] is None  # nothing observed: no verdict
+    for day in (20, 21):
+        r = client.post("/api/agent/outcome", json=body | {"worked": False, "at": f"2026-10-{day}T09:00:00"}).json()
+    assert r["track_record"] == "contested"
+    hits = client.post("/api/agent/run", json={"entity_id": "TRN-117", "at": "2026-10-22T08:00:00"}).json()["hits"]
+    assert next(h for h in hits if h["id"] == aid)["track_record"] == "contested"

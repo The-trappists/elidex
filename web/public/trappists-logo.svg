@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Radial Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#191c26" />
+      <stop offset="65%" stop-color="#0c0e14" />
+      <stop offset="100%" stop-color="#050608" />
+    </radialGradient>
+
+    <!-- Belgian / Royal Gold Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="25%" stop-color="#eab308" />
+      <stop offset="50%" stop-color="#fde047" />
+      <stop offset="75%" stop-color="#ca8a04" />
+      <stop offset="100%" stop-color="#854d0e" />
+    </linearGradient>
+
+    <!-- Belgian National Trio Gradients -->
+    <linearGradient id="belgianRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f87171" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+
+    <!-- Cyber Paff Neon Vapor Gradient -->
+    <linearGradient id="vaporGrad" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.85" />
+      <stop offset="40%" stop-color="#818cf8" stop-opacity="0.6" />
+      <stop offset="80%" stop-color="#c084fc" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Metallic Paff Body Gradient -->
+    <linearGradient id="paffBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" />
+      <stop offset="40%" stop-color="#0f172a" />
+      <stop offset="70%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <radialGradient id="cyberAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Dark Shield Container -->
+  <circle cx="256" cy="256" r="246" fill="url(#bgGrad)" stroke="url(#goldGrad)" stroke-width="4" />
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#262d3d" stroke-width="1.5" stroke-dasharray="6,4" />
+
+  <!-- Core Glow Aura -->
+  <circle cx="256" cy="240" r="140" fill="url(#cyberAura)" />
+
+  <!-- Constellation / Autonomous Knowledge Network Nodes & Fiber Optics -->
+  <g stroke="#38bdf8" stroke-width="1.3" opacity="0.4" stroke-dasharray="3,3">
+    <line x1="140" y1="180" x2="210" y2="140" />
+    <line x1="210" y1="140" x2="256" y2="110" />
+    <line x1="256" y1="110" x2="302" y2="140" />
+    <line x1="302" y1="140" x2="372" y2="180" />
+    <line x1="140" y1="180" x2="180" y2="260" />
+    <line x1="372" y1="180" x2="332" y2="260" />
+    <line x1="180" y1="260" x2="256" y2="300" />
+    <line x1="332" y1="260" x2="256" y2="300" />
+  </g>
+
+  <!-- Glowing Knowledge Graph Nodes -->
+  <g fill="#7dd3fc" filter="url(#glowEffect)">
+    <circle cx="256" cy="110" r="4.5" />
+    <circle cx="210" cy="140" r="3.5" />
+    <circle cx="302" cy="140" r="3.5" />
+    <circle cx="140" cy="180" r="3" />
+    <circle cx="372" cy="180" r="3" />
+    <circle cx="180" cy="260" r="4" />
+    <circle cx="332" cy="260" r="4" />
+    <circle cx="256" cy="300" r="5" />
+  </g>
+
+  <!-- Belgian Folklore: The Brabant Heraldic Lion (Leo Belgicus) Silhouette -->
+  <!-- Majestic stylized lion rampant silhouette holding the crest/paff -->
+  <g fill="url(#goldGrad)" opacity="0.95">
+    <!-- Lion Head & Roaring Mane -->
+    <path d="M 235 152 C 238 140 248 132 256 130 C 264 132 274 140 277 152 C 285 155 292 165 288 174 C 284 182 276 186 270 188 C 274 195 272 204 265 208 C 260 211 252 211 247 208 C 240 204 238 195 242 188 C 236 186 228 182 224 174 C 220 165 227 155 235 152 Z" />
+    
+    <!-- Lion Crown / Monastic Trappist Halo -->
+    <path d="M 238 132 L 243 120 L 250 127 L 256 116 L 262 127 L 269 120 L 274 132 Z" stroke="#181c26" stroke-width="1.2" />
+
+    <!-- Lion Rampant Body & Armored Muscles -->
+    <path d="M 245 208 C 230 216 220 230 218 248 C 215 264 220 280 232 292 L 235 304 C 230 312 222 320 210 326 C 224 330 240 328 250 320 L 256 325 L 262 320 C 272 328 288 330 302 326 C 290 320 282 312 277 304 L 280 292 C 292 280 297 264 294 248 C 292 230 282 216 267 208 Z" />
+
+    <!-- Lion Claws Left & Right -->
+    <path d="M 220 236 L 196 226 C 192 224 188 228 190 232 L 202 245 C 196 248 194 254 198 258 L 214 262 Z" />
+    <path d="M 292 236 L 316 226 C 320 224 324 228 322 232 L 310 245 C 316 248 318 254 314 258 L 298 262 Z" />
+
+    <!-- Lion Red Claws & Tongue (Traditional Leo Belgicus / Brabant Lion Heraldry) -->
+    <circle cx="256" cy="168" r="2.5" fill="url(#belgianRed)" />
+  </g>
+
+  <!-- BILAL'S PAFF (Vape / Puff Bar) with Cyber Smoke Plumes -->
+  <!-- Futuristic Pod / Paff Device wielded centrally like an ancient scepter / cyber relic -->
+  <g id="bilalsPaff">
+    <!-- Glowing Paff Device Shell -->
+    <rect x="247" y="235" width="18" height="75" rx="5" fill="url(#paffBody)" stroke="url(#goldGrad)" stroke-width="1.8" />
+    
+    <!-- Mouthpiece -->
+    <path d="M 250 235 L 250 223 C 250 221 253 219 256 219 C 259 219 262 221 262 223 L 262 235 Z" fill="#0f172a" stroke="url(#goldGrad)" stroke-width="1.2" />
+
+    <!-- Flavor / Status Indicator Window -->
+    <rect x="252" y="248" width="8" height="18" rx="2" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8" opacity="0.9" />
+
+    <!-- "BILAL" engraved miniature script on the paff body -->
+    <text x="256" y="285" fill="#fde047" font-family="monospace" font-size="5" font-weight="bold" letter-spacing="0.5" text-anchor="middle">
+      BILAL
+    </text>
+
+    <!-- LED Indicator at bottom of Paff -->
+    <circle cx="256" cy="303" r="2" fill="#38bdf8" filter="url(#glowEffect)" />
+
+    <!-- Dynamic "PAFF" Cyber Vapor Plume billowing upward -->
+    <g filter="url(#glowEffect)">
+      <!-- Left vapor cloud wave -->
+      <path d="M 256 218 C 244 205 230 195 215 178 C 205 166 208 152 220 148 C 235 144 246 160 252 172 C 255 180 256 200 256 218 Z" fill="url(#vaporGrad)" />
+      <!-- Right vapor cloud wave -->
+      <path d="M 256 218 C 268 205 282 195 297 178 C 307 166 304 152 292 148 C 277 144 266 160 260 172 C 257 180 256 200 256 218 Z" fill="url(#vaporGrad)" />
+      <!-- Top looping wisp -->
+      <path d="M 256 165 C 248 140 250 115 256 95 C 262 115 264 140 256 165 Z" fill="url(#vaporGrad)" />
+    </g>
+  </g>
+
+  <!-- Circular Arch Text -->
+  <path id="textArcTop" d="M 96 256 A 160 160 0 0 1 416 256" fill="none" />
+  <path id="textArcBottom" d="M 416 256 A 160 160 0 0 1 96 256" fill="none" />
+
+  <text fill="url(#goldGrad)" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="22" letter-spacing="5">
+    <textPath href="#textArcTop" startOffset="50%" text-anchor="middle">
+      THE TRAPPISTS
+    </textPath>
+  </text>
+
+  <text fill="#94a3b8" font-family="monospace" font-weight="600" font-size="13" letter-spacing="5">
+    <textPath href="#textArcBottom" startOffset="50%" text-anchor="middle">
+      FOLKLORE • PAFF • SINCE &apos;26
+    </textPath>
+  </text>
+
+  <!-- Belgian Tri-Color Cockades / Star Accents -->
+  <!-- Top star -->
+  <path d="M 256 68 L 260 80 L 272 84 L 260 88 L 256 100 L 252 88 L 240 84 L 252 80 Z" fill="url(#goldGrad)" />
+  
+  <!-- Side Belgian Cockades (Black, Yellow, Red) -->
+  <g transform="translate(80, 256)">
+    <circle cx="0" cy="0" r="8" fill="#18181b" stroke="#eab308" stroke-width="1.5" />
+    <circle cx="0" cy="0" r="5" fill="#facc15" />
+    <circle cx="0" cy="0" r="2.5" fill="#ef4444" />
+  </g>
+  <g transform="translate(432, 256)">
+    <circle cx="0" cy="0" r="8" fill="#18181b" stroke="#eab308" stroke-width="1.5" />
+    <circle cx="0" cy="0" r="5" fill="#facc15" />
+    <circle cx="0" cy="0" r="2.5" fill="#ef4444" />
+  </g>
+</svg>

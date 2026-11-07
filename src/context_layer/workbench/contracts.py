@@ -434,6 +434,18 @@ class AgentRunResult(BaseModel):
     # outcome loop (only when settings.use_outcome_loop is on and knowledge was applied)
     thread_id: str | None = None  # the thread the agent message was posted in
     applications: list[dict[str, Any]] = Field(default_factory=list)  # RuleApplication JSON
+    cited_assertion_ids: list[str] = Field(default_factory=list)
+    evidence_confidence: float | None = None
+
+
+class OutcomeBody(BaseModel):
+    """After acting on an assertion: what the agent observes now (see mvp/feedback.py)."""
+
+    assertion_id: str
+    entity_id: str
+    after: dict[str, Any] = Field(default_factory=dict)
+    worked: bool | None = None  # overrides the judgment from `after`
+    at: datetime | None = None  # default: sim now
 
 
 class ResetBody(BaseModel):
