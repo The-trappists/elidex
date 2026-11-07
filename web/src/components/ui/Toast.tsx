@@ -48,7 +48,7 @@ export function Toaster() {
       {items.map((t) => {
         const Icon = ICON[t.kind]
         return (
-          <div key={t.id} className="flex items-start gap-2 rounded-lg border border-line bg-surface p-3 text-sm shadow-lg animate-slide-in">
+          <div key={t.id} className="flex items-start gap-2 rounded-xl border border-line glass p-3 text-sm shadow-[var(--shadow-md)] animate-slide-in">
             <Icon size={16} className={cn('mt-0.5 shrink-0', COLOR[t.kind])} />
             <span className="flex-1 break-words">{t.text}</span>
             <button onClick={() => close(t.id)} className="text-muted hover:text-text">

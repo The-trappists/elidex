@@ -1,29 +1,14 @@
-import { Activity, AlertTriangle, BookCheck, Cpu, MessagesSquare, Network, Siren, Workflow } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { AlertTriangle, BookCheck, Cpu, MessagesSquare, Network, Siren, Workflow } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { NetworkGraph } from '../components/graph/NetworkGraph'
 import { validAt } from '../components/graph/graphModel'
 import { IncidentFeed } from '../components/incidents/IncidentFeed'
 import { ChatTicker } from '../components/pipeline/ChatTicker'
 import { PipelineLane } from '../components/pipeline/PipelineLane'
-import { Card, Panel } from '../components/ui'
-import { cn } from '../lib/cn'
+import { Panel, Stat } from '../components/ui'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
-
-function Kpi({ icon, label, value, tone, onClick }: { icon: ReactNode; label: string; value: number; tone?: string; onClick?: () => void }) {
-  return (
-    <div className="flex-1" onClick={onClick}>
-    <Card className={cn('flex items-center gap-3 px-3.5 py-2.5', onClick && 'cursor-pointer hover:border-accent')}>
-      <span className={cn('flex size-9 items-center justify-center rounded-lg bg-surface-2 text-muted', tone)}>{icon}</span>
-      <div className="min-w-0">
-        <div className="text-xl font-semibold leading-none tabular-nums" >{value}</div>
-        <div className="mt-1 truncate text-[11px] text-muted">{label}</div>
-      </div>
-    </Card>
-    </div>
-  )
-}
 
 export default function LivePage() {
   const nav = useNavigate()
@@ -52,21 +37,21 @@ export default function LivePage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 p-3">
       <div className="flex shrink-0 gap-3">
-        <Kpi icon={<Siren size={18} />} label="Open incidents" value={k.open} tone={k.open ? 'bg-bad/15 text-bad' : undefined} />
-        <Kpi icon={<MessagesSquare size={18} />} label="Live conversations" value={k.live} tone={k.live ? 'bg-ok/15 text-ok' : undefined} onClick={() => nav('/conversations')} />
-        <Kpi icon={<BookCheck size={18} />} label="Assertions valid now" value={k.valid} tone="bg-accent-soft text-accent" onClick={() => nav('/knowledge')} />
-        <Kpi icon={<Workflow size={18} />} label="Pipeline jobs today" value={k.jobsToday} />
-        <Kpi icon={<AlertTriangle size={18} />} label="LLM calls with errors" value={k.llmErr} tone={k.llmErr ? 'bg-warn/15 text-warn' : undefined} onClick={() => nav('/llm')} />
+        <Stat icon={<Siren size={19} />} label="Open incidents" hint={k.open ? 'need attention' : 'all clear'} value={k.open} tone={k.open ? 'bad' : 'ok'} onClick={() => nav('/')} />
+        <Stat icon={<MessagesSquare size={19} />} label="Conversations in progress" hint="being read right now" value={k.live} tone={k.live ? 'ok' : 'neutral'} onClick={() => nav('/conversations')} />
+        <Stat icon={<BookCheck size={19} />} label="Things the team knows" hint="valid at this moment" value={k.valid} tone="accent" onClick={() => nav('/knowledge')} />
+        <Stat icon={<Workflow size={19} />} label="Conversations processed today" value={k.jobsToday} />
+        <Stat icon={<AlertTriangle size={19} />} label="AI problems" hint={k.llmErr ? 'see what failed' : 'none'} value={k.llmErr} tone={k.llmErr ? 'warn' : 'ok'} onClick={() => nav('/llm')} />
       </div>
 
       <div className="flex min-h-0 flex-1 gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <Panel
-            title="Network and knowledge"
+            title="Network and what we know about it"
             icon={<Network size={15} />}
             className="min-h-0 flex-[3]"
             bodyClassName="relative overflow-hidden"
-            actions={<span className="flex items-center gap-1 text-[11px] text-muted"><Activity size={12} className={running ? 'text-ok' : ''} />{running ? 'clock running' : 'clock paused'}</span>}
+            actions={<span className="flex items-center gap-1 text-[11px] text-muted"><span className={running ? 'live-dot size-1.5 rounded-full bg-ok text-ok' : 'size-1.5 rounded-full bg-muted'} />{running ? 'Simulation running' : 'Simulation paused'}</span>}
           >
             <div className="absolute inset-0">
               <NetworkGraph at={now} layers={{ knowledge }} onLayersChange={(l) => setKnowledge(l.knowledge)} onSelect={(id) => id && nav(`/network?select=${encodeURIComponent(id)}`)} />
@@ -79,7 +64,7 @@ export default function LivePage() {
               )}
             </div>
           </Panel>
-          <Panel title="Pipeline" icon={<Cpu size={15} />} className="min-h-0 flex-[2]">
+          <Panel title="How conversations become knowledge" icon={<Cpu size={15} />} className="min-h-0 flex-[2]">
             <PipelineLane />
           </Panel>
         </div>
@@ -88,7 +73,7 @@ export default function LivePage() {
           <Panel title="Incidents" icon={<Siren size={15} />} className="min-h-0 flex-[3]">
             <IncidentFeed />
           </Panel>
-          <Panel title="Live chat" icon={<MessagesSquare size={15} />} className="min-h-0 flex-[2]" bodyClassName="overflow-hidden">
+          <Panel title="Latest messages" icon={<MessagesSquare size={15} />} className="min-h-0 flex-[2]" bodyClassName="overflow-hidden">
             <ChatTicker />
           </Panel>
         </div>

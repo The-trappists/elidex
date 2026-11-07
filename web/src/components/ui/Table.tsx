@@ -26,10 +26,10 @@ export function Table<T>({
   if (!rows.length && empty) return <>{empty}</>
   return (
     <table className="w-full text-sm">
-      <thead className="sticky top-0 z-10 bg-surface">
-        <tr className="border-b border-line text-left text-xs text-muted">
+      <thead className="sticky top-0 z-10 bg-surface/95 backdrop-blur">
+        <tr className="border-b border-line text-left text-[11px] uppercase tracking-wider text-muted">
           {columns.map((c) => (
-            <th key={c.key} className={cn('px-3 py-2 font-medium', c.className)}>
+            <th key={c.key} className={cn('px-3 py-2.5 font-semibold', c.className)}>
               {c.header}
             </th>
           ))}
@@ -42,10 +42,10 @@ export function Table<T>({
             <tr
               key={k}
               onClick={onRowClick ? () => onRowClick(r) : undefined}
-              className={cn('border-b border-line/60 last:border-0', onRowClick && 'cursor-pointer hover:bg-surface-2', selectedKey === k && 'bg-accent-soft')}
+              className={cn('animate-fade-in border-b border-line/50 transition-colors last:border-0', onRowClick && 'cursor-pointer hover:bg-surface-2', selectedKey === k && 'bg-accent-soft shadow-[inset_3px_0_0_var(--accent)]')}
             >
               {columns.map((c) => (
-                <td key={c.key} className={cn('px-3 py-2 align-top', c.className)}>
+                <td key={c.key} className={cn('px-3 py-3 align-top', c.className)}>
                   {c.cell(r)}
                 </td>
               ))}

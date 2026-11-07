@@ -2,9 +2,9 @@ import type { LlmCall } from '../../api/types'
 
 export type CallStatus = 'ok' | 'api_error' | 'parse_error'
 export const STATUS_LABEL: Record<CallStatus, { label: string; cls: string }> = {
-  ok: { label: 'OK', cls: 'bg-ok/15 text-ok' },
-  api_error: { label: 'API error', cls: 'bg-bad/15 text-bad' },
-  parse_error: { label: 'Parse error', cls: 'bg-warn/15 text-warn' },
+  ok: { label: 'Succeeded', cls: 'bg-ok/15 text-ok' },
+  api_error: { label: 'Failed', cls: 'bg-bad/15 text-bad' },
+  parse_error: { label: 'Unusable answer', cls: 'bg-warn/15 text-warn' },
 }
 
 export const callStatus = (c: LlmCall): CallStatus => (c.error ? 'api_error' : c.parsed_ok === false ? 'parse_error' : 'ok')

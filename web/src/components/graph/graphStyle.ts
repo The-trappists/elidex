@@ -53,7 +53,7 @@ export function buildStyle(): cytoscape.StylesheetJson {
         'text-background-color': surface,
         'text-background-opacity': 0.8,
         'text-background-padding': '1px',
-        'transition-property': 'border-width, border-color, overlay-opacity, overlay-padding',
+        'transition-property': 'border-width, border-color, overlay-opacity, overlay-padding, opacity',
         'transition-duration': 500,
       },
     },
@@ -115,6 +115,9 @@ export function buildStyle(): cytoscape.StylesheetJson {
     { selector: 'node.site.sel', style: { 'border-color': accent, 'border-width': 2, 'border-style': 'solid' } },
     { selector: 'node.assertion.sel, node.assertion.hl', style: { width: 22, height: 22 } },
     { selector: 'edge.dim, node.dim', style: { opacity: 0.12 } },
+    { selector: '.hover-fade', style: { opacity: 0.18 } },
+    { selector: 'node.hover-on', style: { 'overlay-color': accent, 'overlay-opacity': 0.14, 'overlay-padding': 7 } },
+    { selector: 'edge.hover-on', style: { width: 2.5, 'line-color': accent, opacity: 1 } },
     { selector: 'core', style: { 'active-bg-color': line } },
   ] as unknown as cytoscape.StylesheetJson
 }

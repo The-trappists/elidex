@@ -7,7 +7,8 @@ import { cn } from '../../lib/cn'
 import { fmtDateTime, fmtMs } from '../../lib/format'
 import { STAGE_LABEL, STAGE_STATUS_STYLE } from '../../lib/semantic'
 import { assertionHref, TypeBadge, Validity } from '../knowledge/bits'
-import { Badge, EmptyState, IdChip, Button, withToast } from '../ui'
+import { Badge, EmptyState, ErrorNote, IdChip, Button, withToast } from '../ui'
+import { explainError } from '../../lib/explain'
 import { ItemCard } from './ItemCard'
 
 const H = ({ children, count }: { children: string; count?: number }) => (
@@ -32,7 +33,7 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
         <IdChip>{job.extractor}</IdChip>
         <span className="ml-auto">{fmtDateTime(job.started_at)}</span>
       </div>
-      {job.error && <div className="mt-2 rounded-lg border border-bad/40 bg-bad/10 p-2 text-xs text-bad">{job.error}</div>}
+      {job.error && <ErrorNote className="mt-3" explained={explainError(job.error)!} raw={job.error} />}
 
       <H count={job.items.length}>Extracted items</H>
       {job.items.length === 0 ? (

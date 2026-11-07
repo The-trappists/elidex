@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { Sidebar } from './components/layout/Sidebar'
 import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
@@ -12,6 +12,26 @@ import NetworkPage from './pages/NetworkPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
 
+function AnimatedRoutes() {
+  const { pathname } = useLocation()
+  // The conversation detail keeps its list mounted: only animate when the top-level section changes.
+  const section = pathname.split('/')[1] ?? ''
+  return (
+    <div key={section} className="h-full animate-page-in">
+      <Routes>
+        <Route path="/" element={<LivePage />} />
+        <Route path="/conversations" element={<ConversationsPage />} />
+        <Route path="/conversations/:threadId" element={<ConversationsPage />} />
+        <Route path="/network" element={<NetworkPage />} />
+        <Route path="/knowledge" element={<KnowledgePage />} />
+        <Route path="/llm" element={<LlmLogPage />} />
+        <Route path="/data" element={<DataPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
+    </div>
+  )
+}
+
 export default function App() {
   useEffect(() => connectLive(), [])
   const ready = useLive((s) => s.ready)
@@ -23,18 +43,12 @@ export default function App() {
           <TopBar />
           <main className="min-h-0 flex-1 overflow-hidden">
             {!ready ? (
-              <div className="flex h-full items-center justify-center text-sm text-muted">Connecting to the workbench backend…</div>
+              <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">
+                <span className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
+                Connecting to the workbench…
+              </div>
             ) : (
-              <Routes>
-                <Route path="/" element={<LivePage />} />
-                <Route path="/conversations" element={<ConversationsPage />} />
-                <Route path="/conversations/:threadId" element={<ConversationsPage />} />
-                <Route path="/network" element={<NetworkPage />} />
-                <Route path="/knowledge" element={<KnowledgePage />} />
-                <Route path="/llm" element={<LlmLogPage />} />
-                <Route path="/data" element={<DataPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Routes>
+              <AnimatedRoutes />
             )}
           </main>
         </div>

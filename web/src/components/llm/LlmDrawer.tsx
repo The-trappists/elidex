@@ -2,7 +2,9 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import type { LlmCall } from '../../api/types'
 import { fmtDateTime, fmtMs } from '../../lib/format'
-import { Badge, Drawer, IdChip } from '../ui'
+import { Badge, Drawer, ErrorNote, IdChip } from '../ui'
+import { describeCall, explainError, fmtTokens, purposeLabel } from '../../lib/explain'
+import { useLive } from '../../store/live'
 import { threadHref } from '../knowledge/bits'
 import { CopyBlock } from './CopyBlock'
 import { callStatus, fmtCost, STATUS_LABEL, tryParse } from './status'
@@ -17,6 +19,7 @@ const Meta = ({ k, v }: { k: string; v: React.ReactNode }) => (
 export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id: string | null; onClose: () => void }) {
   const parsed = useMemo(() => (call?.raw_response ? tryParse(call.raw_response) : null), [call])
   const st = call ? STATUS_LABEL[callStatus(call)] : null
+  const threadName = useLive((s) => (call?.thread_id ? s.threads[call.thread_id]?.subject : undefined))
 
   return (
     <Drawer
@@ -26,7 +29,7 @@ export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id
       title={
         call ? (
           <div className="flex items-center gap-2">
-            <Badge>{call.purpose}</Badge> <span className="truncate font-mono text-sm">{call.model}</span> {st && <Badge className={st.cls}>{st.label}</Badge>}
+            <span className="truncate">{purposeLabel(call.purpose)}</span> {st && <Badge className={st.cls}>{st.label}</Badge>}
             {call.fallback_used && <Badge className="bg-warn/15 text-warn">fallback</Badge>}
           </div>
         ) : (
@@ -38,7 +41,17 @@ export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id
         <div className="text-sm text-muted">Call "{id}" not found.</div>
       ) : (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-3 rounded-lg border border-line bg-surface-2 p-3 sm:grid-cols-4">
+          <p className="mb-4 text-[15px] font-medium leading-snug">{describeCall(call, threadName ?? undefined)}</p>
+          {(call.error || call.parse_error) && <ErrorNote className="mb-4" explained={explainError(call.error ?? call.parse_error)!} raw={call.error ?? call.parse_error} />}
+          <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-line bg-surface-2 p-3 sm:grid-cols-4">
+            <Meta k="Answer time" v={fmtMs(call.latency_ms)} />
+            <Meta k="Text volume" v={fmtTokens(call)} />
+            <Meta k="Model" v={call.model} />
+            <Meta k="Conversation" v={call.thread_id ? <Link className="text-accent hover:underline" to={threadHref(call.thread_id)}>{threadName ?? call.thread_id}</Link> : '—'} />
+          </div>
+          <details className="mb-4 rounded-xl border border-line px-3 py-2 text-xs">
+            <summary className="cursor-pointer select-none font-medium text-muted hover:text-text">Technical details</summary>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Meta k="Id" v={<IdChip>{call.id}</IdChip>} />
             <Meta k="Time (wall)" v={fmtDateTime(call.ts)} />
             <Meta k="Time (sim)" v={fmtDateTime(call.sim_time)} />
@@ -46,11 +59,9 @@ export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id
             <Meta k="Provider" v={call.provider} />
             <Meta k="Base URL" v={<span title={call.base_url}>{call.base_url}</span>} />
             <Meta k="JSON mode" v={call.json_mode ?? '—'} />
-            <Meta k="Latency" v={fmtMs(call.latency_ms)} />
-            <Meta k="Tokens in / out" v={`${call.usage.prompt_tokens ?? '—'} / ${call.usage.completion_tokens ?? '—'}`} />
             <Meta k="Cost" v={fmtCost(call.usage.cost)} />
-          </div>
-          {call.error && <div className="mb-4 whitespace-pre-wrap rounded-lg border border-bad/40 bg-bad/10 p-3 font-mono text-xs text-bad">{call.error}</div>}
+            </div>
+          </details>
           <div className="grid grid-cols-1 gap-x-5 lg:grid-cols-2">
             <div className="min-w-0">
               <CopyBlock title="System prompt" text={call.system} collapsible />
