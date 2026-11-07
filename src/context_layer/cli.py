@@ -137,7 +137,10 @@ def cmd_llm_check(_: argparse.Namespace) -> None:
 def cmd_dataset(args: argparse.Namespace) -> None:
     from pathlib import Path
 
+    import time
+
     from .dataset import bench as ds_bench
+    from .dataset import source as ds_source
     from .dataset.build import SCALES, generate
 
     if args.dataset_cmd == "generate":
@@ -146,11 +149,65 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         generate(out, args.scale, seed=args.seed, workers=args.workers, overrides=overrides)
         print(f"Dataset written to {out}")
         return
-    root = Path(args.path) if args.path else config.OUT_DIR / "dataset" / "demo"
+    if args.dataset_cmd == "db-check":  # no dataset folder needed: only reports what the databases hold
+        if config.mongo_configured():
+            from .dataset import mongo
+
+            print("MongoDB:", json.dumps(mongo.check(mongo.connect()), indent=2))
+        else:
+            print("MongoDB: MONGODB_URI not set")
+        if config.tiger_configured():
+            from .dataset import tiger
+
+            with tiger.connect() as conn:
+                print("Tiger Data:", json.dumps(tiger.check(conn), indent=2, default=str))
+        else:
+            print("Tiger Data: TIGER_DATABASE_URL not set")
+        return
+    if args.dataset_cmd == "activity":
+        from .dataset import tiger
+
+        with tiger.connect() as conn:
+            for bucket, n, people in tiger.activity(conn, args.element, args.bucket):
+                print(f"{bucket:%Y-%m-%d}  {n:>6} messages  {people:>4} people")
+        return
+    root = Path(args.path) if getattr(args, "path", None) else config.DATASET_DIR
+    if args.dataset_cmd == "threads":
+        from datetime import datetime as dt
+
+        if args.source == "mongo":
+            from .dataset import mongo
+
+            src = ds_source.MongoSource(mongo.connect())
+        else:
+            src = ds_source.FileSource(root)
+        t0 = time.perf_counter()
+        shown = 0
+        for t in src.threads(since=dt.fromisoformat(args.since) if args.since else None, until=dt.fromisoformat(args.until) if args.until else None, element=args.element, limit=args.limit):
+            first = t["messages"][0]
+            print(f"{t['id']}  {first['sent_at']}  {len(t['messages'])} msgs  {first['author']}: {first['text'][:90]!r}")
+            shown += 1
+        print(f"{shown} threads in {time.perf_counter() - t0:.2f} s ({args.source})")
+        return
     if not (root / "manifest.json").exists():
         sys.exit(f"No dataset at {root}. Run `ctx dataset generate --scale {'|'.join(SCALES)}` first.")
     if args.dataset_cmd == "stats":
         print(json.dumps(ds_bench.read_manifest(root), indent=2, ensure_ascii=False))
+    elif args.dataset_cmd == "load-mongo":
+        from .dataset import mongo
+
+        mongo.load(root, mongo.connect(), drop=args.drop, only=set(args.only) if args.only else None)
+    elif args.dataset_cmd == "load-tiger":
+        from .dataset import tiger
+
+        with tiger.connect() as conn:
+            tiger.setup(conn)
+            if args.drop:
+                with conn.cursor() as cur:
+                    cur.execute("TRUNCATE messages;")
+                conn.commit()
+            n = tiger.load(root, conn)
+            print(f"{n:,} messages loaded; {tiger.check(conn)}")
     else:
         print(json.dumps(ds_bench.bench(root, max_facts=args.facts, queries=args.queries), indent=2))
 
@@ -224,6 +281,24 @@ def main(argv: list[str] | None = None) -> None:
     be.add_argument("path", nargs="?")
     be.add_argument("--facts", type=int, help="only the first N facts")
     be.add_argument("--queries", type=int, default=500)
+    lm = dsub.add_parser("load-mongo", help="stream a dataset into MongoDB Atlas (MONGODB_URI in .env), resumable")
+    lm.add_argument("path", nargs="?", help="dataset folder (default: DATASET_DIR)")
+    lm.add_argument("--drop", action="store_true", help="empty each collection first")
+    lm.add_argument("--only", nargs="+", choices=["threads", "elements", "sites", "links", "users", "facts"], help="load only these collections")
+    lt = dsub.add_parser("load-tiger", help="stream the messages into Tiger Data (TIGER_DATABASE_URL in .env)")
+    lt.add_argument("path", nargs="?")
+    lt.add_argument("--drop", action="store_true", help="truncate the messages table first (re-running without it fails on duplicates)")
+    dsub.add_parser("db-check", help="ping MongoDB and Tiger Data and show what they hold")
+    th = dsub.add_parser("threads", help="list threads by time or element without loading the dataset")
+    th.add_argument("--source", choices=["files", "mongo"], default="files")
+    th.add_argument("--path", help="dataset folder for --source files (default: DATASET_DIR)")
+    th.add_argument("--element", help="only threads naming this element id, e.g. TRN-042")
+    th.add_argument("--since", help="ISO datetime")
+    th.add_argument("--until", help="ISO datetime")
+    th.add_argument("--limit", type=int, default=10)
+    ac = dsub.add_parser("activity", help="Tiger Data: messages and people per month that name an element")
+    ac.add_argument("element")
+    ac.add_argument("--bucket", default="1 month")
     ds.set_defaults(func=cmd_dataset)
 
     sub.add_parser("mcp", help="MCP server over stdio, for agents").set_defaults(func=cmd_mcp)

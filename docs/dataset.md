@@ -79,6 +79,25 @@ One line of `facts.jsonl`:
 | `expert_conflict` | Two experts give opposite advice on the same problem (`conflicts_with`) |
 | hunch → verified (`instance_quirk`, `trust_history`) | A guess in one thread, confirmed by an expert weeks later: same fact, trust grows |
 
+## Keeping it outside memory: MongoDB Atlas and Tiger Data
+
+Both are MLH offers (see the resources page, section Cloud). Roles: **Atlas** holds the documents (threads, network, people, facts), **Tiger Data** (PostgreSQL + TimescaleDB) holds one row per message in a hypertable for questions over time. Neither stage loads a shard in memory: files are read line by line and sent in batches.
+
+Setup (humans, once): create an Atlas cluster (check the storage and hourly price shown before using credit; the free tier is too small for `large`), a database user, and your IP and the Vultr VM's IP under Network Access; create a Tiger Data service. Put `MONGODB_URI`, `MONGODB_DB`, `TIGER_DATABASE_URL` in `.env` (placeholders in `.env.example`; `MONGODB_DB` is the *database* name, not the user).
+
+```bash
+uv run ctx dataset db-check                              # ping both, show what they hold
+uv run ctx dataset load-mongo out/dataset/demo           # resumable; --drop to start over, --only threads
+uv run ctx dataset load-tiger out/dataset/demo           # COPY into the hypertable; --drop to truncate first
+uv run ctx dataset threads --source mongo --element TRN-042 --limit 5   # indexed query, no full load
+uv run ctx dataset threads --source files --element TRN-042             # same, by scanning the shards
+uv run ctx dataset activity TRN-042                      # Tiger Data: messages and people per month
+```
+
+Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. Not done yet: the Workbench still keeps its own threads in memory and does not read these sources.
+
+Status: the pure parts (mentions, documents, rows, file source) are tested offline. The loaders and queries against real Atlas and Tiger Data were **not run by the assistant** (AI agents must not use `.env` credentials), so the first run is yours: start with `db-check`.
+
 ## Using it
 
 - Core and bench: `Inventory.load(root / "network")`; `ctx dataset bench` feeds the linker with the true extractions, so it measures linking and storing, **not the LLM**. For the LLM, read threads of `conversations/` and score the output against `facts.jsonl`.
