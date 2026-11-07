@@ -204,3 +204,19 @@ def wait_for_calls(client):
             return calls
         time.sleep(0.05)
     raise AssertionError("no LLM call")
+
+
+def test_graph_routes_over_live_state(client):
+    state = seeded(client)
+    a = rule(state)[0]
+    prov = client.get(f"/api/graph/provenance/{a['id']}").json()
+    assert prov and all(r["text"] for r in prov)  # verbatim quotes from the live threads
+    reach = client.get(f"/api/graph/reach/{a['id']}").json()
+    assert reach["elements"]
+    entity = next(iter(reach["elements"]))
+    assert client.get(f"/api/graph/timeline/{entity}").json()
+    assert client.get("/api/graph/experts", params={"entity_id": entity}).json()
+    assert client.get("/api/graph/stats").json()["nodes"]["Assertion"] >= 1
+    # a thread without messages must not break the graph
+    client.post("/api/threads", json={"source": "teams", "subject": "Empty"})
+    assert client.get("/api/graph/stats").status_code == 200
