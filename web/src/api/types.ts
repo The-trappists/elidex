@@ -689,6 +689,9 @@ export interface Pattern {
   resolved_by: string | null
   people: string[]
   grouped: string[] // why differently named topics were counted as one problem
+  headline: string // one line: the likely cause, or where the fix stands
+  suspects: string[] // elements that may be the common cause (map: amber)
+  links: string[] // topology link ids between the problems and the suspects (map: red)
   note: string
 }
 

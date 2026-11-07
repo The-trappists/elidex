@@ -21,7 +21,16 @@ export interface NetworkGraphProps {
   selectedId?: string | null
   onSelect?: (id: string | null, kind: NodeKind | null) => void
   highlightIds?: string[]
+  /** Patterns page: problem elements in red, suspected common causes in amber, these link ids in red; the rest dims. */
+  focus?: { problem: string[]; suspect: string[]; links: string[] } | null
   className?: string
+}
+
+/** What "fit" frames: the focused elements and their direct neighbours (context, and no huge zoom on a single
+ * element) when there is a focus, else everything. */
+const fitTarget = (cy: cytoscape.Core) => {
+  const f = cy.nodes('node.pb, node.suspect')
+  return f.nonempty() ? f.union(f.neighborhood('node.element')) : cy.elements()
 }
 
 const aKey = (n: cytoscape.NodeSingular) => String(n.data('rawId'))
@@ -103,7 +112,7 @@ function placeNear(cy: cytoscape.Core, nodes: cytoscape.NodeSingular[]) {
   void cy
 }
 
-export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect, highlightIds, className }: NetworkGraphProps) {
+export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect, highlightIds, focus, className }: NetworkGraphProps) {
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
   const links = useLive((s) => s.links)
@@ -168,7 +177,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
         cy.resize()
-        if (!userMoved.current && el.clientHeight > 0 && cy.nodes().length) cy.fit(undefined, 30)
+        if (!userMoved.current && el.clientHeight > 0 && cy.nodes().length) cy.fit(fitTarget(cy), 30)
       })
     })
     ro.observe(el)
@@ -202,7 +211,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
       seedPositions(added)
       const layout = cy.layout(layoutOptions(!first))
       layout.one('layoutstop', () => {
-        if (!userMoved.current && cy.height() > 0) cy.animate({ fit: { eles: cy.elements(), padding: 30 } }, { duration: first ? 0 : 300 })
+        if (!userMoved.current && cy.height() > 0) cy.animate({ fit: { eles: fitTarget(cy), padding: 30 } }, { duration: first ? 0 : 300 })
       })
       layout.run()
     } else {
@@ -235,9 +244,38 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     })
   }, [selectedId, hlKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // pattern focus: classes follow the store; the view is reframed only when the focus itself changes
+  const fKey = focus ? `${focus.problem.join(',')}|${focus.suspect.join(',')}|${focus.links.join(',')}` : ''
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.batch(() => {
+      cy.elements().removeClass('pb suspect pl dim')
+      if (!focus) return
+      const problem = new Set(focus.problem)
+      const suspect = new Set(focus.suspect)
+      const links = new Set(focus.links.map((id) => `lk:${id}`))
+      const on = cy.collection()
+      cy.nodes().forEach((n) => {
+        if (problem.has(aKey(n))) on.merge(n.addClass('pb'))
+        else if (suspect.has(aKey(n))) on.merge(n.addClass('suspect'))
+      })
+      cy.edges().forEach((e) => {
+        if (links.has(e.id())) on.merge(e.addClass('pl'))
+      })
+      cy.elements().not(on).not('node.site').addClass('dim')
+    })
+  }, [fKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || !focus) return
+    userMoved.current = false
+    cy.animate({ fit: { eles: fitTarget(cy), padding: 90 } }, { duration: 400 })
+  }, [fKey]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const fit = () => {
     userMoved.current = false
-    cyRef.current?.animate({ fit: { eles: cyRef.current.elements(), padding: 30 } }, { duration: 300 })
+    if (cyRef.current) cyRef.current.animate({ fit: { eles: fitTarget(cyRef.current), padding: 30 } }, { duration: 300 })
   }
 
   return (
