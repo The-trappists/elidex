@@ -26,45 +26,60 @@
     {
       "persona": "veikko",
       "delay_s": 5,
-      "text": "Team, TRN-088 at Kangas: SFP swapped, link UP, counters stuck at zero. What's the first step, interface bounce or something else?"
+      "text": "Hei! I'm at Kangas, TRN-088. Swapped the SFP, link is UP but the counters are stuck at zero and the optics look normal. What do I try first, bounce the interface or something else?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 70,
+      "text": "Bounce it. Disable, wait a bit, enable. On the old TX-3000s that's always step one."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 80,
+      "text": "Hmm, I'd disagree. The vendor guide for the TX-3000 says reseat the module first."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 12,
+      "text": "A half-seated module also gives you link UP with zero counters. I've seen it."
     },
     {
       "persona": "erkki",
       "delay_s": 60,
-      "text": "Bounce the interface. On TX-3000s installed up to 2019 that's always the first thing."
+      "text": "Reseating means a second optics reset and a second outage window. Bounce is quicker and it has worked every single time 😄"
     },
     {
       "persona": "aino",
-      "delay_s": 90,
-      "text": "I disagree. The vendor guide for TX-3000 says reseat the module first. A half-seated module also gives UP with zero counters."
+      "delay_s": 70,
+      "text": "Every time you've tried it, yes 🙂 I'd still reseat first on anything up to 2019, then bounce if that fails."
     },
     {
       "persona": "erkki",
-      "delay_s": 60,
-      "text": "Reseating means another optics reset and a second outage window. The bounce is quicker and it has worked every time."
-    },
-    {
-      "persona": "aino",
-      "delay_s": 75,
-      "text": "Every time you tried it, yes. I would still reseat first on any TX-3000 up to 2019, and bounce if that fails."
+      "delay_s": 45,
+      "text": "We'll see. Veikko, your call."
     },
     {
       "persona": "veikko",
-      "delay_s": 120,
-      "text": "I'll try Erkki's way first since it's quicker."
+      "delay_s": 100,
+      "text": "ok ok. going with Erkki's way, it's quicker and my window is closing"
     },
     {
       "persona": "veikko",
-      "delay_s": 150,
-      "text": "Bounced it. Traffic is back."
+      "delay_s": 160,
+      "text": "bounced it. traffic is back! 🎉"
     },
     {
       "persona": "aino",
-      "delay_s": 40,
-      "text": "OK. Still, someone should settle this and put it in the field instructions."
+      "delay_s": 50,
+      "text": "Fine, fine. I still think someone should settle this and put it in the field instructions."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 30,
+      "text": "Agreed on that one."
     }
   ],
-  "resolves_incident_at_seq": 7,
+  "resolves_incident_at_seq": 9,
   "expected": {
     "items": [
       {
@@ -124,12 +139,12 @@
         ],
         "fact": null,
         "trust_level": "verified",
-        "evidence": "seq 7: 'Bounced it. Traffic is back.'",
+        "evidence": "seq 9: 'bounced it. traffic is back!'",
         "stated_by": "Erkki Expert",
         "cited_seq": [
           2,
-          4,
-          7
+          5,
+          9
         ],
         "confidence": 0.8
       },
@@ -188,11 +203,12 @@
         "avoid": [],
         "fact": null,
         "trust_level": "stated",
-        "evidence": "seq 3: 'the vendor guide for TX-3000 says reseat the module first'",
+        "evidence": "seq 3: 'The vendor guide for the TX-3000 says reseat the module first'",
         "stated_by": "Aino Arkkitehti",
         "cited_seq": [
           3,
-          5
+          4,
+          6
         ],
         "confidence": 0.7
       }

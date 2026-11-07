@@ -24,45 +24,60 @@
     {
       "persona": "jaakko",
       "delay_s": 5,
-      "text": "RAD-221 on Kemijärvi hill has had poor throughput since last night's storm. I'm planning to swap the unit tomorrow and will bring a spare RU-200."
+      "text": "Hei kaikki! Quick question before tomorrow. RAD-221 up on the Kemijärvi hill has been crawling since last night's storm, throughput is maybe a fifth of normal and the alarm won't clear. I'm planning to drive up and swap the whole unit, I already have a spare RU-200 in the van. Anything I should know before I go? Kiitos!"
     },
     {
       "persona": "liisa",
-      "delay_s": 60,
-      "text": "Remember the barrier key from the service station!"
+      "delay_s": 45,
+      "text": "Moi Jaakko! Take the barrier key from the service station, ask me how I know 😅"
     },
     {
       "persona": "jaakko",
-      "delay_s": 45,
-      "text": "Got it already 👍"
+      "delay_s": 30,
+      "text": "haha already got it, thanks 👍"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 120,
+      "text": "wait"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 8,
+      "text": "before you swap anything"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 12,
+      "text": "that mast is the most exposed one we have. after a storm the tilt on 221 drifts, it's the mount, not the radio. I've re-tilted it like three times, ten minute job. look at the alignment first"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 50,
+      "text": "oh! so the unit is probably fine? I'm not sure I'd have thought of that, how would I even know it's the tilt?"
     },
     {
       "persona": "raimo",
       "delay_s": 90,
-      "text": "Hold on before you swap it. After storms the antenna tilt on RAD-221 drifts, that mast is very exposed. Check the antenna alignment first. I have fixed it three times with a ten minute re-tilt."
+      "text": "RU-200 is solid, never seen one die from wind. a new unit on the same mount would drift too. just put the tilt back to spec"
     },
     {
-      "persona": "jaakko",
-      "delay_s": 60,
-      "text": "So the unit itself is fine? Why do you think so?"
-    },
-    {
-      "persona": "raimo",
-      "delay_s": 75,
-      "text": "The RU-200 has been solid. It's the mount that moves in strong wind. A new unit would drift too."
+      "persona": "liisa",
+      "delay_s": 40,
+      "text": "+1, I was there the second time. nobody believed him either 😄"
     },
     {
       "persona": "jaakko",
       "delay_s": 180,
-      "text": "Re-aligned the antenna. Throughput is back to normal 🎉"
+      "text": "Back down. re-tilted it and throughput is back to normal 🎉 didn't even need the spare. Kiitos Raimo!!"
     },
     {
       "persona": "raimo",
-      "delay_s": 30,
-      "text": "Good. Note it down: check the tilt after every storm."
+      "delay_s": 25,
+      "text": "joo. next time after a storm, check the tilt before you load the van"
     }
   ],
-  "resolves_incident_at_seq": 7,
+  "resolves_incident_at_seq": 10,
   "expected": {
     "items": [
       {
@@ -92,12 +107,12 @@
         ],
         "fact": null,
         "trust_level": "verified",
-        "evidence": "seq 7: 'Re-aligned the antenna. Throughput is back to normal'",
+        "evidence": "seq 10: 'Back down. re-tilted it and throughput is back to normal'",
         "stated_by": "Raimo Rantanen",
         "cited_seq": [
-          4,
           6,
-          7
+          8,
+          10
         ],
         "confidence": 0.8
       }

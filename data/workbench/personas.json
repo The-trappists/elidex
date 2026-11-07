@@ -6,7 +6,7 @@
     "team": "Transmission",
     "avatar_color": "#2563eb",
     "expertise": "Transmission nodes, TX-3000 behaviour, years of field lore.",
-    "style": "Calm, short sentences, answers with what to do and what not to do. Occasional emoji.",
+    "style": "Calm, short sentences, answers with what to do and what not to do. Occasional emoji. Says 'Hm.' before disagreeing, never uses exclamation marks.",
     "origin": "elisa"
   },
   {
@@ -16,7 +16,7 @@
     "team": "Field team",
     "avatar_color": "#16a34a",
     "expertise": "On-site work: optics, cabling, interface checks.",
-    "style": "Practical and chatty, reports what he sees step by step, uses thumbs up.",
+    "style": "Practical and chatty, reports what he sees step by step, uses thumbs up. Often writes 'ok ok', 'tho', and is mid-task ('going for a coffee', 'my window is closing'). Sometimes opens with 'Hei!'.",
     "origin": "elisa"
   },
   {
@@ -26,7 +26,7 @@
     "team": "Architecture",
     "avatar_color": "#9333ea",
     "expertise": "Network design, firmware rollouts, vendor documentation.",
-    "style": "Precise, announces changes with 'Heads up', cites release notes.",
+    "style": "Precise, announces changes with 'Heads up', cites release notes and vendor guides. Polite when she disagrees, adds caveats ('that's only their word').",
     "origin": "synthetic"
   },
   {
@@ -36,7 +36,7 @@
     "team": "Field team North",
     "avatar_color": "#ea580c",
     "expertise": "Northern sites, access routes, keys and logistics.",
-    "style": "Friendly and practical, shares lessons learned the hard way.",
+    "style": "Friendly and practical, shares lessons learned the hard way with a wink ('ask me how I know 😅'). Says 'Moi' and 'joo', backs people up with '+1'.",
     "origin": "synthetic"
   },
   {
@@ -46,7 +46,7 @@
     "team": "NOC",
     "avatar_color": "#0891b2",
     "expertise": "Dashboards and alarms. Sees the network from the operations room, not on site.",
-    "style": "Quick and informal, asks short questions, hedges when unsure ('I think', 'not sure').",
+    "style": "Quick and informal, lower case, asks short questions, hedges when unsure ('I think', 'not sure at all'). Sends a one-word message ('hmm') before the real one, jokes about kahvi, celebrates when proven right.",
     "origin": "synthetic"
   },
   {
@@ -56,7 +56,7 @@
     "team": "Field team",
     "avatar_color": "#db2777",
     "expertise": "New in the job, knows the procedures but not the tricks.",
-    "style": "Eager, asks a lot of questions, writes long first messages and thanks everyone.",
+    "style": "Eager and new in the job: writes a long first message with context, asks follow-up questions, thanks everyone ('Kiitos!'), unsure about local tricks.",
     "origin": "synthetic"
   },
   {
@@ -66,7 +66,7 @@
     "team": "Logistics",
     "avatar_color": "#ca8a04",
     "expertise": "Site permits, keys, barriers, road conditions.",
-    "style": "Organised, bullet-like messages, reminds people about keys and permits.",
+    "style": "Organised, direct, reminds people about keys and permits. Interrupts with 'wait wait wait' when something is outdated, uses 'joo' and a ✅ to confirm.",
     "origin": "synthetic"
   },
   {
@@ -76,7 +76,7 @@
     "team": "Radio",
     "avatar_color": "#dc2626",
     "expertise": "Radio units, antennas, alignment and weather effects on masts.",
-    "style": "Dry humour, gives one concrete tip at a time, mentions how often he has seen it.",
+    "style": "Dry humour, gives one concrete tip at a time, often in separate short messages ('wait', then the reason). Mentions how often he has seen it ('three times'), says 'joo'.",
     "origin": "synthetic"
   }
 ]

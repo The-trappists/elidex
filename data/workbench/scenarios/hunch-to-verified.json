@@ -25,40 +25,55 @@
     {
       "persona": "helmi",
       "delay_s": 5,
-      "text": "Quick one: TRN-176 at Hervanta, module swapped half an hour ago and our dashboard shows optical levels low. Anyone seen this?"
+      "text": "hey, anyone around? TRN-176 at Hervanta, the module was swapped like half an hour ago and the dashboard still shows optical levels low. is that normal or did something go wrong?"
     },
     {
       "persona": "veikko",
-      "delay_s": 60,
-      "text": "I'm on site. RX looks low on my meter too, but the link is UP."
+      "delay_s": 40,
+      "text": "I'm on site 👍 just checked with the meter, RX is low here too. link is UP tho"
     },
     {
       "persona": "helmi",
-      "delay_s": 90,
-      "text": "Hmm, I think the TX-3000s on 4.0 need some minutes to settle the optics after a swap. Not sure though, just a hunch from last spring."
+      "delay_s": 35,
+      "text": "hmm"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 9,
+      "text": "I *think* the 4.0 TX-3000s need a few minutes to settle the optics after a swap? not sure at all, just something I remember from last spring"
     },
     {
       "persona": "erkki",
-      "delay_s": 45,
-      "text": "Haven't seen it myself. Don't swap the module again yet, give it a bit."
+      "delay_s": 60,
+      "text": "Haven't seen that myself. Don't swap it again yet, give it some time."
     },
     {
       "persona": "veikko",
-      "delay_s": 120,
-      "text": "Going for a coffee then ☕"
+      "delay_s": 110,
+      "text": "ok I'll wait, going to get a coffee ☕"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 60,
+      "text": "lol kahvi is always the answer"
     },
     {
       "persona": "veikko",
       "delay_s": 180,
-      "text": "Update: waited about ten minutes, levels came up to normal on their own. Traffic fine."
+      "text": "back. ok so levels came up on their own, took about 10 min. traffic is fine"
     },
     {
       "persona": "helmi",
+      "delay_s": 25,
+      "text": "TOLD YOU 😄 nice"
+    },
+    {
+      "persona": "erkki",
       "delay_s": 40,
-      "text": "Told you 😄 nice."
+      "text": "Good to know, I'll remember that for the 4.0 boxes."
     }
   ],
-  "resolves_incident_at_seq": 6,
+  "resolves_incident_at_seq": 8,
   "expected": {
     "items": [
       {
@@ -102,11 +117,11 @@
         ],
         "fact": null,
         "trust_level": "verified",
-        "evidence": "seq 6: 'waited about ten minutes, levels came up to normal on their own'",
+        "evidence": "seq 8: 'levels came up on their own, took about 10 min'",
         "stated_by": "Helmi Hakkarainen",
         "cited_seq": [
-          3,
-          6
+          4,
+          8
         ],
         "confidence": 0.75
       }

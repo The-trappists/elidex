@@ -35,11 +35,11 @@ def _thread(scenario) -> Thread:
 
 def test_every_scenario_file_validates_and_is_sorted():
     files = list((config.WORKBENCH_SEED_DIR / "scenarios").glob("*.json"))
-    assert len(SEED.scenarios) == len(files) == 10
+    assert len(SEED.scenarios) == len(files) == 15
     assert [s.origin for s in SEED.scenarios][:2] == ["elisa", "elisa"]
     for s in SEED.scenarios:
         assert s.description and s.tags
-        assert all(20 <= m.delay_s <= 180 or i == 0 for i, m in enumerate(s.messages))
+        assert all(8 <= m.delay_s <= 180 or i == 0 for i, m in enumerate(s.messages))
         assert set(m.persona for m in s.messages) <= set(PERSONAS)
         if s.incident:
             assert s.incident.entity_id in {e.id for e in SEED.elements}
@@ -314,3 +314,25 @@ def test_generator_rejects_unknown_ids(monkeypatch):
         generator.generate_scenario(wb, "TRN-305")
     with pytest.raises(ValueError, match="Unknown element"):
         generator.generate_scenario(wb, "TRN-000")
+
+
+def test_key_moved_closes_the_old_barrier_key():
+    from context_layer.mvp.lifecycle import reconcile
+    from context_layer.store import ContextStore
+
+    linker, store = Linker(INVENTORY), ContextStore(INVENTORY)
+    for sid in ("barrier-key-kemijarvi", "slack-key-moved"):
+        s = SCENARIOS[sid]
+        for item in s.expected.items:
+            a, _ = store.add_assertion(linker.link(item, _thread(s)).assertion)
+            reconcile(store, a)
+    old = next(a for a in store.assertions.values() if a.topic == "site-access-barrier-key" and a.type == "access")
+    assert old.valid_to is not None and old.closed_by
+    assert any(a.topic == "site-access-barrier-key-depot" and a.valid_to is None for a in store.assertions.values())
+
+
+def test_slack_scenarios_cover_the_workflow():
+    slack = [s for s in SEED.scenarios if s.channel == "slack"]
+    assert len(slack) >= 6
+    assert any(s.expected and not s.expected.items for s in slack) or any(len(s.expected.items) == 1 and "noise" in s.tags for s in slack)
+    assert any(s.expected and s.expected.items and s.expected.items[0].trust_level == "hunch" for s in slack)
