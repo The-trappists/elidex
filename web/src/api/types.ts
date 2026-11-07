@@ -270,6 +270,7 @@ export interface ReviewFlag {
   thread_id: string
   job_id: string
   assertion_id: string | null
+  item_topic?: string | null // topic of the item or assertion the flag is about, when known
   message: string
   detail: string | null
   created_at: string // wall

@@ -96,6 +96,13 @@ def _ctx(items, use_critic=True, extractor="llm:m"):
     return HookContext(wb=wb, job=job, thread=None, core=_thread(), items=items, settings=Settings(use_critic=use_critic))
 
 
+@pytest.fixture(autouse=True)
+def _llm_key(monkeypatch):
+    from context_layer import config
+
+    monkeypatch.setattr(config, "llm_configured", lambda: True)  # the agents stay quiet without a key
+
+
 def test_hook_replaces_items_and_fills_job(monkeypatch):
     _mock_llm(monkeypatch, [{"index": 0, "verdict": "reject", "reason": "no"}, {"index": 1, "verdict": "keep", "reason": "ok"}])
     clear_hooks()
@@ -113,7 +120,11 @@ def test_hook_is_off_without_toggle_or_llm_extractor(monkeypatch):
     monkeypatch.setattr(llm, "complete_traced", lambda *a, **k: pytest.fail("no call expected"))
     assert asyncio.run(critic._after_understand(_ctx([_item()], use_critic=False))) is None
     ctx = _ctx([_item()], extractor="scripted")
-    assert asyncio.run(critic._after_understand(ctx)) is None and "skipped" in ctx.job.notes[0]
+    assert asyncio.run(critic._after_understand(ctx)) is None and ctx.job.notes == []
+    # no LLM key: silent, no call, no note
+    monkeypatch.setattr("context_layer.config.llm_configured", lambda: False)
+    ctx = _ctx([_item()])
+    assert asyncio.run(critic._after_understand(ctx)) is None and ctx.job.notes == []
 
 
 def test_hook_failure_keeps_items_and_notes(monkeypatch):

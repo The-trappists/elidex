@@ -1,7 +1,7 @@
-// Operator console API (lot L4): review flags, re-run, assertion edits and their history.
-// While the backend side does not exist (VITE_REVIEW_FIXTURES=1, or a 404/501 answer) every call
-// is served by the fixtures in ./fixtures/review.ts, which keep their own in-memory state and
-// update the live store the way the SSE events would.
+// Operator console API: review flags, re-run, assertion edits and their history.
+// Every call goes to the real backend. Only with VITE_REVIEW_FIXTURES=1 (design work) are calls served by
+// the fixtures in ./fixtures/review.ts, which keep their own in-memory state and update the live store the
+// way the SSE events would; the UI then shows a "Sample data" badge.
 import { useLive } from '../store/live'
 import { ApiError, qs, req } from './client'
 import {
@@ -25,31 +25,12 @@ export interface AssertionEdit {
 
 export const FIXTURES_ENV = import.meta.env.VITE_REVIEW_FIXTURES === '1'
 
-/** True once any call has been answered by fixtures (the UI says "Sample data"). */
-let sample = FIXTURES_ENV
-const sampleListeners = new Set<() => void>()
-export const isSample = () => sample
-export const onSampleChange = (fn: () => void) => {
-  sampleListeners.add(fn)
-  return () => sampleListeners.delete(fn)
-}
-function markSample() {
-  if (sample) return
-  sample = true
-  sampleListeners.forEach((f) => f())
-}
+/** True only in fixtures mode (the UI says "Sample data"). */
+export const isSample = () => FIXTURES_ENV
+export const onSampleChange = (_fn: () => void) => () => {}
 
 async function call<T>(real: () => Promise<T>, fake: () => T | Promise<T>): Promise<T> {
-  if (FIXTURES_ENV) return fake()
-  try {
-    return await real()
-  } catch (e) {
-    if (e instanceof ApiError && (e.status === 404 || e.status === 501)) {
-      markSample()
-      return fake()
-    }
-    throw e
-  }
+  return FIXTURES_ENV ? fake() : real()
 }
 
 // ---------------------------------------------------------------- fixture state
@@ -136,7 +117,7 @@ export const reviewApi = {
 
   editAssertion: (id: string, edit: OperatorEdit) =>
     call<ContextAssertion>(
-      () => req('PATCH', `/assertions/${encodeURIComponent(id)}`, edit),
+      () => req<{ assertion: ContextAssertion }>('PATCH', `/assertions/${encodeURIComponent(id)}`, edit).then((r) => r.assertion),
       async () => {
         await wait()
         const a = useLive.getState().assertions[id]
@@ -180,7 +161,7 @@ export const reviewApi = {
 
   undo: (id: string, editId?: string) =>
     call<ContextAssertion>(
-      () => req('POST', `/assertions/${encodeURIComponent(id)}/undo`, editId ? { edit_id: editId } : undefined),
+      () => req<{ assertion: ContextAssertion }>('POST', `/assertions/${encodeURIComponent(id)}/undo`, editId ? { edit_id: editId } : undefined).then((r) => r.assertion),
       async () => {
         await wait()
         const a = useLive.getState().assertions[id]

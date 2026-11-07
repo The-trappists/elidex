@@ -36,10 +36,12 @@ def _plain_reason(why: str) -> str:
     return why or "no reason recorded"
 
 
-def _flag(job: PipelineJob, kind, message: str, assertion_id: str | None = None, detail: str | None = None) -> ReviewFlag:
+def _flag(
+    job: PipelineJob, kind, message: str, assertion_id: str | None = None, detail: str | None = None, item_topic: str | None = None
+) -> ReviewFlag:
     return ReviewFlag(
         id="", kind=kind, thread_id=job.thread_id, job_id=job.id, assertion_id=assertion_id,
-        message=message, detail=detail, created_at=datetime.now(),
+        item_topic=item_topic, message=message, detail=detail, created_at=datetime.now(),
     )
 
 
@@ -71,7 +73,7 @@ def _over_reach(wb: Workbench, job: PipelineJob, stored: list) -> list[ReviewFla
                     job, "over_reach",
                     f"'{a.topic}' applies to {len(elements)} elements, but the conversation only names "
                     f"{len(elements) - len(unnamed)} of them. Check that the advice really covers the others.",
-                    a.id, f"Not named in the thread: {sample}",
+                    a.id, f"Not named in the thread: {sample}", a.topic,
                 )
             )
     return flags
@@ -93,7 +95,7 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
         for note in job.notes:
             if m := _ABSTAINED.match(note):
                 candidates.append(
-                    _flag(job, "abstained", f"Not stored: '{m.group(1)}', because {_plain_reason(m.group(2))}.", None, note)
+                    _flag(job, "abstained", f"Not stored: '{m.group(1)}', because {_plain_reason(m.group(2))}.", None, note, m.group(1))
                 )
             elif note.startswith("abstained"):
                 candidates.append(_flag(job, "abstained", "An item was not stored.", None, note))
@@ -104,7 +106,7 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
                     _flag(
                         job, "low_confidence",
                         f"'{a.topic}' is live, but the system is only {round(a.confidence * 100)}% sure about it.",
-                        a.id, f"confidence {a.confidence}",
+                        a.id, f"confidence {a.confidence}", a.topic,
                     )
                 )
 
@@ -121,7 +123,7 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
                     _flag(
                         job, "conflict",
                         f"Two people gave different advice about '{a.topic}'. Both are kept and the agent sees both.",
-                        a.id, f"conflicts with {conflicted[a.id]}",
+                        a.id, f"conflicts with {conflicted[a.id]}", a.topic,
                     )
                 )
 
@@ -132,6 +134,8 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
 
         created = []
         for flag in candidates:
+            if flag.item_topic is None and flag.assertion_id in wb.store.assertions:
+                flag.item_topic = wb.store.assertions[flag.assertion_id].topic
             if (added := wb.add_flag(flag)) is not None:
                 created.append(added)
         return created

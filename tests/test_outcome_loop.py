@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from context_layer import outcome
+from context_layer import config, outcome
 from context_layer.workbench import persistence
 from test_workbench_core import client, rule, seeded, wait_for  # noqa: F401
 
@@ -30,6 +30,7 @@ def loop(client, monkeypatch):
     client.put("/api/settings", json={"use_outcome_loop": True})
     fake = FakeLlm({"outcome": "unclear", "quote": "", "reason": "x"})
     monkeypatch.setattr(outcome, "_call_llm", fake)
+    monkeypatch.setattr(config, "llm_configured", lambda: True)  # without a key the heuristic decides alone
     return client, fake
 
 

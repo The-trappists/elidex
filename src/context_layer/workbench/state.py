@@ -451,6 +451,7 @@ class Workbench:
             if (old.kind, old.thread_id, old.assertion_id, old.message if old.assertion_id is None else None) == key:
                 if refresh:
                     old.message, old.detail, old.job_id = flag.message, flag.detail, flag.job_id
+                    old.item_topic = flag.item_topic or old.item_topic
                     old.created_at, old.dismissed = flag.created_at, False
                     self.emit("review.flag", old)
                 return None
@@ -516,9 +517,10 @@ class Workbench:
         if not any(s.source == "operator" for s in a.sources):
             a.sources.append(SourceRef(source="operator", file="operator", seq=[]))
             after = self._edit_state(a)
+        changed = [k for k in after if after[k] != before[k]]  # the record holds only the fields the edit touched
         rec = AssertionEdit(
             id=_next_id("edit", self.edits), assertion_id=a.id, ts=datetime.now(), note=edit.note,
-            before=before, after=after,
+            before={k: before[k] for k in changed}, after={k: after[k] for k in changed},
         )
         self.edits[rec.id] = rec
         self.emit("assertion.upserted", a)
@@ -526,7 +528,7 @@ class Workbench:
         job_id = self.threads[thread_id].last_job_id if thread_id in self.threads else None
         self.add_flag(
             ReviewFlag(
-                id="", kind="operator_edit", thread_id=thread_id, job_id=job_id or "", assertion_id=a.id,
+                id="", kind="operator_edit", thread_id=thread_id, job_id=job_id or "", assertion_id=a.id, item_topic=a.topic,
                 message=f"An operator changed '{a.topic}' by hand. Re-processing its thread keeps this change.",
                 detail=edit.note, created_at=datetime.now(),
             ),
@@ -540,15 +542,38 @@ class Workbench:
             raise KeyError(assertion_id)
         return [e for e in reversed(self.edits.values()) if e.assertion_id == assertion_id]
 
-    def undo_edit(self, assertion_id: str) -> AssertionEdit:
-        """Restore the `before` of the latest edit that is not undone and mark it undone.
-        KeyError: unknown assertion. ValueError: nothing to undo."""
+    def undo_edit(self, assertion_id: str, edit_id: str | None = None) -> AssertionEdit:
+        """Undo an edit and mark it undone. Without `edit_id`: the latest edit not undone yet (restores its
+        whole `before`). With `edit_id`: exactly that edit; when it is not the latest one, only the fields it
+        touched are restored, and only if no later edit changed them since.
+        KeyError: unknown assertion or edit. ValueError: nothing to undo, already undone, or not safe."""
         a = self.store.assertions[assertion_id]
-        rec = next((e for e in self.assertion_history(assertion_id) if not e.undone), None)
-        if rec is None:
-            raise ValueError("nothing to undo")
+        history = self.assertion_history(assertion_id)
+        latest = next((e for e in history if not e.undone), None)
+        if edit_id is None:
+            rec, fields = latest, None
+            if rec is None:
+                raise ValueError("nothing to undo")
+        else:
+            rec = next((e for e in history if e.id == edit_id), None)
+            if rec is None:
+                raise KeyError(edit_id)
+            if rec.undone:
+                raise ValueError(f"{edit_id} is already undone")
+            fields = None
+            if rec is not latest:
+                fields = [k for k in rec.before if rec.before[k] != rec.after.get(k)]
+                if any(e is not rec and not e.undone for e in history):
+                    fields = [k for k in fields if k != "sources"]  # the operator source stays while edits remain
+                current = self._edit_state(a)
+                busy = [k for k in fields if current[k] != rec.after.get(k)]
+                if busy:
+                    raise ValueError(
+                        f"{edit_id} cannot be undone on its own: a later edit changed {', '.join(busy)}. "
+                        "Undo the later edits first."
+                    )
         restored = ContextAssertion.model_validate({**a.model_dump(mode="json"), **rec.before})
-        for field in rec.before:
+        for field in fields if fields is not None else rec.before:
             setattr(a, field, getattr(restored, field))
         rec.undone = True
         self.emit("assertion.upserted", a)
@@ -578,6 +603,8 @@ class Workbench:
             # available as scenarios, so knowledge never comes from the simulated future.
             start = datetime.fromisoformat(config.WORKBENCH_SIM_START)
             past = [t for t in data.threads if t.created_at <= start]
+            # The seed is processed without critic and judge (no extra LLM calls at first start).
+            self.processor.bootstrap_threads = {t.id for t in past}
             for t in sorted(past, key=lambda t: t.created_at):
                 self.threads[t.id] = t
                 t.status = "processing"

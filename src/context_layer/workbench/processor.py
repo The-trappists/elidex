@@ -45,6 +45,13 @@ class HookContext:
     settings: Settings | None = None
 
 
+def agents_quiet(ctx: HookContext) -> bool:
+    """True when the LLM agents (critic, judge) must stay silent: no LLM key (scripted mode) or the job
+    processes the seed at first start (no extra LLM calls)."""
+    proc = getattr(ctx.wb, "processor", None)
+    return not config.llm_configured() or (proc is not None and proc.is_bootstrap(ctx.job.thread_id))
+
+
 _HOOKS: dict[str, list[Callable[[HookContext], Any]]] = defaultdict(list)
 
 
@@ -114,6 +121,7 @@ class Processor:
         self._pending: list[str] = []  # requested before start()
         self._tasks: set[asyncio.Task] = set()
         self._generation = 0
+        self.bootstrap_threads: set[str] = set()  # seed threads not processed yet: critic and judge stay off
 
     # ------------------------------------------------------------ lifecycle
 
@@ -140,12 +148,17 @@ class Processor:
         self._running.clear()
         self._rerun.clear()
         self._pending.clear()
+        self.bootstrap_threads.clear()
+
+    def is_bootstrap(self, thread_id: str) -> bool:
+        return thread_id in self.bootstrap_threads
 
     def forget(self, thread_id: str) -> None:
         """Drop the timer of a thread that is going away."""
         if h := self._timers.pop(thread_id, None):
             h.cancel()
         self._rerun.discard(thread_id)
+        self.bootstrap_threads.discard(thread_id)
         if thread_id in self._pending:
             self._pending.remove(thread_id)
 
@@ -247,6 +260,7 @@ class Processor:
             self._touch(job)
             thread.status = "error" if failed else ("active" if len(thread.messages) > n_messages else "processed")
             wb._thread_event(thread)
+            self.bootstrap_threads.discard(thread_id)  # later jobs of this thread use the user's settings
             collect_flags(job, wb)  # informational: the knowledge is already live
             wb.emit_changes(before)
 

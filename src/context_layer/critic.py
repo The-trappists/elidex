@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from . import llm
 from .models import ExtractedItem, Thread
 from .workbench.contracts import CriticVerdict, ReviewFlag
+from .workbench.processor import agents_quiet
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ def _render_items(items: list[ExtractedItem], found: list[bool]) -> str:
     return json.dumps(rows, ensure_ascii=False, indent=1)
 
 
-def _flag(kind: str, thread: Thread, job_id: str, message: str, detail: str | None) -> ReviewFlag:
+def _flag(kind: str, thread: Thread, job_id: str, message: str, detail: str | None, item_topic: str | None = None) -> ReviewFlag:
     return ReviewFlag(
         id="flag_" + uuid.uuid4().hex[:10],
         kind=kind,  # type: ignore[arg-type]
@@ -111,6 +112,7 @@ def _flag(kind: str, thread: Thread, job_id: str, message: str, detail: str | No
         job_id=job_id,
         message=message,
         detail=detail,
+        item_topic=item_topic,
         created_at=datetime.now(),
     )
 
@@ -156,7 +158,7 @@ def critique(
         detail = f"stated_by {item.stated_by}, cited seq {item.cited_seq}"
         if v.verdict == "reject":
             verdicts.append(CriticVerdict(item_topic=item.topic, verdict="reject", reason=v.reason, evidence_found=found[i]))
-            flags.append(_flag("critic_rejected", thread, job_id, f"Dropped '{item.topic}': {v.reason}{quote}", detail))
+            flags.append(_flag("critic_rejected", thread, job_id, f"Dropped '{item.topic}': {v.reason}{quote}", detail, item.topic))
             continue
         confidence, reason, lowered = item.confidence, v.reason, False
         if v.verdict == "downgrade":
@@ -178,6 +180,7 @@ def critique(
                     job_id,
                     f"Lowered confidence of '{item.topic}' from {item.confidence} to {confidence}: {reason}{quote}",
                     detail,
+                    item.topic,
                 )
             )
             kept.append(item.model_copy(update={"confidence": confidence}))
@@ -191,10 +194,11 @@ async def _after_understand(ctx) -> list[ExtractedItem] | None:
     """Hook: runs only when settings.use_critic is on. Any failure keeps the items and adds a job note."""
     if ctx.settings is None or not ctx.settings.use_critic or not ctx.items:
         return None
+    if agents_quiet(ctx):
+        return None  # quiet: no key (scripted mode) or seed bootstrap (no extra LLM calls)
     job = ctx.job
     if not job.extractor.startswith("llm"):
-        job.notes.append(f"critic skipped (extractor is '{job.extractor}', not an LLM)")
-        return None
+        return None  # scripted or cached items: nothing for a second model to check
     traces: list[dict[str, Any]] = []
     try:
         kept, verdicts, flags = await asyncio.to_thread(

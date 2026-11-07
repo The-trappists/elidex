@@ -27,6 +27,7 @@ export const FIELD_LABEL: Record<string, string> = {
   conditions: 'Conditions',
   valid_to: 'Valid until',
   trust_level: 'Trust level',
+  trust: 'Trust level',
 }
 
 export interface FieldChange {
@@ -40,6 +41,7 @@ export interface FieldChange {
 export function showValue(v: unknown): string {
   if (v === null || v === undefined || v === '') return 'none'
   if (Array.isArray(v)) return v.length ? v.map((x) => (typeof x === 'object' && x && 'text' in x ? String((x as { text: unknown }).text) : String(x))).join('; ') : 'none'
+  if (typeof v === 'object' && v && 'level' in v) return String((v as { level: unknown }).level)
   if (typeof v === 'object') return JSON.stringify(v)
   return String(v)
 }

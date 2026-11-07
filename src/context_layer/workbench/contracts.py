@@ -188,6 +188,7 @@ class ReviewFlag(BaseModel):
     thread_id: str
     job_id: str
     assertion_id: str | None = None
+    item_topic: str | None = None  # topic of the extracted item or assertion this is about, when known
     message: str  # plain language
     detail: str | None = None
     created_at: datetime  # wall
@@ -311,9 +312,9 @@ class Settings(BaseModel):
     slack_mirror: bool = True
     auto_sim: bool = False  # start a random scenario every auto_every_s wall seconds
     auto_every_s: float = 45
-    use_critic: bool = False  # critic pass inside understand
-    use_judge: bool = False  # judge pass inside reconcile
-    use_outcome_loop: bool = False  # outcome feedback on assertions
+    use_critic: bool = True  # critic pass inside understand
+    use_judge: bool = True  # judge pass inside reconcile
+    use_outcome_loop: bool = True  # outcome feedback on assertions
     # read-only, filled by the backend
     llm_configured: bool = False
     llm_model: str | None = None
@@ -466,6 +467,10 @@ class RerunBody(BaseModel):
     items: list[ExtractedItem] | None = None  # replacement items (skips understand)
     model: str | None = None  # LLM model override for this run
     from_stage: Literal["link", "store"] = "link"
+
+
+class UndoBody(BaseModel):
+    edit_id: str | None = None  # undo this edit; omitted: the latest one not undone
 
 
 class OperatorEdit(BaseModel):

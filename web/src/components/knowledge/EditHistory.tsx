@@ -7,6 +7,10 @@ import { useReview } from '../../store/review'
 import { Badge, Button, withToast } from '../ui'
 
 /** The operator edits of one assertion, newest first, each with its own Undo. */
+const HIDDEN = new Set(['sources', 'link_notes', 'closed_by']) // bookkeeping, not something the operator changed on purpose
+const changedFields = (e: { before: Record<string, unknown>; after: Record<string, unknown> }) =>
+  Object.keys(e.after).filter((k) => !HIDDEN.has(k) && JSON.stringify(e.before[k]) !== JSON.stringify(e.after[k]))
+
 export function EditHistory({ assertionId }: { assertionId: string }) {
   const rows = useReview((s) => s.history[assertionId])
   const [busy, setBusy] = useState<string | null>(null)
@@ -48,7 +52,7 @@ export function EditHistory({ assertionId }: { assertionId: string }) {
                 </span>
               </div>
               <dl className={e.undone ? 'mt-1.5 space-y-1 opacity-60' : 'mt-1.5 space-y-1'}>
-                {Object.keys(e.after).map((k) => (
+                {changedFields(e).map((k) => (
                   <div key={k} className="grid grid-cols-[6.5rem_1fr] gap-2 text-xs">
                     <dt className="text-muted">{FIELD_LABEL[k] ?? k}</dt>
                     <dd className="min-w-0 break-words">

@@ -17,9 +17,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+
 from .models import TRUST_RANK, ContextAssertion
 from .store import ContextStore
 from .workbench.contracts import JudgeVerdict, ReviewFlag
+from .workbench.processor import agents_quiet
 
 log = logging.getLogger(__name__)
 
@@ -188,6 +190,7 @@ def apply_verdicts(
                 thread_id=job.thread_id,
                 job_id=job.id,
                 assertion_id=flag_on or new.id,
+                item_topic=(old if (flag_on or new.id) == old.id else new).topic,
                 message=message,
                 detail=f"{new.id} vs {old.id}: {verdict}. {reason}",
                 created_at=datetime.now(),
@@ -286,6 +289,8 @@ async def judge_new_assertions(ctx) -> None:
     """after_store hook body. Never raises for an LLM or parsing problem."""
     if ctx.settings is None or not ctx.settings.use_judge or not ctx.new_assertions:
         return
+    if agents_quiet(ctx):
+        return  # quiet: no key (scripted mode) or seed bootstrap (no extra LLM calls)
     store, job = ctx.wb.store, ctx.job
     same_job_ids = {a.id for a in ctx.new_assertions}
     judged: set[frozenset[str]] = set()
