@@ -13,6 +13,10 @@ from context_layer.pipeline import build_store
 class FakeCol:
     def __init__(self):
         self.docs: list[dict] = []
+        self.search_indexes: list[dict] = []
+
+    def list_search_indexes(self):
+        return list(self.search_indexes)
 
     def delete_many(self, _filter):
         self.docs = []
@@ -82,6 +86,17 @@ def test_similar_refuses_when_nothing_is_embedded_or_the_mode_changed():
     db["meta"].insert_many([{"_id": "embedding:facts", "mode": "model:other", "dim": 3}])
     with pytest.raises(SystemExit, match="current mode"):
         mongo_store.similar(db, "facts", "anything")
+
+
+def test_similar_explains_when_the_vector_index_is_missing_or_still_building():
+    db = FakeDb()
+    db["meta"].insert_many([{"_id": "embedding:facts", "mode": embed.mode(), "dim": embed.HASH_DIM}])
+    with pytest.raises(SystemExit, match="No vector index"):
+        mongo_store.similar(db, "facts", "anything")
+    db["facts"].search_indexes = [{"name": "facts_vector", "status": "BUILDING", "queryable": False}]
+    with pytest.raises(SystemExit, match="not ready yet.*BUILDING"):
+        mongo_store.similar(db, "facts", "anything")
+    assert mongo_store.index_status(db, "facts")["status"] == "BUILDING"
 
 
 def test_text_of_reads_assertions_and_ground_truth_facts():

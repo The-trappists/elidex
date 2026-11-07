@@ -70,6 +70,12 @@ def vector_pipeline(collection: str, query_vector: list[float], k: int, num_cand
     ]
 
 
+def index_status(db, collection: str) -> dict | None:
+    """The Atlas Search entry of the vector index (`status`, `queryable`), or None if it was never created."""
+    name = vector_index_name(collection)
+    return next((i for i in db[collection].list_search_indexes() if i["name"] == name), None)
+
+
 def embed_collection(db, collection: str, batch: int = 64, log=print) -> dict:
     """Embed every document of `collection` that has no vector yet, then make sure the vector index exists."""
     from pymongo import UpdateOne
@@ -118,5 +124,17 @@ def similar(db, collection: str, query: str, k: int = 5) -> list[dict]:
         raise SystemExit(f"Nothing embedded in '{collection}' yet: run `ctx dataset embed --collection {collection}`.")
     if meta["mode"] != embed.mode():
         raise SystemExit(f"'{collection}' uses {meta['mode']} but the current mode is {embed.mode()}: use the same EMBEDDING_MODEL as when embedding.")
+    idx = index_status(db, collection)
+    if idx is None:
+        raise SystemExit(f"No vector index on '{collection}': run `ctx dataset embed --collection {collection}`.")
+    if not idx.get("queryable"):
+        raise SystemExit(f"The vector index of '{collection}' is not ready yet (status: {idx.get('status')}). Atlas builds it in the background: wait until Atlas UI > Atlas Search shows it Active, then retry.")
     vector = embed.embed([query])[0]
-    return list(db[collection].aggregate(vector_pipeline(collection, vector, k)))
+    from pymongo.errors import OperationFailure
+
+    try:
+        return list(db[collection].aggregate(vector_pipeline(collection, vector, k)))
+    except OperationFailure as e:
+        if "mongot" in str(e):  # the search process of the cluster is still being deployed or restarted
+            raise SystemExit("Atlas Search (mongot) is not available on the cluster yet. It starts a few minutes after the first search index is created: check Atlas UI > Atlas Search, then retry.") from e
+        raise

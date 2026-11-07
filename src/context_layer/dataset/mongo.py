@@ -34,6 +34,13 @@ def check(db) -> dict:
     for name in db.list_collection_names():
         s = db.command("collStats", name)
         out["collections"][name] = {"documents": s["count"], "data_mb": round(s["size"] / 1e6, 1), "storage_mb": round(s.get("storageSize", 0) / 1e6, 1), "index_mb": round(s.get("totalIndexSize", 0) / 1e6, 1)}
+    for name in ("assertions", "facts"):  # vector indexes: queryable only once Atlas has built them
+        try:
+            found = [{"name": i["name"], "status": i.get("status"), "queryable": i.get("queryable")} for i in db[name].list_search_indexes()]
+        except Exception:  # noqa: BLE001 - a cluster without Atlas Search
+            found = []
+        if found:
+            out.setdefault("search_indexes", {})[name] = found
     return out
 
 
