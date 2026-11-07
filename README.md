@@ -5,8 +5,8 @@
 Built by the **The-trappists** team for the **Since AI Hackathon 2026** in Turku, Finland.
 
 ElidEx is the project name. “Context layer” describes the role the tool plays in network operations.
-
-![ElidEx Knowledge graph showing linked knowledge, people, equipment, and conversations](docs/images/elidex-knowledge-graph.png)
+<!-- 
+![ElidEx Knowledge graph showing linked knowledge, people, equipment, and conversations](docs/images/elidex-knowledge-graph.png) -->
 
 *ElidEx's Knowledge graph, populated with the included sample data.*
 
