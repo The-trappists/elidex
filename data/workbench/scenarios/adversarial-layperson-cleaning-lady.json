@@ -60,5 +60,13 @@
       "delay_s": 25,
       "text": "Understood! Stepping away with my mop right now 👍"
     }
-  ]
+  ],
+  "tags": [
+    "slack",
+    "adversarial",
+    "layperson",
+    "description-to-id",
+    "synthetic"
+  ],
+  "origin": "synthetic"
 }

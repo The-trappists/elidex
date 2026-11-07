@@ -343,6 +343,16 @@ class AgentRunResult(BaseModel):
     evidence_confidence: float | None = None
 
 
+class OutcomeBody(BaseModel):
+    """After acting on an assertion: what the agent observes now (see mvp/feedback.py)."""
+
+    assertion_id: str
+    entity_id: str
+    after: dict[str, Any] = Field(default_factory=dict)
+    worked: bool | None = None  # overrides the judgment from `after`
+    at: datetime | None = None  # default: sim now
+
+
 class ResetBody(BaseModel):
     mode: Literal["seed", "empty"] = "seed"
 

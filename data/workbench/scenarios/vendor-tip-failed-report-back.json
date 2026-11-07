@@ -1,0 +1,97 @@
+{
+  "id": "vendor-tip-failed-report-back",
+  "title": "Slack: the vendor tip did not work on TRN-229",
+  "description": "Follow-up of slack-vendor-secondhand. The field engineer waited as the vendor tip said, the link stayed down, and a reboot fixed it. The new, verified advice is kept for TRN-229 only, and it must be flagged in conflict with the vendor hunch (same topic, same node, other author, other action). One node is not proof for every TX-5000, so the hunch is not closed.",
+  "channel": "slack",
+  "subject": "#transmission",
+  "incident": {
+    "entity_id": "TRN-229",
+    "kind": "link-down-after-power-dip",
+    "severity": "major",
+    "summary": "TRN-229 link still down after waiting for sync",
+    "observations": {
+      "interface_status": "DOWN",
+      "optical_levels": "normal",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "veikko",
+    "aino",
+    "erkki"
+  ],
+  "messages": [
+    {
+      "persona": "veikko",
+      "delay_s": 5,
+      "text": "update on TRN-229: waited 25 min like the vendor said, link still DOWN, alarms still on. so I did a reboot anyway, link came UP in about 3 minutes and alarms cleared."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 50,
+      "text": "thanks for reporting back. so the vendor tip did not hold, at least on 229. I'll push back on them."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 60,
+      "text": "One node is not proof for all TX-5000s. But on 229, waiting did nothing and the reboot fixed it."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 20,
+      "text": "yep. next time on 229 I'd reboot straight away."
+    }
+  ],
+  "resolves_incident_at_seq": 1,
+  "expected": {
+    "items": [
+      {
+        "conditions": [
+          {
+            "text": "after a short power dip",
+            "check": null
+          },
+          {
+            "text": "link down",
+            "check": {
+              "field": "interface_status",
+              "op": "==",
+              "value": "DOWN"
+            }
+          }
+        ],
+        "diagnosis": "waiting for sync did not bring the link back on TRN-229",
+        "action": "Reboot the node: on TRN-229 the link came back about 3 minutes after a reboot; waiting 25 minutes did nothing.",
+        "avoid": [],
+        "fact": null,
+        "type": "workaround",
+        "topic": "tx5000-sync-after-power-dip",
+        "summary": "On TRN-229, waiting for sync after a power dip did not work (25 minutes, link still down); a reboot restored the link in about 3 minutes.",
+        "scope": {
+          "instance_ids": [
+            "TRN-229"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "trust_level": "verified",
+        "evidence": "seq 1: 'waited 25 min ... link still DOWN ... did a reboot anyway, link came UP in about 3 minutes'",
+        "stated_by": "Veikko Vikkelä",
+        "cited_seq": [
+          1,
+          3
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "slack",
+    "lifecycle",
+    "conflict",
+    "field-feedback",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

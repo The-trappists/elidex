@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 from ..store import ContextHit, ContextStore
-from . import conditions
+from . import conditions, feedback
 
 # Small verb vocabulary: enough for the demo, extend as needed.
 VERBS = {
@@ -55,6 +55,8 @@ def check(
         if a.type == "workaround" and planned & verbs_in(" ".join(a.avoid)):
             steps.append(a.action or a.summary)
             reasons.append(f"Human knowledge says avoid '{'; '.join(a.avoid)}' here: {_cite(hit)}")
+            if (tr := feedback.track_record(a, at)).status == "contested":
+                reasons.append(f"But {a.id} is contested in the field: {tr.line()}")
         elif a.type == "access" and "dispatch" in planned:
             steps.append(a.action or a.fact or a.summary)
             reasons.append(f"Site access: {a.fact or a.summary} {_cite(hit)}")

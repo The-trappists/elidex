@@ -50,5 +50,14 @@
       "delay_s": 15,
       "text": "Stopping for hot pulla and coffee at Sodankylä Neste first, I'm frozen solid ☕"
     }
-  ]
+  ],
+  "tags": [
+    "slack",
+    "adversarial",
+    "access",
+    "needle",
+    "lifecycle",
+    "synthetic"
+  ],
+  "origin": "synthetic"
 }

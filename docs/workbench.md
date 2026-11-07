@@ -83,7 +83,8 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 The `/graph/*` views are rebuilt on each call from the live store and live threads. The Network page Inspector shows them: "Where it comes from" and "What it reaches" on knowledge, "History of advice" and "Who to ask" on an element.
 | `DELETE /assertions/{id}` | | 204 |
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
-| `POST /agent/run` | `AgentRunBody` | `AgentRunResult` |
+| `POST /agent/run` | `AgentRunBody` | `AgentRunResult` (hits carry `check_status`, `to_read`, `track_record`) |
+| `POST /agent/outcome` | `OutcomeBody` | `{recorded, track_record, line}`: did the knowledge work when applied? (see `docs/evaluation.md` §4) |
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
 | `DELETE /data/generated` | | `{removed: {kind: count}}`, then emits `state.reset` |
 | `GET /data/export` | | the full state JSON (attachment) |
