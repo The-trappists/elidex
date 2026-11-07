@@ -161,17 +161,16 @@ def run_agent(
     observations = _case_observations(case) if use_conditions else case.observations
     for hit in retrieved:
         assertion = hit.assertion
+        cr = conditions.evaluate(assertion, observations, case.description)
+        if use_conditions:
+            report.checks[assertion.id] = cr  # also for rules without conditions ("text only", see check_line)
         if not use_conditions or not assertion.conditions:
             report.hits.append(hit)
             continue
-        cr = conditions.evaluate(assertion, observations, case.description)
-        report.checks[assertion.id] = cr
-        if cr.applies is True:
-            report.hits.append(hit)
-        elif cr.failed:
+        if cr.failed:
             report.skipped.append((hit, f"{assertion.topic}: condition not met: " + "; ".join(cr.failed)))
         else:
-            report.skipped.append((hit, f"{assertion.topic}: could not confirm condition: " + "; ".join(cr.unknown)))
+            report.hits.append(hit)
     report.recommendation = _llm(case, report.hits, report.checks) if use_llm else _template(case, report.hits, report.checks)
     if use_guard and case.planned_action:
         report.verdict = guard.check(
