@@ -626,3 +626,16 @@ export interface KgGraph {
   at: string
   elements: KgElement[]
 }
+
+/** POST /data/load-dataset: what the loaded sample of the company dataset contains. */
+export interface DatasetSample {
+  dataset: string
+  sites: number
+  elements: number
+  links: number
+  threads: number
+  threads_by_kind: Record<string, number>
+  personas: number
+  assertions: number
+  connected_components: number
+}

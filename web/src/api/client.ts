@@ -2,6 +2,7 @@
 // backend's `detail` message, ready for a toast.
 import type {
   AgentRunBody,
+  DatasetSample,
   AgentRunResult,
   ClockState,
   ContextHit,
@@ -130,6 +131,7 @@ export const api = {
   deleteGenerated: () => req<{ removed: Record<string, number> }>('DELETE', '/data/generated'),
   exportUrl: '/api/data/export',
   import: (data: unknown) => req<void>('POST', '/data/import', data),
+  loadDataset: (body: { sites: number; threads: number; seed?: number }) => req<DatasetSample>('POST', '/data/load-dataset', body),
 
   // settings
   settings: () => req<Settings>('GET', '/settings'),

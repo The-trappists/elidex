@@ -135,7 +135,7 @@ Status: the pure parts (mentions, documents, rows, file source) are tested offli
 ## Using it
 
 - Core and bench: `Inventory.load(root / "network")`; `ctx dataset bench` feeds the linker with the true extractions, so it measures linking and storing, **not the LLM**. For the LLM, read threads of `conversations/` and score the output against `facts.jsonl`.
-- The **Workbench loads everything in memory** and Cytoscape draws every node: use `tiny` or `demo` there, never `large`.
+- The **Workbench loads everything in memory** and Cytoscape draws every node: never `large`. Take a sample instead: `ctx dataset export-workbench out/dataset/tiny` (or the Data page button "Load company dataset"), see [workbench.md](workbench.md#company-dataset-sample).
 - Load shards lazily (one line at a time); do not `json.load` a whole shard of `large` (~80 MB each is fine, all of them is not).
 
 ## Findings from `ctx dataset bench` on `large` (2026-11-07)

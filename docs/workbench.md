@@ -109,7 +109,8 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
 | `DELETE /data/generated` | | `{removed: {kind: count}}`, then emits `state.reset` |
 | `GET /data/export` | | the full state JSON (attachment) |
-| `POST /data/import` | the export JSON | 204, then emits `state.reset` |
+| `POST /data/import` | the export JSON | 204, then emits `state.reset`. 422 when an element's `site_id` or a link's end is unknown (same rules as `POST /elements` and `/links`). The optional key `process_on_import` (thread ids) is processed right away, as the seed is at first start |
+| `POST /data/load-dataset` | `{sites=40 (9-150), threads=300 (0-1000), seed=42}` | the sample summary (counts, `connected_components`). Builds a connected sample of the company dataset on the fly (`DATASET_DIR`, else `out/dataset/tiny`, generated in 2 s when missing) and replaces the state like an import. 422 for a dataset over 500k threads (use the CLI); the Data page button "Load company dataset" calls it |
 | `GET /settings`, `PUT /settings` | `SettingsPatch` | `Settings` |
 | `GET /slack/status` | | `{connected, channel, error}` |
 | `GET /llm/calls?purpose=&thread_id=&limit=` | | `LlmCall[]`, newest first, read from the JSONL |
@@ -173,6 +174,10 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 - a sink that publishes `llm.call` (thread-safe).
 
 `LLMExtractor.last_traces` gives the call ids to put in `job.llm_call_ids`. API keys are never traced.
+
+### Company dataset sample
+
+`uv run ctx dataset export-workbench out/dataset/tiny [--sites 40 --threads 300 --out out/workbench-sample.json --seed 42]` writes an export file (loadable with Import or `POST /data/import`): a connected sub-network grown from the Elisa seed by walking links (TRN-042 and its hub stay), the people who write, a thread mix (knowledge 30 %, hard negatives 15 %, noise naming sub-network elements 35 %, other noise; never a thread naming an element outside the sample; none after the sim start), the true facts of those threads linked into assertions, the hand-written scenarios and the seed threads (processed on load). Deterministic for the same dataset, options and seed. With the default 40 sites, `tiny` gives about 160 elements and 147 links, which the Network page draws without lag. Never use `large` as the Workbench source of truth: only the small sample goes in.
 
 ## Seed data (`data/workbench/`)
 
