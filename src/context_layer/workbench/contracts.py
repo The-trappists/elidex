@@ -207,6 +207,26 @@ class AssertionEdit(BaseModel):
     undone: bool = False
 
 
+ApplicationOutcome = Literal["pending", "worked", "failed", "unclear"]
+
+
+class RuleApplication(BaseModel):
+    """The agent applied a piece of knowledge to a case and said so in a thread. The next human messages of
+    that thread decide the outcome (passive outcome loop, nobody is asked anything)."""
+
+    id: str  # "app_0001"
+    assertion_id: str
+    entity_id: str
+    thread_id: str
+    applied_at: datetime  # sim
+    message_seq: int | None = None  # seq of the agent message that announced it
+    outcome: ApplicationOutcome = "pending"
+    outcome_quote: str | None = None  # verbatim from the human message that decided it
+    outcome_reason: str | None = None
+    outcome_at: datetime | None = None  # sim
+    method: Literal["llm", "heuristic"] | None = None
+
+
 class CriticVerdict(BaseModel):
     """Critic pass inside understand: one verdict per extracted item."""
 
@@ -342,6 +362,7 @@ EventType = Literal[
     "slack.status",  # data: {"connected": bool, "channel": str | None, "error": str | None}
     "llm.call",  # data: LlmCall
     "review.flag",  # data: ReviewFlag (created, refreshed, dismissed or undismissed)
+    "application.upserted",  # data: RuleApplication (created or outcome decided)
     "state.reset",  # data: {} -> clients refetch GET /api/state
     "log",  # data: {"level": "info" | "warning" | "error", "text": str}
 ]
@@ -409,6 +430,9 @@ class AgentRunResult(BaseModel):
     hits: list[dict[str, Any]]  # {"matched_via": str, **assertion}
     skipped: list[dict[str, Any]]  # {"assertion_id": str, "reason": str}
     verdict: dict[str, Any] | None = None  # {"decision", "action", "steps", "reasons"}
+    # outcome loop (only when settings.use_outcome_loop is on and knowledge was applied)
+    thread_id: str | None = None  # the thread the agent message was posted in
+    applications: list[dict[str, Any]] = Field(default_factory=list)  # RuleApplication JSON
 
 
 class ResetBody(BaseModel):

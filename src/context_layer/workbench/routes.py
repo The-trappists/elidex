@@ -37,6 +37,7 @@ from .contracts import (
     RerunBody,
     ResetBody,
     ReviewFlag,
+    RuleApplication,
     Scenario,
     ScenarioRun,
     Settings,
@@ -369,6 +370,20 @@ async def undismiss_flag(flag_id: str, request: Request) -> ReviewFlag:
     return _set_dismissed(request, flag_id, False)
 
 
+@router.get("/applications")
+async def list_applications(
+    request: Request, assertion_id: str | None = None, thread_id: str | None = None, outcome: str | None = None
+) -> list[RuleApplication]:
+    """Knowledge the agent applied and what came of it, newest first. Filters are optional."""
+    apps = [
+        a for a in get_wb(request).applications.values()
+        if (assertion_id is None or a.assertion_id == assertion_id)
+        and (thread_id is None or a.thread_id == thread_id)
+        and (outcome is None or a.outcome == outcome)
+    ]
+    return sorted(apps, key=lambda a: (a.applied_at, a.id), reverse=True)
+
+
 @router.post("/jobs/{job_id}/rerun", status_code=202)
 async def rerun_job(job_id: str, body: RerunBody, request: Request) -> PipelineJob:
     """Run the job's thread again from link (items: body.items, else the job's own items; no LLM call).
@@ -420,7 +435,20 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         if not body.use_llm:
             raise
         raise HTTPException(502, f"LLM call failed: {e}") from e
+    thread_id, applications = None, []
+    if wb.settings.use_outcome_loop and report.hits and body.entity_id:
+        try:  # the loop is automated and optional: a failure here never breaks the agent run
+            from .. import outcome
+
+            thread_id, apps = outcome.post_application(
+                wb, body.entity_id, [h.assertion for h in report.hits], body.description or ""
+            )
+            applications = [a.model_dump(mode="json") for a in apps]
+        except Exception as e:  # noqa: BLE001
+            wb.emit("log", {"level": "warning", "text": f"outcome loop: could not post the agent message ({e})"})
     return AgentRunResult(
+        thread_id=thread_id,
+        applications=applications,
         recommendation=report.recommendation,
         hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],

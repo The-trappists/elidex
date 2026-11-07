@@ -89,7 +89,8 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `POST /review/flags/{id}/dismiss`, `/undismiss` | | `ReviewFlag` |
 | `POST /jobs/{job_id}/rerun` | `RerunBody` | 202 and the new finished `PipelineJob`. Skips the extractor: uses `items`, else the job's own items. `from_stage="store"` behaves as `link`. `model` is not supported yet (422) |
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
-| `POST /agent/run` | `AgentRunBody` | `AgentRunResult` |
+| `POST /agent/run` | `AgentRunBody` | `AgentRunResult`. With `use_outcome_loop` on and knowledge applied, it also posts the ops agent message and returns the optional `thread_id` and `applications` |
+| `GET /applications?assertion_id=&thread_id=&outcome=` | | `RuleApplication[]`, newest first (outcome loop) |
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
 | `DELETE /data/generated` | | `{removed: {kind: count}}`, then emits `state.reset` |
 | `GET /data/export` | | the full state JSON (attachment) |
@@ -104,6 +105,16 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `GET /export/session.json` | | snapshot plus all jobs plus all LLM calls |
 
 Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show `detail` in a toast.
+
+### Passive outcome loop (`src/context_layer/outcome.py`, toggle `use_outcome_loop`)
+
+The loop closes itself and nobody is asked for anything.
+
+1. `POST /agent/run` applies knowledge to a case. When the toggle is on and at least one assertion was applied (conditions not failed), the ops agent (persona `ops-agent`) posts **one informational message** ("Applied ctx_0001 on TRN-117: ... Avoid: ...") into the thread of the entity's newest incident, or into a new `manual` thread named after the case. It never asks anyone to reply, confirm or rate. One `RuleApplication` (outcome `pending`) is created per assertion; event `application.upserted`.
+2. The thread's next job, in the `after_store` hook, looks at the human messages after the agent message (the ops agent's own items are ignored by an `after_understand` hook). One LLM call (critic role, purpose `judge`) returns `worked`, `failed` or `unclear` with a verbatim quote. Without an LLM, or when the call fails, a keyword heuristic decides (`method: "heuristic"`).
+3. `worked`: trust becomes `verified` (stated by the human, evidence = quote), the thread message is added as a source, and a `judge_decision` flag says "Confirmed in the field". `failed`: confidence x0.7 and a `low_confidence` flag. `unclear`: nothing changes, the application stays pending. An application is decided once; a thread without a pending application costs no LLM call. A failure is noted in `job.notes` and never blocks the job.
+
+Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 
 ### Processing rules (processor.py)
 

@@ -118,5 +118,15 @@
     "expertise": "Looks after the building: breakers, doors, heating. Knows the rooms and the labels, not what the equipment does.",
     "style": "Practical and apologetic ('sorry to bother the network people'), describes sounds and lights ('two short beeps', 'a yellow light on the thing with lots of cables'), reads stickers aloud, asks before touching anything.",
     "origin": "synthetic"
+  },
+  {
+    "id": "ops-agent",
+    "name": "Ops agent",
+    "role": "AI operations agent",
+    "team": "Operations",
+    "avatar_color": "#0d9488",
+    "expertise": "Applies recorded human knowledge to cases and reports what it did.",
+    "style": "Informational, one line per applied rule, never asks anyone for anything.",
+    "origin": "synthetic"
   }
 ]

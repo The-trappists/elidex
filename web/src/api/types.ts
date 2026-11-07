@@ -276,6 +276,22 @@ export interface ReviewFlag {
   dismissed: boolean
 }
 
+export type ApplicationOutcome = 'pending' | 'worked' | 'failed' | 'unclear'
+
+export interface RuleApplication {
+  id: string
+  assertion_id: string
+  entity_id: string
+  thread_id: string
+  applied_at: string // sim
+  message_seq: number | null
+  outcome: ApplicationOutcome
+  outcome_quote: string | null
+  outcome_reason: string | null
+  outcome_at: string | null // sim
+  method: 'llm' | 'heuristic' | null
+}
+
 export type CriticVerdictKind = 'keep' | 'downgrade' | 'reject'
 
 export interface AssertionEdit {
@@ -453,6 +469,7 @@ export type WbEvent =
   | Ev<'slack.status', SlackStatus>
   | Ev<'llm.call', LlmCall>
   | Ev<'review.flag', ReviewFlag>
+  | Ev<'application.upserted', RuleApplication>
   | Ev<'state.reset', Record<string, never>>
   | Ev<'log', { level: 'info' | 'warning' | 'error'; text: string }>
 
@@ -561,6 +578,8 @@ export interface AgentRunResult {
   hits: ContextHit[]
   skipped: { assertion_id: string; reason: string }[]
   verdict: GuardVerdict | null
+  thread_id?: string | null // outcome loop: thread the agent message was posted in
+  applications?: RuleApplication[]
 }
 
 export interface LlmCheckResult {

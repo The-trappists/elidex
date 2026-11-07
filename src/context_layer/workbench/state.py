@@ -30,6 +30,7 @@ from .contracts import (
     OperatorEdit,
     PipelineJob,
     ReviewFlag,
+    RuleApplication,
     Scenario,
     ScenarioRun,
     Settings,
@@ -89,6 +90,7 @@ class Workbench:
     jobs: dict[str, PipelineJob]
     flags: dict[str, ReviewFlag]  # operator console, never blocks the loop
     edits: dict[str, AssertionEdit]  # operator edit history
+    applications: dict[str, RuleApplication]  # outcome loop: knowledge the agent applied
     llm_calls: list[LlmCall]  # last 500 in memory; all of them in out/workbench/llm_calls.jsonl
     store: ContextStore  # core store, rebuilt when the inventory changes
 
@@ -463,6 +465,25 @@ class Workbench:
         self.emit("review.flag", flag)
         return flag
 
+    # ------------------------------------------------------------ outcome loop
+
+    def add_application(self, app: RuleApplication) -> RuleApplication:
+        """Store a new application (id assigned) and emit application.upserted."""
+        app.id = _next_id("app", self.applications)
+        self.applications[app.id] = app
+        self.emit("application.upserted", app)
+        return app
+
+    def update_application(self, app_id: str, **fields: Any) -> RuleApplication:
+        """Change fields of an application and emit application.upserted. KeyError: unknown id."""
+        app = self.applications[app_id]
+        for k, v in fields.items():
+            if k not in RuleApplication.model_fields or k == "id":
+                raise ValueError(f"unknown application field {k}")
+            setattr(app, k, v)
+        self.emit("application.upserted", app)
+        return app
+
     def _edit_state(self, a: ContextAssertion) -> dict[str, Any]:
         """The fields an operator edit can touch, as JSON."""
         d = a.model_dump(mode="json")
@@ -538,7 +559,7 @@ class Workbench:
     def _clear(self) -> None:
         self.elements, self.sites, self.links, self.personas = {}, {}, {}, {}
         self.threads, self.incidents, self.scenarios, self.runs, self.jobs = {}, {}, {}, {}, {}
-        self.flags, self.edits = {}, {}
+        self.flags, self.edits, self.applications = {}, {}, {}
         self.processor.reset()
         old = getattr(self, "store", None)
         if old:
