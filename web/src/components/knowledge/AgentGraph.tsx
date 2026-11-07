@@ -66,7 +66,7 @@ export function AgentGraph({ targetId, evidenceIds }: { targetId: string; eviden
   if (!data) return <div className="p-4 text-xs text-muted">Loading graph…</div>
 
   return (
-    <div className="relative h-[32rem] overflow-hidden rounded-lg border border-line bg-bg">
+    <div className="relative h-[min(72vh,48rem)] min-h-[32rem] overflow-hidden rounded-lg border border-line bg-bg">
       <KgCanvas defs={defs} selectedId={null} matchIds={[]} targetHighlightId={targetId} evidenceIds={evidenceIds} onSelect={() => {}} handle={canvas} />
       <Button size="sm" variant="ghost" icon={<Maximize2 size={13} />} className="absolute right-2 top-2 bg-surface/90" onClick={() => canvas.current?.fit()}>
         Fit

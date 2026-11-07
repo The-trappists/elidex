@@ -45,10 +45,12 @@ def check(
     entity_id: str,
     at: datetime | None = None,
     observations: dict[str, Any] | None = None,
+    context_hits: list[ContextHit] | None = None,
 ) -> Verdict:
     planned = verbs_in(action)
     steps, reasons = [], []
-    for hit in store.get_context(entity_id, at=at):
+    hits = context_hits if context_hits is not None else store.get_context(entity_id, at=at)
+    for hit in hits:
         a = hit.assertion
         if observations is not None and conditions.evaluate(a, observations).applies is False:
             continue

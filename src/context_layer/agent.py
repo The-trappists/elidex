@@ -120,6 +120,35 @@ def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.Condit
     return llm.complete(AGENT_PROMPT, user)
 
 
+def _case_observations(case: Case) -> dict[str, Any]:
+    """Combine explicit observations with facts stated plainly in the case description."""
+    text = case.description.lower()
+    inferred: dict[str, Any] = {}
+    if re.search(r"\b(no|without)\s+(an?\s+)?sfp\s+(was\s+)?(changed|replaced|swapped)", text):
+        inferred["sfp_replaced"] = False
+    elif re.search(r"\bsfp\s+(was\s+)?(replaced|swapped|changed)\b", text):
+        inferred["sfp_replaced"] = True
+    if re.search(r"\b(interface|link)\s+(is\s+)?up\b", text):
+        inferred["interface_status"] = "UP"
+    elif re.search(r"\b(interface|link)\s+(is\s+)?down\b", text):
+        inferred["interface_status"] = "DOWN"
+    if re.search(r"\b(optics|optical levels?)\s+(are\s+)?normal\b", text):
+        inferred["optical_levels"] = "normal"
+    elif re.search(r"\b(optics|optical levels?)\s+(are\s+)?low\b", text):
+        inferred["optical_levels"] = "low"
+    elif re.search(r"\b(optics|optical levels?)\s+(are\s+)?high\b", text):
+        inferred["optical_levels"] = "high"
+    if re.search(r"\b(counters?|traffic)\s+(remain|stay|stuck)\s+at\s+zero\b|\bzero\s+(traffic\s+)?counters?\b|\bno traffic\b", text):
+        inferred["traffic_counters"] = 0
+    elif re.search(r"\b(counters?|traffic)\s+(are\s+)?(increasing|moving|flowing)\b|\btraffic counters?\s+(are\s+)?(increasing|moving|flowing)\b", text):
+        inferred["traffic_counters"] = 1
+    if re.search(r"\balarms?\s+(are\s+)?cleared\b", text):
+        inferred["alarms"] = "cleared"
+    elif re.search(r"\balarms?\s+(are\s+)?(active|firing)\b", text):
+        inferred["alarms"] = "active"
+    return {**inferred, **case.observations}
+
+
 def run_agent(
     store: ContextStore,
     case: Case,
@@ -127,19 +156,30 @@ def run_agent(
     use_guard: bool = False,
     use_llm: bool = False,
 ) -> AgentReport:
-    report = AgentReport(case=case, hits=store.get_context(case.entity_id, at=case.at))
-    if use_conditions:
-        kept = []
-        for hit in report.hits:
-            cr = conditions.evaluate(hit.assertion, case.observations)
-            if cr.applies is False:
-                report.skipped.append((hit, "condition not met: " + "; ".join(cr.failed)))
-            else:
-                kept.append(hit)
-                report.checks[hit.assertion.id] = cr
-        report.hits = kept
-    report.recommendation = (_llm if use_llm else _template)(case, report.hits, report.checks)
+    retrieved = store.get_context(case.entity_id, at=case.at)
+    report = AgentReport(case=case, hits=[])
+    observations = _case_observations(case) if use_conditions else case.observations
+    for hit in retrieved:
+        assertion = hit.assertion
+        if not use_conditions or not assertion.conditions:
+            report.hits.append(hit)
+            continue
+        cr = conditions.evaluate(assertion, observations, case.description)
+        report.checks[assertion.id] = cr
+        if cr.applies is True:
+            report.hits.append(hit)
+        elif cr.failed:
+            report.skipped.append((hit, f"{assertion.topic}: condition not met: " + "; ".join(cr.failed)))
+        else:
+            report.skipped.append((hit, f"{assertion.topic}: could not confirm condition: " + "; ".join(cr.unknown)))
+    report.recommendation = _llm(case, report.hits, report.checks) if use_llm else _template(case, report.hits, report.checks)
     if use_guard and case.planned_action:
-        obs = case.observations if use_conditions else None
-        report.verdict = guard.check(store, case.planned_action, case.entity_id, at=case.at, observations=obs)
+        report.verdict = guard.check(
+            store,
+            case.planned_action,
+            case.entity_id,
+            at=case.at,
+            observations=observations if use_conditions else None,
+            context_hits=report.hits,
+        )
     return report

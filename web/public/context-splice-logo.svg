@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 180" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Context splice</title>
+  <desc id="desc">A triangular telecom network mesh with a small linked context marker.</desc>
+  <g stroke="#0063E5" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M67 77 196 44M67 103l129 33M211 61v58" />
+  </g>
+  <g fill="#fff" stroke="#0063E5" stroke-width="9" stroke-linejoin="round">
+    <path d="m44 64 22-13 22 13v26l-22 13-22-13z" />
+    <path d="m191 25 22-13 22 13v26l-22 13-22-13z" />
+    <path d="m191 129 22-13 22 13v26l-22 13-22-13z" />
+  </g>
+  <g transform="rotate(-14 132 90)">
+    <rect x="119" y="78" width="26" height="24" rx="5" fill="#fff" stroke="#0063E5" stroke-width="5" />
+    <circle cx="132" cy="90" r="3.5" fill="#0063E5" />
+  </g>
+</svg>
