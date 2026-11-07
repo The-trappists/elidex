@@ -60,7 +60,8 @@ function useTheme() {
     } catch {
       /* storage blocked */
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
+    // The workbench is dark-first; use dark unless the user has saved a choice.
+    return true
   })
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
