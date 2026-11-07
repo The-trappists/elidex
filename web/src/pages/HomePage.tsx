@@ -7,9 +7,9 @@ import {
   FileText,
   KeyRound,
   MessagesSquare,
+  Network,
   Scroll,
   ShieldAlert,
-  ShieldCheck,
   Sparkles,
   Users,
   Waypoints,
@@ -24,8 +24,6 @@ interface University {
 
 interface TeamMember {
   name: string
-  role: string
-  alias?: string
   degree: string
   unis: University[]
   region: string
@@ -38,8 +36,6 @@ interface TeamMember {
 const TEAM_MEMBERS: TeamMember[] = [
   {
     name: 'Matteo',
-    role: 'Lead Architect & Ops Alchemist',
-    alias: 'The Trappist Prior',
     badge: 'UnPtitBelge',
     avatar: '/matteo.png',
     linkedin: 'https://www.linkedin.com/in/matteo-morbee-cs/',
@@ -50,8 +46,6 @@ const TEAM_MEMBERS: TeamMember[] = [
   },
   {
     name: 'Manuel',
-    role: 'Full-Stack & Agent Interactions',
-    alias: 'The Scribe',
     badge: 'mnlrc',
     avatar: '/manu.png',
     linkedin: 'https://www.linkedin.com/in/mnlrc/',
@@ -65,8 +59,6 @@ const TEAM_MEMBERS: TeamMember[] = [
   },
   {
     name: 'Haluk',
-    role: 'Knowledge Engineer & NLP',
-    alias: 'The Cellar Master',
     badge: 'NLP & Lore',
     degree: 'MEng in Computer Science',
     unis: [{ name: 'KULeuven (Belgium)', logo: '/kuleuven.svg' }],
@@ -75,8 +67,6 @@ const TEAM_MEMBERS: TeamMember[] = [
   },
   {
     name: 'Bilal',
-    role: 'Network Operations Specialist',
-    alias: 'The Gatekeeper',
     badge: 'Domain Ops',
     avatar: '/bilal.png',
     linkedin: 'https://www.linkedin.com/in/bilal-vandenberge/',
@@ -107,7 +97,7 @@ export default function HomePage() {
 
       if (scrollAccRef.current > SCROLL_THRESHOLD) {
         // Scroll down
-        if (currentPage < 2) {
+        if (currentPage < 3) {
           isSwitchingRef.current = true
           scrollAccRef.current = 0
           setCurrentPage((prev) => prev + 1)
@@ -186,16 +176,14 @@ export default function HomePage() {
       {/* Global Top Navbar */}
       <header className="fixed top-0 left-0 right-0 z-40 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6 sm:px-10">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl border border-accent/40 bg-surface-2 shadow-md shadow-accent/10">
-            <span className="font-mono text-lg font-black tracking-tighter text-accent">EX</span>
-          </div>
+          <img src="/elidex-logo.png" alt="ElidEx" className="size-10 object-contain" />
           <span className="text-xl font-black tracking-tight text-text">
             Elid<span className="bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">Ex</span>
           </span>
         </div>
 
         {/* Navigation Dots / Pills */}
-        <nav className="flex items-center gap-2 rounded-full border border-line/70 bg-surface/70 px-3 py-1.5 backdrop-blur-md">
+        <nav className="flex max-w-[calc(100vw-8rem)] items-center gap-2 overflow-x-auto whitespace-nowrap rounded-full border border-line/70 bg-surface/70 px-3 py-1.5 backdrop-blur-md sm:max-w-none">
           <button
             onClick={() => goToPage(0)}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
@@ -219,6 +207,14 @@ export default function HomePage() {
             }`}
           >
             The Trappists
+          </button>
+          <button
+            onClick={() => goToPage(3)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+              currentPage === 3 ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-text'
+            }`}
+          >
+            About Elisa
           </button>
         </nav>
       </header>
@@ -247,15 +243,47 @@ export default function HomePage() {
             {/* Slogan Container (TBD placeholder ready for final text) */}
             <div className="mb-8 max-w-2xl">
               <p className="text-xl font-semibold tracking-tight text-text/90 sm:text-2xl">
-                Sacred tribal lore decoded for autonomous network agents.
+                Hidden knowledge? No thank you!
               </p>
-              <div className="mt-2 inline-block rounded-md border border-dashed border-line/70 bg-surface/50 px-3 py-1 text-xs text-muted">
-                [ Slogan placeholder: TBD — e.g. &ldquo;The Monastic Codex for Autonomous Network Operations&rdquo; ]
+            </div>
+
+            {/* Three Pillars Summary Cards */}
+            <div className="grid w-full gap-4 text-left sm:grid-cols-3">
+              <div className="group rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur-md transition-all hover:border-accent/40 hover:shadow-lg">
+                <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+                  <MessagesSquare size={18} />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold text-text">1. Capture</h3>
+                <p className="text-xs leading-relaxed text-muted">
+                  Parses Slack and email for useful context.
+                  <br />
+                  Links it to network assets for agents.
+                </p>
+              </div>
+
+              <div className="group rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur-md transition-all hover:border-accent/40 hover:shadow-lg">
+                <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+                  <Waypoints size={18} />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold text-text">2. Link</h3>
+                <p className="text-xs leading-relaxed text-muted">
+                  Anchors human context directly onto nodes, sites, and hardware classes with validity intervals.
+                </p>
+              </div>
+
+              <div className="group rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur-md transition-all hover:border-accent/40 hover:shadow-lg">
+                <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
+                  <Bot size={18} />
+                </div>
+                <h3 className="mb-1 text-sm font-semibold text-text">3. Automate</h3>
+                <p className="text-xs leading-relaxed text-muted">
+                  Enhances autonomous network operations avoiding additional work for the specialists
+                </p>
               </div>
             </div>
 
             {/* Start / Enter Dashboard Primary CTA Button */}
-            <div className="mb-10 flex flex-col items-center gap-2.5">
+            <div className="mt-8 flex flex-col items-center gap-2.5">
               <button
                 onClick={() => handleEnterDashboard()}
                 disabled={transitioning}
@@ -267,51 +295,19 @@ export default function HomePage() {
               </button>
               <span className="text-xs text-muted">Direct entry into live operations workbench</span>
             </div>
-
-            {/* Three Pillars Summary Cards */}
-            <div className="grid w-full gap-4 text-left sm:grid-cols-3">
-              <div className="group rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur-md transition-all hover:border-accent/40 hover:shadow-lg">
-                <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-                  <MessagesSquare size={18} />
-                </div>
-                <h3 className="mb-1 text-sm font-semibold text-text">1. Unspoken Lore</h3>
-                <p className="text-xs leading-relaxed text-muted">
-                  Extracts undocumented tricks and barrier keys from Slack & email chatter into canonical assertions.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur-md transition-all hover:border-accent/40 hover:shadow-lg">
-                <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-                  <Waypoints size={18} />
-                </div>
-                <h3 className="mb-1 text-sm font-semibold text-text">2. Topology Linking</h3>
-                <p className="text-xs leading-relaxed text-muted">
-                  Anchors human context directly onto nodes, sites, and hardware classes with validity intervals.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-line bg-surface/60 p-5 backdrop-blur-md transition-all hover:border-accent/40 hover:shadow-lg">
-                <div className="mb-3 flex size-9 items-center justify-center rounded-xl bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-                  <ShieldCheck size={18} />
-                </div>
-                <h3 className="mb-1 text-sm font-semibold text-text">3. Ask-Before-Act</h3>
-                <p className="text-xs leading-relaxed text-muted">
-                  Autonomous agents check ElidEx before acting, preventing unnecessary reboots and wasted dispatches.
-                </p>
-              </div>
-            </div>
           </div>
 
-          {/* Bottom scroll down trigger */}
-          <div className="mx-auto flex flex-col items-center pt-2">
+          {/* Home page footer */}
+          <footer className="mx-auto flex w-full max-w-5xl items-center justify-between border-t border-line/60 pt-3 text-xs text-muted">
+            <span>ElidEx · Since AI 2026</span>
             <button
               onClick={() => goToPage(1)}
-              className="group flex flex-col items-center gap-1 text-xs text-muted transition hover:text-text"
+              className="group flex items-center gap-1.5 transition hover:text-text"
             >
-              <span>Scroll down for the problem & original Elisa case</span>
-              <ArrowDown size={14} className="animate-bounce text-accent" />
+              <span>Explore the Elisa case</span>
+              <ArrowDown size={14} className="text-accent" />
             </button>
-          </div>
+          </footer>
         </section>
 
         {/* ================= SECTION 1: ELISA CASE BRIEFING ================= */}
@@ -459,7 +455,7 @@ export default function HomePage() {
         <section className="relative flex h-screen w-full flex-col justify-between overflow-y-auto px-6 pt-24 pb-6 sm:px-10">
           <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center">
             {/* Team Header */}
-            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 max-w-5xl">
+            <div className="mb-8 max-w-5xl">
               <div className="max-w-2xl">
                 <div className="mb-2 inline-flex items-center gap-2 rounded-md border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                   <Sparkles size={14} />
@@ -471,13 +467,6 @@ export default function HomePage() {
                 <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
                   Combining Belgian folklore, the monastic discipline of illuminating operational manuscripts, and autonomous network telemetry, our team codifies unwritten operational knowledge for telecom NOCs.
                 </p>
-              </div>
-              <div className="shrink-0 flex items-center justify-start sm:justify-end">
-                <img
-                  src="/trappists-logo.png"
-                  alt="The Trappists Emblem"
-                  className="size-24 sm:size-28 rounded-2xl shadow-lg border border-accent/20 object-contain hover:scale-105 transition-transform"
-                />
               </div>
             </div>
 
@@ -539,13 +528,6 @@ export default function HomePage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs font-semibold text-accent">{member.role}</div>
-                    {member.alias && (
-                      <div className="mt-0.5 text-[11px] font-serif italic text-muted">
-                        &ldquo;{member.alias}&rdquo;
-                      </div>
-                    )}
-
                     {/* Degree */}
                     <div className="mt-3 text-xs font-medium text-text leading-snug">
                       {member.degree}
@@ -622,6 +604,61 @@ export default function HomePage() {
               <span>Previous (Elisa Case)</span>
             </button>
             <button
+              onClick={() => goToPage(3)}
+              className="flex items-center gap-1.5 text-xs text-muted transition hover:text-text"
+            >
+              <span>About Elisa</span>
+              <ArrowDown size={13} className="text-accent" />
+            </button>
+          </div>
+        </section>
+
+        {/* ================= SECTION 3: ABOUT ELISA ================= */}
+        <section className="relative flex h-screen w-full flex-col justify-between overflow-y-auto px-6 pt-24 pb-6 sm:px-10">
+          <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-md border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                <Network size={14} />
+                <span>About the Challenge Partner</span>
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">Why ElidEx for Elisa?</h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+                Elisa is the company behind this challenge. Its autonomous network operations already use AI, but that AI cannot act on operational knowledge that remains buried in conversations.
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <article className="rounded-2xl border border-line bg-surface/70 p-6 shadow-sm backdrop-blur-md">
+                <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <Waypoints size={20} />
+                </div>
+                <h3 className="text-lg font-semibold">What is Elisa?</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">
+                  Elisa is a telecommunications company and the challenge partner for this project. The challenge focuses on helping autonomous network operations use both live network data and the experience of the specialists who know the network.
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-line bg-surface/70 p-6 shadow-sm backdrop-blur-md">
+                <div className="mb-4 flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <Bot size={20} />
+                </div>
+                <h3 className="text-lg font-semibold">Why are we building this for Elisa?</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">
+                  Useful workarounds, access details, and lessons from past fixes often live in chats and emails. ElidEx captures that context from the channels specialists already use, links it to the right network elements and time period, then makes it available to agents—without asking specialists to fill in forms.
+                </p>
+              </article>
+            </div>
+          </div>
+
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between pt-2">
+            <button
+              onClick={() => goToPage(2)}
+              className="flex items-center gap-1 text-xs text-muted transition hover:text-text"
+            >
+              <ArrowUp size={13} />
+              <span>Previous (The Trappists)</span>
+            </button>
+            <button
               onClick={() => goToPage(0)}
               className="flex items-center gap-1.5 text-xs text-muted transition hover:text-text"
             >
@@ -635,9 +672,9 @@ export default function HomePage() {
       {/* Transition loading overlay (smooth sequence ~1.15s) */}
       {transitioning && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg/90 backdrop-blur-md animate-fade-in [animation-duration:250ms]">
-          <div className="relative flex size-20 items-center justify-center rounded-2xl border border-accent/40 bg-surface shadow-2xl">
+          <div className="relative flex size-20 items-center justify-center rounded-2xl bg-surface shadow-2xl">
             <div className="absolute inset-0 animate-ping rounded-2xl bg-accent/20 [animation-duration:1.5s]" />
-            <span className="font-mono text-2xl font-black text-accent">EX</span>
+            <img src="/elidex-logo.png" alt="" className="relative size-14 object-contain" />
           </div>
           <div className="mt-6 flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-text">
