@@ -331,7 +331,9 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         raise HTTPException(502, f"LLM call failed: {e}") from e
     return AgentRunResult(
         recommendation=report.recommendation,
-        hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in report.hits],
+        hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json"),
+               **({"check_status": c.status, "to_read": c.to_read} if (c := report.checks.get(h.assertion.id)) else {})}
+              for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,
     )

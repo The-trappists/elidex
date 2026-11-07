@@ -1,0 +1,206 @@
+{
+  "note": "Hand-labelled by the team (with Claude). Labels are (type, topic) keys from the workbench scenarios' expected items. See data/eval/README.md.",
+  "timeline": [
+    {"scenario": "barrier-key-kemijarvi", "start": "2026-09-02T14:00"},
+    {"scenario": "layperson-salesrep-flooded-road", "start": "2026-09-10T08:00"},
+    {"scenario": "layperson-office-manager-humming-cabinet", "start": "2026-09-12T10:00"},
+    {"scenario": "slack-vendor-secondhand", "start": "2026-09-15T11:00"},
+    {"scenario": "ambiguous-helsinki-unresolved", "start": "2026-09-18T09:00"},
+    {"scenario": "slack-noc-handover", "start": "2026-09-22T07:00"},
+    {"scenario": "ambiguous-old-radio-sodankyla", "start": "2026-09-24T13:00"},
+    {"scenario": "ambiguous-number-clash-176", "start": "2026-09-26T08:30"},
+    {"scenario": "slack-breaker-harbour-hut", "start": "2026-09-28T16:00"},
+    {"scenario": "layperson-callcentre-ferry-evenings", "start": "2026-09-30T18:00"},
+    {"scenario": "slack-radio-tilt", "start": "2026-10-02T10:00"},
+    {"scenario": "layperson-caretaker-beeping-cabinet", "start": "2026-10-04T07:30"},
+    {"scenario": "hunch-to-verified", "start": "2026-10-06T09:00"},
+    {"scenario": "new-unit-trn305", "start": "2026-10-08T13:00"},
+    {"scenario": "expert-disagreement", "start": "2026-10-10T09:00"},
+    {"scenario": "slack-needle-in-noise", "start": "2026-10-12T15:00"},
+    {"scenario": "noise-chitchat", "start": "2026-10-13T12:00"},
+    {"scenario": "elisa-trn042-chat", "start": "2026-10-15T09:14"},
+    {"scenario": "elisa-trn042-email", "start": "2026-10-15T10:30"},
+    {"scenario": "ambiguous-two-turku", "start": "2026-10-16T08:00"},
+    {"scenario": "similar-trn117", "start": "2026-10-18T07:30"},
+    {"scenario": "slack-key-moved", "start": "2026-10-25T08:00"},
+    {"scenario": "firmware-4-2-rollout", "start": "2026-10-30T08:40"}
+  ],
+  "cases": [
+    {
+      "id": "sfp-old-unit-trn131",
+      "why": "Similar problem on another old TX-3000 (2019): the class-scoped rule must reach it.",
+      "entity_id": "TRN-131", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+      "expect": ["workaround:sfp-swap-forwarding-state", "workaround:sfp-swap-first-step"],
+      "acceptable": []
+    },
+    {
+      "id": "sfp-old-unit-trn063",
+      "why": "Oldest TX-3000 (2016): same class, same answer.",
+      "entity_id": "TRN-063", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+      "expect": ["workaround:sfp-swap-forwarding-state", "workaround:sfp-swap-first-step"],
+      "acceptable": []
+    },
+    {
+      "id": "sfp-counters-moving-trn117",
+      "why": "Old unit, but counters are moving: the rule's conditions do not hold.",
+      "entity_id": "TRN-117", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 1250, "alarms": "cleared"},
+      "expect": [],
+      "acceptable": []
+    },
+    {
+      "id": "sfp-after-firmware-trn117",
+      "why": "After the firmware 4.2 rollout the bounce rule is closed; the invalidation itself is the useful answer.",
+      "entity_id": "TRN-117", "at": "2026-11-05T10:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+      "expect": ["invalidation:sfp-swap-forwarding-state"],
+      "acceptable": ["workaround:sfp-swap-first-step"]
+    },
+    {
+      "id": "sfp-new-unit-trn305",
+      "why": "TX-5000 (2024): its own fix (missing VLAN), never the old-unit rule.",
+      "entity_id": "TRN-305", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+      "expect": ["workaround:port-vlan-missing-after-sfp-swap"],
+      "acceptable": []
+    },
+    {
+      "id": "sfp-new-unit-trn312",
+      "why": "Another TX-5000: the VLAN fix was stated for TRN-305 only, so nothing should come back.",
+      "entity_id": "TRN-312", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+      "expect": [],
+      "acceptable": []
+    },
+    {
+      "id": "low-optics-trn154",
+      "why": "TX-3000 from 2021 with low optics after a swap: the 'levels settle' advice (class from 2020) applies.",
+      "entity_id": "TRN-154", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "low", "alarms": "active"},
+      "expect": ["workaround:optical-levels-settle-after-swap"],
+      "acceptable": []
+    },
+    {
+      "id": "normal-optics-trn208",
+      "why": "Same class as above but optics are normal: the 'levels settle' advice must not fire.",
+      "entity_id": "TRN-208", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"},
+      "expect": [],
+      "acceptable": []
+    },
+    {
+      "id": "number-clash-trn176",
+      "why": "TRN-176 is not RAD-176: the radio's frost advice must not leak to the transmission node.",
+      "entity_id": "TRN-176", "at": "2026-10-20T08:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "low", "alarms": "active"},
+      "expect": ["workaround:optical-levels-settle-after-swap"],
+      "acceptable": []
+    },
+    {
+      "id": "frost-dip-rad176",
+      "why": "RAD-176 margin dip on a frosty morning: the unit-specific advice applies.",
+      "entity_id": "RAD-176", "at": "2026-10-20T07:00",
+      "observations": {"interface_status": "UP", "alarms": "active"},
+      "expect": ["workaround:frost-margin-dip-self-recovers"],
+      "acceptable": []
+    },
+    {
+      "id": "dispatch-rad221-before-key-moved",
+      "why": "Dispatch to the Kemijärvi mast before the key moved: the barrier key location.",
+      "entity_id": "RAD-221", "at": "2026-10-20T06:30",
+      "observations": {},
+      "expect": ["access:site-access-barrier-key"],
+      "acceptable": ["workaround:antenna-tilt-drift-after-storm"]
+    },
+    {
+      "id": "dispatch-rad221-after-key-moved",
+      "why": "Same dispatch after the key moved to the depot: only the new location is right.",
+      "entity_id": "RAD-221", "at": "2026-11-05T06:30",
+      "observations": {},
+      "expect": ["access:site-access-barrier-key-depot"],
+      "acceptable": ["workaround:antenna-tilt-drift-after-storm", "invalidation:site-access-barrier-key"]
+    },
+    {
+      "id": "link-flap-rad198",
+      "why": "Cold-morning link flap on RAD-198.",
+      "entity_id": "RAD-198", "at": "2026-10-20T06:00",
+      "observations": {"interface_status": "UP", "alarms": "active"},
+      "expect": ["workaround:cold-morning-link-flap"],
+      "acceptable": ["workaround:restart-loses-antenna-profile", "access:site-access-flooded-road-4x4"]
+    },
+    {
+      "id": "reboot-rad233",
+      "why": "RAD-233 shares RAD-198's site: its own reboot advice and the site access, not RAD-198's flap advice.",
+      "entity_id": "RAD-233", "at": "2026-10-20T06:00",
+      "observations": {"interface_status": "UP", "alarms": "active"},
+      "expect": ["workaround:rad233-soft-reboot-hangs"],
+      "acceptable": ["access:site-access-flooded-road-4x4"]
+    },
+    {
+      "id": "radio-dead-rad254",
+      "why": "Harbour-hut radio dead with no link: the breaker trip.",
+      "entity_id": "RAD-254", "at": "2026-10-20T09:00",
+      "observations": {"interface_status": "DOWN", "traffic_counters": 0, "alarms": "active"},
+      "expect": ["workaround:harbour-hut-breaker-trip"],
+      "acceptable": ["workaround:evening-slowdown-ship-radar"]
+    },
+    {
+      "id": "power-dip-trn305",
+      "why": "TX-5000 at the harbour hut, link down after a power dip: the TX-5000 sync advice; the hut breaker is related.",
+      "entity_id": "TRN-305", "at": "2026-10-20T09:00",
+      "observations": {"interface_status": "DOWN", "optical_levels": "normal", "alarms": "active"},
+      "expect": ["workaround:tx5000-sync-after-power-dip"],
+      "acceptable": ["workaround:harbour-hut-breaker-trip"]
+    },
+    {
+      "id": "power-dip-trn240",
+      "why": "Another TX-5000 after a power dip: the class-scoped sync advice reaches it.",
+      "entity_id": "TRN-240", "at": "2026-10-20T09:00",
+      "observations": {"interface_status": "DOWN", "optical_levels": "normal", "alarms": "active"},
+      "expect": ["workaround:tx5000-sync-after-power-dip"],
+      "acceptable": []
+    },
+    {
+      "id": "power-feed-rtr021",
+      "why": "Beeping cabinet at Oulu: lost power feed.",
+      "entity_id": "RTR-021", "at": "2026-10-20T09:00",
+      "observations": {"interface_status": "UP", "alarms": "active"},
+      "expect": ["workaround:beeping-yellow-light-lost-power-feed"],
+      "acceptable": []
+    },
+    {
+      "id": "router-rtr010-unrelated",
+      "why": "Same router model as RTR-033, but the clogged-filter advice was stated for RTR-033 only.",
+      "entity_id": "RTR-010", "at": "2026-10-20T09:00",
+      "observations": {"alarms": "active"},
+      "expect": [],
+      "acceptable": []
+    },
+    {
+      "id": "mgmt-port-trn042",
+      "why": "Slow management port after a power cycle on TRN-042, no SFP swap: only the cold-start advice.",
+      "entity_id": "TRN-042", "at": "2026-10-20T09:00",
+      "observations": {"sfp_replaced": false, "interface_status": "UP", "alarms": "cleared"},
+      "expect": ["workaround:slow-management-port-after-cold-start"],
+      "acceptable": []
+    },
+    {
+      "id": "nothing-known-trn229-later-problem",
+      "why": "TRN-229 (TX-5000) with low optics: no knowledge covers it.",
+      "entity_id": "TRN-229", "at": "2026-10-20T09:00",
+      "observations": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "low", "alarms": "active"},
+      "expect": [],
+      "acceptable": []
+    },
+    {
+      "id": "unknown-element",
+      "why": "An element that is not in the inventory.",
+      "entity_id": "TRN-999", "at": "2026-10-20T09:00",
+      "observations": {},
+      "expect": [],
+      "acceptable": []
+    }
+  ]
+}

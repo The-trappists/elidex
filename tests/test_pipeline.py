@@ -86,3 +86,21 @@ def test_same_author_or_same_advice_merges_other_authors_do_not(core):
     assert not same_knowledge(rule, other_author)
     assert same_knowledge(rule, same_advice)
     assert same_knowledge(rule, same_author)
+
+
+def test_check_status_tells_the_agent_what_to_read():
+    from context_layer.models import Check, Condition, ContextAssertion, Trust
+    from context_layer.mvp.conditions import evaluate
+
+    a = ContextAssertion(
+        type="workaround", topic="t", summary="s", bound_to=[], valid_from=datetime(2026, 1, 1),
+        trust=Trust(level="stated", stated_by="x"), sources=[], confidence=0.8,
+        conditions=[Condition(text="UP", check=Check(field="interface_status", op="==", value="UP")),
+                    Condition(text="no traffic", check=Check(field="traffic_counters", op="==", value=0)),
+                    Condition(text="after a storm")],
+    )
+    assert evaluate(a, {"interface_status": "UP"}).status == "not fully checked"
+    assert evaluate(a, {"interface_status": "UP"}).to_read == ["traffic_counters"]
+    assert evaluate(a, {"interface_status": "UP", "traffic_counters": 0}).status == "fully checked"
+    assert evaluate(a, {"interface_status": "DOWN"}).status == "failed"
+    assert evaluate(a.model_copy(update={"conditions": a.conditions[2:]}), {}).status == "text only"

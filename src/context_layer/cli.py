@@ -116,6 +116,26 @@ def cmd_graph(args: argparse.Namespace) -> None:
     print(json.dumps(out, indent=2, ensure_ascii=False, default=str))
 
 
+def cmd_eval(args: argparse.Namespace) -> None:
+    from .eval import render, run_eval
+    from .eval.kb import EVAL_OUT
+
+    if args.extractor == "llm" and not config.llm_configured():
+        sys.exit("LLM not configured: set LLM_API_KEY and LLM_MODEL in .env (see .env.example), or use the default scripted extractor.")
+    try:
+        result = run_eval(args.extractor)
+    except FileNotFoundError as e:
+        sys.exit(str(e))
+    EVAL_OUT.mkdir(parents=True, exist_ok=True)
+    (EVAL_OUT / f"report-{args.extractor}.json").write_text(json.dumps(result, indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    (EVAL_OUT / f"report-{args.extractor}.md").write_text(render(result), encoding="utf-8")
+    if args.json:
+        print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
+    else:
+        print(render(result))
+        print(f"Saved out/eval/report-{args.extractor}.md and .json")
+
+
 def cmd_serve(args: argparse.Namespace) -> None:
     import uvicorn
 
@@ -182,6 +202,12 @@ def main(argv: list[str] | None = None) -> None:
         sp.add_argument("entity", nargs="?" if name == "experts" else None, help="element or site ID, e.g. TRN-117")
         sp.add_argument("--at", help="ISO datetime (default: now)")
     gr.set_defaults(func=cmd_graph)
+
+    ev = sub.add_parser("eval", help="accuracy report: retrieval (right solution?) and exchange (right information?)")
+    ev.add_argument("--extractor", choices=["scripted", "llm", "cache"], default="scripted",
+                    help="scripted = labels (offline); llm = real extractor; cache = replay the last llm run")
+    ev.add_argument("--json", action="store_true")
+    ev.set_defaults(func=cmd_eval)
 
     srv = sub.add_parser("serve", help="REST API (FastAPI)")
     srv.add_argument("--host", default="127.0.0.1")

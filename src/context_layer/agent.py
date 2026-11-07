@@ -35,11 +35,23 @@ class AgentReport:
     case: Case
     hits: list[ContextHit]
     skipped: list[tuple[ContextHit, str]] = field(default_factory=list)
+    checks: dict[str, conditions.ConditionReport] = field(default_factory=dict)  # assertion id -> check status
     recommendation: str = ""
     verdict: guard.Verdict | None = None
 
 
-def describe(hit: ContextHit) -> str:
+def check_line(check: conditions.ConditionReport) -> str:
+    """One line for the agent: act now, or read these fields first."""
+    if check.status == "fully checked":
+        return f"Checks: fully checked ({len(check.met)}/{check.checks} met)"
+    if check.status == "not fully checked":
+        return f"Checks: not fully checked ({len(check.met)}/{check.checks} met), read first: {', '.join(check.to_read)}"
+    if check.unknown:
+        return "Checks: text only (conditions in words, no machine check)"
+    return "Checks: none needed (no conditions)"
+
+
+def describe(hit: ContextHit, check: conditions.ConditionReport | None = None) -> str:
     a = hit.assertion
     who = a.trust.stated_by + (f", {a.trust.role}" if a.trust.role else "")
     until = f" until {a.valid_to:%Y-%m-%d %H:%M}" if a.valid_to else ""
@@ -49,6 +61,8 @@ def describe(hit: ContextHit) -> str:
     ]
     if a.conditions:
         lines.append("  When: " + "; ".join(c.text for c in a.conditions))
+    if check is not None:
+        lines.append("  " + check_line(check))
     if a.fact and a.fact != a.summary:
         lines.append(f"  Fact: {a.fact}")
     if a.action:
@@ -62,19 +76,26 @@ def describe(hit: ContextHit) -> str:
     return "\n".join(lines)
 
 
-def _template(case: Case, hits: list[ContextHit]) -> str:
+def _template(case: Case, hits: list[ContextHit], checks: dict[str, conditions.ConditionReport]) -> str:
     if not hits:
         return f"No human context for {case.entity_id} at {case.at:%Y-%m-%d}. Follow the standard procedure."
-    return f"Human context for {case.entity_id} ({len(hits)}):\n" + "\n".join(describe(h) for h in hits)
+    return f"Human context for {case.entity_id} ({len(hits)}):\n" + "\n".join(
+        describe(h, checks.get(h.assertion.id)) for h in hits)
 
 
 AGENT_PROMPT = """You are a network operations assistant. Propose the next steps for the case, using only the human context given.
 Cite assertion ids. If an assertion lists things to avoid, say so. If there is no context, say the standard procedure applies.
+If an assertion has check_status "not fully checked", say which fields (to_read) must be read before acting on it.
 Answer in 3-6 short lines."""
 
 
-def _llm(case: Case, hits: list[ContextHit]) -> str:
-    context = [h.assertion.model_dump(mode="json", exclude={"link_notes"}) for h in hits]
+def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.ConditionReport]) -> str:
+    context = []
+    for h in hits:
+        item = h.assertion.model_dump(mode="json", exclude={"link_notes"})
+        if (c := checks.get(h.assertion.id)) is not None:
+            item |= {"check_status": c.status, "to_read": c.to_read}
+        context.append(item)
     user = json.dumps({"case": case.model_dump(mode="json"), "human_context": context}, ensure_ascii=False)
     return llm.complete(AGENT_PROMPT, user)
 
@@ -95,8 +116,9 @@ def run_agent(
                 report.skipped.append((hit, "condition not met: " + "; ".join(cr.failed)))
             else:
                 kept.append(hit)
+                report.checks[hit.assertion.id] = cr
         report.hits = kept
-    report.recommendation = _llm(case, report.hits) if use_llm else _template(case, report.hits)
+    report.recommendation = (_llm if use_llm else _template)(case, report.hits, report.checks)
     if use_guard and case.planned_action:
         obs = case.observations if use_conditions else None
         report.verdict = guard.check(store, case.planned_action, case.entity_id, at=case.at, observations=obs)
