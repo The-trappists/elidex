@@ -13,6 +13,7 @@ import type {
   LlmCall,
   Persona,
   PipelineJob,
+  RuleApplication,
   Scenario,
   ScenarioRun,
   Settings,
@@ -57,6 +58,8 @@ export interface LiveState {
   jobs: PipelineJob[] // oldest first
   scenarios: Scenario[]
   runs: ScenarioRun[]
+  /** Rules the ops agent applied, with what the field answered (outcome loop). */
+  applications: Record<string, RuleApplication>
   llmCalls: LlmCall[] // oldest first
   log: LogLine[]
   lastEventId: number
@@ -96,6 +99,7 @@ export const useLive = create<LiveState>((set, get) => ({
   jobs: [],
   scenarios: [],
   runs: [],
+  applications: {},
   llmCalls: [],
   log: [],
   lastEventId: 0,
@@ -135,6 +139,8 @@ export const useLive = create<LiveState>((set, get) => ({
       runs: s.runs,
       llmCalls: s.llm_calls,
     })
+    // Not in the snapshot: fetch separately, and never let a failure here block the dashboard.
+    api.applications().then((apps) => set({ applications: byId(apps) })).catch(() => set({ applications: {} }))
   },
 
   apply: (e: WbEvent) => {
@@ -204,6 +210,9 @@ export const useLive = create<LiveState>((set, get) => ({
         break
       case 'scenarios.changed':
         set({ scenarios: e.data.scenarios, runs: e.data.runs })
+        break
+      case 'application.upserted':
+        set({ applications: { ...s.applications, [e.data.id]: e.data } })
         break
       case 'slack.status':
         set({ slack: e.data })

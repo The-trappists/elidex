@@ -2,6 +2,7 @@
 // backend's `detail` message, ready for a toast.
 import type {
   AgentRunBody,
+  RuleApplication,
   DatasetSample,
   SourceFreshness,
   SourceSimilar,
@@ -140,6 +141,7 @@ export const api = {
   loadDataset: (body: { sites: number; threads: number; seed?: number }) => req<DatasetSample>('POST', '/data/load-dataset', body),
 
   // settings
+  applications: (f: { thread_id?: string } = {}) => req<RuleApplication[]>('GET', `/applications${qs(f)}`),
   settings: () => req<Settings>('GET', '/settings'),
   updateSettings: (patch: SettingsPatch) => req<Settings>('PUT', '/settings', patch),
   slackStatus: () => req<SlackStatus>('GET', '/slack/status'),

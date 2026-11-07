@@ -33,7 +33,9 @@ export function Section({
   variant = 'card',
   children,
   className,
+  id,
 }: {
+  id?: string
   title: ReactNode
   description?: ReactNode
   icon?: LucideIcon
@@ -54,13 +56,13 @@ export function Section({
   )
   if (variant === 'flat')
     return (
-      <section className={cn('border-b border-line px-4 py-4 last:border-0', className)}>
+      <section id={id} className={cn('border-b border-line px-4 py-4 last:border-0', className)}>
         {head}
         {children}
       </section>
     )
   return (
-    <section className={cn('rounded-lg border border-line bg-surface p-5', className)}>
+    <section id={id} className={cn('rounded-lg border border-line bg-surface p-5', className)}>
       {head}
       {children}
     </section>

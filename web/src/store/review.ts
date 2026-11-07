@@ -131,6 +131,8 @@ export function connectReview(): () => void {
         try {
           const e = JSON.parse(data) as { type: string; data: ReviewFlag }
           if (e.type === 'review.flag') useReview.getState().upsert(e.data, true)
+          // A reset or an import replaces the state, flags included: read them again.
+          else if (e.type === 'state.reset') void load()
         } catch {
           /* not ours */
         }

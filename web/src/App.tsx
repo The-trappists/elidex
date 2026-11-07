@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { ALL_NAV, Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
+import { DemoGuide } from './components/demo/DemoGuide'
 import { Toaster } from './components/ui'
 import ConversationsPage from './pages/ConversationsPage'
 import DataPage from './pages/DataPage'
@@ -59,6 +60,7 @@ function DashboardLayout() {
           )}
         </main>
       </div>
+      {ready && <DemoGuide />}
     </div>
   )
 }

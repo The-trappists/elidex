@@ -207,10 +207,30 @@ Everything except Elisa's chat and email is synthetic and documented in `data/wo
 - **Calm by default.** Neutral surfaces, one accent (`accent`) for what is interactive, and color only for status (`ok`, `warn`, `bad`). Types, trust, channels and origins are plain grey chips (a small dot at most). Graphs are the one place with a color per kind, and their legend is also their filter. No gradients, glows or decorative motion.
 - **One job per screen.** Overview = incidents and recent processing. Conversations = read a thread and follow it through the five pipeline steps (`components/pipeline/JobSteps.tsx`, one step open at a time, each with what it received and produced). Network = topology over time. Graph = the knowledge graph (`pages/GraphPage.tsx`, fed by `GET /graph`). Knowledge = the list.
 - Colors come only from the tokens in `src/index.css` and from `src/lib/semantic.ts`.
+- Page layout comes from `components/ui/Layout.tsx`: `Toolbar` (the bar under the top bar with a page's tabs and filters), `PageHeader` (heading of a page that scrolls as a whole), `Section` (`card` for page bodies, `flat` for side panels such as the Inspector) and `Chip` (a filter toggle, in `Badge.tsx`). Controls are 32 px (`size="sm"`) or 36 px (default) tall, never smaller. Toasts fade out as they leave.
 - Components come from `src/components/ui` (Button, Badge, IdChip, Card/Panel, Modal/Drawer, Input/Select/Textarea/Field/Toggle, Tabs, Table, Avatar, EmptyState, JsonView, `toast` and `withToast`). Containers use `rounded-lg`, controls `rounded-md`; section labels are sentence case, not uppercase.
 - Live data is read with `useLive(selector)` from `src/store/live.ts`. Pages never keep their own copy of the state, and they call `api.*` for actions. The SSE event brings the change back.
 - Sim time comes from `useSimNow()`, and dates are formatted with `src/lib/format.ts`.
 - English only in the UI. Every list has an empty state, and every destructive action asks for confirmation (use a Modal, never `window.confirm`).
+
+## Demo mode (guided story)
+
+A discreet **Demo** button in the top bar opens a floating guide (bottom left, collapsible with the chevron, closed with the cross). It walks through the Elisa case (TRN-042) in seven steps and opens each screen with the right element selected. With the guide closed, the dashboard is exactly the normal one. It adds no backend logic: every action calls an existing endpoint, and nothing in it detects faults (the incident is the scripted one).
+
+| Step | Deep link | What it does |
+| --- | --- | --- |
+| 1. Incident | `/overview?demo=incident` | Button "Start the incident": sets the clock to x60, starts it and runs `elisa-trn042-chat`. The incident card shows that the context layer knows nothing yet |
+| 2. Conversation | `/overview?demo=conversation` | Opens the thread; button "Read the conversation now" (`POST /threads/{id}/process`) once the chat has finished playing |
+| 3. Knowledge | `/overview?demo=knowledge` | Opens the rule `sfp-swap-forwarding-state` in the Knowledge drawer: sources, scope, validity, trust |
+| 4. Element | `/overview?demo=element` | `/network?select=TRN-042&section=human`: Inspector scrolled to Human activity |
+| 5. Agent | `/overview?demo=agent` | `/knowledge?tab=agent&autorun=guard`: the Agent tester runs on TRN-042 with the planned action "Replace the SFP again, then reboot the unit" and shows the recommendation and the guard answer (adapt) |
+| 6. Field | `/overview?demo=field` | Back in the thread; button "Play Veikko's reply" posts "traffic is back" as persona `veikko` and processes the thread, so the outcome loop reads it |
+| 7. Trust | `/overview?demo=trust` | `/review?thread=...`: the "Confirmed in the field" note with the quote |
+
+- **Deep links.** `?demo=<id or number>` on any dashboard page opens the guide on that step and goes to its page (the parameter is then removed). The current step is kept in the browser (`localStorage`, key `demo-guide`), not in the URL, because pages rewrite their own query string. The step list (checklist icon) and the progress bar jump to any step.
+- **Reset to start.** Asks for confirmation, then `POST /data/reset {"mode": "empty"}` (conversations, incidents, knowledge and review cases are emptied; network, people and scenarios stay) and returns to step 1. For a clean run: Reset, then Start the incident.
+- **Without a reset** the guide still works on what exists (it uses the seed thread `elisa/teams_chat.json` and the existing rule), but the incident step has nothing to start.
+- Files: `web/src/components/demo/steps.ts` (the steps and what they call), `DemoGuide.tsx` (the panel), `web/src/store/demo.ts` (state), `AgentTester.tsx` (`autorun` parameter), `Inspector.tsx` (`section=human`).
 
 ## Who owns what (parallel build, Phase 1)
 

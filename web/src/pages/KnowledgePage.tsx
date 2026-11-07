@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { AssertionType, TrustLevel } from '../api/types'
 import { AgentTester } from '../components/knowledge/AgentTester'
@@ -20,7 +20,7 @@ export default function KnowledgePage() {
   const now = useSimNow(30_000)
   const [params, setParams] = useSearchParams()
   const openId = params.get('assertion')
-  const [tab, setTab] = useState<Tab>('table')
+  const [tab, setTab] = useState<Tab>(params.get('tab') === 'agent' ? 'agent' : 'table')
   const [q, setQ] = useState('')
   const [type, setType] = useState<AssertionType | ''>('')
   const [trust, setTrust] = useState<TrustLevel | ''>('')
@@ -36,6 +36,12 @@ export default function KnowledgePage() {
       .filter((a) => !ql || `${a.id} ${a.topic} ${a.summary} ${a.bound_to.map((b) => b.entity).join(' ')}`.toLowerCase().includes(ql))
       .sort((a, b) => a.valid_from.localeCompare(b.valid_from))
   }, [all, q, type, trust, validNow, thread, now])
+
+  // A link such as /knowledge?tab=agent switches tab even when the page is already open.
+  const tabParam = params.get('tab')
+  useEffect(() => {
+    if (tabParam === 'agent') setTab('agent')
+  }, [tabParam])
 
   const open = (id: string) => setParams({ assertion: id })
   const close = () => setParams({})

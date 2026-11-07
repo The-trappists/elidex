@@ -1,6 +1,6 @@
 import { ArrowUp, Bot, ChevronDown, Plus } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { AgentRunResult, GraphProvenance } from '../../api/types'
 import { fmtDateTime, toNaiveIso } from '../../lib/format'
@@ -11,6 +11,9 @@ import { ObservationsEditor, toObservations } from '../data/ObservationsEditor'
 import { AgentGraph } from './AgentGraph'
 import { Button, Card, Field, IdChip, Input, Select, Textarea, Toggle, withToast } from '../ui'
 import { TypeBadge } from './bits'
+
+/** A move the Elisa rule warns against, used by the demo guide to show the guard. */
+const GUARD_PLAN = 'Replace the SFP again, then reboot the unit'
 
 export function AgentTester() {
   const elements = useLive((s) => s.elements)
@@ -42,12 +45,13 @@ export function AgentTester() {
     setShowAdvanced(false)
   }
 
-  const run = async () => {
+  const run = async (plannedOverride?: string) => {
+    const plan = plannedOverride ?? planned
     const observations = toObservations(obs)
     const effectiveAt = at || (sim ? toNaiveIso(sim) : '')
     setBusy(true)
     const r = await withToast(() =>
-      api.agentRun({ entity_id: entity, description: description.trim(), observations, planned_action: planned.trim() || null, at: effectiveAt || null, use_llm: useLlm && llm }),
+      api.agentRun({ entity_id: entity, description: description.trim(), observations, planned_action: plan.trim() || null, at: effectiveAt || null, use_llm: useLlm && llm }),
     )
     setBusy(false)
     if (r) {
@@ -59,6 +63,35 @@ export function AgentTester() {
       setLoadingSources(false)
     }
   }
+
+  // Deep links from the demo guide: ?autorun=recommend runs the agent on the Elisa case, ?autorun=guard
+  // does the same with a planned action the rule warns against. The parameter is consumed once.
+  const [params, setParams] = useSearchParams()
+  const autorun = params.get('autorun')
+  const lastAuto = useRef<string | null>(null)
+  const scrollToResult = useRef(false)
+  const runRef = useRef(run)
+  runRef.current = run
+  useEffect(() => {
+    if (!autorun || lastAuto.current === autorun) return
+    lastAuto.current = autorun
+    const plan = autorun === 'guard' ? GUARD_PLAN : ''
+    setPlanned(plan)
+    setShowAdvanced(autorun === 'guard')
+    scrollToResult.current = true
+    void runRef.current(plan)
+    const next = new URLSearchParams(params)
+    next.delete('autorun')
+    setParams(next, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autorun])
+
+  // After a deep-linked run, bring the recommendation into view.
+  useEffect(() => {
+    if (!result || !scrollToResult.current) return
+    scrollToResult.current = false
+    setTimeout(() => document.getElementById('agent-recommendation-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+  }, [result])
 
   const sourceRows = result
     ? [...new Map(result.hits.flatMap((hit) => provenance[hit.id] ?? []).filter((source) => source.file).map((source) => [`${source.file}|${source.seq ?? 'thread'}`, source])).values()]
@@ -114,7 +147,7 @@ export function AgentTester() {
                   className="!size-8 !rounded-lg !px-0"
                   disabled={!entity || !description.trim()}
                   loading={busy}
-                  onClick={run}
+                  onClick={() => void run()}
                   aria-label="Run agent"
                   title="Run agent"
                   icon={<ArrowUp size={18} />}

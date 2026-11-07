@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { ClassCriteria, ContextAssertion } from '../../api/types'
 import { MousePointerClick } from 'lucide-react'
 import { fmtAgo } from '../../lib/format'
@@ -12,8 +12,8 @@ import { HumanActivity } from './HumanActivity'
 import { Experts, Provenance, Reach, Timeline } from './GraphSections'
 import { classMembers, classesOf, type NodeKind } from './graphModel'
 
-const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
-  <UiSection variant="flat" title={title} count={count} actions={action}>
+const Section = ({ title, count, children, action, id }: { title: string; count?: number; children: ReactNode; action?: ReactNode; id?: string }) => (
+  <UiSection variant="flat" id={id} title={title} count={count} actions={action}>
     {children}
   </UiSection>
 )
@@ -59,6 +59,14 @@ function ElementInfo({ id, at, onSelect }: P) {
   const incidents = useLive((s) => s.incidents)
   const threads = useLive((s) => s.threads)
   const [expired, setExpired] = useState(false)
+  // /network?select=TRN-042&section=human scrolls the panel to the human activity (used by the demo guide).
+  const [params] = useSearchParams()
+  const wantHuman = params.get('section') === 'human'
+  useEffect(() => {
+    if (!wantHuman) return
+    const t = setTimeout(() => document.getElementById('human-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 900)
+    return () => clearTimeout(t)
+  }, [wantHuman, id])
   const { hits, loading } = useContextHits(id, at, expired)
 
   const mine = useMemo(() => Object.values(incidents).filter((i) => i.entity_id === id).sort((a, b) => b.opened_at.localeCompare(a.opened_at)), [incidents, id])
@@ -94,7 +102,7 @@ function ElementInfo({ id, at, onSelect }: P) {
           <None>Nothing known about {id} at this time.</None>
         )}
       </Section>
-      <Section title="Human activity">
+      <Section title="Human activity" id="human-activity">
         <HumanActivity
           id={id}
           defaultQuery={`${el.type.replace(/_/g, ' ')} ${el.model} installed ${el.install_year}`}

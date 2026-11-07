@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
+import { ChevronDown, LogOut, Moon, Pause, Play, PlayCircle, Presentation, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn'
 import { fmtDateTime, toNaiveIso } from '../../lib/format'
 import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
+import { useDemo } from '../../store/demo'
 import { useLive } from '../../store/live'
 import { Button, IconButton, withToast } from '../ui'
 import { ALL_NAV } from './Sidebar'
@@ -85,6 +86,7 @@ export function TopBar() {
   const connection = useLive((s) => s.connection)
   const now = useSimNow(500)
   const [dark, setDark] = useTheme()
+  const demoActive = useDemo((s) => s.active)
   const { pathname } = useLocation()
   const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? ALL_NAV[0]
 
@@ -150,6 +152,16 @@ export function TopBar() {
         <IconButton onClick={() => setDark(!dark)} aria-label={dark ? 'Switch to the light theme' : 'Switch to the dark theme'}>
           {dark ? <Sun size={16} /> : <Moon size={16} />}
         </IconButton>
+        <Button
+          variant="ghost"
+          icon={<Presentation size={15} />}
+          aria-pressed={demoActive}
+          title={demoActive ? 'Close the guided demo' : 'Open the guided demo: the Elisa story in seven steps'}
+          className={demoActive ? '!bg-accent-soft !text-accent' : undefined}
+          onClick={() => (demoActive ? useDemo.getState().close() : useDemo.getState().open())}
+        >
+          Demo
+        </Button>
         <ScenarioLauncher />
         <Link
           to="/"
