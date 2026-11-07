@@ -192,9 +192,9 @@ def _check_meaning() -> None:
         tag = "same     " if row["same"] else "different"
         verdict = "stop " if row["stopped_by_place"] else ("ok   " if row["ok"] else "WRONG")
         print(f"  {row['similarity']:.3f}  {tag}  {verdict}  {row['why']}")
-    print("
-  stop = shares only a model: meaning is never compared for it, not counted for the threshold")
-    print(f"\nLowest 'same' pair: {r['lowest_same']:.3f}; highest 'different' pair: {r['highest_different']:.3f}")
+    print("\n  stop = shares only a model: meaning is never compared for it, not counted for the threshold")
+    print(f"\nLowest 'same' pair: {r['lowest_same']:.3f}; highest 'different' pair that reaches meaning: "
+          f"{r['highest_different']:.3f}")
     if r["separable"]:
         print(f"The model separates them. Suggested PATTERNS_SAME_MEANING={r['suggested']} "
               f"(now {r['threshold']}: {r['wrong_merges']} wrong merge(s), {r['missed']} missed).")

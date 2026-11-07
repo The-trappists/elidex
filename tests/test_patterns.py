@@ -447,3 +447,29 @@ def test_meaning_needs_a_real_shared_place_not_just_a_model():
     _report(store, "E-1", "dish-ice-morning", T0 + timedelta(days=29), "e3", action="Let it thaw.", thread_times=times)
     rec = [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
     assert [p.elements for p in rec] == [["E-1"]] and rec[0].count == 3  # same element: meaning groups it
+
+
+# ---------------------------------------------------------------- the CLI itself (a syntax error there once passed CI)
+
+
+def test_cli_patterns_report(tmp_path, monkeypatch, capsys):
+    from context_layer import cli, config
+
+    monkeypatch.setattr(config, "OUT_DIR", tmp_path)
+    cli.main(["patterns", "--at", "2026-10-31T12:00"])
+    out = capsys.readouterr().out
+    assert "## Insights: worth a look (3)" in out and "meaning check off" in out
+    assert (tmp_path / "patterns" / "report.md").exists() and (tmp_path / "patterns" / "patterns.json").exists()
+
+
+def test_cli_check_meaning(monkeypatch, capsys):
+    from context_layer import cli
+    from context_layer.embed import hash_embed
+    from context_layer.mvp import patterns as P
+
+    with pytest.raises(SystemExit, match="EMBEDDING_MODEL is empty"):
+        cli.main(["patterns", "--check-meaning"])
+    monkeypatch.setattr(P, "model_embedder", lambda: (lambda texts: [hash_embed(t) for t in texts]))
+    cli.main(["patterns", "--check-meaning"])
+    out = capsys.readouterr().out
+    assert "stop = shares only a model" in out and "highest 'different' pair that reaches meaning" in out
