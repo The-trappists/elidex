@@ -1,0 +1,141 @@
+{
+  "id": "layperson-caretaker-beeping-cabinet",
+  "title": "The beeping cabinet in the basement",
+  "description": "A building caretaker with no network knowledge describes sounds, lights and a sticker. Colleagues have to guess what he means ('the thing with lots of cables' = AGG-7 = RTR-021), and a field engineer works out the cause (one of two power feeds lost). Tests a lay description that must be translated into an element and a diagnosis.",
+  "channel": "slack",
+  "subject": "#facilities-oulu",
+  "incident": {
+    "entity_id": "RTR-021",
+    "kind": "power-feed-lost",
+    "severity": "minor",
+    "summary": "Alarm active on RTR-021 after a storm (reported as a beeping cabinet)",
+    "observations": {
+      "interface_status": "UP",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "heikki",
+    "helmi",
+    "veikko"
+  ],
+  "messages": [
+    {
+      "persona": "heikki",
+      "delay_s": 5,
+      "text": "Hei, sorry to bother the network people. in the basement at Linnanmaa the tall cabinet is beeping, two short beeps every minute or so, since the storm last night"
+    },
+    {
+      "persona": "heikki",
+      "delay_s": 12,
+      "text": "also one of the things with lots of cables has a yellow light blinking"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 40,
+      "text": "hmm. which room, the server room or the one next to the lift?"
+    },
+    {
+      "persona": "heikki",
+      "delay_s": 30,
+      "text": "the server room. cabinet number 3. the thing has a sticker AGG-7"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 25,
+      "text": "AGG-7 is RTR-021, the aggregation switch. traffic looks fine on my side, there's an alarm active tho"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 50,
+      "text": "beeping + yellow light on AGG-7 sounds like it lost one of its two power feeds. it runs fine on the other one, it just complains"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 15,
+      "text": "Heikki is there a breaker in that room labelled F2? probably tripped in the storm"
+    },
+    {
+      "persona": "heikki",
+      "delay_s": 60,
+      "text": "yes F2, it is down. should I flip it?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 30,
+      "text": "yes only that one, nothing else 👍"
+    },
+    {
+      "persona": "heikki",
+      "delay_s": 80,
+      "text": "done. beeping stopped and the light is green now ✅"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 30,
+      "text": "alarm cleared on my side too, thanks Heikki!"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 40,
+      "text": "next time the same: breaker F2 first, no need to call us at night"
+    }
+  ],
+  "resolves_incident_at_seq": 11,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "beeping-yellow-light-lost-power-feed",
+        "summary": "When RTR-021 (AGG-7, Oulu Linnanmaa) beeps and shows a yellow light it has lost one of its two power feeds, usually breaker F2 in the server room after a storm; switch F2 back on, nothing else.",
+        "scope": {
+          "instance_ids": [
+            "RTR-021"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": null
+        },
+        "conditions": [
+          {
+            "text": "alarm active",
+            "check": {
+              "field": "alarms",
+              "op": "==",
+              "value": "active"
+            }
+          }
+        ],
+        "diagnosis": "one of the two power feeds is lost, the switch keeps running on the other",
+        "action": "Switch breaker F2 in the Linnanmaa server room back on.",
+        "avoid": [
+          "touch any other breaker",
+          "call the team at night first"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 10: 'beeping stopped and the light is green now'",
+        "stated_by": "Veikko Vikkelä",
+        "cited_seq": [
+          1,
+          2,
+          4,
+          6,
+          7,
+          10,
+          12
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "layperson",
+    "guess-the-problem",
+    "sticker-to-id",
+    "power",
+    "slack",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

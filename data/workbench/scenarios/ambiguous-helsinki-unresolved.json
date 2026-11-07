@@ -1,0 +1,74 @@
+{
+  "id": "ambiguous-helsinki-unresolved",
+  "title": "A rumour about 'the box in Helsinki'",
+  "description": "A new colleague asks about a rumour: one box at Pasila drops traffic if the second port is used. Nobody knows which of the four devices it is and the thread is parked. Tests abstention: the pipeline must store nothing rather than bind a rumour to the whole site or guess an element.",
+  "channel": "slack",
+  "subject": "#noc-general",
+  "incident": null,
+  "participants": [
+    "jaakko",
+    "veikko",
+    "helmi",
+    "aino"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "Hei! I'm preparing my visit to Helsinki Pasila next week and somebody told me one of the boxes there drops traffic if you plug anything into the second port?? is that true? which one is it? I don't want to break anything in my first month"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 60,
+      "text": "oh yeah I heard that too. second port, don't plug anything in 👍"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 40,
+      "text": "which box tho. there are like four things in that room"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 30,
+      "text": "the one near the door I think? not sure"
+    },
+    {
+      "persona": "aino",
+      "delay_s": 55,
+      "text": "Heads up: I can't tell from the inventory which one that would be. Pasila has two TX-3000, one TX-5000 and the router. Nothing in the release notes about a port 2 issue either."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 35,
+      "text": "so should I avoid the second port on all of them?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 25,
+      "text": "lol I'd ask Erkki"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 70,
+      "text": "he's off until Monday. let's park it, someone ask him then"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 20,
+      "text": "ok kiitos, I'll ask him Monday"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": []
+  },
+  "tags": [
+    "ambiguity",
+    "abstention",
+    "precision",
+    "rumour",
+    "slack",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

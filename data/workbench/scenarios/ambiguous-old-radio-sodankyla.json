@@ -1,0 +1,103 @@
+{
+  "id": "ambiguous-old-radio-sodankyla",
+  "title": "'Restart the radio there' (which one?)",
+  "description": "Two radio units in the same cabinet at Sodankylä (RAD-198 RU-200 and RAD-233 RU-400). The ticket and a team lead say 'the old one'. A radio specialist translates it into an id and adds the real tip. Tests binding by a description ('old', 'dusty') instead of an id: only RAD-198 gets the knowledge.",
+  "channel": "slack",
+  "subject": "#field-north",
+  "incident": null,
+  "participants": [
+    "jaakko",
+    "liisa",
+    "raimo"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "going to Sodankylä fell mast tomorrow, ticket says 'restart the radio there'. but there are two radios in the cabinet?? which one? 😬"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 50,
+      "text": "the old one. the other one is fine as far as I remember"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 30,
+      "text": "old as in... the one with more dust?"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 20,
+      "text": "😂 joo roughly"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 45,
+      "text": "wait. the old one is the RU-200, RAD-198. the newer one is RAD-233"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 12,
+      "text": "restarting RAD-198 is fine, but it forgets the antenna profile on 2.3"
+    },
+    {
+      "persona": "raimo",
+      "delay_s": 10,
+      "text": "after the restart, front panel menu, 'Load profile 1'. otherwise it comes up on the factory profile and the link is bad"
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 35,
+      "text": "ohh ok. so restart, then load profile 1. kiitos!"
+    },
+    {
+      "persona": "liisa",
+      "delay_s": 40,
+      "text": "and take a headlamp, the cabinet has no light 🔦"
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "restart-loses-antenna-profile",
+        "summary": "After a restart RAD-198 (RU-200, firmware 2.3) comes up on the factory profile; reload 'Profile 1' from the front panel menu or the link stays degraded.",
+        "scope": {
+          "instance_ids": [
+            "RAD-198"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": "restart"
+        },
+        "conditions": [],
+        "diagnosis": "the restart resets the antenna profile on firmware 2.3",
+        "action": "After the restart, open the front panel menu and choose 'Load profile 1'.",
+        "avoid": [
+          "leave the unit on the factory profile after a restart"
+        ],
+        "fact": null,
+        "trust_level": "stated",
+        "evidence": "seq 6-7: 'it forgets the antenna profile on 2.3' / 'Load profile 1'",
+        "stated_by": "Raimo Rantanen",
+        "cited_seq": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "ambiguity",
+    "description-to-id",
+    "radio",
+    "slack",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

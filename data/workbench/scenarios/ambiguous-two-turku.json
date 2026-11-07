@@ -1,0 +1,113 @@
+{
+  "id": "ambiguous-two-turku",
+  "title": "The Turku node (which one?)",
+  "description": "The ticket only says 'the Turku node' and Turku has two sites (Kupittaa exchange and the harbour hut). Colleagues narrow it down in the chat. Tests disambiguation: the knowledge must bind to TRN-042 only, not to the site's other elements and not to the new TX-5000 in the harbour hut.",
+  "channel": "teams",
+  "subject": "Turku node: management port after power cycle",
+  "incident": null,
+  "participants": [
+    "helmi",
+    "veikko",
+    "erkki"
+  ],
+  "messages": [
+    {
+      "persona": "helmi",
+      "delay_s": 5,
+      "text": "hey, quick one. the Turku node was power cycled this morning after the maintenance window and I still can't reach its management port"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 9,
+      "text": "should I just cycle it again?"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 50,
+      "text": "Which one? Turku has Kupittaa and the harbour hut."
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 25,
+      "text": "hmm. the ticket just says 'Turku node'. veikko you were there last week right?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 45,
+      "text": "yes the old one, Kupittaa 👍 the harbour hut one is the new TX-5000, they only put that in last year"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 20,
+      "text": "ah ok so that's TRN-042 then"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 40,
+      "text": "Hm. Then don't cycle it again. The 3.8 boxes need around 8 minutes after a cold start before the management port answers. Traffic is fine in the meantime."
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 30,
+      "text": "oh that explains why it looked dead when I stood in front of it last time"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 70,
+      "text": "ok waiting. kahvi ☕"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 180,
+      "text": "port is back, took 9 min. as you said"
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 40,
+      "text": "Good."
+    }
+  ],
+  "resolves_incident_at_seq": null,
+  "expected": {
+    "items": [
+      {
+        "type": "workaround",
+        "topic": "slow-management-port-after-cold-start",
+        "summary": "After a power cycle TRN-042 (firmware 3.8) needs about 8 minutes before its management port answers; traffic is not affected, so do not cycle it again.",
+        "scope": {
+          "instance_ids": [
+            "TRN-042"
+          ],
+          "site_ids": [],
+          "element_class": null,
+          "trigger": "power-cycle"
+        },
+        "conditions": [],
+        "diagnosis": "management port is slow to come up after a cold start, the unit is not stuck",
+        "action": "Wait about 8 to 10 minutes after a power cycle before checking the management port.",
+        "avoid": [
+          "power cycle it again"
+        ],
+        "fact": null,
+        "trust_level": "verified",
+        "evidence": "seq 10: 'port is back, took 9 min. as you said'",
+        "stated_by": "Erkki Expert",
+        "cited_seq": [
+          3,
+          5,
+          6,
+          7,
+          10
+        ],
+        "confidence": 0.8
+      }
+    ]
+  },
+  "tags": [
+    "ambiguity",
+    "disambiguation",
+    "site",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}
