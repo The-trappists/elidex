@@ -116,10 +116,10 @@ Status: the pure parts (mentions, documents, rows, file source) are tested offli
 | --- | --- | --- |
 | Loaded | 3,000,000 threads (+ sites, links, elements, users, facts) | 13,772,400 messages |
 | Time | 466 s for the threads, then the index build | 735 s including the analytics layer |
-| Size | indexed and queried; sizes to add from `db-check` | 4,913 MB right after the load (compression of chunks older than 30 days runs later as a background job) |
+| Size | `threads`: 3,423 MB of data, **1,206 MB on disk** (compressed) + 186 MB of indexes; the whole database is about 1.4 GB of the 10 GB | 4,913 MB right after the load (compression of chunks older than 30 days runs later as a background job) |
 | `demo` for comparison | 150,000 threads in 34 s | 687,697 messages |
 
-`tiger-verify` passed on `demo` (hypertable, indexes, compression policy, `message_mentions`, `daily_mentions`, real query). Run it again on `large`. Elements named per message average 0.07: most messages are noise, which is the point of the haystack.
+`tiger-verify` passes on `large`, every line `ok`: 13,772,400 rows, 897,169 rows in `message_mentions`, 739,624 in `daily_mentions`. Example answers: `freshness TRN-042` gives "last discussed 2026-09-02, 14 messages over 12 active days"; `activity TRN-042 --bucket "1 month"` lists messages and people per month. At this size `xl` (about three times `large`) would still fit 10 GB in Atlas, but it was dropped as useless for the demo. Elements named per message average 0.07: most messages are noise, which is the point of the haystack.
 
 ## Using it
 
