@@ -37,6 +37,7 @@ uv run ctx run                      # Teams + email -> context assertions (out/c
 uv run ctx context TRN-117 --at 2026-10-20T08:00
 uv run ctx agent                    # demo agent on the synthetic cases
 uv run ctx eval                     # accuracy report (docs/evaluation.md)
+uv run ctx outcome ctx_0002 TRN-117 --after '{"traffic_counters": 0}'   # field feedback: did it work?
 uv run ctx run --lifecycle && uv run ctx agent --conditions --guard   # MVP angles D, C, B
 uv run ctx workbench                # team test bench: live UI + API on http://127.0.0.1:8010 (build web/ first)
 uv run ctx llm-check                # which LLM provider and JSON mode work with your .env

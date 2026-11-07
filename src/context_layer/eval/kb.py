@@ -45,11 +45,26 @@ class RetrievalCase(BaseModel):
     observations: dict = Field(default_factory=dict)
     expect: list[str]  # "type:topic" keys that must come back
     acceptable: list[str] = Field(default_factory=list)  # related: neither required nor counted as noise
+    expect_contested: list[str] = Field(default_factory=list)  # keys that must come back flagged "contested"
+
+
+class OutcomeCase(BaseModel):
+    """An agent applied a rule; what it observed afterwards (field feedback, see mvp/feedback.py)."""
+
+    id: str
+    why: str
+    rule: str  # "type:topic" key
+    source: str  # scenario the rule was learnt from (two rules can share a key)
+    entity_id: str
+    at: datetime
+    after: dict = Field(default_factory=dict)
+    expect_worked: bool | None  # None: no verdict expected
 
 
 class EvalSpec(BaseModel):
     timeline: list[TimelineEntry]
     cases: list[RetrievalCase]
+    outcomes: list[OutcomeCase] = Field(default_factory=list)
 
 
 def load_spec(path: Path = EVAL_FILE) -> EvalSpec:

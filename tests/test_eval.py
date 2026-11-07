@@ -91,3 +91,20 @@ def test_fully_checked_knowledge_is_safe_to_act_on(result):
     status = {r["status"]: r for r in result["missing_observations"]["by_status"]}
     assert status["fully checked"]["noise"] == 0
     assert status["not fully checked"]["noise"] > 0  # the noise is where the agent is told to read first
+
+
+def test_report_back_conflicts_with_the_vendor_hunch():
+    """A later chat saying 'the tip did not work here' keeps both, flagged; one node does not close a class rule."""
+    store = build_kb(load_spec(), "scripted").store
+    tips = [a for a in store.assertions.values() if a.topic == "tx5000-sync-after-power-dip"]
+    hunch = next(a for a in tips if a.trust.level == "hunch")
+    report = next(a for a in tips if a.trust.level == "verified")
+    assert report.id in hunch.conflicts_with and hunch.valid_to is None
+    assert report.applies_to == {"TRN-229"}
+
+
+def test_field_feedback_is_learnt_without_false_alarms(result):
+    ff = result["field_feedback"]
+    assert ff["judgment_right"] == 1.0
+    assert ff["contested_right"] == 1.0 and ff["false_alarms"] == 0
+    assert any(c["got"] for c in ff["contested_cases"])  # the vendor hunch did get contested

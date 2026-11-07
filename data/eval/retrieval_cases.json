@@ -5,6 +5,8 @@
     {"scenario": "layperson-salesrep-flooded-road", "start": "2026-09-10T08:00"},
     {"scenario": "layperson-office-manager-humming-cabinet", "start": "2026-09-12T10:00"},
     {"scenario": "slack-vendor-secondhand", "start": "2026-09-15T11:00"},
+    {"scenario": "vendor-tip-failed-report-back", "start": "2026-09-15T12:30"},
+    {"scenario": "noise-car-cold-start-sodankyla", "start": "2026-09-16T07:45"},
     {"scenario": "ambiguous-helsinki-unresolved", "start": "2026-09-18T09:00"},
     {"scenario": "slack-noc-handover", "start": "2026-09-22T07:00"},
     {"scenario": "ambiguous-old-radio-sodankyla", "start": "2026-09-24T13:00"},
@@ -18,6 +20,7 @@
     {"scenario": "expert-disagreement", "start": "2026-10-10T09:00"},
     {"scenario": "slack-needle-in-noise", "start": "2026-10-12T15:00"},
     {"scenario": "noise-chitchat", "start": "2026-10-13T12:00"},
+    {"scenario": "noise-home-router-reboot", "start": "2026-10-14T09:00"},
     {"scenario": "elisa-trn042-chat", "start": "2026-10-15T09:14"},
     {"scenario": "elisa-trn042-email", "start": "2026-10-15T10:30"},
     {"scenario": "ambiguous-two-turku", "start": "2026-10-16T08:00"},
@@ -201,6 +204,89 @@
       "observations": {},
       "expect": [],
       "acceptable": []
+    },
+    {
+      "id": "car-chat-not-a-fix-rad233",
+      "why": "Trap: the car cold-start chat named the Sodankylä mast; RAD-233 there must get its own advice and the site access, never the car tips.",
+      "entity_id": "RAD-233", "at": "2026-10-20T06:30",
+      "observations": {"interface_status": "DOWN", "alarms": "active"},
+      "expect": ["workaround:rad233-soft-reboot-hangs"],
+      "acceptable": ["access:site-access-flooded-road-4x4"]
+    },
+    {
+      "id": "home-router-not-a-fix-rtr010",
+      "why": "Trap: the home router chat named the RT-9 make; RTR-010 (RT-9) must get nothing.",
+      "entity_id": "RTR-010", "at": "2026-10-20T21:00",
+      "observations": {"interface_status": "DOWN", "alarms": "active"},
+      "expect": [],
+      "acceptable": []
+    },
+    {
+      "id": "power-dip-trn229-after-report-back",
+      "why": "TRN-229 after the report-back: the vendor hunch and Veikko's reboot advice both come back (same topic, flagged as a conflict).",
+      "entity_id": "TRN-229", "at": "2026-10-20T09:00",
+      "observations": {"interface_status": "DOWN", "optical_levels": "normal", "alarms": "active"},
+      "expect": ["workaround:tx5000-sync-after-power-dip"],
+      "acceptable": []
+    },
+    {
+      "id": "power-dip-trn312-after-field-failures",
+      "why": "The vendor hunch failed in the field on TRN-229 and TRN-240: it still comes back for TRN-312, but contested.",
+      "entity_id": "TRN-312", "at": "2026-10-25T09:00",
+      "observations": {"interface_status": "DOWN", "optical_levels": "normal", "alarms": "active"},
+      "expect": ["workaround:tx5000-sync-after-power-dip"],
+      "acceptable": [],
+      "expect_contested": ["workaround:tx5000-sync-after-power-dip"]
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "wait-failed-trn229",
+      "why": "Veikko waited 25 min as the vendor tip said: still DOWN.",
+      "rule": "workaround:tx5000-sync-after-power-dip", "source": "slack-vendor-secondhand",
+      "entity_id": "TRN-229", "at": "2026-09-15T12:05",
+      "after": {"interface_status": "DOWN", "alarms": "active"},
+      "expect_worked": false
+    },
+    {
+      "id": "wait-failed-trn240",
+      "why": "Another TX-5000 after a power dip: waited 20 min, still DOWN. Second failure: the hunch becomes contested.",
+      "rule": "workaround:tx5000-sync-after-power-dip", "source": "slack-vendor-secondhand",
+      "entity_id": "TRN-240", "at": "2026-10-21T09:40",
+      "after": {"interface_status": "DOWN", "optical_levels": "normal", "alarms": "active"},
+      "expect_worked": false
+    },
+    {
+      "id": "bounce-worked-trn131",
+      "why": "Erkki's interface bounce on TRN-131: counters move again.",
+      "rule": "workaround:sfp-swap-forwarding-state", "source": "elisa-trn042-chat",
+      "entity_id": "TRN-131", "at": "2026-10-20T08:20",
+      "after": {"sfp_replaced": true, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 980},
+      "expect_worked": true
+    },
+    {
+      "id": "settle-worked-trn154",
+      "why": "Optics settled to normal on TRN-154 as advised (sfp_replaced stays true: it is an event, not a symptom).",
+      "rule": "workaround:optical-levels-settle-after-swap", "source": "hunch-to-verified",
+      "entity_id": "TRN-154", "at": "2026-10-20T10:00",
+      "after": {"sfp_replaced": true, "optical_levels": "normal"},
+      "expect_worked": true
+    },
+    {
+      "id": "breaker-nothing-observed-rad254",
+      "why": "Edge case: the agent observed nothing after resetting the breaker. No verdict, nothing recorded.",
+      "rule": "workaround:harbour-hut-breaker-trip", "source": "slack-breaker-harbour-hut",
+      "entity_id": "RAD-254", "at": "2026-10-20T10:00",
+      "after": {},
+      "expect_worked": null
+    },
+    {
+      "id": "frost-no-check-rad176",
+      "why": "Edge case: the frost advice has no machine check, so the result cannot be judged. No verdict.",
+      "rule": "workaround:frost-margin-dip-self-recovers", "source": "ambiguous-number-clash-176",
+      "entity_id": "RAD-176", "at": "2026-10-20T08:00",
+      "after": {"interface_status": "UP", "alarms": "cleared"},
+      "expect_worked": null
     }
   ]
 }

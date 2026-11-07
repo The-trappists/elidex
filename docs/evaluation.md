@@ -10,11 +10,11 @@ uv run ctx eval --extractor llm      # the real LLM extractor (needs LLM_* in .e
 uv run ctx eval --extractor cache    # re-score the last LLM run offline
 ```
 
-The knowledge base is rebuilt from the 23 labelled workbench scenarios in time order, through the real pipeline (extract → link → store → lifecycle). Retrieval uses the demo agent's own code (`agent.run_agent`).
+The knowledge base is rebuilt from the 26 labelled workbench scenarios in time order, through the real pipeline (extract → link → store → lifecycle). Retrieval uses the demo agent's own code (`agent.run_agent`).
 
 ## 1. Retrieval: when a problem happens, do we get the right solution?
 
-22 labelled cases (`data/eval/retrieval_cases.json`): a problem on an element at a time, with observations. 14 have a right answer, 8 are traps where the right answer is nothing.
+26 labelled cases (`data/eval/retrieval_cases.json`): a problem on an element at a time, with observations. 19 have a right answer, 7 are traps where the right answer is nothing. Two traps test chats that *look* technical but are personal (a car that will not start at the Sodankylä mast, a home router "of the same make as our RT-9s").
 
 | Metric | Meaning |
 | --- | --- |
@@ -45,10 +45,10 @@ An LLM's topic slugs rarely match the labels, so items are matched by type and s
 
 | Mode | Accuracy | Solution found | Precision | Noise items |
 | --- | --- | --- | --- | --- |
-| plain | 68% | 100% | 67% | 9 |
+| plain | 73% | 100% | 70% | 9 |
 | with conditions | 100% | 100% | 100% | 0 |
 
-Plain retrieval always finds the solution but adds useless knowledge in 7 of 22 cases. For example, it returns the old-unit SFP rule when counters are moving, or the TX-5000 power-dip advice for an SFP problem. Condition checks remove all of it. With labels as the extractor, extraction scores are 100% by construction, so **the real extractor has not been measured yet**: run `--extractor llm`.
+Plain retrieval always finds the solution but adds useless knowledge in 7 of 26 cases. For example, it returns the old-unit SFP rule when counters are moving, or the TX-5000 power-dip advice for an SFP problem. Condition checks remove all of it. With labels as the extractor, extraction scores are 100% by construction, so **the real extractor has not been measured yet**: run `--extractor llm`.
 
 ## 3. Edge cases: what if the agent knows less? (check status)
 
@@ -64,11 +64,11 @@ Plain retrieval always finds the solution but adds useless knowledge in 7 of 22 
 
 ### The problem
 
-With **every** observation, condition checks give 100%. A real agent often has only some. Example: on TRN-117 it knows "SFP swapped, interface UP" but not the counters. The SFP rule's counter check cannot run, so the rule stays in, and it may be noise (if counters are moving, it is). `ctx eval` reruns every case with **every subset** of its observations (325 runs, all combinations, no random sampling):
+With **every** observation, condition checks give 100%. A real agent often has only some. Example: on TRN-117 it knows "SFP swapped, interface UP" but not the counters. The SFP rule's counter check cannot run, so the rule stays in, and it may be noise (if counters are moving, it is). `ctx eval` reruns every case with **every subset** of its observations (349 runs, all combinations, no random sampling):
 
 | Observations missing | 0 | 1 | 2 | 3 | 5 |
 | --- | --- | --- | --- | --- | --- |
-| Accuracy | 100% | 90% | 78% | 66% | 43% |
+| Accuracy | 100% | 91% | 80% | 67% | 43% |
 | Solution lost | 0 | 0 | 0 | 0 | 0 |
 
 The right answer never goes missing, but noise comes back.
@@ -84,14 +84,48 @@ Each kept rule gets a **check status**, a fact about the case, not a weight. Not
 
 | Check status | Meaning | Example | What the agent does | Precision |
 | --- | --- | --- | --- | --- |
-| `fully checked` | every check ran and passed | TRN-131: swapped, UP, normal optics, counters 0 → SFP rule 4/4 | act on it | **100%** (46 items) |
-| `not fully checked` | some checks could not run; `to_read` lists the fields | same case without counters → "read first: traffic_counters" | read those fields, then act | 72% (all 140 noise items) |
-| `text only` | no machine check (none, or in words only) | barrier key at Kemijärvi; "after a storm" | use it, judging the words | 100% (73 items) |
+| `fully checked` | every check ran and passed | TRN-131: swapped, UP, normal optics, counters 0 → SFP rule 4/4 | act on it | **100%** (58 items) |
+| `not fully checked` | some checks could not run; `to_read` lists the fields | same case without counters → "read first: traffic_counters" | read those fields, then act | 72% (all 148 noise items) |
+| `text only` | no machine check (none, or in words only) | barrier key at Kemijärvi; "after a storm" | use it, judging the words | 100% (81 items) |
 | `failed` | a check is false | counters 1250 → SFP rule removed | (not shown, listed as "not applied") | |
 
 All the noise lands in `not fully checked`, and the agent can clear it itself by reading the missing field. No human step. Shown in `ctx agent --conditions`, sent to the LLM agent, and returned by the workbench agent API (`check_status`, `to_read`).
 
 Caveat: "fully checked = 100%" is partly true by design (a rule whose checks all pass applies). The real risk is the LLM extractor writing a wrong check, so rerun with `--extractor llm`.
+
+## 4. Knowledge that does not work in reality (field feedback)
+
+### Words used here
+
+| Term | Meaning | Example |
+| --- | --- | --- |
+| **Outcome** | What the agent observes after applying a rule | Waited 25 min as the vendor tip said: TRN-229 still `DOWN` |
+| **Symptom check** | A rule's check that describes the problem, so it should change when the fix works | `interface_status == DOWN`. Not `sfp_replaced`: that is an event, it stays true |
+| **Track record** | Outcomes of a rule up to the case time | "worked 0/2 (failed on TRN-229, TRN-240)" |
+| **Contested** | Failed at least twice, and more often than it worked | The vendor hunch after two failures |
+
+### The problem
+
+Before, nothing came back from the field: a tip that failed every time stayed "stated" or "verified" forever. Only a later chat could close it.
+
+### The solution: two ways to learn it, no human step
+
+1. **From the agent's own observations** (`mvp/feedback.py`). After acting, the agent compares what it sees with the rule's symptom checks:
+   - symptoms all still there → *did not work* (TRN-229 still `DOWN` after waiting);
+   - a symptom gone → *worked* (TRN-131: counters at 980 after the bounce);
+   - nothing observed, or the rule has no machine check → *no verdict*, nothing recorded. We do not guess.
+2. **From a later chat** (lifecycle). Veikko reports "waited, still down, a reboot fixed it" (`vendor-tip-failed-report-back`): his advice is stored for TRN-229 only and flagged in conflict with the vendor hunch.
+
+The rule is **never dropped on feedback**: one failure can have another cause, and one node is not proof for a whole class. It is shown with its track record, and with "CONTESTED: check before acting" after 2+ failures that outnumber its successes. A record counts only outcomes before the case time.
+
+| Measure | Result (labels as extractor) |
+| --- | --- |
+| Outcome judged right (worked / did not / no verdict) | 100% of 6, including 2 "no verdict" edge cases |
+| Contested flag right per case | 100% of 26, 0 false alarms |
+
+Where: `ctx agent` and `ctx context` print the track record; the LLM agent and `POST /api/agent/run` get it; the guard warns when it adapts an action because of a contested tip. Record an outcome with `ctx outcome ctx_0004 TRN-229 --after '{"interface_status": "DOWN"}'` or `POST /api/agent/outcome`.
+
+Limit: "a symptom changed" is not always "fixed" (optics could go from normal to low while counters stay at 0, which counts as "worked"). The agent can pass `worked` explicitly when it knows better (e.g. the ticket was closed).
 
 ## Confidence: what the percentage is
 
@@ -106,6 +140,6 @@ It is not calibrated: 85% does not mean "right 85% of the time". `ctx eval --ext
 
 ## Limits
 
-- Labels written by people who know the system; small set (22 cases, 23 conversations).
+- Labels written by people who know the system; small set (26 cases, 26 conversations, 6 outcomes).
 - Conditions only help when the agent has the observations; with none, plain retrieval applies.
 - No ranking, on purpose (see section 3): the agent gets a set plus a check status per rule.

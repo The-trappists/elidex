@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 
 from .. import agent as agent_mod
 from .. import config, llm_check
-from ..mvp import guard
+from ..mvp import feedback, guard
 from ..models import Message
 from . import generator, persistence
 from .contracts import (
@@ -29,6 +29,7 @@ from .contracts import (
     LlmCall,
     LlmCheckResult,
     NewThreadBody,
+    OutcomeBody,
     Persona,
     PostMessageBody,
     ResetBody,
@@ -332,11 +333,27 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
     return AgentRunResult(
         recommendation=report.recommendation,
         hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json"),
+               "track_record": feedback.track_record(h.assertion, case.at).status,
                **({"check_status": c.status, "to_read": c.to_read} if (c := report.checks.get(h.assertion.id)) else {})}
               for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,
     )
+
+
+@router.post("/agent/outcome")
+async def agent_outcome(body: OutcomeBody, request: Request) -> dict:
+    """The agent acted on an assertion: record whether it worked, judged from what it observes now."""
+    wb = get_wb(request)
+    a = wb.store.assertions.get(body.assertion_id)
+    if a is None:
+        raise HTTPException(404, f"Unknown assertion {body.assertion_id}")
+    before = wb.assertion_snapshot()
+    at = body.at or wb.now()
+    outcome = feedback.record(a, wb.store.resolve(body.entity_id), at, body.after, worked=body.worked)
+    wb.emit_changes(before)
+    tr = feedback.track_record(a, at)
+    return {"recorded": outcome.model_dump(mode="json") if outcome else None, "track_record": tr.status, "line": tr.line()}
 
 
 # ---------------------------------------------------------------- knowledge graph (see docs/knowledge-graph.md)

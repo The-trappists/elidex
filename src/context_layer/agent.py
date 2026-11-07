@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from . import config, llm
-from .mvp import conditions, guard
+from .mvp import conditions, feedback, guard
 from .store import ContextHit, ContextStore
 
 
@@ -51,7 +51,7 @@ def check_line(check: conditions.ConditionReport) -> str:
     return "Checks: none needed (no conditions)"
 
 
-def describe(hit: ContextHit, check: conditions.ConditionReport | None = None) -> str:
+def describe(hit: ContextHit, check: conditions.ConditionReport | None = None, at: datetime | None = None) -> str:
     a = hit.assertion
     who = a.trust.stated_by + (f", {a.trust.role}" if a.trust.role else "")
     until = f" until {a.valid_to:%Y-%m-%d %H:%M}" if a.valid_to else ""
@@ -71,6 +71,8 @@ def describe(hit: ContextHit, check: conditions.ConditionReport | None = None) -
         lines.append("  Avoid: " + "; ".join(a.avoid))
     if a.conflicts_with:
         lines.append("  Conflicts with: " + ", ".join(a.conflicts_with))
+    if (tr := feedback.track_record(a, at)).status != "untested":
+        lines.append("  " + tr.line())
     srcs = " | ".join(f"{s.source} {s.file}" + (f" seq {','.join(map(str, s.seq))}" if s.source == "teams" else "") for s in a.sources)
     lines.append(f"  Sources: {srcs}")
     return "\n".join(lines)
@@ -80,19 +82,22 @@ def _template(case: Case, hits: list[ContextHit], checks: dict[str, conditions.C
     if not hits:
         return f"No human context for {case.entity_id} at {case.at:%Y-%m-%d}. Follow the standard procedure."
     return f"Human context for {case.entity_id} ({len(hits)}):\n" + "\n".join(
-        describe(h, checks.get(h.assertion.id)) for h in hits)
+        describe(h, checks.get(h.assertion.id), case.at) for h in hits)
 
 
 AGENT_PROMPT = """You are a network operations assistant. Propose the next steps for the case, using only the human context given.
 Cite assertion ids. If an assertion lists things to avoid, say so. If there is no context, say the standard procedure applies.
 If an assertion has check_status "not fully checked", say which fields (to_read) must be read before acting on it.
+If an assertion's track_record status is "contested", warn that it failed in the field (say where) before proposing it.
 Answer in 3-6 short lines."""
 
 
 def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.ConditionReport]) -> str:
     context = []
     for h in hits:
-        item = h.assertion.model_dump(mode="json", exclude={"link_notes"})
+        item = h.assertion.model_dump(mode="json", exclude={"link_notes", "outcomes"})
+        tr = feedback.track_record(h.assertion, case.at)
+        item["track_record"] = {"status": tr.status, "worked": tr.worked, "failed": tr.failed, "failed_on": tr.failed_on}
         if (c := checks.get(h.assertion.id)) is not None:
             item |= {"check_status": c.status, "to_read": c.to_read}
         context.append(item)
