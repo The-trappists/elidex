@@ -90,6 +90,28 @@ def llm_critic_fallback_configured() -> bool:
     return _key_set(LLM_CRITIC_FALLBACK_API_KEY) and bool(LLM_CRITIC_FALLBACK_MODEL)
 
 
+# Big dataset storage, outside the app's memory (`ctx dataset load-mongo`, `load-tiger`; docs/dataset.md).
+MONGODB_URI = os.getenv("MONGODB_URI", "")
+MONGODB_DB = os.getenv("MONGODB_DB", "ctx")
+TIGER_DATABASE_URL = os.getenv("TIGER_DATABASE_URL", "")
+# Embeddings for the vector search: an OpenAI-compatible embedding model on the primary LLM provider.
+# Empty = offline fallback (hashed words: finds similar wording, not similar meaning).
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
+DATASET_DIR = Path(os.getenv("DATASET_DIR", OUT_DIR / "dataset" / "demo"))
+
+
+def _set(value: str) -> bool:
+    return bool(value) and "your-" not in value
+
+
+def mongo_configured() -> bool:
+    return _set(MONGODB_URI)
+
+
+def tiger_configured() -> bool:
+    return _set(TIGER_DATABASE_URL)
+
+
 # ---------------------------------------------------------------- workbench
 
 WORKBENCH_DIR = OUT_DIR / "workbench"

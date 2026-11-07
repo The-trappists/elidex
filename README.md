@@ -21,6 +21,7 @@ We are tackling **Elisa's challenge "Capturing and Linking Human-Generated Conte
 | [MVPs](docs/mvps.md) | What the code does now, one starter per idea |
 | [Knowledge graph](docs/knowledge-graph.md) | Graph over network, assertions and provenance; agent queries; Neo4j mirror |
 | [Evaluation](docs/evaluation.md) | Accuracy: right solution retrieved? right information kept? What confidence means |
+| [Dataset](docs/dataset.md) | Company-sized synthetic data, Atlas and Tiger Data loaders, vector search |
 | [Decisions](docs/decisions.md) | What we chose and why |
 | [Contributing](CONTRIBUTING.md) | Language, git workflow, shared contracts |
 | [AGENTS.md](AGENTS.md) | Instructions for every AI assistant |
@@ -46,6 +47,35 @@ uv run ctx serve                    # REST API, docs at http://127.0.0.1:8000/do
 uv run ctx mcp                      # MCP server (stdio) for agents
 uv run pytest
 ```
+
+<h2>Demo checklist: big data and the MLH prizes</h2>
+
+Details in [docs/dataset.md](docs/dataset.md). The company-sized data (`large`: 3 M threads, 13.8 M messages) lives in **MongoDB Atlas** and **Tiger Data**, outside the app's memory. Prizes: *Best Use of MongoDB Atlas* and *Best Use of Tiger Data*. **Tick both categories on the team submission in sinceai.app before Sunday 10:00** (the page gives no judging criteria).
+
+**Before the demo** (needs `MONGODB_URI`, `MONGODB_DB`, `TIGER_DATABASE_URL`, `EMBEDDING_MODEL` in `.env`):
+
+```bash
+uv run ctx dataset db-check                          # both databases answer; vector index queryable
+uv run ctx dataset tiger-verify out/dataset/large    # every line [  ok]
+uv run ctx serve                                     # API on http://127.0.0.1:8000/docs
+```
+
+If the Atlas cluster was paused or the dataset is gone: `ctx dataset generate --scale large`, `ctx dataset load-mongo out/dataset/large --drop`, `ctx dataset load-tiger out/dataset/large --drop --analytics`, `ctx dataset bench out/dataset/large --save-mongo`, `ctx dataset embed --collection assertions --reset`.
+
+**The 2-minute script**
+
+| Step | Command (or API) | What to say |
+| --- | --- | --- |
+| 1. The scale | `uv run ctx dataset stats out/dataset/large` | A full operator: 5 009 sites, 20 086 elements, 3 012 staff, 3 M threads |
+| 2. Atlas, by element | `uv run ctx dataset threads --source mongo --element TRN-042 --limit 5` | Every thread naming this node, from 3 M, in milliseconds (indexed). Nothing is loaded in memory |
+| 3. Atlas, by meaning | `uv run ctx dataset similar "port stays down after SFP swap" --limit 5` (or `/similar?q=...`) | Vector search finds the nearest human knowledge, even without the same node or words |
+| 4. Tiger, over time | `uv run ctx dataset activity TRN-042 --bucket "1 month"` | 13.8 M messages in a hypertable: who talked about it, when |
+| 5. Tiger, freshness | `uv run ctx dataset freshness TRN-042` (or `/freshness/TRN-042`) | Knowledge goes stale: when did a human last talk about this node? |
+| 6. The link to the challenge | `uv run ctx context TRN-117 --at 2026-10-20T08:00` | The context layer returns what humans know, with source, trust and validity |
+
+One sentence per database for the jury: *Atlas stores the threads, the assertions and the vector search; Tiger Data stores the message time series and the freshness of knowledge.*
+
+**After the hackathon:** pause or delete the Atlas cluster (0.08 $/h) and delete the Tiger service before its 30-day credit ends.
 
 <h2>Run locally on Windows</h2>
 
