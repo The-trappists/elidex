@@ -127,6 +127,12 @@ export default function SettingsPage() {
           >
             <Toggle checked={st.use_conditions} onChange={(v) => save({ use_conditions: v })} />
           </Row>
+          <Row
+            label="Merge similar knowledge"
+            text="When the same advice is told again in another conversation, add it to the existing knowledge instead of creating a copy. Contradictions and different scopes are never merged."
+          >
+            <Toggle checked={st.use_dedupe} onChange={(v) => save({ use_dedupe: v })} />
+          </Row>
           <Row label="Check planned actions" text="Checks an agent's planned action against the knowledge and says go or adapt.">
             <Toggle checked={st.use_guard} onChange={(v) => save({ use_guard: v })} />
           </Row>

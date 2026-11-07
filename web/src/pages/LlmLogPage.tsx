@@ -1,19 +1,28 @@
 import { PageIntro } from '../components/layout/PageIntro'
-import { CheckCircle2, Download, FlaskConical, ScrollText, XCircle } from 'lucide-react'
+import { Archive, CheckCircle2, Download, FlaskConical, ScrollText, XCircle } from 'lucide-react'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
-import type { LlmCall } from '../api/types'
+import type { LlmCall, LlmSummary } from '../api/types'
 import { threadHref } from '../components/knowledge/bits'
 import { CheckModal } from '../components/llm/CheckModal'
 import { LlmDrawer } from '../components/llm/LlmDrawer'
-import { callStatus, isProblem, recentProblems, STATUS_LABEL, type CallStatus } from '../components/llm/status'
-import { Button, EmptyState, ErrorNote, Input, Select, Table, toast, type Column } from '../components/ui'
+import { callStatus, isProblem, recentProblems, RECENT_MS, STATUS_LABEL, type CallStatus } from '../components/llm/status'
+import { Button, EmptyState, ErrorNote, Input, Modal, Select, Skeleton, Table, toast, type Column } from '../components/ui'
 import { cn } from '../lib/cn'
 import { describeCall, explainError, fmtTokens, purposeLabel } from '../lib/explain'
-import { fmtDateTime, fmtMs } from '../lib/format'
+import { fmtDateTime, fmtMs, fmtTime } from '../lib/format'
 import { useLive } from '../store/live'
+
+/** One table row: the newest call of a group plus how many calls the group holds. */
+interface Row {
+  call: LlmCall
+  count: number
+}
+
+type View = 'latest' | 'all'
+type Range = '' | 'hour' | 'today'
 
 const STATUS_ICON: Record<CallStatus, typeof CheckCircle2> = { ok: CheckCircle2, api_error: XCircle, parse_error: XCircle }
 
@@ -23,10 +32,10 @@ function Speed({ ms }: { ms: number | null }) {
   return <span className={cn('text-xs tabular-nums', ms >= 10000 ? 'text-warn' : 'text-muted')}>{fmtMs(ms)}</span>
 }
 
-function useColumns(): Column<LlmCall>[] {
+function useColumns(view: View): Column<Row>[] {
   const threads = useLive((s) => s.threads)
   const name = (c: LlmCall) => (c.thread_id ? threads[c.thread_id]?.subject || c.thread_id : undefined)
-  return [
+  const cols: Column<LlmCall>[] = [
     {
       key: 'time',
       header: 'When (real time)',
@@ -92,6 +101,22 @@ function useColumns(): Column<LlmCall>[] {
         ),
     },
   ]
+  return cols.map((col) => ({
+    ...col,
+    cell: (r: Row) =>
+      col.key === 'what' ? (
+        <>
+          {col.cell(r.call)}
+          {r.count > 1 && (
+            <div className="mt-0.5 text-xs text-muted tabular-nums">
+              {view === 'latest' ? `${r.count - 1} earlier ${r.count === 2 ? 'request' : 'requests'} hidden` : `Same request ×${r.count}`}
+            </div>
+          )}
+        </>
+      ) : (
+        col.cell(r.call)
+      ),
+  }))
 }
 
 const dl = (href: string, label: string) => (
@@ -112,17 +137,44 @@ function Figure({ value, label }: { value: number | string; label: string }) {
 export default function LlmLogPage() {
   const live = useLive((s) => s.llmCalls)
   const [fetched, setFetched] = useState<LlmCall[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [summary, setSummary] = useState<LlmSummary | null>(null)
   const [params, setParams] = useSearchParams()
   const openId = params.get('call')
+  const [view, setView] = useState<View>('latest')
   const [purpose, setPurpose] = useState('')
   const [model, setModel] = useState('')
+  const [range, setRange] = useState<Range>('')
   const [status, setStatus] = useState<CallStatus | 'problem' | ''>('')
   const [q, setQ] = useState('')
   const [check, setCheck] = useState(false)
+  const [confirmClean, setConfirmClean] = useState(false)
+  const [cleaning, setCleaning] = useState(false)
 
-  useEffect(() => {
-    api.llmCalls({ limit: 500 }).then(setFetched, (e) => toast.error(e))
-  }, [])
+  const load = () => {
+    setLoadError(null)
+    api.llmCalls({ limit: 500 }).then(
+      (c) => { setFetched(c); setLoaded(true) },
+      (e) => { setLoadError(e instanceof Error ? e.message : String(e)); setLoaded(true) },
+    )
+    api.llmSummary().then(setSummary, () => {})
+  }
+  useEffect(load, [])
+
+  const cleanUp = async () => {
+    setCleaning(true)
+    try {
+      const s = await api.llmCompact()
+      setSummary(s)
+      setConfirmClean(false)
+      toast.success(s.last_removed ? `Moved ${s.last_removed} older requests to the archive` : 'Nothing to clean up')
+      load()
+    } catch (e) {
+      toast.error(e)
+    }
+    setCleaning(false)
+  }
 
   useEffect(() => {
     if (openId && !fetched.some((c) => c.id === openId) && !live.some((c) => c.id === openId))
@@ -138,15 +190,30 @@ export default function LlmLogPage() {
 
   const purposes = useMemo(() => [...new Set(calls.map((c) => c.purpose))], [calls])
   const models = useMemo(() => [...new Set(calls.map((c) => c.model))], [calls])
-  const rows = calls.filter(
-    (c) =>
-      (!purpose || c.purpose === purpose) &&
-      (!model || c.model === model) &&
-      (!status || (status === 'problem' ? callStatus(c) !== 'ok' : callStatus(c) === status)) &&
-      (!q || (c.thread_id ?? '').toLowerCase().includes(q.toLowerCase())),
-  )
 
-  const columns = useColumns()
+  const rows = useMemo<Row[]>(() => {
+    const since = range === 'hour' ? Date.now() - RECENT_MS : range === 'today' ? new Date().setHours(0, 0, 0, 0) : 0
+    const hits = calls.filter(
+      (c) =>
+        (!purpose || c.purpose === purpose) &&
+        (!model || c.model === model) &&
+        (!since || new Date(c.ts).getTime() >= since) &&
+        (!status || (status === 'problem' ? callStatus(c) !== 'ok' : callStatus(c) === status)) &&
+        (!q || (c.thread_id ?? '').toLowerCase().includes(q.toLowerCase())),
+    )
+    // Latest: one row per kind of request and conversation. Everything: only identical repeats are merged.
+    const key = (c: LlmCall) => (view === 'latest' ? `${c.purpose}|${c.thread_id}` : `${c.purpose}|${c.thread_id}|${c.model}|${callStatus(c)}|${c.user}`)
+    const groups = new Map<string, Row>()
+    for (const c of hits) {
+      const g = groups.get(key(c))
+      if (g) g.count++
+      else groups.set(key(c), { call: c, count: 1 }) // calls are newest first
+    }
+    // Problems first, then newest first.
+    return [...groups.values()].sort((a, b) => Number(isProblem(b.call)) - Number(isProblem(a.call)) || b.call.ts.localeCompare(a.call.ts))
+  }, [calls, view, purpose, model, range, status, q])
+
+  const columns = useColumns(view)
   const stats = useMemo(() => {
     const failed = calls.filter(isProblem)
     // Failures that share the headline of the latest one (calls are newest first).
@@ -164,6 +231,8 @@ export default function LlmLogPage() {
       firstSame: same[same.length - 1]?.ts,
     }
   }, [calls])
+  const byPurpose = summary?.by_purpose ?? Object.fromEntries(purposes.map((p) => [p, calls.filter((c) => c.purpose === p).length]))
+  const filtered = !!(purpose || model || range || status || q)
 
   const chip = (k: CallStatus | 'problem' | '', label: string, n: number) => (
     <button
@@ -178,18 +247,49 @@ export default function LlmLogPage() {
       <span className="tabular-nums text-muted">{n}</span>
     </button>
   )
+  const seg = (v: View, label: string) => (
+    <button
+      key={v}
+      onClick={() => setView(v)}
+      className={cn('rounded px-2.5 py-1 text-xs font-medium transition-colors', view === v ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
+    >
+      {label}
+    </button>
+  )
 
   return (
     <div className="flex h-full flex-col gap-4 p-5">
       <PageIntro title="Understand what the AI did" description="Follow how conversations were read, what succeeded, and what needs attention." />
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-8 gap-y-1 px-1">
-        <Figure value={stats.total} label="requests since the server started" />
+        <Figure value={summary?.total_kept ?? stats.total} label="requests kept" />
         <Figure value={stats.total ? `${stats.okPct}%` : "—"} label="went through" />
         <Figure value={stats.avg ? `${stats.avg} s` : "—"} label="average answer time" />
         <button className="group flex items-baseline gap-2" onClick={() => setStatus('problem')} disabled={!stats.failed}>
-          <span className={cn('text-2xl font-semibold tabular-nums', stats.recent > 0 && 'text-bad')}>{stats.failed}</span>
+          <span className={cn('text-2xl font-semibold tabular-nums', stats.recent > 0 && 'text-bad')}>{summary?.errors_kept ?? stats.failed}</span>
           <span className="text-sm text-muted group-enabled:group-hover:text-text">problems · {stats.recent} in the last hour</span>
         </button>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 px-1 text-xs text-muted">
+        <span className="flex flex-wrap items-center gap-1">
+          By kind:
+          {Object.entries(byPurpose).map(([p, n]) => (
+            <button
+              key={p}
+              onClick={() => setPurpose(purpose === p ? '' : p)}
+              className={cn('rounded border px-2 py-0.5 tabular-nums transition-colors', purpose === p ? 'border-accent text-text' : 'border-line hover:text-text')}
+            >
+              {purposeLabel(p)} {n}
+            </button>
+          ))}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Archive size={13} />
+          {summary?.last_compacted_at
+            ? `Cleaned ${summary.last_removed} older ${summary.last_removed === 1 ? 'request' : 'requests'}, last at ${fmtTime(summary.last_compacted_at).slice(0, 5)}`
+            : 'Not cleaned up yet'}
+          {summary ? ` · ${summary.archived_total} archived in total` : ''}
+        </span>
+        <Button size="sm" icon={<Archive size={13} />} onClick={() => setConfirmClean(true)} disabled={!summary}>Clean up now</Button>
       </div>
 
       {stats.lastFailure && stats.recent > 0 && status === '' && (
@@ -204,11 +304,15 @@ export default function LlmLogPage() {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-line bg-surface">
         <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
           <div className="flex gap-0.5 rounded-md border border-line p-0.5">
+            {seg('latest', 'Latest only')}
+            {seg('all', 'Show everything kept')}
+          </div>
+          <div className="flex gap-0.5 rounded-md border border-line p-0.5">
             {chip('', 'All', calls.length)}
             {chip('ok', 'Succeeded', calls.filter((c) => callStatus(c) === 'ok').length)}
             {chip('problem', 'Problems', stats.failed)}
           </div>
-          <Select className="ml-2 w-52" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
+          <Select className="w-52" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
             <option value="">Every kind of request</option>
             {purposes.map((p) => <option key={p} value={p}>{purposeLabel(p)}</option>)}
           </Select>
@@ -216,8 +320,13 @@ export default function LlmLogPage() {
             <option value="">All models</option>
             {models.map((p) => <option key={p}>{p}</option>)}
           </Select>
+          <Select className="w-36" value={range} onChange={(e) => setRange(e.target.value as Range)} aria-label="Time range">
+            <option value="">Any time</option>
+            <option value="hour">Last hour</option>
+            <option value="today">Today</option>
+          </Select>
           <Input className="w-48" placeholder="Search a conversation" value={q} onChange={(e) => setQ(e.target.value)} />
-          <span className="text-xs text-muted">{rows.length} shown</span>
+          <span className="text-xs text-muted">{rows.length} {rows.length === 1 ? "row" : "rows"} shown</span>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted">Export</span>
             <div className="flex gap-1">
@@ -233,16 +342,40 @@ export default function LlmLogPage() {
           <Table
             columns={columns}
             rows={rows}
-            rowKey={(c) => c.id}
+            rowKey={(r) => r.call.id}
             selectedKey={openId}
-            onRowClick={(c) => setParams({ call: c.id })}
-            rowClassName={(c) => isProblem(c) && 'bg-bad/5'}
-            empty={<EmptyState icon={<ScrollText size={26} />} title={calls.length ? 'No request matches these filters' : 'No request to the AI yet'} hint="Each time a conversation is read by the language model, a line appears here with what it did, how long it took and whether it worked." action={calls.length ? <Button size="sm" onClick={() => { setStatus(''); setPurpose(''); setModel(''); setQ('') }}>Clear filters</Button> : undefined} />}
+            onRowClick={(r) => setParams({ call: r.call.id })}
+            rowClassName={(r) => isProblem(r.call) && 'bg-bad/5'}
+            empty={
+              !loaded ? (
+                <div className="space-y-2 p-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+              ) : loadError ? (
+                <EmptyState icon={<XCircle size={26} />} title="The AI activity could not be loaded" hint={loadError} action={<Button size="sm" onClick={load}>Try again</Button>} />
+              ) : (
+                <EmptyState
+                  icon={<ScrollText size={26} />}
+                  title={calls.length ? 'No request matches these filters' : 'No request to the AI yet'}
+                  hint="Each time a conversation is read by the language model, a line appears here with what it did, how long it took and whether it worked."
+                  action={filtered ? <Button size="sm" onClick={() => { setStatus(''); setPurpose(''); setModel(''); setRange(''); setQ('') }}>Clear filters</Button> : undefined}
+                />
+              )
+            }
           />
         </div>
       </div>
       <LlmDrawer id={openId} call={openId ? calls.find((c) => c.id === openId) : undefined} onClose={() => setParams({})} />
       <CheckModal open={check} onClose={() => setCheck(false)} />
+      <Modal
+        open={confirmClean}
+        onClose={() => setConfirmClean(false)}
+        title="Clean up older requests"
+        footer={<><Button onClick={() => setConfirmClean(false)}>Cancel</Button><Button variant="primary" loading={cleaning} onClick={cleanUp}>Clean up now</Button></>}
+      >
+        <p className="text-sm leading-relaxed">
+          Only the newest request of each kind, conversation and model stays here, together with recent requests and recent problems.
+          Older requests move to the archive file. Nothing is lost, and the Log export still has what is kept.
+        </p>
+      </Modal>
     </div>
   )
 }

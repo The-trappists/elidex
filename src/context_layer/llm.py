@@ -37,9 +37,13 @@ def remove_trace_sink(sink: TraceSink) -> None:
         _sinks.remove(sink)
 
 
+# Held by every JSONL append and by the workbench log compaction, so a rewrite never loses a line.
+FILE_LOCK = threading.Lock()
+
+
 def jsonl_sink(path: Path) -> TraceSink:
     """A sink that appends each trace as one JSON line (thread-safe)."""
-    lock = threading.Lock()
+    lock = FILE_LOCK
 
     def sink(trace: dict[str, Any]) -> None:
         with lock:

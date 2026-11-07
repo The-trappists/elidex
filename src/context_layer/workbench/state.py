@@ -611,6 +611,7 @@ class Workbench:
         self.elements, self.sites, self.links, self.personas = {}, {}, {}, {}
         self.threads, self.incidents, self.scenarios, self.runs, self.jobs = {}, {}, {}, {}, {}
         self.flags, self.edits, self.applications = {}, {}, {}
+        self.dedupe_merges, self.dedupe_total = [], 0  # workbench/dedupe.py
         self.processor.reset()
         old = getattr(self, "store", None)
         if old:

@@ -1,5 +1,6 @@
 // Typed client for every /api route (see docs/workbench.md). Errors throw ApiError with the
 // backend's `detail` message, ready for a toast.
+import { fixtureAgentRun } from './fixtures/agentRun'
 import type {
   AgentRunBody,
   DatasetSample,
@@ -21,6 +22,7 @@ import type {
   LiveThread,
   LlmCall,
   LlmCheckResult,
+  LlmSummary,
   Message,
   NewThreadBody,
   PatternReport,
@@ -38,7 +40,12 @@ import type {
   CompanyState,
   CompanyStartBody,
   ContextAssertion,
-  ElementClass } from './types'
+  ElementClass,
+  DedupeReport,
+  Justification } from './types'
+import { fixtureLlmCall, fixtureLlmCalls, fixtureLlmCompact, fixtureLlmSummary } from './fixtures/llm'
+
+const FX = import.meta.env.VITE_REVIEW_FIXTURES === '1'
 
 /** GET /company/package: what the autonomous system was handed at one cycle. */
 export interface CompanyPackage {
@@ -137,6 +144,15 @@ export const api = {
   context: (entity: string, at?: string | null, includeExpired = false) =>
     req<ContextHit[]>('GET', `/context/${enc(entity)}${qs({ at, include_expired: includeExpired })}`),
   deleteAssertion: (id: string) => req<void>('DELETE', `/assertions/${enc(id)}`),
+  justification: (id: string): Promise<Justification> =>
+    import.meta.env.VITE_REVIEW_FIXTURES === '1'
+      ? import('./fixtures/justification').then((m) => m.fixtureJustification(id))
+      : req<Justification>('GET', `/assertions/${enc(id)}/justification`),
+  dedupe: (): Promise<DedupeReport> =>
+    import.meta.env.VITE_REVIEW_FIXTURES === '1'
+      ? import('./fixtures/justification').then((m) => m.FIXTURE_DEDUPE)
+      : req<DedupeReport>('GET', '/knowledge/dedupe'),
+  knowledgeExportUrl: (format: string, validOnly = true) => `/api/knowledge/export${qs({ format, valid_only: validOnly })}`,
   knowledgeGraph: (at?: string) => req<KgGraph>('GET', `/graph${qs({ at })}`),
   provenance: (assertionId: string) => req<GraphProvenance[]>('GET', `/graph/provenance/${enc(assertionId)}`),
   reach: (assertionId: string) => req<GraphReach>('GET', `/graph/reach/${enc(assertionId)}`),
@@ -149,7 +165,8 @@ export const api = {
     req<PatternReport>('GET', `/patterns${qs({ entity_id: entityId, at })}`),
   patternsReportUrl: (at?: string | null) => `/api/patterns/report.md${qs({ at })}`,
   guard: (body: GuardBody) => req<GuardVerdict>('POST', '/guard', body),
-  agentRun: (body: AgentRunBody) => req<AgentRunResult>('POST', '/agent/run', body),
+  agentRun: (body: AgentRunBody) =>
+    import.meta.env.VITE_REVIEW_FIXTURES === '1' ? Promise.resolve(fixtureAgentRun(body)) : req<AgentRunResult>('POST', '/agent/run', body),
 
   // data
   reset: (mode: 'seed' | 'empty') => req<void>('POST', '/data/reset', { mode }),
@@ -168,8 +185,10 @@ export const api = {
 
   // LLM
   llmCalls: (f: { purpose?: string; thread_id?: string; limit?: number } = {}) =>
-    req<LlmCall[]>('GET', `/llm/calls${qs(f)}`),
-  llmCall: (id: string) => req<LlmCall>('GET', `/llm/calls/${enc(id)}`),
+    FX ? Promise.resolve(fixtureLlmCalls()) : req<LlmCall[]>('GET', `/llm/calls${qs(f)}`),
+  llmCall: (id: string) => (FX ? Promise.resolve(fixtureLlmCall(id) as LlmCall) : req<LlmCall>('GET', `/llm/calls/${enc(id)}`)),
+  llmSummary: () => (FX ? Promise.resolve(fixtureLlmSummary()) : req<LlmSummary>('GET', '/llm/summary')),
+  llmCompact: () => (FX ? Promise.resolve(fixtureLlmCompact()) : req<LlmSummary>('POST', '/llm/compact')),
   llmCheck: () => req<LlmCheckResult[]>('POST', '/llm/check'),
 
   // company day

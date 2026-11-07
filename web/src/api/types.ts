@@ -391,6 +391,7 @@ export interface Settings {
   use_critic: boolean
   use_judge: boolean
   use_outcome_loop: boolean
+  use_dedupe: boolean
   // read-only
   llm_configured: boolean
   llm_model: string | null
@@ -412,6 +413,7 @@ export type SettingsPatch = Partial<
     | 'use_critic'
     | 'use_judge'
     | 'use_outcome_loop'
+    | 'use_dedupe'
   >
 >
 

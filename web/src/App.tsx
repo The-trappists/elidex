@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
+import AgentTesterPage from './pages/AgentTesterPage'
 import CompanyPage from './pages/CompanyPage'
 import ConversationsPage from './pages/ConversationsPage'
 import DataPage from './pages/DataPage'
@@ -52,6 +53,7 @@ function DashboardLayout() {
                 <Route path="/network" element={<NetworkPage />} />
                 <Route path="/graph" element={<GraphPage />} />
                 <Route path="/knowledge" element={<KnowledgePage />} />
+                <Route path="/agent" element={<AgentTesterPage />} />
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/patterns" element={<Navigate to="/insights" replace />} />
                 <Route path="/llm" element={<LlmLogPage />} />

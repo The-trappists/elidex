@@ -1,5 +1,7 @@
 import { ArrowRight, BookOpenCheck, MessagesSquare, Waypoints } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useState, type MouseEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { BootSequence } from '../components/home/BootSequence'
 
 interface University {
   name: string
@@ -62,8 +64,17 @@ const TEAM_MEMBERS: TeamMember[] = [
 ]
 
 export default function HomePage() {
+  const navigate = useNavigate()
+  const [booting, setBooting] = useState(false)
+  // Entering the dashboard from here plays the boot sequence; opening /overview directly never does.
+  const enter = (e: MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+    e.preventDefault()
+    setBooting(true)
+  }
   return (
     <div className="landing h-full overflow-auto bg-bg text-text">
+      {booting && <BootSequence onDone={() => navigate('/overview')} />}
       <header className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-6 sm:px-10">
         <a href="#home" aria-label="ElidEx home" className="flex items-center gap-3">
           <img src="/elidex-logo.png" alt="" className="size-9 object-contain" />
@@ -80,6 +91,7 @@ export default function HomePage() {
           </a>
           <Link
             to="/overview"
+            onClick={enter}
             className="flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 font-medium hover:border-accent"
           >
             Open workbench <ArrowRight size={15} />
@@ -106,6 +118,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap items-center gap-5">
               <Link
                 to="/overview"
+                onClick={enter}
                 className="flex items-center gap-3 rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-on-accent hover:opacity-90"
               >
                 Explore the workbench <ArrowRight size={17} />

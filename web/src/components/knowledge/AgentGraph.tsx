@@ -40,7 +40,7 @@ export function AgentGraph({ targetId, evidenceIds, panelWidth = 0 }: { targetId
   const node = selected ? nodes.get(selected) : undefined
 
   return (
-    <div className="relative h-[min(65vh,40rem)] min-h-[20rem] overflow-hidden rounded-lg border border-line bg-bg">
+    <div className="relative h-full min-h-[16rem] overflow-hidden rounded-lg border border-line bg-bg">
       {!data ? (
         <GraphLoading />
       ) : (

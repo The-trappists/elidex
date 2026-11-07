@@ -103,6 +103,20 @@ def _over_reach(wb: Workbench, job: PipelineJob, stored: list) -> list[ReviewFla
     return flags
 
 
+def _folded_into_supported(wb: Workbench, job: PipelineJob, stored: list) -> set[str]:
+    """Ids of stored assertions that this job folded a duplicate into (dedupe) and that at least two people back:
+    the system already knows this well, so asking the operator again would only add noise."""
+    folded = {m.kept_id for m in getattr(wb, "dedupe_merges", []) if m.at >= job.started_at}
+    return {a.id for a in stored if a.id in folded and len({a.trust.stated_by, *a.trust.confirmed_by}) >= 2 and a.valid_to is None}
+
+
+def _flagged_conflict_pairs(wb: Workbench) -> set[frozenset[str]]:
+    """Pairs that already have a conflict flag in any thread, dismissed or not."""
+    from .state import _flag_key
+
+    return {frozenset(i for i in _flag_key(f)[2]) for f in wb.flags.values() if f.kind == "conflict" and f.assertion_id}
+
+
 def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
     """Create the review flags of a finished job: job.flags (from the critic and judge hooks) plus the rules
     below. Returns the flags that are new (a flag already known for the same kind, thread and assertion is
@@ -115,9 +129,13 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
     try:
         candidates = list(job.flags)
         stored = [wb.store.assertions[i] for i in job.assertion_ids if i in wb.store.assertions]
+        quiet = _folded_into_supported(wb, job, stored)  # merged into a well-supported assertion: no new flags
+        quiet_topics = {a.topic for a in stored if a.id in quiet}
 
         for note in job.notes:
             if m := _ABSTAINED.match(note):
+                if m.group(1) in quiet_topics:
+                    continue
                 candidates.append(
                     _flag(job, "abstained", f"Not stored: '{m.group(1)}', because {_plain_reason(m.group(2))}.", None, note, m.group(1))
                 )
@@ -125,7 +143,7 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
                 candidates.append(_flag(job, "abstained", "An item was not stored.", None, note))
 
         for a in stored:
-            if a.confidence < LOW_CONFIDENCE:
+            if a.confidence < LOW_CONFIDENCE and a.id not in quiet:
                 candidates.append(
                     _flag(
                         job, "low_confidence",
@@ -149,11 +167,14 @@ def collect_flags(job: PipelineJob, wb: Workbench) -> list[ReviewFlag]:
                 pairs.update(tuple(sorted((aid, o))) for o in others)
             else:
                 pairs.add((aid,))
+        known_pairs = _flagged_conflict_pairs(wb)
         for pair in sorted(pairs):
+            if quiet & set(pair) or (len(pair) > 1 and frozenset(pair) in known_pairs):
+                continue  # a pair is flagged once, whatever the thread
             candidates.append(_conflict_flag(job, wb, pair))
 
         try:
-            candidates += _over_reach(wb, job, stored)
+            candidates += _over_reach(wb, job, [a for a in stored if a.id not in quiet])
         except Exception as e:  # noqa: BLE001 - a rule must never break the job
             log.warning("over_reach rule failed: %s", e)
 

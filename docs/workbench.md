@@ -29,7 +29,7 @@ The Workbench runs the loop v2 agents on top of the five pipeline steps. The loo
 - A **judge** compares each new assertion with its neighbours after the store step (hook `after_store`); the lifecycle reconcile step still runs afterwards as a fallback.
 - A **passive outcome loop** posts the demo agent's applied action in a thread and reads the technician's reply to update trust (`POST /api/agent/run`, hook `after_store`).
 - The **operator console** ("Needs a look" page, assertion editor, item re-run with history and undo) shows what the loop did and why, and never blocks it.
-- All three agents are toggles in Settings (`use_critic`, `use_judge`, `use_outcome_loop`, default on; critic and judge stay silent without an LLM key).
+- All three agents are toggles in Settings (`use_critic`, `use_judge`, `use_outcome_loop`, default on; critic and judge stay silent without an LLM key). `use_dedupe` (default on) folds near-duplicate assertions in the store step.
 
 Read more: [plan-loop-v2.md](plan-loop-v2.md) (what was built, known weaknesses), [design.md](design.md) (pipeline and fields), [evaluation.md](evaluation.md) (metric and model comparison), [demo-loop-v2.md](demo-loop-v2.md) (2m30 demo script), and the endpoint tables below.
 
@@ -122,6 +122,9 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `POST /data/import` | the export JSON | 204, then emits `state.reset`. 422 when an element's `site_id` or a link's end is unknown (same rules as `POST /elements` and `/links`). The optional key `process_on_import` (thread ids) is processed right away, as the seed is at first start |
 | `POST /data/load-dataset` | `{sites=40 (9-80), threads=300 (0-1000), seed=42}` | the sample summary (counts, `connected_components`). Builds a connected sample of the company dataset on the fly (`DATASET_DIR`, else `out/dataset/tiny`, generated in 2 s when missing) and replaces the state like an import. 422 for a dataset over 500k threads (use the CLI); the Data page button "Load company dataset" calls it |
 | `GET /settings`, `PUT /settings` | `SettingsPatch` | `Settings` |
+| `GET /assertions/{id}/justification` | | `Justification` (404 unknown): why the assertion has its trust level and confidence, factor by factor. See "Knowledge polish" below |
+| `GET /knowledge/dedupe` | | `DedupeReport`: `enabled`, `merged_total`, last 50 merges (newest first), `threshold` |
+| `POST /knowledge/dedupe/run` | | `DedupeReport`; folds the near-duplicates of the whole store now (works with the setting off) and emits `assertion.upserted` / `assertion.deleted` |
 | `GET /slack/status` | | `{connected, channel, error}` |
 | `GET /llm/calls?purpose=&thread_id=&limit=` | | `LlmCall[]`, newest first, read from the JSONL |
 | `GET /llm/calls/{id}` | | `LlmCall` |
@@ -168,6 +171,12 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 5. Eval: when the extractor is the LLM and the thread has `expected`, items are compared on `(type, scope, action similarity)`, not on the topic slug (see [evaluation.md](evaluation.md)), and the result goes in `job.eval`. Same type and scope with a similar action is matched; the same scope with another action, or the same action with another scope, goes in `binding_diffs`.
 6. Invalidation items are only applied when `settings.lifecycle` is on (as in `pipeline.build_store`).
 
+### Knowledge polish: dedupe and justification
+
+**Dedupe** (`workbench/dedupe.py`, setting `use_dedupe`, default on). In the store step a new assertion is folded into an older one when it is a near-duplicate. All of this must hold ("a wrong link is worse than none"): same type (never an invalidation); both valid (no `valid_to`) and not in conflict; same trigger and same `applies_to` (or the very same reach); same `avoid` list, same condition checks and same numbers ("5 minutes" never merges with "15"); neither text negates the other; and the advice text (action or fact, avoid, conditions) is at least `DEDUPE_THRESHOLD = 0.85` similar by (a) exact normalised text, (b) Jaccard on stemmed words, (c) embedding cosine when `EMBEDDING_MODEL` is set (vectors are cached and fetched off the event loop; any failure falls back to words). Items from the same job never merge with each other. On a merge the older assertion stays; the newer one's sources (deduplicated), confirmers and outcomes move into it, trust never goes down, confidence rises by 0.03 (cap 0.95) only when a person who had not backed it before joins, so re-processing a thread is idempotent. Each merge is a `DedupeMerge` (last 200, in memory and in the state file under `dedupe`); the job gets an event `dedupe: folded into ctx_xxxx`. Review flags (`low_confidence`, `conflict`, `over_reach`, `abstained`) stay quiet for an assertion this job folded a duplicate into when at least two people back it, and a `conflict` flag is raised once per pair of assertions across all threads.
+
+**Justification** (`workbench/justify.py`): deterministic, built from what was recorded, never invented. Trust factors: level (hunch/stated/verified) with the author, their role and the evidence quote; confirmations or "single voice"; operator edits; outcome track record and the latest human field report; contradictions; closed or expired. Confidence factors: extractor confidence (from the creating job's items), critic verdict with its reason and `confidence_after`, linker notes (class wider than stated, x0.8; "not bound" notes), class vs named-equipment binding, independent sources (references, threads, people), judge verdicts with their reasons, failed outcomes (x0.7 each). When the job, critic or judge data is no longer in memory (jobs are capped at 200) the factor says "Not recorded" and is neutral.
+
 ### Data lifecycle
 
 - On first start, the seed is loaded:
@@ -184,6 +193,22 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 - a sink that publishes `llm.call` (thread-safe).
 
 `LLMExtractor.last_traces` gives the call ids to put in `job.llm_call_ids`. API keys are never traced.
+
+`llm.FILE_LOCK` is shared by the JSONL sink and the compaction below.
+
+### Knowledge export (`workbench/routes_export.py`)
+
+`GET /api/knowledge/export?format=json|markdown|csv|graphml|jsonld&valid_only=true&at=` answers an attachment named `knowledge-<simdate>.<ext>` (`json`, `md`, `csv`, `graphml`, `jsonld`); 422 for another format. `GET /api/knowledge/export/formats` lists format, extension, media type and description. `valid_only` keeps the assertions valid at `at` (default sim now). It reuses `company.export_package` / `render_markdown`; `/company/export` is unchanged.
+
+- `json`: `schema_version`, `valid_at`, counts, assertions, classes, class members, bindings, sources.
+- `markdown`: the company report plus an index by element, site and class.
+- `csv`: one row per assertion; list fields joined by ` | `; cells starting with `= + - @` get a leading `'` (formula-injection guard).
+- `graphml`: the knowledge graph (nodes and edges, all attributes as strings, XML escaped); with `valid_only`, assertions not valid at `at` are left out.
+- `jsonld`: `@context` plus `@graph`; stable ids `urn:ctx:assertion:<id>`, entities `urn:ctx:entity:<id>`.
+
+### AI activity log compaction (`workbench/llm_compact.py`)
+
+The log (`out/workbench/llm_calls.jsonl`) is compacted at startup and every 10 wall minutes, or at once with `POST /api/llm/compact`; `GET /api/llm/summary` reports `LlmSummary` (kept, per purpose, errors, oldest/newest, archived total, last run). Rules (wall time): keep every call of the last 2 h; keep errors and parse failures of the last 24 h; keep the newest call per (purpose, thread, model); older than 2 h, drop calls whose thread no longer exists and repeats of an identical request (system + user hash, newest stays); cap at 500. Removed lines (and unreadable ones) are appended to `out/workbench/archive/llm_calls.jsonl` first, then the live file is rewritten via temp file + rename while holding the lock the trace sink uses, so concurrent appends are not lost. `wb.llm_calls` drops the same ids. File work runs in `asyncio.to_thread`.
 
 ### Human activity from the sources (`workbench/sources.py`)
 
