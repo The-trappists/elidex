@@ -7,21 +7,78 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import inspect
 import time
+from collections import defaultdict
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from .. import config, llm
 from ..link import Linker
 from ..mvp.lifecycle import reconcile
-from ..models import ExtractedItem
+from ..models import ContextAssertion, ExtractedItem, Thread
 from ..understand import CachedExtractor, LLMExtractor
-from .contracts import EvalResult, LiveThread, LlmCall, PipelineJob
+from .contracts import EvalResult, LiveThread, LlmCall, PipelineJob, Settings
 
 if TYPE_CHECKING:
     from .state import Workbench
 
 log = logging.getLogger(__name__)
+
+
+HOOK_NAMES = ("after_understand", "after_store", "after_reconcile")
+
+
+@dataclass
+class HookContext:
+    """What a hook sees. `items` is the current item list; `new_assertions` is filled from after_store on."""
+
+    wb: Any  # Workbench
+    job: PipelineJob
+    thread: LiveThread
+    core: Thread  # core models.Thread
+    items: list[ExtractedItem]
+    new_assertions: list[ContextAssertion] = field(default_factory=list)
+    settings: Settings | None = None
+
+
+_HOOKS: dict[str, list[Callable[[HookContext], Any]]] = defaultdict(list)
+
+
+def register_hook(name: str, fn: Callable[[HookContext], Any]) -> None:
+    """Register fn (sync or async) for "after_understand", "after_store" or "after_reconcile".
+
+    after_understand may return a replacement list of ExtractedItem (None keeps the items).
+    Exceptions are caught and noted in job.notes; a hook never fails the job."""
+    if name not in HOOK_NAMES:
+        raise ValueError(f"unknown hook {name!r}, expected one of {HOOK_NAMES}")
+    if fn not in _HOOKS[name]:
+        _HOOKS[name].append(fn)
+
+
+def clear_hooks() -> None:
+    _HOOKS.clear()
+
+
+async def run_hooks(name: str, ctx: HookContext) -> list[ExtractedItem] | None:
+    """Run the hooks of `name` in registration order. Returns the last replacement items, if any."""
+    replacement: list[ExtractedItem] | None = None
+    for fn in list(_HOOKS.get(name, ())):
+        try:
+            out = fn(ctx)
+            if inspect.isawaitable(out):
+                out = await out
+            if name == "after_understand" and out is not None:
+                replacement = list(out)
+                ctx.items = replacement
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:  # noqa: BLE001 - never fail the job
+            ctx.job.notes.append(f"hook {name}:{getattr(fn, '__name__', 'fn')} failed ({type(e).__name__}: {e})")
+            log.warning("hook %s failed: %s", name, e)
+    return replacement
 
 
 def _scope_key(item: ExtractedItem, inv) -> tuple:
@@ -214,6 +271,11 @@ class Processor:
         items = await self._extract(job, thread, core)
         if gen != self._generation or thread.id not in wb.threads:
             return
+        hook_ctx = HookContext(wb=wb, job=job, thread=thread, core=core, items=items, settings=wb.settings)
+        if (replaced := await run_hooks("after_understand", hook_ctx)) is not None:
+            items = replaced
+        if gen != self._generation or thread.id not in wb.threads:
+            return
         job.items = items
         scenario = wb.scenarios.get(thread.scenario_id) if thread.scenario_id else None
         if job.extractor.startswith("llm") and scenario and scenario.expected:
@@ -252,6 +314,10 @@ class Processor:
                 merged += 1
                 job.events.append(f"merged into {stored.id} (same knowledge, another source)")
         self._stage(job, "store", "done", f"{len(new)} new, {merged} merged, {len(job.removed_assertion_ids)} removed", t0)
+        hook_ctx.new_assertions = new
+        await run_hooks("after_store", hook_ctx)
+        if gen != self._generation or thread.id not in wb.threads:
+            return
 
         # --- reconcile
         if wb.settings.lifecycle:
@@ -262,6 +328,7 @@ class Processor:
             self._stage(job, "reconcile", "done", f"{len(job.events)} event(s)", t0)
         else:
             self._stage(job, "reconcile", "skipped", "lifecycle is off")
+        await run_hooks("after_reconcile", hook_ctx)
 
     async def _extract(self, job: PipelineJob, thread: LiveThread, core) -> list[ExtractedItem]:
         wb = self.wb

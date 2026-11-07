@@ -82,6 +82,10 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 
 The `/graph/*` views are rebuilt on each call from the live store and live threads. The Network page Inspector shows them: "Where it comes from" and "What it reaches" on knowledge, "History of advice" and "Who to ask" on an element.
 | `DELETE /assertions/{id}` | | 204 |
+| `PATCH /assertions/{id}` | `OperatorEdit` | stub, L4 (501) |
+| `GET /review/flags` | | `ReviewFlag[]` (stub, L4: returns `[]`) |
+| `POST /review/flags/{id}/dismiss` | | `ReviewFlag` (stub, L4: 501) |
+| `POST /jobs/{job_id}/rerun` | `RerunBody` | 202 (stub, L4: 501) |
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
 | `POST /agent/run` | `AgentRunBody` | `AgentRunResult` |
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
@@ -114,6 +118,7 @@ Errors use FastAPI's `{"detail": "..."}` with 4xx/5xx codes, so the UI can show 
    - `link`: one `Linker.link` per item; its notes go to the job.
    - `store`: `add_class` and `add_assertion` (new or merged).
    - `reconcile`: `lifecycle.reconcile` when `settings.lifecycle` is on, otherwise `skipped`.
+   Hooks (`processor.register_hook(name, fn)`, sync or async, `fn(HookContext)`): `after_understand` (may return a replacement item list), `after_store` (`ctx.new_assertions` filled), `after_reconcile`. A hook exception is noted in `job.notes` and never fails the job. The critic runs in `after_understand`, the judge in `after_reconcile`; `STAGES` is unchanged. Toggles: `use_critic`, `use_judge`, `use_outcome_loop` (default off).
 4. Extractor choice (`settings.extractor_mode`):
    - `llm`: `LLMExtractor(cache_path=out/workbench/llm_cache.json)`; error if no key.
    - `scripted`:

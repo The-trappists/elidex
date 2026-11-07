@@ -11,7 +11,17 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from ..models import ContextAssertion, ElementClass, ExtractionResult, ExtractedItem, Message, NetworkElement, Site
+from ..models import (
+    Condition,
+    ContextAssertion,
+    ElementClass,
+    ExtractionResult,
+    ExtractedItem,
+    Message,
+    NetworkElement,
+    Site,
+    TrustLevel,
+)
 
 Origin = Literal["elisa", "synthetic", "generated", "manual", "slack"]
 # Origins removed by "DELETE /api/data/generated".
@@ -27,6 +37,12 @@ IncidentStatus = Literal["open", "resolved"]
 LinkKind = Literal["fiber", "microwave", "backhaul"]
 LlmPurpose = Literal["extract", "generate_scenario", "agent", "check"]
 JsonMode = Literal["json_object", "json_schema", "prompt"]
+
+FlagKind = Literal[
+    "abstained", "low_confidence", "conflict", "over_reach", "critic_rejected", "judge_decision", "operator_edit"
+]
+CriticVerdictKind = Literal["keep", "downgrade", "reject"]
+JudgeVerdictKind = Literal["supports", "contradicts", "supersedes", "unrelated"]
 
 STAGES: list[str] = ["listen", "understand", "link", "store", "reconcile"]
 
@@ -164,6 +180,39 @@ class EvalResult(BaseModel):
     binding_diffs: list[str] = Field(default_factory=list)  # human-readable notes
 
 
+class ReviewFlag(BaseModel):
+    """Something the loop wants the operator to see. Informational: nothing waits for a click."""
+
+    id: str
+    kind: FlagKind
+    thread_id: str
+    job_id: str
+    assertion_id: str | None = None
+    message: str  # plain language
+    detail: str | None = None
+    created_at: datetime  # wall
+    dismissed: bool = False
+
+
+class CriticVerdict(BaseModel):
+    """Critic pass inside understand: one verdict per extracted item."""
+
+    item_topic: str
+    verdict: CriticVerdictKind
+    reason: str
+    evidence_found: bool  # the evidence quote was found in a cited message
+    confidence_after: float | None = None
+
+
+class JudgeVerdict(BaseModel):
+    """Judge pass inside reconcile: how a new assertion relates to an existing one."""
+
+    new_assertion_id: str
+    other_assertion_id: str
+    verdict: JudgeVerdictKind
+    reason: str
+
+
 class PipelineJob(BaseModel):
     id: str  # "job_0001"
     thread_id: str
@@ -178,6 +227,9 @@ class PipelineJob(BaseModel):
     events: list[str] = Field(default_factory=list)  # lifecycle: closed, conflict, merged
     llm_call_ids: list[str] = Field(default_factory=list)
     eval: EvalResult | None = None
+    flags: list[ReviewFlag] = Field(default_factory=list)
+    critic: list[CriticVerdict] = Field(default_factory=list)
+    judge: list[JudgeVerdict] = Field(default_factory=list)
     error: str | None = None
 
 
@@ -225,6 +277,9 @@ class Settings(BaseModel):
     slack_mirror: bool = True
     auto_sim: bool = False  # start a random scenario every auto_every_s wall seconds
     auto_every_s: float = 45
+    use_critic: bool = False  # critic pass inside understand
+    use_judge: bool = False  # judge pass inside reconcile
+    use_outcome_loop: bool = False  # outcome feedback on assertions
     # read-only, filled by the backend
     llm_configured: bool = False
     llm_model: str | None = None
@@ -354,6 +409,9 @@ class SettingsPatch(BaseModel):
     slack_mirror: bool | None = None
     auto_sim: bool | None = None
     auto_every_s: float | None = None
+    use_critic: bool | None = None
+    use_judge: bool | None = None
+    use_outcome_loop: bool | None = None
 
 
 class LlmCheckResult(BaseModel):
@@ -363,3 +421,21 @@ class LlmCheckResult(BaseModel):
     ping_ok: bool
     modes: dict[str, dict[str, Any]]  # mode -> {"ok": bool, "latency_ms": int, "error": str | None, "items": int}
     recommended_mode: JsonMode | None = None
+
+
+class RerunBody(BaseModel):
+    items: list[ExtractedItem] | None = None  # replacement items (skips understand)
+    model: str | None = None  # LLM model override for this run
+    from_stage: Literal["link", "store"] = "link"
+
+
+class OperatorEdit(BaseModel):
+    """Fields an operator may change on an assertion. Omitted fields stay as they are."""
+
+    summary: str | None = None
+    action: str | None = None
+    avoid: list[str] | None = None
+    conditions: list[Condition] | None = None
+    valid_to: datetime | None = None
+    trust_level: TrustLevel | None = None
+    note: str | None = None

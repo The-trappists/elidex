@@ -18,6 +18,7 @@ export const SOURCE_STYLE: Record<SourceKind, { label: string; cls: string; hex:
   teams: { label: 'Teams', cls: 'bg-surface-2 text-muted', hex: '#5b5fc7' },
   email: { label: 'Email', cls: 'bg-surface-2 text-muted', hex: '#0ea5e9' },
   slack: { label: 'Slack', cls: 'bg-surface-2 text-muted', hex: '#e01e5a' },
+  operator: { label: 'Operator', cls: 'bg-surface-2 text-muted', hex: '#64748b' },
 }
 
 export const ORIGIN_STYLE: Record<Origin, { label: string; cls: string }> = {

@@ -29,9 +29,12 @@ from .contracts import (
     LlmCall,
     LlmCheckResult,
     NewThreadBody,
+    OperatorEdit,
     Persona,
     PostMessageBody,
+    RerunBody,
     ResetBody,
+    ReviewFlag,
     Scenario,
     ScenarioRun,
     Settings,
@@ -294,6 +297,29 @@ async def delete_assertion(assertion_id: str, request: Request) -> Response:
     except KeyError:
         raise HTTPException(404, f"unknown assertion {assertion_id}") from None
     return Response(status_code=204)
+
+
+@router.patch("/assertions/{assertion_id}")
+async def edit_assertion(assertion_id: str, body: OperatorEdit, request: Request) -> dict:
+    raise HTTPException(501, "not implemented yet (lot L4: operator edit of an assertion)")
+
+
+# ---------------------------------------------------------------- review loop (stubs, lot L4)
+
+
+@router.get("/review/flags")
+async def review_flags(request: Request) -> list[ReviewFlag]:
+    return []
+
+
+@router.post("/review/flags/{flag_id}/dismiss")
+async def dismiss_flag(flag_id: str, request: Request) -> ReviewFlag:
+    raise HTTPException(501, "not implemented yet (lot L4: dismiss a review flag)")
+
+
+@router.post("/jobs/{job_id}/rerun", status_code=202)
+async def rerun_job(job_id: str, body: RerunBody, request: Request) -> dict:
+    raise HTTPException(501, "not implemented yet (lot L4: re-run a job from link or store)")
 
 
 def _verdict(v: guard.Verdict) -> dict:

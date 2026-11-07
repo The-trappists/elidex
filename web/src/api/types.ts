@@ -4,7 +4,7 @@
 
 // ---------------------------------------------------------------- core (models.py)
 
-export type SourceKind = 'teams' | 'email' | 'slack'
+export type SourceKind = 'teams' | 'email' | 'slack' | 'operator'
 export type AssertionType = 'workaround' | 'access' | 'fact' | 'invalidation'
 export type TrustLevel = 'hunch' | 'stated' | 'verified'
 export type BindingRole = 'applies_to' | 'observed_on' | 'trigger'
@@ -65,6 +65,7 @@ export interface Scope {
   site_ids: string[]
   element_class: ClassCriteria | null
   trigger: string | null
+  qualifier: string | null
 }
 
 export interface ExtractedItem {
@@ -81,6 +82,7 @@ export interface ExtractedItem {
   evidence: string | null
   stated_by: string
   cited_seq: number[]
+  evidence_quote: string | null
   confidence: number
 }
 
@@ -253,6 +255,46 @@ export interface EvalResult {
   binding_diffs: string[]
 }
 
+export type FlagKind =
+  | 'abstained'
+  | 'low_confidence'
+  | 'conflict'
+  | 'over_reach'
+  | 'critic_rejected'
+  | 'judge_decision'
+  | 'operator_edit'
+
+export interface ReviewFlag {
+  id: string
+  kind: FlagKind
+  thread_id: string
+  job_id: string
+  assertion_id: string | null
+  message: string
+  detail: string | null
+  created_at: string // wall
+  dismissed: boolean
+}
+
+export type CriticVerdictKind = 'keep' | 'downgrade' | 'reject'
+
+export interface CriticVerdict {
+  item_topic: string
+  verdict: CriticVerdictKind
+  reason: string
+  evidence_found: boolean
+  confidence_after: number | null
+}
+
+export type JudgeVerdictKind = 'supports' | 'contradicts' | 'supersedes' | 'unrelated'
+
+export interface JudgeVerdict {
+  new_assertion_id: string
+  other_assertion_id: string
+  verdict: JudgeVerdictKind
+  reason: string
+}
+
 export interface PipelineJob {
   id: string
   thread_id: string
@@ -267,6 +309,9 @@ export interface PipelineJob {
   events: string[]
   llm_call_ids: string[]
   eval: EvalResult | null
+  flags: ReviewFlag[]
+  critic: CriticVerdict[]
+  judge: JudgeVerdict[]
   error: string | null
 }
 
@@ -306,6 +351,9 @@ export interface Settings {
   slack_mirror: boolean
   auto_sim: boolean
   auto_every_s: number
+  use_critic: boolean
+  use_judge: boolean
+  use_outcome_loop: boolean
   // read-only
   llm_configured: boolean
   llm_model: string | null
@@ -324,8 +372,27 @@ export type SettingsPatch = Partial<
     | 'slack_mirror'
     | 'auto_sim'
     | 'auto_every_s'
+    | 'use_critic'
+    | 'use_judge'
+    | 'use_outcome_loop'
   >
 >
+
+export interface RerunBody {
+  items?: ExtractedItem[] | null
+  model?: string | null
+  from_stage?: 'link' | 'store'
+}
+
+export interface OperatorEdit {
+  summary?: string | null
+  action?: string | null
+  avoid?: string[] | null
+  conditions?: Condition[] | null
+  valid_to?: string | null
+  trust_level?: TrustLevel | null
+  note?: string | null
+}
 
 export interface ClockState {
   sim_now: string
