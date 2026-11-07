@@ -5,8 +5,8 @@
 2. The technician's next messages in that thread ("traffic is back", "still down") are read after the thread's
    job stored its knowledge (hook `after_store`). One LLM call per pending application decides worked / failed /
    unclear; without an LLM (or when it fails) a small keyword heuristic decides.
-3. worked: trust becomes "verified", the thread is added as a source, a flag explains it.
-   failed: confidence x0.7 and a flag. unclear: nothing changes, the application stays pending.
+3. The verdict is recorded in the one ledger (`Assertion.outcomes`, source "thread") and settled by `settle`: the same
+   rule as POST /agent/outcome (see docs/outcome-unification.md). unclear: nothing changes, the application stays pending.
 
 Everything is behind Settings.use_outcome_loop. A failure here is noted in the job and never blocks it.
 """
@@ -164,40 +164,93 @@ def _decide(app, assertion, announce: str, messages: list, sim_time) -> tuple[st
     return outcome, quote, reason, "heuristic", msg
 
 
-# ---------------------------------------------------------------- applying it
+# ---------------------------------------------------------------- applying it (one ledger, one rule)
+
+
+def settle(
+    wb: Workbench, a, o, *, thread_id: str, job_id: str, author: str | None = None, role: str | None = None,
+    source_ref: SourceRef | None = None, reason: str = "", method: str = "",
+) -> None:
+    """The effects of ONE freshly recorded outcome (`o` is already in `a.outcomes`), applied once, never again.
+    failed: confidence x0.7 and a flag. worked from a human (`author`) and no failure in the ledger: trust verified
+    with the human's words, thread added as a source. worked with a failure in the ledger: mixed evidence, trust is
+    not upgraded. worked from observation: trust unchanged. A rule is never dropped."""
+    from .mvp import feedback
+    from .workbench.contracts import ReviewFlag
+
+    kind, detail = "judge_decision", f"{reason} ({method})" if reason else method
+    who = f"{author}: “{o.quote}”" if author and o.quote else f"observed: {o.evidence}"
+    if not o.worked:
+        a.confidence = round(a.confidence * FAILED_CONFIDENCE_FACTOR, 3)
+        text = (
+            f"Did not help in the field: '{a.topic}' on {o.entity}, so the system trusts it less "
+            f"({round(a.confidence * 100)}%). {who}"
+        )
+        kind = "low_confidence"
+    elif feedback.track_record(a).failed:
+        tr = feedback.track_record(a)
+        text = (
+            f"Mixed evidence: '{a.topic}' worked on {o.entity} but failed {tr.failed} time(s) elsewhere, "
+            f"so its trust level is not upgraded. {who}"
+        )
+    elif author:
+        a.trust = Trust(level="verified", stated_by=author, role=role or "", evidence=o.quote or o.evidence)
+        if source_ref is not None and not any(s.file == source_ref.file and set(source_ref.seq) <= set(s.seq) for s in a.sources):
+            a.sources.append(source_ref)
+        text = f"Confirmed in the field: '{a.topic}' worked on {o.entity}. {who}"
+    else:
+        return  # observed success: the track record counts it, nobody's word to upgrade trust with
+    wb.add_flag(
+        ReviewFlag(
+            id="", kind=kind, thread_id=thread_id, job_id=job_id, assertion_id=a.id, item_topic=a.topic, message=text,
+            detail=detail, created_at=datetime.now(),
+        ),
+        refresh=True,
+    )
 
 
 def _apply(wb: Workbench, ctx: HookContext, app, outcome: str, quote: str, reason: str, method: str, msg) -> None:
-    from .workbench.contracts import ReviewFlag
+    from .mvp import feedback
 
     a = wb.store.assertions.get(app.assertion_id)
-    thread = ctx.thread
     when = wb.now()
     if a is not None:
-        if outcome == "worked":
-            a.trust = Trust(level="verified", stated_by=msg.author, role=msg.role, evidence=quote)
-            if not any(s.file == thread.id and msg.seq in s.seq for s in a.sources):
-                a.sources.append(SourceRef(source=thread.source, file=thread.id, seq=[msg.seq]))
-            text = f"Confirmed in the field: '{a.topic}' worked on {app.entity_id}. {msg.author}: “{quote}”"
-            kind = "judge_decision"
-        else:
-            a.confidence = round(a.confidence * FAILED_CONFIDENCE_FACTOR, 3)
-            text = (
-                f"Did not help in the field: '{a.topic}' on {app.entity_id}, so the system trusts it less "
-                f"({round(a.confidence * 100)}%). {msg.author}: “{quote}”"
-            )
-            kind = "low_confidence"
-        wb.add_flag(
-            ReviewFlag(
-                id="", kind=kind, thread_id=thread.id, job_id=ctx.job.id, assertion_id=a.id, item_topic=a.topic, message=text,
-                detail=f"{reason} ({method})", created_at=datetime.now(),
-            ),
-            refresh=True,
+        rec = feedback.record(
+            a, app.entity_id, when, {}, worked=outcome == "worked", source="thread", application_id=app.id, quote=quote
         )
-        ctx.job.events.append(f"outcome {outcome} for {a.id} on {app.entity_id} ({method})")
+        if rec is not None:  # None: this application is already in the ledger, it is never counted twice
+            rec.evidence = f"{msg.author}: {reason}"
+            settle(
+                wb, a, rec, thread_id=ctx.thread.id, job_id=ctx.job.id, author=msg.author, role=msg.role,
+                source_ref=SourceRef(source=ctx.thread.source, file=ctx.thread.id, seq=[msg.seq]), reason=reason, method=method,
+            )
+            ctx.job.events.append(f"outcome {outcome} for {a.id} on {app.entity_id} ({method})")
     wb.update_application(
         app.id, outcome=outcome, outcome_quote=quote, outcome_reason=reason, outcome_at=when, method=method
     )
+
+
+def record_observation(wb: Workbench, a, entity_id: str, at: datetime, after: dict, worked: bool | None):
+    """POST /agent/outcome: record through the same ledger and settle the same effects. A pending application of
+    this assertion and entity is the same real event: it is resolved here (method "observation"), so a later
+    reply in its thread does not count it again."""
+    from .mvp import feedback
+
+    entity = wb.store.resolve(entity_id)
+    apps = [
+        x for x in wb.applications.values()
+        if x.assertion_id == a.id and x.outcome == "pending" and wb.store.resolve(x.entity_id) == entity
+    ]
+    rec = feedback.record(a, entity, at, after, worked=worked, application_id=apps[0].id if apps else None)
+    if rec is None:
+        return None
+    settle(wb, a, rec, thread_id=apps[0].thread_id if apps else "agent", job_id="", reason=rec.evidence, method="observation")
+    for x in apps:
+        wb.update_application(
+            x.id, outcome="worked" if rec.worked else "failed", outcome_quote=None, outcome_reason=rec.evidence,
+            outcome_at=at, method="observation",
+        )
+    return rec
 
 
 def _restore_sources(ctx: HookContext, worked: list) -> None:

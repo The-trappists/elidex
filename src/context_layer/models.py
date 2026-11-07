@@ -222,6 +222,9 @@ class Outcome(BaseModel):
     worked: bool
     evidence: str  # e.g. "interface_status still DOWN after the action"
     case_id: str | None = None
+    source: Literal["observation", "thread"] = "observation"  # what decided it: observed state or a human reply
+    application_id: str | None = None  # the RuleApplication this outcome settled (dedupe key)
+    quote: str | None = None  # verbatim human words, for source "thread"
 
 
 class ContextAssertion(BaseModel):

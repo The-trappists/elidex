@@ -215,7 +215,7 @@ The rule is **never dropped on feedback**: one failure can have another cause, a
 | Outcome judged right (worked / did not / no verdict) | 100% of 6, including 2 "no verdict" edge cases |
 | Contested flag right per case | 100% of 26, 0 false alarms |
 
-Where: `ctx agent` and `ctx context` print the track record; the LLM agent and `POST /api/agent/run` get it; the guard warns when it adapts an action because of a contested tip. Record an outcome with `ctx outcome ctx_0004 TRN-229 --after '{"interface_status": "DOWN"}'` or `POST /api/agent/outcome`.
+Where: `ctx agent` and `ctx context` print the track record; the LLM agent and `POST /api/agent/run` get it; the guard warns when it adapts an action because of a contested tip. Record an outcome with `ctx outcome ctx_0004 TRN-229 --after '{"interface_status": "DOWN"}'` or `POST /api/agent/outcome`. Since the outcome unification, technicians' replies read by the outcome loop land in the same ledger (`Outcome.source = "thread"`) and count in the track record; the measures above replay observation outcomes only and are unchanged. See [outcome-unification.md](outcome-unification.md).
 
 Limit: "a symptom changed" is not always "fixed" (optics could go from normal to low while counters stay at 0, which counts as "worked"). The agent can pass `worked` explicitly when it knows better (e.g. the ticket was closed).
 

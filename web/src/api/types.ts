@@ -290,7 +290,16 @@ export interface RuleApplication {
   outcome_quote: string | null
   outcome_reason: string | null
   outcome_at: string | null // sim
-  method: 'llm' | 'heuristic' | null
+  method: 'llm' | 'heuristic' | 'observation' | null
+}
+
+export interface TrackRecord {
+  status: 'untested' | 'ok' | 'contested'
+  worked: number
+  failed: number
+  failed_on: string[]
+  thread: number // outcomes that came from a human reply in a thread
+  last_at: string | null
 }
 
 export type CriticVerdictKind = 'keep' | 'downgrade' | 'reject'

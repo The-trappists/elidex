@@ -82,6 +82,7 @@ Drop in this order if time runs short: firmware-based expiry and stage breakpoin
 
 - The critic and the judge have never been tested against a real model: the tests use a mocked LLM.
 - The thresholds are guesses, not tuned: confidence x0.7 (critic evidence penalty, failed outcome) and x0.8 (qualifier), the over-reach flag at 6 unnamed elements and the low-confidence flag below 0.7.
+- Resolved by the outcome unification: the loop's failed outcomes now count in `track_record`, and an observation outcome and a thread reply about the same application are counted once. Still open: an observed success does not upgrade trust (no human word), and a second `/agent/run` on an entity with no open incident creates a new thread each time.
 - The heuristic outcome keyword "back" is loose: it also matches "back to the office" style sentences.
 - A rule that came only from the same thread as its outcome loses the trust upgrade when that thread is reprocessed, because reprocessing removes that thread's sources and re-extracts.
 - Trust upgrades and extra sources added by the judge are not rolled back when the thread that caused them is reprocessed.

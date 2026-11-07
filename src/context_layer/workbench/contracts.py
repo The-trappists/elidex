@@ -225,7 +225,7 @@ class RuleApplication(BaseModel):
     outcome_quote: str | None = None  # verbatim from the human message that decided it
     outcome_reason: str | None = None
     outcome_at: datetime | None = None  # sim
-    method: Literal["llm", "heuristic"] | None = None
+    method: Literal["llm", "heuristic", "observation"] | None = None  # observation: settled by POST /agent/outcome
 
 
 class CriticVerdict(BaseModel):

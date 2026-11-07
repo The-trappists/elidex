@@ -112,7 +112,7 @@ def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.Condit
     for h in hits:
         item = h.assertion.model_dump(mode="json", exclude={"link_notes", "outcomes"})
         tr = feedback.track_record(h.assertion, case.at)
-        item["track_record"] = {"status": tr.status, "worked": tr.worked, "failed": tr.failed, "failed_on": tr.failed_on}
+        item["track_record"] = tr.to_dict()
         if (c := checks.get(h.assertion.id)) is not None:
             item |= {"check_status": c.status, "to_read": c.to_read}
         context.append(item)
