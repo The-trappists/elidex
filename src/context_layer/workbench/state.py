@@ -517,9 +517,10 @@ class Workbench:
         if not any(s.source == "operator" for s in a.sources):
             a.sources.append(SourceRef(source="operator", file="operator", seq=[]))
             after = self._edit_state(a)
+        changed = [k for k in after if after[k] != before[k]]  # the record holds only the fields the edit touched
         rec = AssertionEdit(
             id=_next_id("edit", self.edits), assertion_id=a.id, ts=datetime.now(), note=edit.note,
-            before=before, after=after,
+            before={k: before[k] for k in changed}, after={k: after[k] for k in changed},
         )
         self.edits[rec.id] = rec
         self.emit("assertion.upserted", a)
