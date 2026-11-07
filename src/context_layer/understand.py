@@ -22,6 +22,10 @@ Rules:
 - Most messages are not knowledge. Keep only reusable rules or facts: workarounds, site access, why a config is odd, what actually fixed a problem. Return {{"items": []}} if there is none.
 - Extract the knowledge as the humans state it. Never diagnose faults yourself.
 - Scope: copy element and site IDs exactly as written. Fill element_class (type, model, install-year range) only as far as the text supports it; leave fields null rather than overgeneralise. A wrong link is worse than none.
+- Topics: reuse a known topic only when it is the same advice for the same problem on the same kind of element. A different problem, or a different advice for the same problem, gets its own topic slug. Never attach knowledge to a known topic just because the words look similar.
+- When two people recommend different things for the same problem, extract each person's position as its own item (same topic, different stated_by and action), even if the thread ends with one of them following the other's advice.
+- type: "workaround" for what to do or avoid, "access" for how to reach or enter a site, "fact" only for a statement with no action attached.
+- Copy site names and IDs as written; do not shorten an ID such as SITE-NF-017.
 - trust_level: "hunch" for guesses and hedges, "stated" for an expert's claim, "verified" when a later message reports the outcome (e.g. "traffic is back").
 - type "invalidation": a message says earlier knowledge is no longer true (fixed by firmware, new lock...). Reuse the topic of the knowledge it closes.
 - conditions: add a machine check {{field, op, value}} only for these observable fields: {fields}. Otherwise check is null.

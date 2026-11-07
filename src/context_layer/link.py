@@ -35,6 +35,7 @@ class Inventory:
         self._alias = {_norm(e.id): e.id for e in elements}
         self._alias |= {_norm(a): e.id for e in elements for a in e.aliases}
         self._site_alias = {_norm(s.id): s.id for s in sites}
+        self._site_name = {_norm(s.name): s.id for s in sites}
 
     @classmethod
     def load(cls, folder: Path = config.INVENTORY_DIR) -> "Inventory":
@@ -60,8 +61,22 @@ class Inventory:
         return self.elements.get(eid) if eid else None
 
     def resolve_site(self, raw: str) -> Site | None:
-        sid = self._site_alias.get(_norm(raw))
-        return self.sites.get(sid) if sid else None
+        """Exact id first. Then, only when exactly one site fits (precision first): an id without its
+        prefix ("NF-017" for SITE-NF-017), the exact site name, or a name fragment of 6+ characters
+        ("Sodankylä", "Turku harbour hut"). Ambiguous fragments such as "Turku" are not bound."""
+        key = _norm(raw)
+        if not key:
+            return None
+        sid = self._site_alias.get(key)
+        if sid:
+            return self.sites[sid]
+        sid = self._site_name.get(key)
+        if sid:
+            return self.sites[sid]
+        fits = {s for k, s in self._site_alias.items() if k.endswith(key) and len(key) >= 4}
+        if not fits and len(key) >= 6:
+            fits = {s for k, s in self._site_name.items() if key in k}
+        return self.sites[fits.pop()] if len(fits) == 1 else None
 
 
 @dataclass
