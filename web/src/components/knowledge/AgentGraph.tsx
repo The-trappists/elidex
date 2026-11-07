@@ -62,8 +62,8 @@ export function AgentGraph({ targetId, evidenceIds }: { targetId: string; eviden
     return [...out, ...edgeDefs]
   }, [data])
 
-  if (error && !data) return <div className="p-4 text-xs text-bad">Could not load graph: {error}</div>
-  if (!data) return <div className="p-4 text-xs text-muted">Loading graph…</div>
+  if (error && !data) return <div className="p-4 text-[13px] text-bad">Could not load graph: {error}</div>
+  if (!data) return <div className="p-4 text-[13px] text-muted">Loading graph…</div>
 
   return (
     <div className="relative h-[min(72vh,48rem)] min-h-[32rem] overflow-hidden rounded-lg border border-line bg-bg">

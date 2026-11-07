@@ -56,8 +56,8 @@ export function MessageList({
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-semibold">{g[0].author}</span>
-                {role && <span className="text-xs text-muted">{role}</span>}
-                <span className="text-xs text-muted">{fmtDateTime(g[0].sent_at)}</span>
+                {role && <span className="text-[13px] text-muted">{role}</span>}
+                <span className="text-[13px] text-muted">{fmtDateTime(g[0].sent_at)}</span>
               </div>
               {g.map((m) => {
                 const c = citations.get(m.seq)
@@ -66,12 +66,12 @@ export function MessageList({
                     key={m.seq}
                     onMouseEnter={c ? () => onHoverItem(c.itemIndex) : undefined}
                     onMouseLeave={c ? () => onHoverItem(null) : undefined}
-                    className={cn('group relative mt-0.5 rounded-md border-l-[3px] py-0.5 pl-2 pr-2 transition', c ? 'hover:bg-surface-2' : 'border-transparent', c && hoverItem === c.itemIndex && 'bg-surface-2')}
+                    className={cn('animate-item-in group relative mt-0.5 rounded-md border-l-[3px] py-0.5 pl-2 pr-2 transition', c ? 'hover:bg-surface-2' : 'border-transparent', c && hoverItem === c.itemIndex && 'bg-surface-2')}
                     style={c ? { borderLeftColor: TYPE_STYLE[c.type].hex } : undefined}
                   >
                     <div className="whitespace-pre-wrap break-words text-sm">{m.text}</div>
                     {c && (
-                      <div className="mt-1 flex items-center gap-1.5 text-xs">
+                      <div className="mt-1 flex items-center gap-1.5 text-[13px]">
                         <span style={{ color: TYPE_STYLE[c.type].hex }}>→ {c.topic}</span>
                         {c.assertionId && (
                           <Link to={assertionHref(c.assertionId)}>
@@ -80,7 +80,7 @@ export function MessageList({
                         )}
                       </div>
                     )}
-                    <span className="absolute right-2 top-1 hidden text-xs text-muted group-hover:block">#{m.seq}</span>
+                    <span className="absolute right-2 top-1 hidden text-[13px] text-muted group-hover:block">#{m.seq}</span>
                   </div>
                 )
               })}

@@ -1,13 +1,13 @@
 import { Pencil } from 'lucide-react'
-import type { CriticVerdict, ExtractedItem } from '../../api/types'
-import { TRUST_STYLE } from '../../lib/semantic'
+import type { ContextAssertion, CriticVerdict, ExtractedItem } from '../../api/types'
+import { TRUST_HELP, TRUST_STYLE } from '../../lib/semantic'
 import { TypeBadge } from '../knowledge/bits'
 import { Badge, Button, IdChip } from '../ui'
 import { CriticBadge } from './Verdicts'
 
-export function ConfidenceBar({ value }: { value: number }) {
+export function ConfidenceBar({ value, title }: { value: number; title?: string }) {
   return (
-    <div className="flex items-center gap-1.5" title={`confidence ${Math.round(value * 100)}%`}>
+    <div className="flex items-center gap-1.5" title={title ?? `Confidence ${Math.round(value * 100)}%`}>
       <div className="h-1.5 w-16 overflow-hidden rounded-full bg-line">
         <div className="h-full rounded-full bg-accent" style={{ width: `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%` }} />
       </div>
@@ -17,8 +17,14 @@ export function ConfidenceBar({ value }: { value: number }) {
 }
 
 /** One extracted item as a card (used in the job drawer). */
-export function ItemCard({ item, active, onHover, verdict, onEdit }: { item: ExtractedItem; active?: boolean; onHover?: (on: boolean) => void; verdict?: CriticVerdict; onEdit?: () => void }) {
+export function ItemCard({ item, active, onHover, verdict, onEdit, stored }: { item: ExtractedItem; stored?: ContextAssertion; active?: boolean; onHover?: (on: boolean) => void; verdict?: CriticVerdict; onEdit?: () => void }) {
   const sc = item.scope
+  // One value: the confidence of what was saved (after the second check and linking), else the extracted one.
+  const confidence = stored?.confidence ?? item.confidence
+  const confidenceTitle =
+    stored && Math.abs(stored.confidence - item.confidence) > 0.005
+      ? `Confidence ${Math.round(confidence * 100)}% as saved. The model said ${Math.round(item.confidence * 100)}%; it was lowered by the second check or by a wider scope.`
+      : `Confidence ${Math.round(confidence * 100)}%`
   return (
     <div
       onMouseEnter={() => onHover?.(true)}
@@ -30,7 +36,7 @@ export function ItemCard({ item, active, onHover, verdict, onEdit }: { item: Ext
         <span className="font-semibold">{item.topic}</span>
         <span className="ml-auto flex items-center gap-1.5">
           {verdict && <CriticBadge v={verdict} />}
-          <Badge className={TRUST_STYLE[item.trust_level].cls}>{TRUST_STYLE[item.trust_level].label}</Badge>
+          <Badge className={TRUST_STYLE[item.trust_level].cls} title={TRUST_HELP[item.trust_level]}>Trust: {TRUST_STYLE[item.trust_level].label}</Badge>
         </span>
       </div>
       <p className="mt-1.5 text-muted">{item.summary}</p>
@@ -52,7 +58,7 @@ export function ItemCard({ item, active, onHover, verdict, onEdit }: { item: Ext
       <div className="mt-2 flex items-center gap-3 text-xs text-muted">
         <span>stated by <b className="font-medium text-text">{item.stated_by}</b></span>
         {item.cited_seq.length > 0 && <span>msgs #{item.cited_seq.join(', #')}</span>}
-        <span className="ml-auto"><ConfidenceBar value={item.confidence} /></span>
+        <span className="ml-auto"><ConfidenceBar value={confidence} title={confidenceTitle} /></span>
       </div>
       {onEdit && (
         <div className="mt-2 border-t border-line pt-2">

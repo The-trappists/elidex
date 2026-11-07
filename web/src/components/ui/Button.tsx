@@ -5,10 +5,10 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type Size = 'sm' | 'md'
 
 const VARIANT: Record<Variant, string> = {
-  primary: 'bg-accent text-on-accent hover:opacity-90',
+  primary: 'bg-accent text-on-accent hover:opacity-90 shadow-sm',
   secondary: 'bg-surface border border-line text-text hover:bg-surface-2',
   ghost: 'text-muted hover:text-text hover:bg-surface-2',
-  danger: 'bg-surface border border-bad/40 text-bad hover:bg-bad/10',
+  danger: 'bg-surface border border-bad/40 text-bad hover:bg-bad hover:text-white hover:border-bad',
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -36,6 +36,7 @@ export function Button({ variant = 'secondary', size = 'md', icon, loading, clas
   )
 }
 
-export function IconButton({ className, ...rest }: ButtonProps) {
-  return <Button variant="ghost" size="sm" className={cn('!px-1.5', className)} {...rest} />
+/** Icon-only button: 32px hit area, and an aria-label is required. */
+export function IconButton({ className, 'aria-label': label, title, ...rest }: Omit<ButtonProps, 'aria-label'> & { 'aria-label': string }) {
+  return <Button variant="ghost" aria-label={label} title={title ?? label} className={cn('!size-8 !p-0', className)} {...rest} />
 }

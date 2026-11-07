@@ -3,7 +3,7 @@ import { AlertTriangle, UserPen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { AssertionType, Binding, ContextAssertion, TrustLevel } from '../../api/types'
 import { fmtDate } from '../../lib/format'
-import { TRUST_STYLE, TYPE_STYLE } from '../../lib/semantic'
+import { TRUST_HELP, TRUST_STYLE, TYPE_STYLE } from '../../lib/semantic'
 import { Badge, IdChip } from '../ui'
 
 export const TypeBadge = ({ type }: { type: AssertionType }) => (
@@ -12,7 +12,12 @@ export const TypeBadge = ({ type }: { type: AssertionType }) => (
     {TYPE_STYLE[type].label}
   </Badge>
 )
-export const TrustBadge = ({ level }: { level: TrustLevel }) => <Badge className={TRUST_STYLE[level].cls}>{TRUST_STYLE[level].label}</Badge>
+export const TrustBadge = ({ level, labelled }: { level: TrustLevel; labelled?: boolean }) => (
+  <Badge className={TRUST_STYLE[level].cls} title={TRUST_HELP[level]}>
+    {labelled && 'Trust: '}
+    {TRUST_STYLE[level].label}
+  </Badge>
+)
 
 export const isOperatorEdited = (a: ContextAssertion) => a.sources.some((s) => s.source === 'operator')
 

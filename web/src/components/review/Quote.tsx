@@ -7,8 +7,8 @@ export function QuotedMessages({ messages, className }: { messages: Message[]; c
   return (
     <div className={cn('space-y-1.5', className)}>
       {messages.map((m) => (
-        <blockquote key={m.seq} className="rounded-r-md border-l-2 border-accent bg-surface-2 px-3 py-1.5 text-[13px] leading-snug">
-          <span className="mr-1.5 font-mono text-xs text-muted">#{m.seq}</span>
+        <blockquote key={m.seq} className="rounded-r-md border-l-2 border-accent bg-surface-2 px-3 py-1.5 text-sm leading-snug">
+          <span className="mr-1.5 font-mono text-[13px] text-muted">#{m.seq}</span>
           <b className="font-medium">{m.author}</b>
           <span className="text-muted">: </span>
           <span>{m.text}</span>
@@ -21,7 +21,7 @@ export function QuotedMessages({ messages, className }: { messages: Message[]; c
 /** One verbatim phrase, e.g. the evidence quote of a finding. */
 export function QuoteLine({ text, className }: { text: string; className?: string }) {
   return (
-    <blockquote className={cn('rounded-r-md border-l-2 border-line bg-surface-2 px-3 py-1.5 text-[13px] italic leading-snug text-text', className)}>
+    <blockquote className={cn('rounded-r-md border-l-2 border-line bg-surface-2 px-3 py-1.5 text-sm italic leading-snug text-text', className)}>
       “{text}”
     </blockquote>
   )

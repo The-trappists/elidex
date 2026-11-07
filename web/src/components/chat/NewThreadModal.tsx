@@ -54,8 +54,8 @@ export function NewThreadModal({ open, onClose }: { open: boolean; onClose: () =
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Link flapping on TRN-042" />
         </Field>
         <div>
-          <div className="mb-1 text-xs font-medium text-muted">Participants</div>
-          {personas.length === 0 && <div className="text-xs text-muted">No personas yet. Add some in Data.</div>}
+          <div className="mb-1 text-[13px] font-medium text-muted">Participants</div>
+          {personas.length === 0 && <div className="text-[13px] text-muted">No personas yet. Add some in Data.</div>}
           <div className="grid grid-cols-2 gap-1.5">
             {personas.map((p) => (
               <button
@@ -66,8 +66,8 @@ export function NewThreadModal({ open, onClose }: { open: boolean; onClose: () =
               >
                 <Avatar name={p.name} color={p.avatar_color} size={24} />
                 <span className="min-w-0">
-                  <span className="block truncate text-xs font-medium">{p.name}</span>
-                  <span className="block truncate text-xs text-muted">{p.role}</span>
+                  <span className="block truncate text-[13px] font-medium">{p.name}</span>
+                  <span className="block truncate text-[13px] text-muted">{p.role}</span>
                 </span>
               </button>
             ))}

@@ -13,7 +13,7 @@ import { classMembers, classesOf, type NodeKind } from './graphModel'
 
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
   <section className="border-b border-line px-4 py-3 last:border-0">
-    <div className="mb-2 flex items-center gap-1.5">
+    <div className="mb-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
       <h4 className="text-xs font-medium text-muted">{title}</h4>
       {count !== undefined && <span className="rounded bg-surface-2 px-1 text-xs text-muted">{count}</span>}
       <div className="ml-auto">{action}</div>
@@ -89,7 +89,7 @@ function ElementInfo({ id, at, onSelect }: P) {
       <Section title="Classes" count={its.length}>
         {its.length ? <div className="flex flex-wrap gap-1.5">{its.map((c) => <IdChip key={c.id} onClick={() => onSelect(c.id, 'class')}>{c.label}</IdChip>)}</div> : <None>Not in any known class.</None>}
       </Section>
-      <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>
+      <Section title="Context at the selected time" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>
         {hits === null || (loading && !hits.length) ? (
           <div className="h-16 animate-pulse rounded-md bg-surface-2" />
         ) : hits.length ? (
