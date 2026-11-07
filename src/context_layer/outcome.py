@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field
 
+from . import config
 from .models import ExtractedItem, SourceRef, Trust
 
 if TYPE_CHECKING:
@@ -144,6 +145,8 @@ def _decide(app, assertion, announce: str, messages: list, sim_time) -> tuple[st
         ensure_ascii=False,
     )
     try:
+        if not config.llm_configured():
+            raise RuntimeError("no LLM key")  # skip the call: the heuristic decides
         raw = _call_llm(SYSTEM, user, thread_id=app.thread_id, sim_time=sim_time, validate=OutcomeVerdict.model_validate_json)
         v = OutcomeVerdict.model_validate_json(raw)
         if v.outcome == "unclear":
