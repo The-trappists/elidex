@@ -4,7 +4,7 @@
 // the toast Undo is clicked (there is no un-dismiss endpoint).
 import { create } from 'zustand'
 import { toast } from '../components/ui'
-import { api } from '../api/client'
+import { subscribeStream } from './stream'
 import { FIXTURES_ENV, fixtureFlagBus, fixtureLiveFlag, isSample, onSampleChange, reviewApi, type AssertionEdit } from '../api/review'
 import type { ContextAssertion, OperatorEdit, ReviewFlag } from '../api/types'
 
@@ -110,7 +110,7 @@ export const useOpenFlagCount = () => useReview((s) => s.flags.filter((f) => isO
 
 /** Load flags and listen for new ones. Called once from App. */
 export function connectReview(): () => void {
-  let es: EventSource | null = null
+  let unsub: (() => void) | null = null
   let liveTimer: number | undefined
   const stopSample = onSampleChange(() => useReview.setState({ sample: true }))
   const stopBus = (() => {
@@ -125,19 +125,20 @@ export function connectReview(): () => void {
     // Show the live update without a backend: one flag arrives a few seconds after load.
     liveTimer = window.setTimeout(() => useReview.getState().upsert(fixtureLiveFlag(), true), 10_000)
   } else {
-    es = new EventSource(api.streamUrl)
-    es.onopen = () => void load()
-    es.onmessage = (m) => {
-      try {
-        const e = JSON.parse(m.data) as { type: string; data: ReviewFlag }
-        if (e.type === 'review.flag') useReview.getState().upsert(e.data, true)
-      } catch {
-        /* not ours */
-      }
-    }
+    unsub = subscribeStream({
+      onReconnect: () => void load(),
+      onMessage: (data) => {
+        try {
+          const e = JSON.parse(data) as { type: string; data: ReviewFlag }
+          if (e.type === 'review.flag') useReview.getState().upsert(e.data, true)
+        } catch {
+          /* not ours */
+        }
+      },
+    })
   }
   return () => {
-    es?.close()
+    unsub?.()
     window.clearTimeout(liveTimer)
     stopSample()
     stopBus()

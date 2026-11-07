@@ -64,8 +64,8 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
           </div>
           <p>{a.summary}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted">
-            <TrustBadge level={a.trust.level} />
-            <span>confidence {Math.round(a.confidence * 100)}%</span>
+            <TrustBadge level={a.trust.level} labelled />
+            <span title="How sure the system is of its reading, after the second check and linking">Confidence {Math.round(a.confidence * 100)}%</span>
             <span>
               valid {fmtDateTime(a.valid_from)} → {a.valid_to ? fmtDateTime(a.valid_to) : 'still valid'}
             </span>

@@ -25,7 +25,7 @@ export function ItemCard({ item, highlighted, onHover }: { item: ExtractedItem; 
       <div className="flex flex-wrap items-center gap-1.5">
         <TypeBadge type={item.type} />
         <span className="font-semibold">{item.topic}</span>
-        <span className="ml-auto text-xs text-muted">conf {Math.round(item.confidence * 100)}%</span>
+        <span className="ml-auto text-xs text-muted" title="As extracted, before the second check and linking">Confidence {Math.round(item.confidence * 100)}%</span>
       </div>
       <p className="mt-1.5 text-text">{item.summary}</p>
       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -49,7 +49,7 @@ export function ItemCard({ item, highlighted, onHover }: { item: ExtractedItem; 
       {item.fact && <Line k="Fact" v={item.fact} />}
       {item.avoid.length > 0 && <Line k="Avoid" v={item.avoid.join('; ')} />}
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-        <TrustBadge level={item.trust_level} />
+        <TrustBadge level={item.trust_level} labelled />
         <span>by {item.stated_by}</span>
         {item.cited_seq.length > 0 && <span>msgs {item.cited_seq.map((q) => `#${q}`).join(' ')}</span>}
       </div>

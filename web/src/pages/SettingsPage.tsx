@@ -115,7 +115,7 @@ export default function SettingsPage() {
           <Row label="Mirror to Slack" text="Messages written in the workbench are also posted in the Slack channel.">
             <Toggle checked={st.slack_mirror} disabled={!slack.connected} onChange={(v) => save({ slack_mirror: v })} />
           </Row>
-          <p className="text-xs text-muted">To connect: create the Slack app from the manifest in <code>deploy/slack-manifest.yml</code>, add the bot and app tokens to <code>.env</code>, invite the bot to a channel and restart. Full steps in <code>docs/slack-setup.md</code>.</p>
+          {!slack.connected && <p className="text-xs text-muted">To connect: create the Slack app from the manifest in <code>deploy/slack-manifest.yml</code>, add the bot and app tokens to <code>.env</code>, invite the bot to a channel and restart. Full steps in <code>docs/slack-setup.md</code>.</p>}
         </Section>
 
         <Section icon={Bot} title="AI model" intro="Which language models read the conversations. Set on the server, read-only here.">
