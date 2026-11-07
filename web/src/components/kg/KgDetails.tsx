@@ -1,7 +1,9 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, BookOpen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { KgElement, KgKind } from '../../api/types'
 import { fmtDateTime } from '../../lib/format'
+import { CopyId } from '../knowledge/bits'
+import { JustificationPanel } from '../knowledge/JustificationPanel'
 import { EDGE_LABEL, KIND, KIND_ORDER, title } from './kgStyle'
 
 type Data = KgElement['data']
@@ -90,12 +92,22 @@ export function KgDetails({ node, nodes, edges, onSelect }: { node: Data; nodes:
         </div>
         <h3 className="mt-1 text-base font-semibold leading-snug">{title(node)}</h3>
         <details className="mt-3 text-xs text-muted"><summary className="cursor-pointer">Technical reference</summary><p className="mt-2 break-all font-mono">{node.id}</p>{node.topic != null && <p className="mt-1 break-all">Topic: {String(node.topic)}</p>}</details>
-        {link && (
+        {node.kind === 'Assertion' && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Link to={`/knowledge?assertion=${encodeURIComponent(node.id)}`} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
+              <BookOpen size={13} /> Open in Knowledge
+            </Link>
+            <CopyId id={node.id} />
+          </div>
+        )}
+        {link && node.kind !== 'Assertion' && (
           <Link to={link.to} className="mt-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
             {link.label} <ArrowRight size={13} />
           </Link>
         )}
       </div>
+
+      {node.kind === 'Assertion' && <JustificationPanel id={node.id} />}
 
       {props.length > 0 && (
         <dl className="space-y-2 text-[13px]">

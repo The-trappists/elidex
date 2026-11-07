@@ -329,15 +329,26 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   .conversation-layout[data-pane='pipeline'] .conversation-pipeline { display: block; width: min(100%, 540px); flex: 1; }
   .conversation-layout[data-pane='pipeline'] .conversation-messages { display: none; }
 }
-@media (max-width: 1100px) {
+/* Icons-only sidebar below 1280 px; a top bar with a menu drawer below 768 px. */
+.mobile-bar { display: none; height: 48px; flex-shrink: 0; }
+@media (max-width: 1279px) {
   .app-sidebar { width: 76px; }
-  .sidebar-brand { padding: 0; justify-content: center; }
-  .sidebar-brand > div, .nav-label, .nav-group-label, .sidebar-footer { display: none; }
-  .sidebar-links { padding: 16px 10px; }
-  .sidebar-links a { justify-content: center; position: relative; min-height: 44px; padding: 12px; }
-  .sidebar-links a > span:last-child:not(.nav-label) { position: absolute; top: 0; right: 0; font-size: 9px; }
+  .app-sidebar .sidebar-brand { padding: 0; justify-content: center; }
+  .app-sidebar .sidebar-brand > div, .app-sidebar .nav-label, .app-sidebar .nav-group-label, .app-sidebar .sidebar-footer { display: none; }
+  .app-sidebar .sidebar-links { padding: 16px 10px; }
+  .app-sidebar .sidebar-links a { justify-content: center; position: relative; min-height: 44px; padding: 12px; }
+  .app-sidebar .sidebar-links a > span:last-child:not(.nav-label) { position: absolute; top: 0; right: 0; font-size: 9px; }
 }
+@keyframes drawer-in-left { from { transform: translateX(-32px); opacity: 0; } to { transform: none; opacity: 1; } }
+.drawer-left.animate-drawer-in { animation-name: drawer-in-left; }
 @media (max-width: 767px) {
+  .app-shell { flex-direction: column; }
+  .app-sidebar { display: none; }
+  .mobile-bar { display: flex; }
+  .drawer-panel { max-width: none !important; }
+  .app-topbar { min-height: 0; }
+  .app-topbar > div:first-child { display: none; }
+  .nav-drawer .sidebar-links a { min-height: 44px; }
   .app-topbar { padding: 12px; gap: 10px; }
   .topbar-controls { margin-left: 0; width: 100%; gap: 8px; }
   .topbar-controls > a { display: none; }
@@ -408,4 +419,45 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 /* Insights keeps its list under the map on narrow screens (it has no Browse/Details switch). */
 @media (max-width: 1100px) {
   .diagram-details.insights-list { display: flex; border-top: 1px solid var(--line); max-height: 50vh; }
+}
+
+/* Company day: a status dot that flashes once when its element changes state. */
+@keyframes status-flash { 0% { box-shadow: 0 0 0 0 currentColor; transform: scale(1.7); } 100% { box-shadow: 0 0 0 8px transparent; transform: scale(1); } }
+.status-flash { color: var(--accent); animation: status-flash 1.6s ease-out 1; }
+@media (prefers-reduced-motion: reduce) { .status-flash { animation: none; } }
+
+/* Short screens: headings give the room back to the content. */
+@media (max-height: 759px), (max-width: 767px) {
+  .page-intro { padding: 8px 12px 0; }
+  .page-intro h2 { font-size: 18px; line-height: 1.2; }
+  .page-intro p { display: none; }
+}
+@media (max-height: 759px) {
+  .app-topbar { min-height: 0; }
+  .app-topbar p { display: none; }
+}
+/* Overview on short screens: the two feeds keep the room. */
+@media (max-height: 759px) {
+  .overview-page { gap: 10px; padding: 12px; }
+  .overview-intro p { display: none; }
+  .overview-intro h2 { font-size: 20px; }
+  .overview-page .flow-stop { padding: 8px 16px; }
+  .overview-page .flow-stop p { display: none; }
+  .overview-metric { flex-direction: row; align-items: baseline; gap: 8px; padding: 6px 14px; }
+  .overview-metric > span:first-child { font-size: 20px; }
+}
+/* Graph pages on short screens: no intro text, the canvas keeps the room. */
+@media (max-height: 759px) {
+  .diagram-workspace { padding: 10px 12px; gap: 8px; }
+  .diagram-heading p { display: none; }
+  .diagram-heading h2 { font-size: 18px; }
+  .diagram-toolbar { padding: 8px 12px; }
+  .diagram-canvas { min-height: 200px; }
+  .diagram-key { padding: 6px 12px; }
+}
+
+/* Touch targets: at least 32 px on phones. */
+@media (max-width: 767px) {
+  button, [role='tab'], select, summary, input:not([type='checkbox']):not([type='radio']):not([type='range']) { min-height: 32px; }
+  button { min-width: 32px; }
 }

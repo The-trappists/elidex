@@ -203,6 +203,25 @@ def _check_meaning() -> None:
               f"or raise PATTERNS_SAME_MEANING above {r['highest_different']:.2f} to never merge a look-alike.")
 
 
+def cmd_dedupe_check(args: argparse.Namespace) -> None:
+    """Precision and recall of the dedupe threshold on the labelled pairs. With EMBEDDING_MODEL it also scores the
+    real embeddings (one embedding call for all texts); a human runs it."""
+    from .workbench import dedupe
+
+    embedder = None
+    if config.EMBEDDING_MODEL:
+        from . import embed
+
+        embedder = embed.embed
+    else:
+        print("EMBEDDING_MODEL is empty: words only. Set it in .env (see .env.example) to score the embeddings too.\n")
+    result = dedupe.evaluate(dedupe.load_pairs(), embedder)
+    print(f"Now: DEDUPE_THRESHOLD={config.DEDUPE_THRESHOLD}" + (f", model {config.EMBEDDING_MODEL}" if embedder else "") + "\n")
+    print(dedupe.render_table(result))
+    print("\nA false positive (FP) is a wrong merge: pick the lowest threshold with 0 FP in the 'full rule' column "
+          "(and in 'embedding only' if you rely on it), then set DEDUPE_THRESHOLD.")
+
+
 def cmd_serve(args: argparse.Namespace) -> None:
     import uvicorn
 
@@ -445,6 +464,9 @@ def main(argv: list[str] | None = None) -> None:
     pa.add_argument("--check-meaning", action="store_true",
                     help="score labelled pairs with EMBEDDING_MODEL and suggest PATTERNS_SAME_MEANING (calls the model)")
     pa.set_defaults(func=cmd_patterns)
+
+    dc = sub.add_parser("dedupe-check", help="precision/recall of the dedupe threshold on labelled pairs (uses EMBEDDING_MODEL if set)")
+    dc.set_defaults(func=cmd_dedupe_check)
 
     srv = sub.add_parser("serve", help="REST API (FastAPI)")
     srv.add_argument("--host", default="127.0.0.1")

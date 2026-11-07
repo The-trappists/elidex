@@ -2,10 +2,13 @@
 // Pages read from this store with selectors, e.g. `const threads = useLive(s => s.threads)`.
 import { create } from 'zustand'
 import { api } from '../api/client'
+import { demoIdleState, isDemo } from '../api/fixtures/company'
 import { fixtureSnapshot } from '../api/fixtures/review'
 import { backoffDelay, subscribeStream } from './stream'
 import type {
+  AgentCall,
   ClockState,
+  CompanyState,
   ContextAssertion,
   ElementClass,
   Incident,
@@ -27,6 +30,25 @@ import type {
 const MAX_JOBS = 200
 const MAX_LLM_CALLS = 500
 const MAX_LOG = 200
+const MAX_CYCLES = 60
+const MAX_CALLS = 200
+// Endless company days: keep only the newest closed threads and incidents so memory stays flat.
+const MAX_THREADS = 400
+const MAX_INCIDENTS = 300
+
+/** Drops the oldest entries beyond `max`, never an open one (`keep`). */
+function pruneOldest<T extends { id: string }>(m: Record<string, T>, max: number, key: (x: T) => string, keep: (x: T) => boolean): Record<string, T> {
+  const all = Object.values(m)
+  if (all.length <= max) return m
+  const drop = new Set(
+    all
+      .filter((x) => !keep(x))
+      .sort((a, b) => key(a).localeCompare(key(b)))
+      .slice(0, all.length - max)
+      .map((x) => x.id),
+  )
+  return Object.fromEntries(Object.entries(m).filter(([id]) => !drop.has(id)))
+}
 
 let snapshotIsFixture = false
 
@@ -60,10 +82,18 @@ export interface LiveState {
   llmCalls: LlmCall[] // oldest first
   log: LogLine[]
   lastEventId: number
+  company: CompanyState | null
+  /** true when the last GET /company failed (the page shows an error instead of loading forever) */
+  companyError: boolean
+  /** wall ms of the last status change per element, to flash it for a moment */
+  healthFlash: Record<string, number>
 
   load: () => Promise<void>
+  loadCompany: () => Promise<void>
   apply: (e: WbEvent) => void
 }
+
+const emptyDemoCompany = demoIdleState
 
 const byId = <T extends { id: string }>(xs: T[]) => Object.fromEntries(xs.map((x) => [x.id, x]))
 
@@ -99,6 +129,9 @@ export const useLive = create<LiveState>((set, get) => ({
   llmCalls: [],
   log: [],
   lastEventId: 0,
+  company: null,
+  companyError: false,
+  healthFlash: {},
 
   load: async () => {
     let s: StateSnapshot
@@ -106,7 +139,7 @@ export const useLive = create<LiveState>((set, get) => ({
       s = await api.state()
     } catch (e) {
       // VITE_REVIEW_FIXTURES=1: the console works with the backend down, on sample data.
-      if (import.meta.env.VITE_REVIEW_FIXTURES !== '1') throw e
+      if (import.meta.env.VITE_REVIEW_FIXTURES !== '1' && !isDemo()) throw e
       s = fixtureSnapshot()
       snapshotIsFixture = true
     }
@@ -137,6 +170,19 @@ export const useLive = create<LiveState>((set, get) => ({
     })
   },
 
+  loadCompany: async () => {
+    if (isDemo()) {
+      if (!get().company) set({ company: emptyDemoCompany() })
+      return
+    }
+    try {
+      set({ company: await api.company(), companyError: false })
+    } catch {
+      // Backend without the company routes or down: keep what we have, the page shows an error if there is nothing.
+      set({ companyError: true })
+    }
+  },
+
   apply: (e: WbEvent) => {
     const s = get()
     set({ lastEventId: e.id })
@@ -163,7 +209,8 @@ export const useLive = create<LiveState>((set, get) => ({
         const old = s.threads[e.data.id]
         // Events carry no messages: keep the ones we have.
         const messages = e.data.messages.length ? e.data.messages : (old?.messages ?? [])
-        set({ threads: { ...s.threads, [e.data.id]: { ...e.data, messages } } })
+        const threads = { ...s.threads, [e.data.id]: { ...e.data, messages } }
+        set({ threads: s.company?.endless ? pruneOldest(threads, MAX_THREADS, (t) => t.last_message_at ?? t.created_at, (t) => t.status === 'active' || t.status === 'processing') : threads })
         break
       }
       case 'thread.deleted': {
@@ -172,9 +219,11 @@ export const useLive = create<LiveState>((set, get) => ({
         set({ threads: rest })
         break
       }
-      case 'incident.upserted':
-        set({ incidents: { ...s.incidents, [e.data.id]: e.data } })
+      case 'incident.upserted': {
+        const incidents = { ...s.incidents, [e.data.id]: e.data }
+        set({ incidents: s.company?.endless ? pruneOldest(incidents, MAX_INCIDENTS, (i) => i.opened_at, (i) => i.status === 'open') : incidents })
         break
+      }
       case 'incident.deleted': {
         const { [e.data.id]: _gone, ...rest } = s.incidents
         void _gone
@@ -211,8 +260,40 @@ export const useLive = create<LiveState>((set, get) => ({
       case 'llm.call':
         set({ llmCalls: upsertList(s.llmCalls, e.data, MAX_LLM_CALLS) })
         break
+      case 'company.state': {
+        // The event carries no cycles, calls or health: keep ours.
+        const old = s.company
+        set({ company: { ...e.data, cycles: old?.cycles ?? [], calls: old?.calls ?? [], health: old?.health ?? [] } })
+        break
+      }
+      case 'company.cycle': {
+        const c = s.company
+        if (!c) break
+        const cycles = [...c.cycles.filter((x) => x.n !== e.data.n), e.data].sort((a, b) => a.n - b.n).slice(-MAX_CYCLES)
+        set({ company: { ...c, cycles } })
+        break
+      }
+      case 'agent.call': {
+        const c = s.company
+        if (!c) break
+        const calls: AgentCall[] = c.calls.some((x) => x.id === e.data.id)
+          ? c.calls.map((x) => (x.id === e.data.id ? e.data : x))
+          : [...c.calls, e.data].slice(-MAX_CALLS)
+        set({ company: { ...c, calls } })
+        break
+      }
+      case 'network.status': {
+        const c = s.company
+        if (!c) break
+        const i = c.health.findIndex((h) => h.element_id === e.data.element_id)
+        const health = i >= 0 ? c.health.map((h, j) => (j === i ? e.data : h)) : [...c.health, e.data]
+        set({ company: { ...c, health }, healthFlash: { ...s.healthFlash, [e.data.element_id]: Date.now() } })
+        break
+      }
       case 'state.reset':
+        set({ healthFlash: {} })
         void get().load()
+        void get().loadCompany()
         break
       case 'log':
         set({ log: [...s.log, { id: e.id, ts: e.ts, ...e.data }].slice(-MAX_LOG) })
@@ -246,7 +327,10 @@ export function connectLive(): () => void {
     }
     unsub = subscribeStream({
       onStatus: (st) => useLive.setState({ connection: st }),
-      onReconnect: () => void useLive.getState().load().catch(() => undefined),
+      onReconnect: () => {
+        void useLive.getState().load().catch(() => undefined)
+        if (useLive.getState().company) void useLive.getState().loadCompany()
+      },
       onMessage: (data) => {
         try {
           useLive.getState().apply(JSON.parse(data) as WbEvent)

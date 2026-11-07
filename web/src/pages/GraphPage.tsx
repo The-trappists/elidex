@@ -2,12 +2,15 @@ import { Search, Waypoints, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
+import { demoKnowledgeGraph, isDemo } from '../api/fixtures/company'
+import { useLive } from '../store/live'
 import type { KgElement, KgKind } from '../api/types'
 import { useGraphQuery } from '../components/graph/useGraphQuery'
 import { ForceCanvas, GraphLoading } from '../components/force/ForceCanvas'
 import { KG_SHAPE, knowledgeModel } from '../components/force/models'
 import { KgDetails } from '../components/kg/KgDetails'
 import { KIND, KIND_ORDER, title } from '../components/kg/kgStyle'
+import { ExportMenu } from '../components/knowledge/ExportMenu'
 import { Button, EmptyState, Input, Toggle } from '../components/ui'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
 import { GraphKey, ShapeSwatch } from '../components/graph/GraphLegend'
@@ -19,7 +22,8 @@ const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Eve
 
 export default function GraphPage() {
   const [params, setParams] = useSearchParams()
-  const selectedId = params.get('node')
+  // ?focus=<id> is the deep link from the Knowledge page; it selects that node like ?node does.
+  const selectedId = params.get('node') ?? params.get('focus')
   const select = (id: string | null) => setParams(id ? { node: id } : {}, { replace: true })
   const [kinds, setKinds] = useState<Set<KgKind>>(new Set(DEFAULT_KINDS))
   const [showOutdated, setShowOutdated] = useState(false)
@@ -27,7 +31,7 @@ export default function GraphPage() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [retry, setRetry] = useState(0)
 
-  const { data, error } = useGraphQuery(() => api.knowledgeGraph(), `kg-${retry}`)
+  const { data, error } = useGraphQuery(() => (isDemo() ? Promise.resolve(demoKnowledgeGraph(useLive)) : api.knowledgeGraph()), `kg-${retry}`)
 
   const { nodes, edges, counts } = useMemo(() => {
     const nodes = new Map<string, Data>()
@@ -108,6 +112,7 @@ export default function GraphPage() {
           <Button icon={<SlidersHorizontal size={15} />} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}>
             Filters
           </Button>
+          <ExportMenu />
           {filtersOpen && (
             <div className="w-full space-y-3 border-t border-line pt-3">
               <div className="flex flex-wrap gap-2" role="group" aria-label="Show item types">

@@ -349,7 +349,7 @@ export const FIXTURE_HISTORY: FixtureEdit[] = [
 
 const SETTINGS: Settings = {
   extractor_mode: 'auto', lifecycle: true, idle_seconds: 90, use_conditions: true, use_guard: true, slack_mirror: false,
-  auto_sim: false, auto_every_s: 600, use_critic: true, use_judge: true, use_outcome_loop: false,
+  auto_sim: false, auto_every_s: 600, use_critic: true, use_judge: true, use_outcome_loop: false, use_dedupe: true,
   llm_configured: false, llm_model: null, llm_fallback_model: null, slack_connected: false,
 }
 

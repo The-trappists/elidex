@@ -9,7 +9,7 @@ const columns: Column<ContextAssertion>[] = [
   {
     key: 'what',
     header: 'What the team knows',
-    className: 'max-w-lg',
+    className: 'w-full min-w-[320px]',
     cell: (a) => (
       <>
         <div className="line-clamp-2 text-sm font-medium leading-snug">{a.summary}</div>
@@ -75,33 +75,35 @@ export function AssertionTable({
   if (!rows.length) return <NoKnowledge />
   return (
     <>
-      <div className="space-y-3 p-4 lg:hidden">
+      <ul className="divide-y divide-line/60 2xl:hidden">
         {rows.map((a) => (
-          <button
-            key={a.id}
-            onClick={() => onOpen(a.id)}
-            aria-pressed={selected === a.id}
-            className="w-full rounded-xl border border-line bg-surface p-4 text-left hover:border-accent focus-visible:border-accent"
-          >
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <TypeBadge type={a.type} />
-              <TrustBadge level={a.trust.level} />
-              <ConflictIcon a={a} />
-            </div>
-            <p className="text-sm font-medium leading-relaxed">{a.summary}</p>
-            <div className="mt-3 text-xs text-muted">
-              <Validity a={a} />
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
-              <span className="text-muted">
-                {a.sources.length} source conversation{a.sources.length === 1 ? '' : 's'}
-              </span>
-              <span className="font-medium text-accent">Read knowledge →</span>
-            </div>
-          </button>
+          <li key={a.id}>
+            <button
+              onClick={() => onOpen(a.id)}
+              aria-pressed={selected === a.id}
+              className={`block w-full px-4 py-3 text-left hover:bg-surface-2 focus-visible:bg-surface-2 ${selected === a.id ? 'bg-accent-soft shadow-[inset_3px_0_0_var(--accent)]' : ''}`}
+            >
+              <div className="line-clamp-2 text-sm font-medium leading-snug">{a.summary}</div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <TypeBadge type={a.type} />
+                <TrustBadge level={a.trust.level} />
+                {isOperatorEdited(a) && <OperatorChip />}
+                <ConflictIcon a={a} />
+                <Validity a={a} />
+                <span className="text-xs text-muted">
+                  · {a.sources.length} conversation{a.sources.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              {a.bound_to.length > 0 && (
+                <div className="mt-1.5">
+                  <BindingChips bound={a.bound_to} />
+                </div>
+              )}
+            </button>
+          </li>
         ))}
-      </div>
-      <div className="hidden lg:block">
+      </ul>
+      <div className="hidden 2xl:block">
         <Table
           columns={columns}
           rows={rows}

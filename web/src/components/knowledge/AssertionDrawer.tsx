@@ -1,11 +1,12 @@
-import { History, Pencil, Trash2 } from 'lucide-react'
+import { History, Network, Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { ContextAssertion } from '../../api/types'
 import { fmtDateTime } from '../../lib/format'
 import { Button, Drawer, IdChip, JsonView, Modal, withToast } from '../ui'
-import { assertionHref, BindingChips, isOperatorEdited, OperatorChip, TrustBadge, TypeBadge, threadHref } from './bits'
+import { JustificationPanel } from './JustificationPanel'
+import { assertionHref, BindingChips, CopyId, isOperatorEdited, OperatorChip, TrustBadge, TypeBadge, threadHref } from './bits'
 import { AssertionEditor } from './AssertionEditor'
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
@@ -38,8 +39,8 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
       width="max-w-xl"
       title={
         a ? (
-          <div className="flex items-center gap-2">
-            <TypeBadge type={a.type} /> <span className="truncate">{a.topic}</span> <IdChip>{a.id}</IdChip>
+          <div className="flex min-w-0 items-center gap-2">
+            <TypeBadge type={a.type} /> <span className="min-w-0 truncate">{a.topic}</span> <IdChip className="shrink-0">{a.id}</IdChip>
             {isOperatorEdited(a) && <OperatorChip />}
           </div>
         ) : (
@@ -53,6 +54,10 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
         <div className="text-sm">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>
+            <Link to={`/graph?focus=${encodeURIComponent(a.id)}`} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
+              <Network size={13} /> Show in graph
+            </Link>
+            <CopyId id={a.id} />
             {isOperatorEdited(a) && (
               <button
                 className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[13px] text-muted transition-colors hover:bg-surface-2 hover:text-text"
@@ -70,6 +75,8 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
               valid {fmtDateTime(a.valid_from)} → {a.valid_to ? fmtDateTime(a.valid_to) : 'still valid'}
             </span>
           </div>
+
+          <JustificationPanel id={a.id} />
 
           <Section title="Bound to">
             <BindingChips bound={a.bound_to} />

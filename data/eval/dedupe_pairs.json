@@ -1,0 +1,1362 @@
+{
+ "_note": "Labelled advice pairs for `dedupe.evaluate` / `ctx dedupe-check`. same=true: the same advice in other words (scope, avoid, numbers equal); same=false: look-alike that must never merge. 'source' names the repo file the wording comes from (or 'hand'). Mutated look-alikes of every data/workbench/scenarios expected action are added at run time.",
+ "pairs": [
+  {
+   "same": true,
+   "why": "minor rewording",
+   "source": "scenarios/elisa-trn042-chat",
+   "a": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [
+     "replace the SFP again"
+    ],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Disable the interface, wait a bit, then enable it again.",
+    "avoid": [
+     "replace the SFP again"
+    ],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "case and full stop",
+   "source": "scenarios/elisa-trn042-chat",
+   "a": {
+    "action": "Reboot the line card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   },
+   "b": {
+    "action": "reboot the line card",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "article dropped",
+   "source": "scenarios/elisa-trn042-chat",
+   "a": {
+    "action": "Reset the timing port; sync comes back within a minute or two.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Reset timing port; sync comes back within a minute or two.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "plural and tense",
+   "source": "scenarios/slack-radio-tilt",
+   "a": {
+    "action": "Check the antenna alignment and re-tilt it before replacing the radio unit.",
+    "avoid": [
+     "replacing the radio unit first"
+    ],
+    "applies_to": [
+     "RAD-221"
+    ]
+   },
+   "b": {
+    "action": "Check the antenna alignment and re-tilt it before replacing the radio unit.",
+    "avoid": [
+     "replacing the radio unit first"
+    ],
+    "applies_to": [
+     "RAD-221"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "synonym: reboot/restart",
+   "source": "hand",
+   "a": {
+    "action": "Reboot the line card and wait for the optics to settle.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   },
+   "b": {
+    "action": "Restart the line card and wait for the optics to settle.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "synonym: power cycle",
+   "source": "hand",
+   "a": {
+    "action": "Power cycle the module.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Restart the transceiver.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "bounce vs disable/enable",
+   "source": "pair_patterns",
+   "a": {
+    "action": "Bounce the interface: disable, wait a bit, then enable.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "reboot vs power cycle card",
+   "source": "pair_patterns",
+   "a": {
+    "action": "Reboot the line card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   },
+   "b": {
+    "action": "Power-cycle the forwarding card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "timing port reinit",
+   "source": "pair_patterns",
+   "a": {
+    "action": "Reset the timing port; sync comes back within a minute or two.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Re-initialise the PTP interface; timing lock returns after a minute or two.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "breaker reset",
+   "source": "scenarios/slack-breaker-harbour-hut",
+   "a": {
+    "action": "Reset breaker F3 in the cabinet left of the door and empty the dehumidifier tray.",
+    "avoid": [
+     "replacing the radio unit"
+    ],
+    "applies_to": [
+     "RAD-254"
+    ]
+   },
+   "b": {
+    "action": "Flip breaker F3 back up in the cabinet left of the door and empty the dehumidifier tray.",
+    "avoid": [
+     "replacing the radio unit"
+    ],
+    "applies_to": [
+     "RAD-254"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "barrier key",
+   "source": "scenarios/barrier-key-kemijarvi",
+   "a": {
+    "action": "Collect the barrier key at the Kemijarvi service station before driving to the site.",
+    "avoid": [],
+    "applies_to": [
+     "SITE-KEMIJARVI"
+    ]
+   },
+   "b": {
+    "action": "Before driving to the site, pick up the barrier key at the Kemijarvi service station.",
+    "avoid": [],
+    "applies_to": [
+     "SITE-KEMIJARVI"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "wait 5 minutes (digits)",
+   "source": "scenarios/qualifier-old-tx3000-site",
+   "a": {
+    "action": "Wait 5 minutes after boot, then run 'clear ospf neighbor' on the uplink port.",
+    "avoid": [
+     "expect the OSPF neighbour to come back on its own"
+    ],
+    "applies_to": [
+     "TRN-088"
+    ]
+   },
+   "b": {
+    "action": "After boot wait 5 minutes, then run 'clear ospf neighbor' on the uplink port.",
+    "avoid": [
+     "expect the OSPF neighbour to come back on its own"
+    ],
+    "applies_to": [
+     "TRN-088"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "five vs 5",
+   "source": "hand",
+   "a": {
+    "action": "Wait five minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Wait 5 minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "ten vs 10",
+   "source": "scenarios/hunch-to-verified",
+   "a": {
+    "action": "Wait about ten minutes and re-check the optical levels.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-176"
+    ]
+   },
+   "b": {
+    "action": "Wait about 10 minutes and re-check the optical levels.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-176"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "vlan",
+   "source": "scenarios/new-unit-trn305",
+   "a": {
+    "action": "Set the port to trunk and tag VLAN 120.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-305"
+    ]
+   },
+   "b": {
+    "action": "Tag VLAN 120 and set the port to trunk.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-305"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "fan filter",
+   "source": "scenarios/layperson-office-manager-humming-cabinet",
+   "a": {
+    "action": "Swap the fan filter and keep vacuum cleaners away from the cabinet.",
+    "avoid": [
+     "open the cabinet"
+    ],
+    "applies_to": [
+     "RTR-033"
+    ]
+   },
+   "b": {
+    "action": "Replace the fan filter and keep vacuum cleaners away from the cabinet.",
+    "avoid": [
+     "open the cabinet"
+    ],
+    "applies_to": [
+     "RTR-033"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "PDU pull",
+   "source": "scenarios/slack-needle-in-noise",
+   "a": {
+    "action": "Pull the power at the PDU instead of using the soft reboot.",
+    "avoid": [
+     "soft reboot"
+    ],
+    "applies_to": [
+     "RAD-233"
+    ]
+   },
+   "b": {
+    "action": "Pull the power at the PDU rather than using the soft reboot.",
+    "avoid": [
+     "soft reboot"
+    ],
+    "applies_to": [
+     "RAD-233"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "clock module",
+   "source": "scenarios/pattern-trn117-clock-module",
+   "a": {
+    "action": "Replace the clock module.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-117"
+    ]
+   },
+   "b": {
+    "action": "Swap out the clock module.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-117"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "reseat module",
+   "source": "scenarios/expert-disagreement",
+   "a": {
+    "action": "Reseat the optical module first, then bounce the interface if that fails.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-088"
+    ]
+   },
+   "b": {
+    "action": "First reseat the optical module, then bounce the interface if that fails.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-088"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "antenna channel",
+   "source": "scenarios/layperson-callcentre-ferry-evenings",
+   "a": {
+    "action": "Move the sector to the other channel and compare the evenings.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   },
+   "b": {
+    "action": "Move the sector onto the other channel and compare the evenings.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "front panel profile",
+   "source": "scenarios/ambiguous-old-radio-sodankyla",
+   "a": {
+    "action": "After the restart open the front panel menu and choose 'Load profile 1'.",
+    "avoid": [
+     "leave the unit on the factory profile after a restart"
+    ],
+    "applies_to": [
+     "RAD-198"
+    ]
+   },
+   "b": {
+    "action": "After the restart, open the front-panel menu and choose 'Load profile 1'.",
+    "avoid": [
+     "leave the unit on the factory profile after a restart"
+    ],
+    "applies_to": [
+     "RAD-198"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "4x4 vehicle",
+   "source": "scenarios/layperson-salesrep-flooded-road",
+   "a": {
+    "action": "Take a 4x4 and park at the fork before the gate.",
+    "avoid": [
+     "go in with a regular van"
+    ],
+    "applies_to": [
+     "SITE-ROV"
+    ]
+   },
+   "b": {
+    "action": "Use a 4x4 and park at the fork before the gate.",
+    "avoid": [
+     "go in with a regular van"
+    ],
+    "applies_to": [
+     "SITE-ROV"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "teardown wording",
+   "source": "hand",
+   "a": {
+    "action": "Drain the absorber and push the popped cut-out back in.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   },
+   "b": {
+    "action": "Empty the dehumidifier tray and push the tripped breaker back in.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "fact paraphrase 1",
+   "source": "hand",
+   "a": {
+    "action": "Firmware 4.2 fixes the forwarding-state bug.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "The forwarding-state bug is fixed by firmware 4.2.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "fact paraphrase 2",
+   "source": "hand",
+   "a": {
+    "action": "Ship radar hits the sector around the evening ferry.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   },
+   "b": {
+    "action": "The sector gets hit by ship radar around the evening ferry.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "tip",
+   "source": "hand",
+   "a": {
+    "action": "Check the link margin before closing the ticket.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Before closing the ticket, check the link margin.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "handover",
+   "source": "scenarios/slack-noc-handover",
+   "a": {
+    "action": "Wait until about 10:00 and dispatch only if the link is still flapping.",
+    "avoid": [
+     "dispatching a crew straight away"
+    ],
+    "applies_to": [
+     "RAD-198"
+    ]
+   },
+   "b": {
+    "action": "Wait until about 10:00, and dispatch only if the link is still flapping.",
+    "avoid": [
+     "dispatching a crew straight away"
+    ],
+    "applies_to": [
+     "RAD-198"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "whitespace",
+   "source": "hand",
+   "a": {
+    "action": "Clear   the  counters then re-check",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Clear the counters, then re-check.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "order swap",
+   "source": "hand",
+   "a": {
+    "action": "Reboot the node after the maintenance window.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "After the maintenance window, reboot the node.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "hyphens",
+   "source": "hand",
+   "a": {
+    "action": "Re-seat the SFP and re-check the optical levels.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Reseat the SFP and re check the optical levels.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "verb form",
+   "source": "hand",
+   "a": {
+    "action": "Wait for sync to come back before rebooting.",
+    "avoid": [
+     "rebooting the node straight away"
+    ],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Wait for sync to come back before the reboot.",
+    "avoid": [
+     "rebooting the node straight away"
+    ],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "polite",
+   "source": "hand",
+   "a": {
+    "action": "Please reset the timing port.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Reset the timing port.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "synonym: verify/check",
+   "source": "hand",
+   "a": {
+    "action": "Check the optical levels after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Verify the optical levels after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": true,
+   "why": "synonym: replace/swap",
+   "source": "hand",
+   "a": {
+    "action": "Replace the fan filter every quarter.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-033"
+    ]
+   },
+   "b": {
+    "action": "Swap the fan filter every quarter.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-033"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "5 vs 15 minutes",
+   "source": "hand",
+   "a": {
+    "action": "Wait 5 minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Wait 15 minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "five vs fifteen",
+   "source": "hand",
+   "a": {
+    "action": "Wait five minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Wait fifteen minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "8 vs 10 minutes",
+   "source": "scenarios/ambiguous-two-turku",
+   "a": {
+    "action": "Wait about 8 minutes after a power cycle before checking the management port.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Wait about 10 minutes after a power cycle before checking the management port.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "20 vs 25 minutes",
+   "source": "scenarios/vendor-tip-failed-report-back",
+   "a": {
+    "action": "Wait about 20 minutes and re-check the link margin.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Wait about 25 minutes and re-check the link margin.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "VLAN 120 vs 121",
+   "source": "scenarios/new-unit-trn305",
+   "a": {
+    "action": "Set the port to trunk and tag VLAN 120.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-305"
+    ]
+   },
+   "b": {
+    "action": "Set the port to trunk and tag VLAN 121.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-305"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "breaker F3 vs F2",
+   "source": "scenarios/layperson-caretaker-beeping-cabinet",
+   "a": {
+    "action": "Switch breaker F3 back on.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-021"
+    ]
+   },
+   "b": {
+    "action": "Switch breaker F2 back on.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-021"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "do vs do not",
+   "source": "hand",
+   "a": {
+    "action": "Wait five minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Do not wait five minutes after the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "dispatch vs do not dispatch",
+   "source": "scenarios/slack-noc-handover",
+   "a": {
+    "action": "Dispatch a crew.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-198"
+    ]
+   },
+   "b": {
+    "action": "Do not dispatch a crew.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-198"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "reboot vs never reboot",
+   "source": "hand",
+   "a": {
+    "action": "Reboot the node.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Never reboot the node.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "without",
+   "source": "hand",
+   "a": {
+    "action": "Replace the module.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Replace the module without power cycling.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "avoid differs",
+   "source": "scenarios/elisa-trn042-chat",
+   "a": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [
+     "replace the SFP again"
+    ],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [
+     "reboot the unit"
+    ],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "avoid vs none",
+   "source": "hand",
+   "a": {
+    "action": "Reset the timing port.",
+    "avoid": [
+     "rebooting line cards"
+    ],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Reset the timing port.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "other element, same advice",
+   "source": "scenarios/similar-trn117",
+   "a": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-117"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "other element 2",
+   "source": "scenarios/pattern-trn131-traffic-drop-ev",
+   "a": {
+    "action": "Reboot the line card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-131"
+    ]
+   },
+   "b": {
+    "action": "Reboot the line card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "other class",
+   "source": "hand",
+   "a": {
+    "action": "Reboot the unit.",
+    "avoid": [],
+    "applies_to": [
+     "class:radio"
+    ]
+   },
+   "b": {
+    "action": "Reboot the unit.",
+    "avoid": [],
+    "applies_to": [
+     "class:transmission_node"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "other site",
+   "source": "hand",
+   "a": {
+    "action": "Collect the barrier key at the depot.",
+    "avoid": [],
+    "applies_to": [
+     "SITE-KEMI"
+    ]
+   },
+   "b": {
+    "action": "Collect the barrier key at the depot.",
+    "avoid": [],
+    "applies_to": [
+     "SITE-ROV"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "opposite: reboot vs replace",
+   "source": "scenarios/pattern-trn117-clock-module",
+   "a": {
+    "action": "Reboot the line card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-117"
+    ]
+   },
+   "b": {
+    "action": "Replace the line card.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-117"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "opposite: wait vs act now",
+   "source": "scenarios/slack-vendor-secondhand",
+   "a": {
+    "action": "Wait about 15 minutes for sync to come back before rebooting.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Reboot the node straight away.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "opposite: reset vs rewire",
+   "source": "scenarios/pattern-harbour-breaker-third",
+   "a": {
+    "action": "Reset breaker F3 and empty the dehumidifier tray.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   },
+   "b": {
+    "action": "Rewire the dehumidifier onto its own circuit.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "opposite: bounce vs reseat",
+   "source": "scenarios/expert-disagreement",
+   "a": {
+    "action": "Disable the interface, wait a little, then enable it again.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-088"
+    ]
+   },
+   "b": {
+    "action": "Reseat the optical module first.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-088"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "opposite: key depot vs station",
+   "source": "scenarios/slack-key-moved",
+   "a": {
+    "action": "Collect the barrier key at the Kemijarvi service station.",
+    "avoid": [],
+    "applies_to": [
+     "SITE-KEMI"
+    ]
+   },
+   "b": {
+    "action": "Collect the barrier key at the municipal depot.",
+    "avoid": [],
+    "applies_to": [
+     "SITE-KEMI"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "tilt vs replace",
+   "source": "scenarios/slack-radio-tilt",
+   "a": {
+    "action": "Check the antenna alignment and re-tilt it.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-221"
+    ]
+   },
+   "b": {
+    "action": "Replace the radio unit.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-221"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "PDU vs soft reboot",
+   "source": "scenarios/slack-needle-in-noise",
+   "a": {
+    "action": "Pull the power at the PDU.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-233"
+    ]
+   },
+   "b": {
+    "action": "Use the soft reboot.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-233"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "filter vs vacuum",
+   "source": "scenarios/layperson-office-manager-humming-cabinet",
+   "a": {
+    "action": "Swap the fan filter.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-033"
+    ]
+   },
+   "b": {
+    "action": "Keep vacuum cleaners away from the cabinet.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-033"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "same words, other object",
+   "source": "hand",
+   "a": {
+    "action": "Reset the timing port on the uplink.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   },
+   "b": {
+    "action": "Reset the management port on the uplink.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-229"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "same words, other module",
+   "source": "hand",
+   "a": {
+    "action": "Reseat the optical module.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Reseat the clock module.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "same words, other direction",
+   "source": "hand",
+   "a": {
+    "action": "Move the sector to channel 1.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   },
+   "b": {
+    "action": "Move the sector to channel 6.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-254"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "before vs after",
+   "source": "hand",
+   "a": {
+    "action": "Check the link margin before the swap.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Check the link margin after the swap, not before.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "only vs also",
+   "source": "scenarios/slack-noc-handover",
+   "a": {
+    "action": "Dispatch only if the link is still flapping.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-198"
+    ]
+   },
+   "b": {
+    "action": "Dispatch if the link is still flapping or down.",
+    "avoid": [],
+    "applies_to": [
+     "RAD-198"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "stop vs continue",
+   "source": "hand",
+   "a": {
+    "action": "Stop the soak test when the counters reach zero.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Continue the soak test when the counters reach zero.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "avoid word in action",
+   "source": "hand",
+   "a": {
+    "action": "Avoid touching the second breaker.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-021"
+    ]
+   },
+   "b": {
+    "action": "Touch the second breaker.",
+    "avoid": [],
+    "applies_to": [
+     "RTR-021"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "1 vs 10 hours",
+   "source": "hand",
+   "a": {
+    "action": "Wait 1 hour before dispatching.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Wait 10 hours before dispatching.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "weekday window",
+   "source": "scenarios/slack-key-moved",
+   "a": {
+    "action": "Collect the key on weekdays between 07:00 and 15:00.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Collect the key on weekdays between 08:00 and 16:00.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "2019 vs 2021",
+   "source": "scenarios/firmware-4-2-rollout",
+   "a": {
+    "action": "Firmware 4.2 applies to nodes installed 2019 or earlier.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Firmware 4.2 applies to nodes installed 2021 or earlier.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  },
+  {
+   "same": false,
+   "why": "4.2 vs 4.3",
+   "source": "scenarios/firmware-4-2-rollout",
+   "a": {
+    "action": "Firmware 4.2 fixes the forwarding-state bug.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   },
+   "b": {
+    "action": "Firmware 4.3 fixes the forwarding-state bug.",
+    "avoid": [],
+    "applies_to": [
+     "TRN-042"
+    ]
+   }
+  }
+ ]
+}

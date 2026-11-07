@@ -6,7 +6,7 @@ import { cn } from '../../lib/cn'
 import { fmtDateTime } from '../../lib/format'
 import { ORIGIN_STYLE, SOURCE_STYLE, THREAD_STATUS_STYLE } from '../../lib/semantic'
 import { useLive } from '../../store/live'
-import { Badge, Button, EmptyState, Input, Select } from '../ui'
+import { Badge, Button, EmptyState, FilterMenu, Input, Select } from '../ui'
 import { NewThreadModal } from './NewThreadModal'
 
 export const SourceIcon = ({ source, size = 14 }: { source: ThreadSource; size?: number }) => {
@@ -39,18 +39,14 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="space-y-2 border-b border-line p-3">
+      <div className="border-b border-line p-3">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search size={14} className="absolute left-2.5 top-2.5 text-muted" />
             <Input className="pl-8" placeholder="Search threads" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
-          <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
-            New
-          </Button>
-        </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          <Select className="h-8 !px-1.5 text-[13px]" value={source} onChange={(e) => setSource(e.target.value as ThreadSource | '')}>
+          <FilterMenu count={[source, origin, status].filter(Boolean).length}>
+          <Select aria-label="Source" className="text-[13px]" value={source} onChange={(e) => setSource(e.target.value as ThreadSource | '')}>
             <option value="">All sources</option>
             {Object.entries(SOURCE_STYLE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -58,7 +54,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
               </option>
             ))}
           </Select>
-          <Select className="h-8 !px-1.5 text-[13px]" value={origin} onChange={(e) => setOrigin(e.target.value as Origin | '')}>
+          <Select aria-label="Origin" className="text-[13px]" value={origin} onChange={(e) => setOrigin(e.target.value as Origin | '')}>
             <option value="">All origins</option>
             {Object.entries(ORIGIN_STYLE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -66,7 +62,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
               </option>
             ))}
           </Select>
-          <Select className="h-8 !px-1.5 text-[13px]" value={status} onChange={(e) => setStatus(e.target.value as ThreadStatus | '')}>
+          <Select aria-label="Status" className="text-[13px]" value={status} onChange={(e) => setStatus(e.target.value as ThreadStatus | '')}>
             <option value="">All status</option>
             {Object.entries(THREAD_STATUS_STYLE).map(([k, v]) => (
               <option key={k} value={k}>
@@ -74,6 +70,10 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
               </option>
             ))}
           </Select>
+          </FilterMenu>
+          <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
+            New
+          </Button>
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">

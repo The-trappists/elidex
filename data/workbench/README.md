@@ -38,3 +38,7 @@ Rewritten on 2026-11-07 (Claude Code) to sound less robotic, reviewed by the tea
 - `expected` for the Elisa and the two other file-based scenarios is copied from `data/cache/extractions.json` (hand-written ground truth). The other `expected` items were written by hand in the same format, so the core `Linker` binds them against the seeded inventory (tested in `tests/test_workbench_sim.py`).
 - Class criteria are conservative: model plus install year range, never a bare type.
 - Incidents are scripted ground truth (observations from `models.OBSERVABLE_FIELDS`). Nothing here detects a fault.
+
+## Company day
+
+`company/day.json` is the timeline of the Company day scenario (`docs/workbench.md`, "Company day"): 32 entries `{id, at_min, kind, scenario_id, label}` over one 480-minute working day starting at 08:00, all pointing at existing scenarios (no new scenario files). Order matters on purpose: `elisa-trn042-chat` runs before `similar-trn117` so the autonomous system can reuse that knowledge, the `pattern-*` scenarios repeat across the day, noise and adversarial chats are mixed in, and `agent-outcome-followup` comes last. A few adversarial incidents never resolve, so those elements stay degraded or down.
