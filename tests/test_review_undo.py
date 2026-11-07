@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 import test_workbench_core as core
 from context_layer import critic, judge
-from context_layer.workbench import loop_agents
+from context_layer.workbench import loop_agents, processor
 from context_layer.workbench.app import create_app
 from test_review_backend import edit, flags, item, run_thread
 from test_workbench_core import client, seeded, wait_for  # noqa: F401
@@ -87,10 +87,12 @@ def test_seed_is_processed_without_critic_and_judge(tmp_path, monkeypatch):
     seen = []
     monkeypatch.setattr(critic, "critique", lambda *a, **k: seen.append("critic") or ([], [], []))
     monkeypatch.setattr(judge, "_call_llm", lambda *a, **k: seen.append("judge") or "{}")
+    # llm_configured is faked on, so mode "auto" would call the real extractor (slow, network, uses a dev key)
+    monkeypatch.setattr(processor.LLMExtractor, "extract", lambda *a, **k: seen.append("extract") or [])
     loop_agents.install_all()
     with TestClient(create_app(state_file=tmp_path / "state.json", background=False)) as c:
         assert c.get("/api/settings").json()["use_critic"] is True  # the user's settings are never touched
         wait_for(c, lambda s: s["threads"] and all(t["status"] != "processing" for t in s["threads"]), "seed")
-        assert seen == []
+        assert set(seen) <= {"extract"}  # no critic, no judge
         assert c.get("/api/settings").json()["use_judge"] is True
         assert not c.app.state.wb.processor.bootstrap_threads

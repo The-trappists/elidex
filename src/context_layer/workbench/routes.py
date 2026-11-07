@@ -181,11 +181,22 @@ async def generate(body: GenerateBody, request: Request) -> Scenario:
 # ---------------------------------------------------------------- inventory and people
 
 
+def _check_refs(wb: Workbench, kind: str, body) -> None:
+    """422 on dangling references: an element's site, a link's two ends. Only the HTTP layer checks."""
+    if kind == "elements" and body.site_id is not None and body.site_id not in wb.sites:
+        raise HTTPException(422, f"unknown site {body.site_id}")
+    if kind == "links":
+        for end in (body.a, body.b):
+            if end not in wb.elements:
+                raise HTTPException(422, f"unknown element {end}")
+
+
 def _crud(path: str, kind: str, model: type, label: str) -> None:
     async def create(body, request: Request):
         wb = get_wb(request)
         if body.id in getattr(wb, kind):
             raise HTTPException(409, f"{label} {body.id} already exists")
+        _check_refs(wb, kind, body)
         body.origin = "manual"
         wb.upsert_item(kind, body)
         return body
@@ -195,6 +206,7 @@ def _crud(path: str, kind: str, model: type, label: str) -> None:
         old = getattr(wb, kind).get(item_id)
         if old is None:
             raise HTTPException(404, f"unknown {label} {item_id}")
+        _check_refs(wb, kind, body)
         body.id, body.origin = item_id, old.origin
         wb.upsert_item(kind, body)
         return body

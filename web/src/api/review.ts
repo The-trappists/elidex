@@ -27,7 +27,7 @@ export const FIXTURES_ENV = import.meta.env.VITE_REVIEW_FIXTURES === '1'
 
 /** True only in fixtures mode (the UI says "Sample data"). */
 export const isSample = () => FIXTURES_ENV
-export const onSampleChange = (_fn: () => void) => () => {}
+export const onSampleChange = (fn: () => void) => { void fn; return () => {} }
 
 async function call<T>(real: () => Promise<T>, fake: () => T | Promise<T>): Promise<T> {
   return FIXTURES_ENV ? fake() : real()

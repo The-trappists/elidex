@@ -67,7 +67,7 @@ export function KgCanvas({
   useEffect(() => {
     const cy = cyRef.current
     if (!cy) return
-    const evidence = new Set(evidenceIds)
+    const evidence = new Set(evidenceKey ? evidenceKey.split('|') : []) // from the stable key: the default [] is a new array each render
     const agentMode = !!targetHighlightId || evidence.size > 0
     const usedNodes = new Set<string>([...evidence, ...(targetHighlightId ? [targetHighlightId] : [])])
     const usedEdges = new Set<string>()

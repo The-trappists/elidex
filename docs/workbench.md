@@ -77,6 +77,8 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 | `POST /sim/generate` | `GenerateBody` | `Scenario` (stored, origin `generated`); 503 if no LLM, 422 if the output is invalid |
 | `POST /elements`, `PUT /elements/{id}`, `DELETE /elements/{id}` | `WbElement` | `WbElement` / 204 |
 | same for `/sites` (`WbSite`), `/links` (`TopologyLink`), `/personas` (`Persona`) | | |
+
+`PUT` on these collections replaces the whole object: fields omitted from the body are reset to their default (usually `null`), not kept. Send the full object (`id` and `origin` are kept from the stored one). `POST` and `PUT` answer 422 when an element's `site_id` is not a known site, or when a link's `a` or `b` is not a known element (the element `type` stays free text). Only the HTTP layer checks; the seed and the Slack bridge write directly.
 | `POST /threads` | `NewThreadBody` | `LiveThread` (origin `manual`) |
 | `POST /threads/{id}/messages` | `PostMessageBody` | `Message` |
 | `POST /threads/{id}/process` | | 202, job runs now |
