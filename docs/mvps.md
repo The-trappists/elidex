@@ -4,6 +4,8 @@
 
 ## The core (idea A): runs today
 
+Later work on the core (critic, judge, outcome loop, operator console) is described in [plan-loop-v2.md](plan-loop-v2.md) and [design.md](design.md).
+
 ```
 Listen ──> Understand ──> Link ──> Store ──> Serve / Reuse
 listen.py  understand.py  link.py  store.py  api.py, mcp_server.py, agent.py

@@ -4,7 +4,7 @@
 
 The Workbench is the team's real-time test bench. It is not the pitch demo. It lets us:
 - watch fake employees talk, in an in-app chat or in a real Slack;
-- see each conversation go through our pipeline (listen → understand → link → store → reconcile);
+- see each conversation go through our pipeline (listen → understand → link → store → reconcile, with the loop v2 agents hooked in, see below);
 - see the network graph with scripted incidents and the knowledge bound to it;
 - add or remove generated data;
 - read every LLM call afterwards.
@@ -20,6 +20,18 @@ uv run ctx llm-check            # which LLM provider / JSON mode works
 - **Incidents are scripted** ground truth from scenarios (the "as-observed" layer). The Workbench never detects or diagnoses faults, which is out of scope (see [challenge.md](challenge.md)). An incident only triggers a conversation and shows what the context layer knows about the element.
 - Knowledge comes only from the messages. Nobody fills in a form.
 - Slack stands in for Teams: it shows that the listen step works on the channels people already use.
+
+## Loop v2 overview
+
+The Workbench runs the loop v2 agents on top of the five pipeline steps. The loop is **fully automated**: knowledge goes live with no human review and nobody is asked for a click. The operator console is optional, for observation, debugging and manual override.
+
+- A **critic** (a second model) checks each extracted item against its cited messages, inside the understand step (hook `after_understand`).
+- A **judge** compares each new assertion with its neighbours after the store step (hook `after_store`); the lifecycle reconcile step still runs afterwards as a fallback.
+- A **passive outcome loop** posts the demo agent's applied action in a thread and reads the technician's reply to update trust (`POST /api/agent/run`, hook `after_store`).
+- The **operator console** ("Needs a look" page, assertion editor, item re-run with history and undo) shows what the loop did and why, and never blocks it.
+- All three agents are toggles in Settings (`use_critic`, `use_judge`, `use_outcome_loop`, default off).
+
+Read more: [plan-loop-v2.md](plan-loop-v2.md) (what was built, known weaknesses), [design.md](design.md) (pipeline and fields), [evaluation.md](evaluation.md) (metric and model comparison), [demo-loop-v2.md](demo-loop-v2.md) (2m30 demo script), and the endpoint tables below.
 
 ## Architecture
 
@@ -131,7 +143,7 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
    - `link`: one `Linker.link` per item; its notes go to the job.
    - `store`: `add_class` and `add_assertion` (new or merged).
    - `reconcile`: `lifecycle.reconcile` when `settings.lifecycle` is on, otherwise `skipped`.
-   Hooks (`processor.register_hook(name, fn)`, sync or async, `fn(HookContext)`): `after_understand` (may return a replacement item list), `after_store` (`ctx.new_assertions` filled), `after_reconcile`. A hook exception is noted in `job.notes` and never fails the job. The critic runs in `after_understand`, the judge in `after_reconcile`; `STAGES` is unchanged. Toggles: `use_critic`, `use_judge`, `use_outcome_loop` (default off).
+   Hooks (`processor.register_hook(name, fn)`, sync or async, `fn(HookContext)`): `after_understand` (may return a replacement item list), `after_store` (`ctx.new_assertions` filled), `after_reconcile`. A hook exception is noted in `job.notes` and never fails the job. The critic runs in `after_understand` (inside the understand step), the judge and the outcome loop in `after_store` (the judge runs before `lifecycle.reconcile`, which stays as a fallback), and nothing is registered on `after_reconcile` by the loop v2 agents; `STAGES` is still the five steps. Toggles: `use_critic`, `use_judge`, `use_outcome_loop` (default off).
 4. Extractor choice (`settings.extractor_mode`):
    - `llm`: `LLMExtractor(cache_path=out/workbench/llm_cache.json)`; error if no key.
    - `scripted`:
@@ -139,7 +151,7 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
      - otherwise the core cache (`data/cache/extractions.json`) for seeded files;
      - otherwise nothing, with note "scripted mode: no ground truth for this thread".
    - `auto`: `llm` if a key is configured, else `scripted`.
-5. Eval: when the extractor is the LLM and the thread has `expected`, items are compared on `(type, topic)` and the result goes in `job.eval`. Same bindings count as matched; different bindings go in `binding_diffs`.
+5. Eval: when the extractor is the LLM and the thread has `expected`, items are compared on `(type, scope, action similarity)`, not on the topic slug (see [evaluation.md](evaluation.md)), and the result goes in `job.eval`. Same type and scope with a similar action is matched; the same scope with another action, or the same action with another scope, goes in `binding_diffs`.
 6. Invalidation items are only applied when `settings.lifecycle` is on (as in `pipeline.build_store`).
 
 ### Data lifecycle
@@ -163,7 +175,7 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 
 - `personas.json`: Elisa's two people (Erkki, Veikko) plus synthetic colleagues.
 - `topology.json`: extra elements, sites with lat/lon, and links between elements. It is merged with `data/synthetic/*.csv`.
-- `scenarios/*.json`: one `Scenario` per file (23, eleven of them on Slack). Elisa's chat replayed word for word is `elisa-trn042-chat.json`.
+- `scenarios/*.json`: one `Scenario` per file (25). Elisa's chat replayed word for word is `elisa-trn042-chat.json`.
 
 Everything except Elisa's chat and email is synthetic and documented in `data/workbench/README.md`.
 

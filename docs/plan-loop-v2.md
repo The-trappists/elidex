@@ -1,6 +1,6 @@
 # Loop v2 plan: targeted agents + operator console
 
-> **Status: proposal, validated by the team lead on 2026-11-07** (plan approved; log the decisions below in [decisions.md](decisions.md) once the work lands). Branch: `worktree-loop-v2`.
+> **Status: implemented** (merged on branch `worktree-loop-v2`, pending a pull request to `main`). The plan was validated by the team lead on 2026-11-07 and the decisions are logged in [decisions.md](decisions.md). The sections below are the original plan; "What was built" and "Known weaknesses" describe the result.
 
 ## Ground rules (from the team)
 
@@ -63,3 +63,29 @@ Drop in this order if time runs short: firmware-based expiry and stage breakpoin
 - D2: linking stays deterministic.
 - D3: operator console is optional and never part of a specialist's path; the loop is fully automated.
 - D4: models by role, chosen from L6 results.
+
+## What was built
+
+| Lot | Main files | Notes |
+| --- | --- | --- |
+| L0 Contract | `models.py`, `workbench/contracts.py`, `workbench/processor.py` (hooks `after_understand`, `after_store`, `after_reconcile`), `workbench/loop_agents.py`, `web/src/api/types.ts` | `Scope.qualifier`, `ExtractedItem.evidence_quote`, source kind `operator`, `ReviewFlag`, `RuleApplication`, toggles `use_critic`, `use_judge`, `use_outcome_loop` |
+| L1 Critic + qualifier | `critic.py`, `link.py`, `llm.py`, `config.py`, `tests/test_critic.py`, scenario `qualifier-old-tx3000-site` | Evidence check then one LLM call per thread; critic role provider (`LLM_CRITIC_*`) with its own fallback; qualifier lowers class confidence x0.8 |
+| L2 Judge | `judge.py`, `tests/test_judge.py` | After store, verdicts against up to 8 neighbours, applied deterministically; the lifecycle path still runs after it |
+| L3 Outcome loop | `outcome.py`, `/agent/run` and `/applications` in `workbench/routes.py`, `tests/test_outcome_loop.py`, scenario `agent-outcome-followup` | Agent message in the thread, outcome read from the technician's reply; LLM with a keyword fallback |
+| L4 Console backend | `workbench/review.py`, `workbench/state.py`, `workbench/routes.py`, `tests/test_review_backend.py` | Flags, `PATCH /assertions/{id}` with history and undo, `POST /jobs/{id}/rerun` |
+| L5 Console UI | `web/src/pages/ReviewPage.tsx`, `web/src/components/review/`, `components/pipeline/ItemEditor.tsx`, `Verdicts.tsx`, `components/knowledge/AssertionEditor.tsx`, `EditHistory.tsx`, `web/src/store/review.ts` | "Needs a look" page, inline item editing with re-run, assertion editor with undo |
+| L6 Eval + models | `evaluation.py`, `evaluate()` in `processor.py`, `scripts/eval_models.py`, `scripts/eval_candidates.example.json`, [evaluation.md](evaluation.md) | Match on (type, scope, action); model comparison script, a human runs the paid mode |
+| L7 Demo + docs | `docs/**`, [demo-loop-v2.md](demo-loop-v2.md) | This lot |
+| L8 Integration + QA | review only | Runs in parallel with L7; this document does not describe its changes |
+
+## Known weaknesses
+
+- The critic and the judge have never been tested against a real model: the tests use a mocked LLM.
+- The thresholds are guesses, not tuned: confidence x0.7 (critic evidence penalty, failed outcome) and x0.8 (qualifier), the over-reach flag at 6 unnamed elements and the low-confidence flag below 0.7.
+- The heuristic outcome keyword "back" is loose: it also matches "back to the office" style sentences.
+- A rule that came only from the same thread as its outcome loses the trust upgrade when that thread is reprocessed, because reprocessing removes that thread's sources and re-extracts.
+- Trust upgrades and extra sources added by the judge are not rolled back when the thread that caused them is reprocessed.
+- Dismissing a flag in the UI is delayed by 6 s (to allow Undo) and is lost if the page is reloaded within that window.
+- The scripted baseline of the evaluation is trivial: it scores the expected items against themselves.
+- Only 21 scenarios have expected items, about one item each: a difference of one or two items is noise.
+- The critic is skipped when the extractor is not an LLM (scripted mode), so critic behaviour is only visible with a live model.
