@@ -57,12 +57,13 @@ class Provider:
     api_key: str
     model: str
     json_mode: str
+    reasoning_effort: str = ""
 
 
 def providers() -> list[Provider]:
     out = []
     if config.llm_configured():
-        out.append(Provider("primary", config.LLM_BASE_URL, config.LLM_API_KEY, config.LLM_MODEL, config.LLM_JSON_MODE))
+        out.append(Provider("primary", config.LLM_BASE_URL, config.LLM_API_KEY, config.LLM_MODEL, config.LLM_JSON_MODE, config.LLM_REASONING_EFFORT))
     if config.llm_fallback_configured():
         out.append(
             Provider(
@@ -71,6 +72,7 @@ def providers() -> list[Provider]:
                 config.LLM_FALLBACK_API_KEY,
                 config.LLM_FALLBACK_MODEL,
                 config.LLM_FALLBACK_JSON_MODE,
+                config.LLM_FALLBACK_REASONING_EFFORT,
             )
         )
     return out
@@ -132,6 +134,8 @@ def call_provider(
     kwargs: dict[str, Any] = {}
     if mode and (rf := response_format(mode, schema)):
         kwargs["response_format"] = rf
+    if p.reasoning_effort:
+        kwargs["reasoning_effort"] = p.reasoning_effort
     t0 = time.perf_counter()
     text, exc = None, None
     try:
