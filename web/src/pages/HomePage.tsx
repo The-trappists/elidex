@@ -44,8 +44,9 @@ const TEAM_MEMBERS: TeamMember[] = [
     flag: '/flag-ch.svg',
   },
   {
-    name: 'Haluk',
+    name: 'Haluk Yilmaz',
     badge: 'NLP & Lore',
+    avatar: '/haluk.png',
     degree: 'MEng in Computer Science',
     unis: [{ name: 'KULeuven (Belgium)', logo: '/kuleuven.svg' }],
     region: 'Belgium',

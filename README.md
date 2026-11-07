@@ -1,126 +1,57 @@
-<div align="center">
-  <h1>Since AI 2026</h1>
-</div>
+# ElidEx
 
-Codebase for the Since AI hackathon 2026 challenge
+**Capture the know-how that lives in network operations conversations, connect it to the right equipment and time, and make it usable by an AI agent.**
 
-<h2>The team</h2>
-<h2>The project</h2>
+Built by the **The-trappists** team for the **Since AI Hackathon 2026** in Turku, Finland.
 
-We are tackling **Elisa's challenge "Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations"**: capture the knowledge experts share in Teams chats and emails, bind it to network entities with a validity period, and let an AI agent reuse it on a similar case.
+ElidEx is the project name. “Context layer” describes the role the tool plays in network operations.
+<!-- 
+![ElidEx Knowledge graph showing linked knowledge, people, equipment, and conversations](docs/images/elidex-knowledge-graph.png) -->
 
-> **Status: choosing an idea.** Docs are proposals until logged in [docs/decisions.md](docs/decisions.md). Start with **Challenge**, then **Ideas**.
+*ElidEx's Knowledge graph, populated with the included sample data.*
 
-| Doc | What's inside |
-| --- | --- |
-| [Challenge](docs/challenge.md) | The brief, the material, scope checklist |
-| [Ideas](docs/ideas.md) | Candidate directions, all in scope |
-| [Design](docs/design.md) | Pipeline and context-assertion schema |
-| [Plan](docs/plan.md) | 48h plan, demo, risks, questions for mentors |
-| [Tech stack](docs/tech-stack.md) | Stack options and event tools |
-| [MVPs](docs/mvps.md) | What the code does now, one starter per idea |
-| [Knowledge graph](docs/knowledge-graph.md) | Graph over network, assertions and provenance; agent queries; Neo4j mirror |
-| [Evaluation](docs/evaluation.md) | Accuracy: right solution retrieved? right information kept? What confidence means |
-| [Final improvements](docs/final-improvements.md) | Ranked gaps and retrieval upgrades for the final push (for ultra mode, after current tasks are merged) |
-| [Dataset](docs/dataset.md) | Company-sized synthetic data, Atlas and Tiger Data loaders, vector search |
-| [Patterns](docs/patterns.md) | Recurring and linked problems in captured knowledge, with hypotheses |
-| [Decisions](docs/decisions.md) | What we chose and why |
-| [Contributing](CONTRIBUTING.md) | Language, git workflow, shared contracts |
-| [AGENTS.md](AGENTS.md) | Instructions for every AI assistant |
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
 
-Elisa's material: [brief](docs/elisa/challenge-brief.pdf), [slides](docs/elisa/sinceai-2026-challenge-pitch-elisa.html), example data in [data/elisa/](data/elisa/).
+## The challenge
 
-<h2>Quick start</h2>
+Elisa's challenge is **“Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations.”** Network specialists already share practical knowledge in chats and emails, but that knowledge is hard for an autonomous agent to find later. ElidEx captures the reusable rule or fact, binds it to network entities and a validity period, records its source and trust, and makes it available when a similar case comes up.
 
-Needs [uv](https://docs.astral.sh/uv/). Runs offline by default (cached extractions); add an LLM key in `.env` (see `.env.example`) to use `--llm`.
+The demo follows the challenge's SFP example: after a module swap, a link can look healthy while traffic counters stay at zero. The conversation contains a practical next step from an expert. The agent can retrieve that human advice on a similar case and cite the assertion it used.
+
+The project focuses on **human knowledge and its reuse**. Fault detection and root-cause analysis are outside the challenge scope. See [the challenge brief and scope checklist](docs/challenge.md) for details.
+
+## Get started
+
+### Requirements
+
+- [uv](https://docs.astral.sh/uv/) for Python dependency and command management.
+- Python 3.12 or newer. `uv` can install the project interpreter when needed.
+- Node.js 22 and npm only if you want the Workbench web UI.
+
+### Install and run the core
 
 ```bash
-uv sync
-uv run ctx run                      # Teams + email -> context assertions (out/context_store.json)
-uv run ctx context TRN-117 --at 2026-10-20T08:00
-uv run ctx agent                    # demo agent on the synthetic cases
-uv run ctx eval                     # accuracy report (docs/evaluation.md)
-uv run ctx outcome ctx_0002 TRN-117 --after '{"traffic_counters": 0}'   # field feedback: did it work?
-uv run ctx run --lifecycle && uv run ctx agent --conditions --guard   # MVP angles D, C, B
-uv run ctx workbench                # team test bench: live UI + API on http://127.0.0.1:8010 (build web/ first)
-uv run ctx llm-check                # which LLM provider and JSON mode work with your .env
-uv run streamlit run demo/app.py    # demo UI
-uv run ctx serve                    # REST API, docs at http://127.0.0.1:8000/docs
-uv run ctx mcp                      # MCP server (stdio) for agents
-uv run pytest
-```
-
-<h2>Demo checklist: big data and the MLH prizes</h2>
-
-Details in [docs/dataset.md](docs/dataset.md). The company-sized data (`large`: 3 M threads, 13.8 M messages) lives in **MongoDB Atlas** and **Tiger Data**, outside the app's memory. Prizes: *Best Use of MongoDB Atlas* and *Best Use of Tiger Data*. **Tick both categories on the team submission in sinceai.app before Sunday 10:00** (the page gives no judging criteria).
-
-**Before the demo** (needs `MONGODB_URI`, `MONGODB_DB`, `TIGER_DATABASE_URL`, `EMBEDDING_MODEL` in `.env`):
-
-```bash
-uv run ctx dataset db-check                          # both databases answer; vector index queryable
-uv run ctx dataset tiger-verify out/dataset/large    # every line [  ok]
-uv run ctx serve                                     # API on http://127.0.0.1:8000/docs
-```
-
-If the Atlas cluster was paused or the dataset is gone: `ctx dataset generate --scale large`, `ctx dataset load-mongo out/dataset/large --drop`, `ctx dataset load-tiger out/dataset/large --drop --analytics`, `ctx dataset bench out/dataset/large --save-mongo`, `ctx dataset embed --collection assertions --reset`.
-
-**The 2-minute script**
-
-| Step | Command (or API) | What to say |
-| --- | --- | --- |
-| 1. The scale | `uv run ctx dataset stats out/dataset/large` | A full operator: 5 009 sites, 20 086 elements, 3 012 staff, 3 M threads |
-| 2. Atlas, by element | `uv run ctx dataset threads --source mongo --element TRN-042 --limit 5` | Every thread naming this node, from 3 M, in milliseconds (indexed). Nothing is loaded in memory |
-| 3. Atlas, by meaning | `uv run ctx dataset similar "port stays down after SFP swap" --limit 5` (or `/similar?q=...`) | Vector search finds the nearest human knowledge, even without the same node or words |
-| 4. Tiger, over time | `uv run ctx dataset activity TRN-042 --bucket "1 month"` | 13.8 M messages in a hypertable: who talked about it, when |
-| 5. Tiger, freshness | `uv run ctx dataset freshness TRN-042` (or `/freshness/TRN-042`) | Knowledge goes stale: when did a human last talk about this node? |
-| 6. The link to the challenge | `uv run ctx context TRN-117 --at 2026-10-20T08:00` | The context layer returns what humans know, with source, trust and validity |
-
-One sentence per database for the jury: *Atlas stores the threads, the assertions and the vector search; Tiger Data stores the message time series and the freshness of knowledge.*
-
-**After the hackathon:** pause or delete the Atlas cluster (0.08 $/h) and delete the Tiger service before its 30-day credit ends.
-
-<h2>Run locally on Windows</h2>
-
-Tested on Windows 11 with PowerShell. Python itself is not needed: `uv` downloads the pinned version (3.12, see `.python-version`).
-
-**1. Install the tools** (once, then open a new terminal so `PATH` is updated):
-
-| Tool | Needed for | Install (PowerShell) |
-| --- | --- | --- |
-| Git | Cloning | `winget install --id Git.Git -e` |
-| uv | Everything in Python | `winget install --id astral-sh.uv -e` (or `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 \| iex"`) |
-| Node.js 22 (includes npm) | Workbench UI only (`web/`) | `winget install --id OpenJS.NodeJS.22 -e` (see step 3) |
-| Docker Desktop | Neo4j only (optional) | `winget install --id Docker.DockerDesktop -e`, then start it |
-
-**2. Install and run the core** (offline, no API key needed):
-
-```powershell
 git clone https://github.com/The-trappists/since-ai-hackathon.git
 cd since-ai-hackathon
 uv sync
-Copy-Item .env.example .env          # optional: add an LLM key to use --llm
-uv run ctx run --lifecycle           # Teams + email -> context assertions
+
+# Build the context store from the included sample conversations and cached extractions.
+uv run ctx run --lifecycle
+
+# Inspect captured context and run the sample agent.
 uv run ctx context TRN-117 --at 2026-10-20T08:00
-uv run ctx graph reach ctx_0002      # knowledge graph queries, see docs/knowledge-graph.md
-uv run ctx eval                      # accuracy report, see docs/evaluation.md
-uv run pytest
+uv run ctx agent --conditions --guard
 ```
 
-**3. Workbench UI** (http://127.0.0.1:8010). It needs Node.js 22, the version CI uses.
+The core example runs without a live model key. By default, extraction replays the checked-in cache so the demo is repeatable. To call a model, copy `.env.example` to `.env`, add your provider details, then run `uv run ctx run --llm`. Keep `.env` local; never commit credentials.
 
-Install Node.js 22 (once), then **close and reopen the terminal** and check it:
+### Run the Workbench
 
-```powershell
-winget install --id OpenJS.NodeJS.22 -e
-node --version    # v22.x
-npm --version
-```
+The Workbench is the team's interactive test bench. Build the frontend once, then start the API and UI together:
 
-Use `OpenJS.NodeJS.22`, not `OpenJS.NodeJS.LTS`: the LTS package is now Node 26, which CI does not test. Without winget, take the "Windows Installer (.msi)" for v22 from https://nodejs.org/en/download and keep the default options (it adds `node` and `npm` to `PATH`). If you already have another Node version, [nvm-windows](https://github.com/coreybutler/nvm-windows) can switch: `nvm install 22` then `nvm use 22`.
-
-Build the UI and start the workbench:
-
-```powershell
+```bash
 cd web
 npm ci
 npm run build
@@ -128,43 +59,77 @@ cd ..
 uv run ctx workbench
 ```
 
-**4. Neo4j mirror of the knowledge graph** (optional; browser on http://localhost:7474, user `neo4j`):
+Open [http://127.0.0.1:8010](http://127.0.0.1:8010). The Workbench starts with seeded network data and scenarios. It can run in scripted mode without an LLM key. For frontend development with hot reload, leave the backend running and use `npm run dev` in `web/`; the dev server proxies API requests to port 8010.
 
-```powershell
-uv sync --extra neo4j
-# in .env: NEO4J_PASSWORD=<at least 8 characters>
-docker compose --env-file .env -f deploy/docker-compose.neo4j.yml up -d
-uv run ctx graph push
-docker compose --env-file .env -f deploy/docker-compose.neo4j.yml down    # stop (data is kept)
+### Other useful commands
+
+```bash
+uv run ctx eval                 # evaluate extraction and retrieval
+uv run ctx graph stats          # inspect the knowledge graph
+uv run ctx serve                # standalone REST API at http://127.0.0.1:8000
+uv run ctx mcp                  # MCP tools over stdio
+uv run streamlit run demo/app.py  # earlier Streamlit demo
 ```
 
-**Troubleshooting**
+The commands above also work in PowerShell; install [uv](https://docs.astral.sh/uv/) and, for the Workbench UI, Node.js 22 with npm. For optional Neo4j, Slack, and deployment instructions, see the [deployment guide](docs/deploy-vultr.md), [Slack setup](docs/slack-setup.md), and [Workbench guide](docs/workbench.md).
 
-| Symptom | Fix |
+## How it works
+
+```mermaid
+flowchart LR
+    A[Teams, email, Slack, or sample conversations] --> B[Listen]
+    B --> C[Understand: extract a reusable fact or rule]
+    C --> E[Link: bind to network entities and time]
+    N[Network inventory] --> E
+    E --> F[Core context store]
+    F --> G[Core demo agent]
+    G --> H[Outcome feedback]
+    F --> I[Standalone REST API and MCP]
+    J[Workbench simulator or Slack bridge] --> K[Workbench pipeline]
+    K --> D[Optional critic checks evidence and scope]
+    D --> P[Deterministic linker]
+    N --> P
+    P --> M[Workbench context store]
+    M --> O[Workbench agent]
+    O --> H
+    M --> L[Workbench REST and SSE]
+```
+
+1. **Listen:** Load conversation threads from the sample data, the Workbench simulator, or its optional Slack bridge. The challenge's key requirement is to use the conversations people already have, without asking specialists to fill out a separate form.
+2. **Understand:** An extractor returns structured assertions: a summary, conditions, action or fact, cited messages, author, trust level, confidence, and scope. It can use cached results, scripted scenario data, or a configured LLM.
+3. **Check and link:** In the Workbench, an optional critic checks the evidence and whether the extracted scope is too broad. A deterministic linker resolves equipment, sites, equipment classes, and triggers against the inventory; when it cannot link safely, it can abstain.
+4. **Store and reconcile:** Assertions include source provenance and `valid_from` / `valid_to`. The NetworkX-backed context store supports time-aware retrieval, conflicts, lifecycle updates, and a graph view. Optional hooks compare new assertions and update trust from agent outcomes.
+5. **Reuse:** An agent retrieves context for an entity and case, checks machine-readable conditions when observations are available, and returns a recommendation with assertion citations. REST and MCP interfaces expose context and graph tools to other clients.
+
+The main shared data contract is in [`src/context_layer/models.py`](src/context_layer/models.py). Core pipeline stages live under [`src/context_layer/`](src/context_layer/); the live team test bench is in [`src/context_layer/workbench/`](src/context_layer/workbench/). The CLI-built store (`out/context_store.json`) backs the standalone REST and MCP interfaces. The Workbench runs its own live store and persists it separately under `out/workbench/`; its REST and SSE endpoints serve that Workbench state. See [the design](docs/design.md), [Workbench API](docs/workbench.md), and [evaluation notes](docs/evaluation.md) for more detail.
+
+## Project contents
+
+| Path | What's inside |
 | --- | --- |
-| `uv`, `node` or `npm` is not recognized | Open a new terminal after installing; if it persists, sign out and back in so `PATH` is reloaded |
-| `npm.ps1 cannot be loaded because running scripts is disabled` | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use `npm.cmd` instead of `npm` |
-| `npm ci` fails on a `package-lock.json` mismatch | Check `node --version` is v22, delete `web\node_modules`, run `npm ci` again |
-| `The token '&&' is not a valid statement separator` | Windows PowerShell 5.1 has no `&&`: run the commands of the Quick start one per line, or use PowerShell 7 |
-| `failed to connect to the docker API` | Start Docker Desktop and wait until it says "Engine running" |
-| `set NEO4J_PASSWORD` error from Compose | Set it in `.env` and keep `--env-file .env` (Compose looks for `.env` in `deploy/` otherwise) |
-| `No store at out\context_store.json` | Run `uv run ctx run` first |
-| Port 7474, 7687, 8000 or 8010 already in use | Stop the other program, or pass `--port` to `ctx serve` / `ctx workbench` |
+| [`data/elisa/`](data/elisa/) | Elisa's example conversation and challenge material |
+| [`data/synthetic/`](data/synthetic/) | Synthetic conversations, network inventory, and cases |
+| [`src/context_layer/`](src/context_layer/) | Extraction, entity linking, storage, agent, REST and MCP services |
+| [`src/context_layer/workbench/`](src/context_layer/workbench/) | Live state, pipeline processor, simulator, Slack bridge, and API |
+| [`web/`](web/) | React, TypeScript, and Vite Workbench interface |
+| [`docs/`](docs/) | Challenge, design, decisions, evaluation, deployment, and data documentation |
 
-**Workbench UI** (see [docs/workbench.md](docs/workbench.md)): `cd web && npm ci && npm run build`, then `uv run ctx workbench`. For UI work with hot reload, run `npm run dev` in `web/` (port 5173, proxies `/api` to 8010). Deployment: [docs/deploy-vultr.md](docs/deploy-vultr.md). Slack: [docs/slack-setup.md](docs/slack-setup.md).
+## Contributors
 
-| Path | Content |
-| --- | --- |
-| `src/context_layer/` | `listen` → `understand` → `link` → `store`, then `agent`, `api`, `mcp_server` |
-| `src/context_layer/graph/` | Knowledge graph: ontology, queries (provenance, reach, experts, timeline), exports, Neo4j push |
-| `src/context_layer/mvp/` | Starters for ideas B (guard), C (conditions), D (lifecycle): see [docs/mvps.md](docs/mvps.md) |
-| `data/synthetic/` | Our synthetic records, messages and cases ([how they were made](data/synthetic/README.md)) |
-| `data/cache/` | Cached extractions for the offline demo |
-| `src/context_layer/workbench/` | Workbench backend: live state, pipeline jobs, simulator, Slack bridge, REST + SSE |
-| `web/` | Workbench UI (React, Vite, Tailwind, canvas force graphs) |
-| `data/workbench/` | Workbench seed: topology, personas, scenarios ([how they were made](data/workbench/README.md)) |
-| `deploy/` | Docker Compose + Caddy for the Vultr VM, Slack app manifest |
-| `demo/app.py` | Streamlit demo |
-| `tests/` | End-to-end checks on Erkki's case |
+Contributors credited in the Git commit history include **Bilal Vandenberge** (`jaketherealone`), **Manuel Rocca** (`mnlrc`), **Haluk Yilmaz** (`maybe`), and **Matteo Morbée** (`UnPtitBelge`). Git author aliases may refer to the same person. Contributions and design choices are documented in [the decision log](docs/decisions.md); see [CONTRIBUTING.md](CONTRIBUTING.md) for collaboration conventions.
 
-<h2>The license</h2>
+## Hackathon and license context
+
+This project was created for the **Since AI Hackathon 2026**, held in Turku, Finland, on 6–8 November 2026. It addresses Elisa's challenge; the challenge brief states that the team owns its output and grants Elisa a perpetual, non-exclusive, royalty-free license to use it. See [the challenge summary](docs/challenge.md) and the original [challenge brief](docs/elisa/challenge-brief.pdf).
+
+**This repository does not currently include a standalone `LICENSE` file.** The challenge's license terms above describe Elisa's use rights; they do not specify a general open-source license for this repository. Contact the project team before reusing the code under other terms.
+
+## Further reading
+
+- [Challenge and scope](docs/challenge.md)
+- [Design and assertion schema](docs/design.md)
+- [Recorded decisions](docs/decisions.md)
+- [Evaluation](docs/evaluation.md)
+- [Workbench guide](docs/workbench.md)
+- [Synthetic dataset guide](docs/dataset.md)
+- [Contributing](CONTRIBUTING.md)
