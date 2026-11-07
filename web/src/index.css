@@ -379,7 +379,13 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 .diagram-view-switch { display: none; gap: 6px; }
 .graph-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--muted); }
 .graph-key li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.graph-caption { flex-shrink: 0; padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); }
+.graph-loading line { stroke: var(--g-link); stroke-width: 2; stroke-dasharray: 4 4; animation: graph-flow 0.9s linear infinite; }
+.graph-loading circle { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: graph-pulse 1.2s ease-in-out infinite; }
+.graph-loading circle:nth-of-type(2) { animation-delay: 0.2s; }
+.graph-loading circle:nth-of-type(3) { animation-delay: 0.4s; }
+@keyframes graph-flow { to { stroke-dashoffset: -8; } }
+@keyframes graph-pulse { 0%, 100% { transform: scale(0.8); } 50% { transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .graph-loading line, .graph-loading circle { animation: none; } }
 @media (max-width: 1100px) {
  .diagram-workspace { padding: 16px; gap: 12px; }
  .diagram-body { grid-template-columns: minmax(0, 1fr); }
@@ -397,4 +403,9 @@ button:not(:disabled):active { transform: translateY(0.5px); }
  .diagram-body { min-height: 360px; }
  .diagram-toolbar > div:first-child { flex-basis: 100%; }
  .graph-key { gap: 4px 12px; font-size: 10px; }
+}
+
+/* Insights keeps its list under the map on narrow screens (it has no Browse/Details switch). */
+@media (max-width: 1100px) {
+  .diagram-details.insights-list { display: flex; border-top: 1px solid var(--line); max-height: 50vh; }
 }

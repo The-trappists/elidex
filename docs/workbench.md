@@ -36,7 +36,7 @@ Read more: [plan-loop-v2.md](plan-loop-v2.md) (what was built, known weaknesses)
 ## Architecture
 
 ```
-web/ (React + Vite + TS + Tailwind + Cytoscape)
+web/ (React + Vite + TS + Tailwind + canvas force graphs)
    │  GET /api/state (snapshot) then GET /api/stream (SSE events)
 src/context_layer/workbench/
    app.py ─ routes.py ─ Workbench (state.py) ─ EventBus (bus.py) ─► SSE

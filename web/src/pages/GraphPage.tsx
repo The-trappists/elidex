@@ -1,22 +1,21 @@
-import type cytoscape from 'cytoscape'
 import { Search, Waypoints, SlidersHorizontal } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { KgElement, KgKind } from '../api/types'
 import { useGraphQuery } from '../components/graph/useGraphQuery'
-import { KgCanvas } from '../components/kg/KgCanvas'
+import { ForceCanvas, GraphLoading } from '../components/force/ForceCanvas'
+import { KG_SHAPE, knowledgeModel } from '../components/force/models'
 import { KgDetails } from '../components/kg/KgDetails'
-import { EDGE_LABEL, KIND, KIND_ORDER, title } from '../components/kg/kgStyle'
+import { KIND, KIND_ORDER, title } from '../components/kg/kgStyle'
 import { Button, EmptyState, Input, Toggle } from '../components/ui'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
-import { GraphKey, Swatch } from '../components/graph/GraphLegend'
+import { GraphKey, ShapeSwatch } from '../components/graph/GraphLegend'
 import { cn } from '../lib/cn'
 
 type Data = KgElement['data']
 
 const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Event', 'Thread']
-const short = (s: string, n = 26) => (s.length > n ? s.slice(0, n - 1) + '…' : s)
 
 export default function GraphPage() {
   const [params, setParams] = useSearchParams()
@@ -44,48 +43,17 @@ export default function GraphPage() {
   }, [data])
 
   // What is drawn: the chosen kinds; when messages are hidden, their edges are moved onto their conversation.
-  const { defs } = useMemo(() => {
-    const visible = (d: Data | undefined) =>
-      !!d && kinds.has(d.kind as KgKind) && (showOutdated || d.kind !== 'Assertion' || d.valid !== false)
-    const threadOf = new Map(edges.filter((e) => e.type === 'PART_OF').map((e) => [String(e.source), String(e.target)]))
-    const out: cytoscape.ElementDefinition[] = []
-    const linked = new Set<string>()
-    const edgeDefs: cytoscape.ElementDefinition[] = []
-    const seen = new Set<string>()
-    for (const e of edges) {
-      let s = String(e.source)
-      let t = String(e.target)
-      if (!kinds.has('Message')) {
-        if (e.type === 'PART_OF') continue
-        if (nodes.get(s)?.kind === 'Message') s = threadOf.get(s) ?? s
-        if (nodes.get(t)?.kind === 'Message') t = threadOf.get(t) ?? t
-      }
-      if (s === t || !visible(nodes.get(s)) || !visible(nodes.get(t))) continue
-      const id = `${s}|${e.type}|${t}`
-      if (seen.has(id)) continue
-      seen.add(id)
-      edgeDefs.push({ group: 'edges', data: { id, source: s, target: t, type: e.type, name: EDGE_LABEL[String(e.type)] ?? e.type } })
-      linked.add(s).add(t)
-    }
-    // A node with no visible connection is noise (e.g. equipment once sites are hidden); keep it only when selected.
-    for (const d of nodes.values()) {
-      if (!visible(d)) continue
-      if (!linked.has(d.id) && d.id !== selectedId) {
-        continue
-      }
-      out.push({
-        group: 'nodes',
-        data: {
-          id: d.id,
-          kind: d.kind,
-          color: KIND[d.kind as KgKind]?.color ?? '#999',
-          short: d.kind === 'Message' ? '' : short(title(d), 54),
-          expired: d.kind === 'Assertion' && d.valid === false,
-        },
-      })
-    }
-    return { defs: [...out, ...edgeDefs] }
-  }, [nodes, edges, kinds, showOutdated, selectedId])
+  const { fNodes, fLinks } = useMemo(
+    () =>
+      knowledgeModel(
+        nodes,
+        edges,
+        (d) => !!d && kinds.has(d.kind as KgKind) && (showOutdated || d.kind !== 'Assertion' || d.valid !== false),
+        kinds.has('Message'),
+        selectedId,
+      ),
+    [nodes, edges, kinds, showOutdated, selectedId],
+  )
 
   const matches = useMemo(() => {
     const ql = q.trim().toLowerCase()
@@ -166,7 +134,7 @@ export default function GraphPage() {
         <GraphKey
           items={KIND_ORDER.filter((k) => kinds.has(k)).map((k) => ({
             label: KIND[k].plural,
-            swatch: <Swatch color={KIND[k].color} radius={k === 'Person' ? 99 : 3} dashed={k === 'Class' || k === 'Site'} />,
+            swatch: <ShapeSwatch color={KIND[k].color} shape={KG_SHAPE[k].shape} />,
           }))}
         />
       }
@@ -180,10 +148,8 @@ export default function GraphPage() {
               action={<Button onClick={() => setRetry(retry + 1)}>Try again</Button>}
             />
           ) : !data ? (
-            <div role="status" className="flex h-full items-center justify-center text-sm text-muted">
-              Connecting the knowledge…
-            </div>
-          ) : defs.length === 0 ? (
+            <GraphLoading label="Connecting the knowledge…" />
+          ) : fNodes.length === 0 ? (
             <EmptyState
               icon={<Waypoints size={28} />}
               title={nodes.size ? 'No connections match these filters' : 'Your knowledge map starts with a conversation'}
@@ -194,7 +160,15 @@ export default function GraphPage() {
               }
             />
           ) : (
-            <KgCanvas defs={defs} selectedId={selectedId} matchIds={matches} onSelect={selectNode} />
+            <ForceCanvas
+              mode="knowledge"
+              nodes={fNodes}
+              links={fLinks}
+              selectedId={selectedId}
+              matchIds={matches}
+              onSelect={selectNode}
+              ariaLabel="Knowledge connections. Use Browse to select items with the keyboard."
+            />
           )}
         </>
       }

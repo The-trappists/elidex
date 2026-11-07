@@ -237,7 +237,7 @@ export function AgentTester() {
             <p className="text-[13px] text-muted">The target entity and knowledge used by the agent are highlighted in the graph.</p>
           </div>
           <div className="relative">
-            <AgentGraph targetId={result ? runEntity : entity} evidenceIds={result?.hits.map((hit) => hit.id) ?? []} />
+            <AgentGraph targetId={result ? runEntity : entity} evidenceIds={result?.hits.map((hit) => hit.id) ?? []} panelWidth={result ? 376 : 0} />
             <details open={Boolean(result)} className="group absolute right-3 top-3 z-10 w-[min(22rem,calc(100%-1.5rem))] overflow-hidden rounded-lg border border-line bg-surface/95 shadow-md backdrop-blur">
               <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-semibold [&::-webkit-details-marker]:hidden">
                 <ChevronDown size={15} className="shrink-0 text-muted transition-transform group-open:rotate-180" />

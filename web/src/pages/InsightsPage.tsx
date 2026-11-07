@@ -1,16 +1,16 @@
-// Insights: what the captured human knowledge reveals across conversations. Two kinds, one on each side of the map:
-//   left  - Shared root cause: separate problems at the same time that may come from one thing (multi-factor);
-//   right - Recurring issues: the same problem on the same equipment, again and again.
-// The chosen insight is drawn on the map in the middle (problems red, possible cause amber, the links between them lit).
-// Every cause is a hypothesis built from human reports, never a rule for the agent.
+// Insights: what the captured human knowledge reveals across conversations, in two kinds:
+//   Shared root cause - separate problems at the same time that may come from one thing (multi-factor);
+//   Recurring issues  - the same problem on the same equipment, again and again.
+// One map, one list beside it (a tab per kind). The chosen insight is drawn on the map: problems red,
+// possible cause amber, the links between them lit. Every cause is a hypothesis built from human reports.
 import { ChevronDown, ChevronRight, Download, GitMerge, Lightbulb, RefreshCw, Repeat } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Pattern, PatternReport } from '../api/types'
-import { GraphKey, LineSwatch, Swatch } from '../components/graph/GraphLegend'
-import { NetworkGraph } from '../components/graph/NetworkGraph'
-import { Button, IdChip, Toggle, toast } from '../components/ui'
+import { GraphKey, LineSwatch, ShapeSwatch, Swatch } from '../components/graph/GraphLegend'
+import { TopologyGraph } from '../components/force/TopologyGraph'
+import { Button, IdChip, Tabs, Toggle, toast } from '../components/ui'
 import { cn } from '../lib/cn'
 import { fmtDate } from '../lib/format'
 import { useSimNow } from '../lib/useNow'
@@ -50,29 +50,39 @@ export default function InsightsPage() {
   // The chosen insight; with none chosen, the map shows the first open one.
   const shown = all.find((p) => p.id === params.get('p')) ?? shared[0] ?? recurring[0] ?? null
   const select = (id: string) => setParams({ p: id }, { replace: true })
+  // A node clicked on the map, to look at its neighbourhood; choosing another insight clears it.
+  const [picked, setPicked] = useState<string | null>(null)
+  const [pickedFor, setPickedFor] = useState(shown?.id)
+  if (pickedFor !== shown?.id) {
+    setPickedFor(shown?.id)
+    setPicked(null)
+  }
   const focus = useMemo(
     () => (shown ? { problem: shown.elements, suspect: shown.suspects, links: shown.links } : null),
     [shown],
   )
 
+  // The list shows one kind at a time; it follows the chosen insight.
+  const [tab, setTab] = useState<'linked' | 'recurring'>(shown?.kind === 'recurring' ? 'recurring' : 'linked')
+  const [tabFor, setTabFor] = useState(shown?.id)
+  if (tabFor !== shown?.id) {
+    setTabFor(shown?.id)
+    if (shown) setTab(shown.kind === 'recurring' ? 'recurring' : 'linked')
+  }
+  const rows = tab === 'linked' ? shared : recurring
+
   return (
-    <div className="diagram-workspace overflow-auto lg:overflow-hidden">
+    <div className="diagram-workspace">
       <div className="diagram-heading flex-wrap">
         <div className="min-w-0">
           <h2 className="font-display text-2xl font-medium tracking-tight">Insights from the field</h2>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            What the team's reports reveal together: problems that may share one cause, and problems that keep coming back.
-            Every cause is a hypothesis to check.
+            Problems that may share one cause, and problems that keep coming back. Every cause is a hypothesis to check.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-semibold">{openCount ? `${openCount} open` : 'Nothing open'}</span>
           <Toggle checked={showResolved} onChange={setShowResolved} label={`Show resolved (${resolvedCount})`} />
-          {report && (
-            <span className="text-xs text-muted" title={`Same problem in other words: meaning check ${report.meaning}`}>
-              {report.meaning.startsWith('on') ? 'words + meaning' : 'words only'}
-            </span>
-          )}
           <Button size="sm" icon={<RefreshCw size={14} className={cn(loading && 'animate-spin')} />} onClick={load}>
             Recompute
           </Button>
@@ -84,87 +94,60 @@ export default function InsightsPage() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 overflow-hidden rounded-xl border border-line bg-surface md:grid-cols-2 lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)_minmax(260px,320px)]">
-        <Column
-          className="lg:border-r"
-          icon={<GitMerge size={16} className="text-warn" />}
-          title="Shared root cause"
-          hint="Separate problems at the same time, on equipment that shares a link, a site or a firmware. One thing may be behind all of them."
-          empty="No simultaneous problems with something in common right now."
-          rows={shared}
-          shown={shown}
-          onSelect={select}
-        />
-
-        <section className="order-first flex min-h-[380px] flex-col border-b border-line md:col-span-2 lg:order-none lg:col-span-1 lg:min-h-0 lg:border-b-0" aria-label="Network map">
-          <div className="min-w-0 border-b border-line px-3 py-2 text-xs text-muted">
-            {shown ? (
-              <>
-                On the map: <span className="font-medium text-text">{shown.headline}</span>
-              </>
-            ) : (
-              'Choose an insight to see it on the network.'
-            )}
-          </div>
+      <div className="diagram-body">
+        <section className="diagram-main" aria-label="Network map">
           <div className="diagram-canvas">
-            <NetworkGraph at={now} knowledge={false} focus={focus} selectedId={null} />
+            <TopologyGraph at={now} insight={focus} selectedId={picked} onSelect={setPicked} showKnowledge={false} />
+            {shown && (
+              <div className="pointer-events-none absolute left-3 top-3 z-[5] max-w-[min(28rem,calc(100%-5rem))] rounded-lg border border-line bg-surface/95 px-3 py-2 text-xs shadow-sm">
+                <span className="text-muted">{shown.kind === 'recurring' ? 'Recurring issue' : 'Shared root cause'}</span>
+                <span className="mt-0.5 block font-medium leading-snug">{shown.headline}</span>
+              </div>
+            )}
           </div>
           <div className="diagram-key">
             <GraphKey
               items={[
-                { label: 'Problem reported', swatch: <Swatch color="var(--bad)" radius={99} /> },
-                { label: 'Possible common cause', swatch: <Swatch color="var(--warn)" radius={99} /> },
+                { label: 'Problem reported', swatch: <ShapeSwatch shape="circle" color="var(--bad)" dot /> },
+                { label: 'Possible common cause', swatch: <ShapeSwatch shape="circle" color="var(--warn)" dot /> },
                 { label: 'Link between them', swatch: <LineSwatch color="var(--bad)" /> },
                 { label: 'Site', swatch: <Swatch color="var(--g-link)" radius={4} dashed /> },
-                { label: 'Other equipment', swatch: <Swatch color="var(--g-element)" radius={99} fill /> },
               ]}
             />
           </div>
         </section>
 
-        <Column
-          className="border-t border-line md:border-l md:border-t-0"
-          icon={<Repeat size={16} className="text-bad" />}
-          title="Recurring issues"
-          hint="The same problem on the same equipment, reported 3 times or more. A quick fix that does not hold."
-          empty="No problem has come back 3 times."
-          rows={recurring}
-          shown={shown}
-          onSelect={select}
-        />
+        <aside className="diagram-details insights-list flex flex-col" aria-label="Insights">
+          <div className="sticky top-0 z-10 border-b border-line bg-surface px-4 pt-2">
+            <Tabs<'linked' | 'recurring'>
+              className="border-b-0"
+              value={tab}
+              onChange={setTab}
+              items={[
+                { id: 'linked', label: 'Shared root cause', count: shared.length },
+                { id: 'recurring', label: 'Recurring', count: recurring.length },
+              ]}
+            />
+          </div>
+          <p className="flex gap-2 px-4 pt-3 text-xs leading-relaxed text-muted">
+            {tab === 'linked' ? <GitMerge size={14} className="mt-0.5 shrink-0 text-warn" /> : <Repeat size={14} className="mt-0.5 shrink-0 text-bad" />}
+            {tab === 'linked'
+              ? 'Separate problems at the same time, on equipment that shares a link, a site or a firmware.'
+              : 'The same problem on the same equipment, reported 3 times or more.'}
+          </p>
+          <div className="divide-y divide-line px-2 pb-2">
+            {rows.map((p) => (
+              <Row key={p.id} p={p} active={shown?.id === p.id} onSelect={() => select(p.id)} />
+            ))}
+            {!rows.length && (
+              <p className="px-2 py-6 text-sm text-muted">
+                {tab === 'linked' ? 'No simultaneous problems with something in common right now.' : 'No problem has come back 3 times.'}
+              </p>
+            )}
+          </div>
+        </aside>
       </div>
     </div>
-  )
-}
-
-function Column(props: {
-  className?: string
-  icon: ReactNode
-  title: string
-  hint: string
-  empty: string
-  rows: Pattern[]
-  shown: Pattern | null
-  onSelect: (id: string) => void
-}) {
-  const { className, icon, title, hint, empty, rows, shown, onSelect } = props
-  return (
-    <section className={cn('flex min-h-0 min-w-0 flex-col border-line', className)} aria-label={title}>
-      <div className="border-b border-line p-4">
-        <h3 className="flex items-center gap-2 font-semibold">
-          {icon}
-          {title}
-          <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted">{rows.length}</span>
-        </h3>
-        <p className="mt-1 text-xs leading-relaxed text-muted">{hint}</p>
-      </div>
-      <div className="min-h-0 flex-1 divide-y divide-line overflow-auto px-2">
-        {rows.map((p) => (
-          <Row key={p.id} p={p} active={shown?.id === p.id} onSelect={() => onSelect(p.id)} />
-        ))}
-        {!rows.length && <p className="px-2 py-6 text-sm text-muted">{empty}</p>}
-      </div>
-    </section>
   )
 }
 
