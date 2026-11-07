@@ -142,7 +142,7 @@ export type StageStatus = 'pending' | 'running' | 'done' | 'skipped' | 'error'
 export type Severity = 'minor' | 'major' | 'critical'
 export type IncidentStatus = 'open' | 'resolved'
 export type LinkKind = 'fiber' | 'microwave' | 'backhaul'
-export type LlmPurpose = 'extract' | 'generate_scenario' | 'agent' | 'check'
+export type LlmPurpose = 'extract' | 'generate_scenario' | 'agent' | 'check' | 'critic' | 'judge'
 export type JsonMode = 'json_object' | 'json_schema' | 'prompt'
 
 export const STAGES: StageName[] = ['listen', 'understand', 'link', 'store', 'reconcile']
@@ -327,7 +327,8 @@ export interface LlmCall {
   sim_time: string | null
   purpose: LlmPurpose
   thread_id: string | null
-  provider: string
+  provider: string // "primary" | "fallback" | "critic" | "critic_fallback"
+  role: string | null // "primary" | "critic"
   base_url: string
   model: string
   json_mode: JsonMode | null

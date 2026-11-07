@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
 from .. import config
+from . import loop_agents
 from .processor import install_llm_sinks
 from .routes import emit_clock, router
 from .simulator import Simulator
@@ -52,6 +53,7 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         remove_sinks = install_llm_sinks(wb, loop)
         wb.clock.start()
         wb.processor.start()
+        loop_agents.install_all()
 
         app.state.simulator = Simulator(wb)
         app.state.slack = None

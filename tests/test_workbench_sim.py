@@ -35,7 +35,7 @@ def _thread(scenario) -> Thread:
 
 def test_every_scenario_file_validates_and_is_sorted():
     files = list((config.WORKBENCH_SEED_DIR / "scenarios").glob("*.json"))
-    assert len(SEED.scenarios) == len(files) == 23
+    assert len(SEED.scenarios) == len(files) == 24
     assert [s.origin for s in SEED.scenarios][:2] == ["elisa", "elisa"]
     for s in SEED.scenarios:
         assert s.description and s.tags

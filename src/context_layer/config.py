@@ -47,6 +47,20 @@ def _reasoning_effort(env_name: str, base_url: str) -> str:
 LLM_REASONING_EFFORT = _reasoning_effort("LLM_REASONING_EFFORT", LLM_BASE_URL)
 LLM_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_FALLBACK_REASONING_EFFORT", LLM_FALLBACK_BASE_URL)
 
+# Optional critic provider (second opinion on extracted items; a different model family from the extractor
+# decorrelates errors). Unset: the critic silently uses the primary chain. LLM_CRITIC_FALLBACK_* is tried
+# when the critic fails (429, 5xx, timeout).
+LLM_CRITIC_BASE_URL = os.getenv("LLM_CRITIC_BASE_URL", "")
+LLM_CRITIC_API_KEY = os.getenv("LLM_CRITIC_API_KEY", "")
+LLM_CRITIC_MODEL = os.getenv("LLM_CRITIC_MODEL", "")
+LLM_CRITIC_JSON_MODE = os.getenv("LLM_CRITIC_JSON_MODE", LLM_JSON_MODE)
+LLM_CRITIC_FALLBACK_BASE_URL = os.getenv("LLM_CRITIC_FALLBACK_BASE_URL", "")
+LLM_CRITIC_FALLBACK_API_KEY = os.getenv("LLM_CRITIC_FALLBACK_API_KEY", "")
+LLM_CRITIC_FALLBACK_MODEL = os.getenv("LLM_CRITIC_FALLBACK_MODEL", "")
+LLM_CRITIC_FALLBACK_JSON_MODE = os.getenv("LLM_CRITIC_FALLBACK_JSON_MODE", LLM_CRITIC_JSON_MODE)
+LLM_CRITIC_REASONING_EFFORT = _reasoning_effort("LLM_CRITIC_REASONING_EFFORT", LLM_CRITIC_BASE_URL)
+LLM_CRITIC_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_CRITIC_FALLBACK_REASONING_EFFORT", LLM_CRITIC_FALLBACK_BASE_URL)
+
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
 
 # Optional Neo4j mirror of the knowledge graph (`ctx graph push`, docs/knowledge-graph.md).
@@ -66,6 +80,14 @@ def llm_configured() -> bool:
 
 def llm_fallback_configured() -> bool:
     return _key_set(LLM_FALLBACK_API_KEY) and bool(LLM_FALLBACK_MODEL)
+
+
+def llm_critic_configured() -> bool:
+    return _key_set(LLM_CRITIC_API_KEY) and bool(LLM_CRITIC_MODEL)
+
+
+def llm_critic_fallback_configured() -> bool:
+    return _key_set(LLM_CRITIC_FALLBACK_API_KEY) and bool(LLM_CRITIC_FALLBACK_MODEL)
 
 
 # ---------------------------------------------------------------- workbench
