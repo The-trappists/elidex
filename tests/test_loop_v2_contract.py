@@ -53,7 +53,7 @@ def test_new_models_and_defaults():
     assert job.flags == [] and job.critic == [] and job.judge == []
     assert len(STAGES) == 5
     s = Settings()
-    assert not (s.use_critic or s.use_judge or s.use_outcome_loop)
+    assert s.use_critic and s.use_judge and s.use_outcome_loop
     assert SettingsPatch(use_critic=True).model_dump(exclude_none=True) == {"use_critic": True}
     assert RerunBody().from_stage == "link"
     assert OperatorEdit(summary="x").action is None

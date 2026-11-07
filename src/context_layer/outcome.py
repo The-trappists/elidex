@@ -186,7 +186,7 @@ def _apply(wb: Workbench, ctx: HookContext, app, outcome: str, quote: str, reaso
             kind = "low_confidence"
         wb.add_flag(
             ReviewFlag(
-                id="", kind=kind, thread_id=thread.id, job_id=ctx.job.id, assertion_id=a.id, message=text,
+                id="", kind=kind, thread_id=thread.id, job_id=ctx.job.id, assertion_id=a.id, item_topic=a.topic, message=text,
                 detail=f"{reason} ({method})", created_at=datetime.now(),
             ),
             refresh=True,

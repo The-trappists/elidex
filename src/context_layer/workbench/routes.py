@@ -31,6 +31,7 @@ from .contracts import (
     LlmCheckResult,
     NewThreadBody,
     OperatorEdit,
+    UndoBody,
     Persona,
     PipelineJob,
     PostMessageBody,
@@ -324,13 +325,15 @@ async def assertion_history(assertion_id: str, request: Request) -> list[Asserti
 
 
 @router.post("/assertions/{assertion_id}/undo")
-async def undo_assertion_edit(assertion_id: str, request: Request) -> dict:
-    """Undo the latest edit not undone yet. Returns {"assertion": ContextAssertion, "edit": AssertionEdit (undone)}."""
+async def undo_assertion_edit(assertion_id: str, request: Request, body: UndoBody | None = None) -> dict:
+    """Undo the latest edit not undone yet, or exactly `body.edit_id` (409 when that is not safe).
+    Returns {"assertion": ContextAssertion, "edit": AssertionEdit (undone)}."""
     wb = get_wb(request)
     try:
-        edit = wb.undo_edit(assertion_id)
-    except KeyError:
-        raise HTTPException(404, f"unknown assertion {assertion_id}") from None
+        edit = wb.undo_edit(assertion_id, body.edit_id if body else None)
+    except KeyError as e:
+        what = "assertion" if e.args[0] == assertion_id else "edit"
+        raise HTTPException(404, f"unknown {what} {e.args[0]}") from None
     except ValueError as e:
         raise HTTPException(409, str(e)) from None
     return {"assertion": wb.store.assertions[assertion_id].model_dump(mode="json"), "edit": edit.model_dump(mode="json")}

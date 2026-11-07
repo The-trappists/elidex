@@ -74,7 +74,7 @@ export interface FlagContext {
 /**
  * Tie a flag to what it is about. ReviewFlag has no item_topic yet, so the finding is found
  * through the assertion's topic first, then by its topic text inside the flag message.
- * TODO(L4 rewire): use flag.item_topic when the backend sends it.
+ * flag.item_topic (sent by the backend) is used first; the old matching is the fallback.
  */
 export function flagContext(flag: ReviewFlag, jobs: PipelineJob[], threads: Record<string, LiveThread>, assertions: Record<string, ContextAssertion>): FlagContext {
   const assertion = flag.assertion_id ? assertions[flag.assertion_id] : undefined
@@ -82,6 +82,7 @@ export function flagContext(flag: ReviewFlag, jobs: PipelineJob[], threads: Reco
   const thread = threads[flag.thread_id]
   const msg = norm(flag.message)
   const item =
+    (flag.item_topic ? job?.items.find((i) => i.topic === flag.item_topic) : undefined) ||
     (assertion && job?.items.find((i) => i.topic === assertion.topic)) ||
     job?.items.find((i) => norm(i.topic).length > 3 && msg.includes(norm(i.topic)))
 

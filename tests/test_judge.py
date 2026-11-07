@@ -59,6 +59,13 @@ def mk(topic, summary, who, level="stated", at=T0, action=None, type_="workaroun
     )
 
 
+@pytest.fixture(autouse=True)
+def _llm_key(monkeypatch):
+    from context_layer import config
+
+    monkeypatch.setattr(config, "llm_configured", lambda: True)  # the agents stay quiet without a key
+
+
 def put(store, a):
     stored, is_new = store.add_assertion(a)
     assert is_new
