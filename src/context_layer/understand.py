@@ -31,6 +31,8 @@ Rules:
 - type "invalidation": a message says earlier knowledge is no longer true (fixed by firmware, new lock...). Reuse the topic of the knowledge it closes.
 - conditions: add a machine check {{field, op, value}} only for these observable fields: {fields}. Otherwise check is null.
 - cited_seq: the seq numbers of the messages that carry the knowledge.
+- evidence_quote: one short quote copied verbatim (same words, no paraphrase) from a cited message that supports the item; null if none.
+- scope.qualifier: when the speakers describe the scope with a vague word ("old", "legacy", "older units", "the new ones") instead of exact values, copy that word as written and do not turn it into a year range or model you cannot read in the text; otherwise null.
 - Element types use snake_case, e.g. transmission_node, radio_unit.
 
 Reply with JSON only, matching this JSON schema:

@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, ChevronDown, ChevronRight, Circle, MinusCircle } from 'lucide-react'
+import { AlertTriangle, Check, ChevronDown, ChevronRight, Circle, Eye, MinusCircle } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { ContextAssertion, LiveThread, PipelineJob, StageName, StageStatus } from '../../api/types'
@@ -10,6 +10,8 @@ import { assertionHref, TypeBadge, Validity } from '../knowledge/bits'
 import { ErrorNote, IdChip } from '../ui'
 import { extractorLabel } from './jobUtils'
 import { ItemCard } from './ItemCard'
+import { ItemEditor } from './ItemEditor'
+import { CriticVerdicts, JudgeVerdicts } from './Verdicts'
 
 const ICON: Record<StageStatus, ReactNode> = {
   pending: <Circle size={15} className="text-muted/50" />,
@@ -44,15 +46,16 @@ export function JobSteps({
 }) {
   const failed = job.stages.find((s) => s.status === 'error')?.stage
   const [open, setOpen] = useState<StageName>(failed ?? 'understand')
+  const [editing, setEditing] = useState<number | null>(null)
   const ev = job.eval
   const cited = new Set(job.items.flatMap((i) => i.cited_seq))
 
   const summary: Record<StageName, string> = {
     listen: plural(thread?.messages.length ?? 0, 'message'),
-    understand: plural(job.items.length, 'finding'),
+    understand: plural(job.items.length, 'finding') + (job.critic.some((v) => v.verdict === 'reject') ? ` · ${job.critic.filter((v) => v.verdict === 'reject').length} rejected` : ''),
     link: job.notes.length ? plural(job.notes.length, 'note') : 'no remark',
     store: `${job.assertion_ids.length} saved${job.removed_assertion_ids.length ? ` · ${job.removed_assertion_ids.length} replaced` : ''}`,
-    reconcile: job.events.length ? plural(job.events.length, 'event') : 'nothing to change',
+    reconcile: job.judge.filter((v) => v.verdict !== 'unrelated').length ? plural(job.judge.filter((v) => v.verdict !== 'unrelated').length, 'verdict') : job.events.length ? plural(job.events.length, 'event') : 'nothing to change',
   }
 
   const body: Record<StageName, ReactNode> = {
@@ -92,10 +95,12 @@ export function JobSteps({
         ) : (
           <div className="space-y-2">
             {job.items.map((it, i) => (
-              <ItemCard key={i} item={it} active={hoverItem === i} onHover={onHoverItem ? (on) => onHoverItem(on ? i : null) : undefined} />
+              <ItemCard key={i} item={it} active={hoverItem === i} onHover={onHoverItem ? (on) => onHoverItem(on ? i : null) : undefined} verdict={job.critic.find((v) => v.item_topic === it.topic)} onEdit={() => setEditing(i)} />
             ))}
           </div>
         )}
+        <Label>Second check: why each finding was kept, lowered or rejected</Label>
+        <CriticVerdicts job={job} thread={thread} />
         {ev && (
           <>
             <Label>Compared with the expected answer</Label>
@@ -164,12 +169,21 @@ export function JobSteps({
         ) : (
           <Empty>No older knowledge was closed, and no conflict was found.</Empty>
         )}
+        <Label>Comparison with stored knowledge: why</Label>
+        <JudgeVerdicts job={job} />
       </>
     ),
   }
 
   return (
     <div>
+      {job.flags.some((f) => !f.dismissed) && (
+        <Link to={`/review?thread=${encodeURIComponent(job.thread_id)}`} className="mb-3 flex items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs transition-colors hover:border-accent">
+          <Eye size={14} className="text-muted" />
+          <span>{plural(job.flags.filter((f) => !f.dismissed).length, 'thing')} from this run could use a look.</span>
+          <span className="ml-auto font-medium text-accent">Open</span>
+        </Link>
+      )}
       {job.error && <ErrorNote className="mb-3" explained={explainError(job.error)!} raw={job.error} />}
       <ol className="divide-y divide-line rounded-lg border border-line">
         {job.stages.map((s, i) => {
@@ -200,6 +214,7 @@ export function JobSteps({
           )
         })}
       </ol>
+      <ItemEditor job={job} index={editing} onClose={() => setEditing(null)} />
     </div>
   )
 }

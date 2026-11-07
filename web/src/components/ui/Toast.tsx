@@ -3,18 +3,25 @@ import { create } from 'zustand'
 import { cn } from '../../lib/cn'
 
 type Kind = 'success' | 'error' | 'info'
+export interface ToastOptions {
+  /** A button inside the toast, e.g. Undo. Clicking it closes the toast. */
+  action?: { label: string; onClick: () => void }
+  /** How long the toast stays, in ms. */
+  duration?: number
+}
 interface ToastItem {
   id: number
   kind: Kind
   text: string
+  action?: ToastOptions['action']
 }
 
-const useToasts = create<{ items: ToastItem[]; push: (kind: Kind, text: string) => void; close: (id: number) => void }>((set) => ({
+const useToasts = create<{ items: ToastItem[]; push: (kind: Kind, text: string, opts?: ToastOptions) => void; close: (id: number) => void }>((set) => ({
   items: [],
-  push: (kind, text) => {
+  push: (kind, text, opts) => {
     const id = Date.now() + Math.random()
-    set((s) => ({ items: [...s.items, { id, kind, text }] }))
-    setTimeout(() => set((s) => ({ items: s.items.filter((t) => t.id !== id) })), kind === 'error' ? 7000 : 3500)
+    set((s) => ({ items: [...s.items, { id, kind, text, action: opts?.action }] }))
+    setTimeout(() => set((s) => ({ items: s.items.filter((t) => t.id !== id) })), opts?.duration ?? (kind === 'error' ? 7000 : 3500))
   },
   close: (id) => set((s) => ({ items: s.items.filter((t) => t.id !== id) })),
 }))
@@ -22,7 +29,7 @@ const useToasts = create<{ items: ToastItem[]; push: (kind: Kind, text: string) 
 /** toast.success('Saved'), toast.error(err), toast.info('...') from anywhere. */
 export const toast = {
   success: (text: string) => useToasts.getState().push('success', text),
-  info: (text: string) => useToasts.getState().push('info', text),
+  info: (text: string, opts?: ToastOptions) => useToasts.getState().push('info', text, opts),
   error: (err: unknown) => useToasts.getState().push('error', err instanceof Error ? err.message : String(err)),
 }
 
@@ -51,7 +58,18 @@ export function Toaster() {
           <div key={t.id} className="flex items-start gap-2 rounded-md border border-line bg-surface p-3 text-sm shadow-[var(--shadow-md)] animate-slide-in">
             <Icon size={16} className={cn('mt-0.5 shrink-0', COLOR[t.kind])} />
             <span className="flex-1 break-words">{t.text}</span>
-            <button onClick={() => close(t.id)} className="text-muted hover:text-text">
+            {t.action && (
+              <button
+                onClick={() => {
+                  t.action?.onClick()
+                  close(t.id)
+                }}
+                className="rounded-md px-1.5 text-sm font-medium text-accent hover:bg-accent-soft"
+              >
+                {t.action.label}
+              </button>
+            )}
+            <button onClick={() => close(t.id)} aria-label="Dismiss notification" className="text-muted hover:text-text">
               <X size={14} />
             </button>
           </div>

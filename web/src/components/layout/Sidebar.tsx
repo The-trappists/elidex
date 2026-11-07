@@ -1,10 +1,11 @@
-import { Activity, BookOpenCheck, Bot, Database, LogOut, MessagesSquare, Network, Presentation, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { Activity, BookOpenCheck, Bot, Database, Eye, LogOut, MessagesSquare, Network, Presentation, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { recentProblems } from '../llm/status'
 import { useWallNow } from '../../lib/useNow'
 import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
+import { useOpenFlagCount } from '../../store/review'
 
 export interface NavItem {
   to: string
@@ -20,6 +21,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: 'Observe',
     items: [
       { to: '/overview', label: 'Overview', title: 'Overview', subtitle: 'Open incidents and what the pipeline did recently', icon: Activity, end: true },
+      { to: '/review', label: 'Needs a look', title: 'Needs a look', subtitle: 'What the loop was unsure about, dropped or changed. Nothing here waits for approval', icon: Eye },
       { to: '/conversations', label: 'Conversations', title: 'Conversations', subtitle: 'Read a conversation, then follow it through each pipeline step', icon: MessagesSquare },
       { to: '/network', label: 'Network', title: 'Network', subtitle: 'Equipment and the knowledge attached to it', icon: Network },
       { to: '/graph', label: 'Graph', title: 'Knowledge graph', subtitle: 'People, messages, knowledge and equipment, and how they connect', icon: Waypoints },
@@ -41,10 +43,11 @@ export const ALL_NAV = NAV_GROUPS.flatMap((g) => g.items)
 export function Sidebar() {
   const openIncidents = useLive((s) => Object.values(s.incidents).filter((i) => i.status === 'open').length)
   const llmCalls = useLive((s) => s.llmCalls)
+  const needLook = useOpenFlagCount()
   const now = useWallNow()
   const llmErrors = useMemo(() => recentProblems(llmCalls, now.getTime()).length, [llmCalls, now])
   // Only things that need action get a badge.
-  const badge: Record<string, number> = { '/overview': openIncidents, '/llm': llmErrors }
+  const badge: Record<string, number> = { '/overview': openIncidents, '/llm': llmErrors, '/review': needLook }
   return (
     <nav className="flex w-52 shrink-0 flex-col border-r border-line bg-surface">
       <div className="flex h-14 items-center gap-2.5 px-4">
@@ -75,7 +78,7 @@ export function Sidebar() {
                 >
                   <Icon size={16} />
                   {label}
-                  {!!badge[to] && <span className="ml-auto rounded bg-bad/10 px-1.5 text-xs font-medium tabular-nums text-bad">{badge[to]}</span>}
+                  {!!badge[to] && <span className={cn('ml-auto rounded px-1.5 text-xs font-medium tabular-nums', to === '/review' ? 'bg-surface-3 text-text' : 'bg-bad/10 text-bad')}>{badge[to]}</span>}
                 </NavLink>
               ))}
             </div>

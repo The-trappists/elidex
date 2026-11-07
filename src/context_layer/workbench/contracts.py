@@ -11,7 +11,17 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from ..models import ContextAssertion, ElementClass, ExtractionResult, ExtractedItem, Message, NetworkElement, Site
+from ..models import (
+    Condition,
+    ContextAssertion,
+    ElementClass,
+    ExtractionResult,
+    ExtractedItem,
+    Message,
+    NetworkElement,
+    Site,
+    TrustLevel,
+)
 
 Origin = Literal["elisa", "synthetic", "generated", "manual", "slack"]
 # Origins removed by "DELETE /api/data/generated".
@@ -25,8 +35,14 @@ StageStatus = Literal["pending", "running", "done", "skipped", "error"]
 Severity = Literal["minor", "major", "critical"]
 IncidentStatus = Literal["open", "resolved"]
 LinkKind = Literal["fiber", "microwave", "backhaul"]
-LlmPurpose = Literal["extract", "generate_scenario", "agent", "check"]
+LlmPurpose = Literal["extract", "generate_scenario", "agent", "check", "critic", "judge"]
 JsonMode = Literal["json_object", "json_schema", "prompt"]
+
+FlagKind = Literal[
+    "abstained", "low_confidence", "conflict", "over_reach", "critic_rejected", "judge_decision", "operator_edit"
+]
+CriticVerdictKind = Literal["keep", "downgrade", "reject"]
+JudgeVerdictKind = Literal["supports", "contradicts", "supersedes", "unrelated"]
 
 STAGES: list[str] = ["listen", "understand", "link", "store", "reconcile"]
 
@@ -164,6 +180,73 @@ class EvalResult(BaseModel):
     binding_diffs: list[str] = Field(default_factory=list)  # human-readable notes
 
 
+class ReviewFlag(BaseModel):
+    """Something the loop wants the operator to see. Informational: nothing waits for a click."""
+
+    id: str
+    kind: FlagKind
+    thread_id: str
+    job_id: str
+    assertion_id: str | None = None
+    item_topic: str | None = None  # topic of the extracted item or assertion this is about, when known
+    message: str  # plain language
+    detail: str | None = None
+    created_at: datetime  # wall
+    dismissed: bool = False
+
+
+class AssertionEdit(BaseModel):
+    """One operator change to an assertion. `before` and `after` hold only the fields the edit touched
+    (summary, action, avoid, conditions, valid_to, closed_by, trust, sources, link_notes), as JSON."""
+
+    id: str  # "edit_0001"
+    assertion_id: str
+    ts: datetime  # wall
+    note: str | None = None
+    before: dict[str, Any]
+    after: dict[str, Any]
+    undone: bool = False
+
+
+ApplicationOutcome = Literal["pending", "worked", "failed", "unclear"]
+
+
+class RuleApplication(BaseModel):
+    """The agent applied a piece of knowledge to a case and said so in a thread. The next human messages of
+    that thread decide the outcome (passive outcome loop, nobody is asked anything)."""
+
+    id: str  # "app_0001"
+    assertion_id: str
+    entity_id: str
+    thread_id: str
+    applied_at: datetime  # sim
+    message_seq: int | None = None  # seq of the agent message that announced it
+    outcome: ApplicationOutcome = "pending"
+    outcome_quote: str | None = None  # verbatim from the human message that decided it
+    outcome_reason: str | None = None
+    outcome_at: datetime | None = None  # sim
+    method: Literal["llm", "heuristic", "observation"] | None = None  # observation: settled by POST /agent/outcome
+
+
+class CriticVerdict(BaseModel):
+    """Critic pass inside understand: one verdict per extracted item."""
+
+    item_topic: str
+    verdict: CriticVerdictKind
+    reason: str
+    evidence_found: bool  # the evidence quote was found in a cited message
+    confidence_after: float | None = None
+
+
+class JudgeVerdict(BaseModel):
+    """Judge pass inside reconcile: how a new assertion relates to an existing one."""
+
+    new_assertion_id: str
+    other_assertion_id: str
+    verdict: JudgeVerdictKind
+    reason: str
+
+
 class PipelineJob(BaseModel):
     id: str  # "job_0001"
     thread_id: str
@@ -178,6 +261,9 @@ class PipelineJob(BaseModel):
     events: list[str] = Field(default_factory=list)  # lifecycle: closed, conflict, merged
     llm_call_ids: list[str] = Field(default_factory=list)
     eval: EvalResult | None = None
+    flags: list[ReviewFlag] = Field(default_factory=list)
+    critic: list[CriticVerdict] = Field(default_factory=list)
+    judge: list[JudgeVerdict] = Field(default_factory=list)
     error: str | None = None
 
 
@@ -198,7 +284,8 @@ class LlmCall(BaseModel):
     sim_time: datetime | None = None
     purpose: LlmPurpose
     thread_id: str | None = None
-    provider: str  # "primary" or "fallback"
+    provider: str  # "primary" or "fallback"; "critic" / "critic_fallback" for the critic role
+    role: str | None = None  # "primary" or "critic"; None on old trace lines
     base_url: str
     model: str
     json_mode: JsonMode | None = None
@@ -225,6 +312,9 @@ class Settings(BaseModel):
     slack_mirror: bool = True
     auto_sim: bool = False  # start a random scenario every auto_every_s wall seconds
     auto_every_s: float = 45
+    use_critic: bool = True  # critic pass inside understand
+    use_judge: bool = True  # judge pass inside reconcile
+    use_outcome_loop: bool = True  # outcome feedback on assertions
     # read-only, filled by the backend
     llm_configured: bool = False
     llm_model: str | None = None
@@ -272,6 +362,8 @@ EventType = Literal[
     "scenarios.changed",  # data: {"scenarios": [...], "runs": [...]}
     "slack.status",  # data: {"connected": bool, "channel": str | None, "error": str | None}
     "llm.call",  # data: LlmCall
+    "review.flag",  # data: ReviewFlag (created, refreshed, dismissed or undismissed)
+    "application.upserted",  # data: RuleApplication (created or outcome decided)
     "state.reset",  # data: {} -> clients refetch GET /api/state
     "log",  # data: {"level": "info" | "warning" | "error", "text": str}
 ]
@@ -339,6 +431,9 @@ class AgentRunResult(BaseModel):
     hits: list[dict[str, Any]]  # {"matched_via": str, **assertion}
     skipped: list[dict[str, Any]]  # {"assertion_id": str, "reason": str}
     verdict: dict[str, Any] | None = None  # {"decision", "action", "steps", "reasons"}
+    # outcome loop (only when settings.use_outcome_loop is on and knowledge was applied)
+    thread_id: str | None = None  # the thread the agent message was posted in
+    applications: list[dict[str, Any]] = Field(default_factory=list)  # RuleApplication JSON
     cited_assertion_ids: list[str] = Field(default_factory=list)
     evidence_confidence: float | None = None
 
@@ -366,6 +461,9 @@ class SettingsPatch(BaseModel):
     slack_mirror: bool | None = None
     auto_sim: bool | None = None
     auto_every_s: float | None = None
+    use_critic: bool | None = None
+    use_judge: bool | None = None
+    use_outcome_loop: bool | None = None
 
 
 class LlmCheckResult(BaseModel):
@@ -375,3 +473,25 @@ class LlmCheckResult(BaseModel):
     ping_ok: bool
     modes: dict[str, dict[str, Any]]  # mode -> {"ok": bool, "latency_ms": int, "error": str | None, "items": int}
     recommended_mode: JsonMode | None = None
+
+
+class RerunBody(BaseModel):
+    items: list[ExtractedItem] | None = None  # replacement items (skips understand)
+    model: str | None = None  # LLM model override for this run
+    from_stage: Literal["link", "store"] = "link"
+
+
+class UndoBody(BaseModel):
+    edit_id: str | None = None  # undo this edit; omitted: the latest one not undone
+
+
+class OperatorEdit(BaseModel):
+    """Fields an operator may change on an assertion. Omitted fields stay as they are."""
+
+    summary: str | None = None
+    action: str | None = None
+    avoid: list[str] | None = None
+    conditions: list[Condition] | None = None
+    valid_to: datetime | None = None
+    trust_level: TrustLevel | None = None
+    note: str | None = None

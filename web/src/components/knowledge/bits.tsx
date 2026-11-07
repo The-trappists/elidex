@@ -1,5 +1,5 @@
 // Small shared pieces for assertions: badges, validity text, binding chips.
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, UserPen } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { AssertionType, Binding, ContextAssertion, TrustLevel } from '../../api/types'
 import { fmtDate } from '../../lib/format'
@@ -13,6 +13,16 @@ export const TypeBadge = ({ type }: { type: AssertionType }) => (
   </Badge>
 )
 export const TrustBadge = ({ level }: { level: TrustLevel }) => <Badge className={TRUST_STYLE[level].cls}>{TRUST_STYLE[level].label}</Badge>
+
+export const isOperatorEdited = (a: ContextAssertion) => a.sources.some((s) => s.source === 'operator')
+
+/** Marks knowledge an operator changed by hand. */
+export const OperatorChip = ({ title = 'An operator edited this knowledge' }: { title?: string }) => (
+  <Badge className="bg-surface-2 text-muted" title={title}>
+    <UserPen size={11} />
+    Operator
+  </Badge>
+)
 
 export const ASSERTION_TYPES: AssertionType[] = ['workaround', 'access', 'fact', 'invalidation']
 export const TRUST_LEVELS: TrustLevel[] = ['hunch', 'stated', 'verified']

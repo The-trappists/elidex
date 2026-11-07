@@ -236,6 +236,6 @@ def test_agent_outcome_flags_failing_knowledge(client):
     assert client.post("/api/agent/outcome", json=body).json()["recorded"] is None  # nothing observed: no verdict
     for day in (20, 21):
         r = client.post("/api/agent/outcome", json=body | {"worked": False, "at": f"2026-10-{day}T09:00:00"}).json()
-    assert r["track_record"] == "contested"
+    assert r["track_record"]["status"] == "contested"
     hits = client.post("/api/agent/run", json={"entity_id": "TRN-117", "at": "2026-10-22T08:00:00"}).json()["hits"]
-    assert next(h for h in hits if h["id"] == aid)["track_record"] == "contested"
+    assert next(h for h in hits if h["id"] == aid)["track_record"]["status"] == "contested"
