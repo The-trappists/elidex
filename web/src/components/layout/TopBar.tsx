@@ -1,6 +1,6 @@
-import { ChevronDown, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
+import { ChevronDown, LogOut, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
 import { cn } from '../../lib/cn'
 import { fmtDateTime, toNaiveIso } from '../../lib/format'
@@ -140,6 +140,14 @@ export function TopBar() {
           {dark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <ScenarioLauncher />
+        <Link
+          to="/"
+          className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:bg-surface-2 hover:text-text"
+          title="Exit to ElidEx home page"
+        >
+          <LogOut size={14} />
+          <span>Exit</span>
+        </Link>
       </div>
     </header>
   )
