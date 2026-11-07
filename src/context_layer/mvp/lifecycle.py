@@ -6,11 +6,31 @@ kept with a conflict flag. No "is this still true?" prompt to a human.
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..models import ContextAssertion
     from ..store import ContextStore
+
+# "firmware 3.8 leaks memory" (the version a rule is about); "3.9 fixes the leak", "release 4.2" (the version a fix ships).
+_AFFECTED = re.compile(r"\b(?:firmware|fw|software|release|version)\s+v?(\d+(?:\.\d+)+)\b", re.IGNORECASE)
+_SHIPPED = re.compile(r"\b(?:firmware|fw|software|release|version)\s+v?(\d+(?:\.\d+)+)\b|\b(\d+(?:\.\d+)+)\s+(?:fixes|solves|resolves|corrects)\b",
+                      re.IGNORECASE)
+
+
+def _version(text: str | None, pattern: re.Pattern) -> tuple[int, ...] | None:
+    """The first version named, compared as numbers ("4.10" > "4.2"); None when the text names none."""
+    m = pattern.search(text or "")
+    return tuple(int(x) for x in next(g for g in m.groups() if g).split(".")) if m else None
+
+
+def fix_predates(old: ContextAssertion, new: ContextAssertion) -> bool:
+    """True when the invalidation ships a version that is not newer than the firmware the rule is about: "3.9 fixes
+    the leak" does not close "firmware 3.9 leaks memory". When either side names no version, nothing is known."""
+    affected = _version(" ".join(filter(None, (old.fact, old.summary, old.diagnosis))), _AFFECTED)
+    shipped = _version(" ".join(filter(None, (new.fact, new.summary))), _SHIPPED)
+    return affected is not None and shipped is not None and shipped <= affected
 
 
 def _norm(text: str | None) -> str:
@@ -50,6 +70,9 @@ def reconcile(store: ContextStore, new: ContextAssertion) -> list[str]:
                     f"{old.id} kept open: {new.id} covers {len(old_reach) - len(left)} of its {len(old_reach)} "
                     f"elements, not {', '.join(left[:4])}{', ...' if len(left) > 4 else ''}"
                 )
+                continue
+            if fix_predates(old, new):
+                events.append(f"{old.id} kept open: {new.id} ships a version that is not newer than the one {old.id} is about")
                 continue
             old.valid_to = new.valid_from
             old.closed_by = new.id

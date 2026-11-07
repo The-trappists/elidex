@@ -13,7 +13,8 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from . import config, llm
-from .mvp import conditions, feedback, guard
+from .mvp import conditions, feedback, guard, relevance
+from .mvp.relevance import RelevanceReport
 from .store import ContextHit, ContextStore
 
 
@@ -37,7 +38,17 @@ class AgentReport:
     hits: list[ContextHit]
     skipped: list[tuple[ContextHit, str]] = field(default_factory=list)
     checks: dict[str, conditions.ConditionReport] = field(default_factory=dict)  # assertion id -> check status
+    relevance: dict[str, RelevanceReport] = field(default_factory=dict)  # assertion id -> problem match
     recommendation: str = ""
+
+    def matching(self, strict: bool = False) -> list[ContextHit]:
+        """Hits whose rule is about the case's problem (all hits when relevance was not assessed). When no rule
+        matches, the description did not say what the problem is in words the knowledge base uses, so all hits are
+        returned, as without relevance: a lost answer is worse than noise. `strict` returns nothing instead."""
+        if not self.relevance:
+            return self.hits
+        hits = [h for h in self.hits if self.relevance[h.assertion.id].status != "other problem"]
+        return hits if hits or strict else self.hits
     verdict: guard.Verdict | None = None
 
 
@@ -107,7 +118,8 @@ def cited_assertion_ids(recommendation: str, hits: list[ContextHit]) -> list[str
     return [h.assertion.id for h in hits if h.assertion.id in found]
 
 
-def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.ConditionReport]) -> str:
+def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.ConditionReport],
+         matches: dict[str, RelevanceReport] | None = None) -> str:
     context = []
     for h in hits:
         item = h.assertion.model_dump(mode="json", exclude={"link_notes", "outcomes"})
@@ -115,6 +127,8 @@ def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.Condit
         item["track_record"] = tr.to_dict()
         if (c := checks.get(h.assertion.id)) is not None:
             item |= {"check_status": c.status, "to_read": c.to_read}
+        if matches and (r := matches.get(h.assertion.id)) is not None:
+            item |= {"problem_match": r.status, "problem_match_score": r.score}
         context.append(item)
     user = json.dumps({"case": case.model_dump(mode="json"), "human_context": context}, ensure_ascii=False)
     return llm.complete(AGENT_PROMPT, user)
@@ -155,7 +169,12 @@ def run_agent(
     use_conditions: bool = False,
     use_guard: bool = False,
     use_llm: bool = False,
+    use_relevance: bool = False,
+    relevance_threshold: float = relevance.DEFAULT_THRESHOLD,
 ) -> AgentReport:
+    """`use_relevance` tags each kept rule with whether it is about the case's problem (mvp/relevance.py). Nothing
+    is dropped: rules about another problem stay in `hits`, after the matching ones, and `matching()` lists the
+    rules the agent should act on."""
     retrieved = store.get_context(case.entity_id, at=case.at)
     report = AgentReport(case=case, hits=[])
     observations = _case_observations(case) if use_conditions else case.observations
@@ -171,7 +190,17 @@ def run_agent(
             report.skipped.append((hit, f"{assertion.topic}: condition not met: " + "; ".join(cr.failed)))
         else:
             report.hits.append(hit)
-    report.recommendation = _llm(case, report.hits, report.checks) if use_llm else _template(case, report.hits, report.checks)
+    if use_relevance:
+        index = relevance.index_for(store)
+        el = store.inventory.resolve_element(case.entity_id)
+        site = store.inventory.sites.get(el.site_id) if el and el.site_id else None
+        report.relevance = index.assess_all([h.assertion for h in report.hits], case.description, relevance_threshold,
+                                            ignore=[site.name] if site else [])
+        report.hits.sort(key=lambda h: report.relevance[h.assertion.id].status == "other problem")  # stable: matches first
+    if use_llm:
+        report.recommendation = _llm(case, report.hits, report.checks, report.relevance)
+    else:
+        report.recommendation = _template(case, report.matching(), report.checks)
     if use_guard and case.planned_action:
         report.verdict = guard.check(
             store,
