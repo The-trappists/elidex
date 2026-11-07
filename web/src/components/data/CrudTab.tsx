@@ -43,8 +43,9 @@ export function CrudTab<T extends { id: string; origin: Origin }>({
     cell: (r) => (
       <div className="flex justify-end gap-0.5">
         {rowActions?.(r)}
-        {onEdit && <IconButton title="Edit" onClick={() => onEdit(r)}><Pencil size={14} /></IconButton>}
-        <IconButton title="Delete" className="hover:!text-bad" onClick={() => setDel(r)}><Trash2 size={14} /></IconButton>
+        {onEdit && <IconButton aria-label="Edit" onClick={() => onEdit(r)}><Pencil size={14} /></IconButton>}
+        <span aria-hidden className="mx-1 my-1.5 w-px bg-line" />
+        <IconButton aria-label="Delete" className="hover:!text-bad hover:!bg-bad/10" onClick={() => setDel(r)}><Trash2 size={14} /></IconButton>
       </div>
     ),
   }

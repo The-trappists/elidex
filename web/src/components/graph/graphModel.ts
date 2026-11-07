@@ -80,7 +80,7 @@ export function buildGraph(g: GraphInput): BuiltGraph {
         id: nodeIds.element(e.id),
         rawId: e.id,
         kind: 'element',
-        label: e.id,
+        label: `${e.id}\n${e.type.replace(/_/g, ' ')}`,
         etype: e.type,
         parent,
         incident: openIncident.has(e.id),
@@ -115,7 +115,7 @@ export function buildGraph(g: GraphInput): BuiltGraph {
       const color = TYPE_STYLE[a.type].hex
       const aid = nodeIds.assertion(a.id)
       defs.push({
-        data: { id: aid, rawId: a.id, kind: 'assertion', label: '', title: a.topic, color, faded: !valid },
+        data: { id: aid, rawId: a.id, kind: 'assertion', label: a.topic.replace(/-/g, ' ').replace(/^./, (ch) => ch.toUpperCase()), title: a.topic, color, faded: !valid },
         classes: 'assertion',
       })
       for (const b of a.bound_to) {

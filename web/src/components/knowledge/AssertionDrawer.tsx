@@ -10,7 +10,7 @@ import { AssertionEditor } from './AssertionEditor'
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mt-5">
-    <h4 className="mb-1.5 text-xs font-medium text-muted">{title}</h4>
+    <h4 className="mb-1.5 text-[13px] font-medium text-muted">{title}</h4>
     {children}
   </section>
 )
@@ -55,7 +55,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>
             {isOperatorEdited(a) && (
               <button
-                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[13px] text-muted transition-colors hover:bg-surface-2 hover:text-text"
                 onClick={() => setEditing('history')}
               >
                 <History size={13} /> Edited by operator. View history
@@ -63,9 +63,9 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             )}
           </div>
           <p>{a.summary}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted">
-            <TrustBadge level={a.trust.level} />
-            <span>confidence {Math.round(a.confidence * 100)}%</span>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-muted">
+            <TrustBadge level={a.trust.level} labelled />
+            <span title="How sure the system is of its reading, after the second check and linking">Confidence {Math.round(a.confidence * 100)}%</span>
             <span>
               valid {fmtDateTime(a.valid_from)} → {a.valid_to ? fmtDateTime(a.valid_to) : 'still valid'}
             </span>
@@ -79,9 +79,9 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             <Section title="Conditions">
               <ul className="space-y-1">
                 {a.conditions.map((c, i) => (
-                  <li key={i} className="rounded-md border border-line px-2.5 py-1.5 text-xs">
+                  <li key={i} className="rounded-md border border-line px-2.5 py-1.5 text-[13px]">
                     {c.text}
-                    <div className="mt-0.5 font-mono text-xs text-muted">{c.check ? `check: ${c.check.field} ${c.check.op} ${JSON.stringify(c.check.value)}` : 'no machine check (read by humans only)'}</div>
+                    <div className="mt-0.5 font-mono text-[13px] text-muted">{c.check ? `check: ${c.check.field} ${c.check.op} ${JSON.stringify(c.check.value)}` : 'no machine check (read by humans only)'}</div>
                   </li>
                 ))}
               </ul>
@@ -97,7 +97,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
           )}
 
           <Section title="Trust">
-            <div className="text-xs">
+            <div className="text-[13px]">
               Stated by <b>{a.trust.stated_by}</b>
               {a.trust.role && <span className="text-muted"> ({a.trust.role})</span>}
               {a.trust.evidence && <div className="mt-1 italic text-muted">"{a.trust.evidence}"</div>}
@@ -106,7 +106,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
 
           {(a.conflicts_with.length > 0 || a.closed_by) && (
             <Section title="Relations">
-              <div className="space-y-1 text-xs">
+              <div className="space-y-1 text-[13px]">
                 {a.conflicts_with.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-warn">Conflicts with</span>
@@ -126,7 +126,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
           )}
 
           <Section title={`Sources (${a.sources.length})`}>
-            <ul className="space-y-1 text-xs">
+            <ul className="space-y-1 text-[13px]">
               {a.sources.map((s, i) => (
                 <li key={i} className="flex items-center gap-2">
                   <Link className="text-accent hover:underline" to={threadHref(s.file)}>{s.file}</Link>
@@ -138,7 +138,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
 
           {a.link_notes.length > 0 && (
             <Section title="Link notes">
-              <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted">{a.link_notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+              <ul className="list-disc space-y-0.5 pl-5 text-[13px] text-muted">{a.link_notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
             </Section>
           )}
 

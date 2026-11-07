@@ -2,6 +2,7 @@ import { AlertTriangle, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLive } from '../../store/live'
+import { IconButton } from '../ui'
 
 const RECENT_MS = 15 * 60 * 1000
 
@@ -42,9 +43,9 @@ export function LlmErrorBanner() {
       <Link to="/llm" className="shrink-0 text-xs font-medium text-bad hover:underline">
         LLM log
       </Link>
-      <button className="shrink-0 rounded p-1 text-muted hover:bg-surface-2 hover:text-text" onClick={() => setDismissed(last.id)} aria-label="Dismiss">
+      <IconButton className="shrink-0" onClick={() => setDismissed(last.id)} aria-label="Dismiss">
         <X size={14} />
-      </button>
+      </IconButton>
     </div>
   )
 }

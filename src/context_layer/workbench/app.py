@@ -15,6 +15,7 @@ from .. import config
 from . import loop_agents
 from .processor import install_llm_sinks
 from .routes import emit_clock, router
+from .sources import router as sources_router
 from .simulator import Simulator
 from .slack_bridge import SlackBridge
 from .state import Workbench
@@ -85,6 +86,7 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         allow_headers=["*"],
     )
     app.include_router(router)
+    app.include_router(sources_router)
     _serve_web(app)
     return app
 

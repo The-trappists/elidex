@@ -1,3 +1,4 @@
+import { PageIntro } from '../components/layout/PageIntro'
 import { CheckCircle2, Download, FlaskConical, ScrollText, XCircle } from 'lucide-react'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
@@ -180,6 +181,7 @@ export default function LlmLogPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 p-5">
+      <PageIntro title="Understand what the AI did" description="Follow how conversations were read, what succeeded, and what needs attention." />
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-8 gap-y-1 px-1">
         <Figure value={stats.total} label="requests since the server started" />
         <Figure value={stats.total ? `${stats.okPct}%` : "—"} label="went through" />

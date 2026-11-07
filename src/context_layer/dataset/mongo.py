@@ -18,12 +18,12 @@ from .source import load_alias_map, thread_doc
 BATCH = 1000
 
 
-def connect():
+def connect(timeout_ms: int = 10_000, socket_timeout_ms: int | None = None):
     from pymongo import MongoClient
 
     if not config.mongo_configured():
         raise SystemExit("MONGODB_URI is not set. Copy the line from .env.example into .env and fill it in (docs/dataset.md).")
-    client = MongoClient(config.MONGODB_URI, serverSelectionTimeoutMS=10_000)
+    client = MongoClient(config.MONGODB_URI, serverSelectionTimeoutMS=timeout_ms, socketTimeoutMS=socket_timeout_ms)
     return client[config.MONGODB_DB]
 
 

@@ -1,3 +1,4 @@
+import { PageIntro } from '../components/layout/PageIntro'
 import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -42,32 +43,33 @@ export default function KnowledgePage() {
 
   return (
     <div className="flex h-full flex-col">
+      <PageIntro title="What the network remembers" description="Find advice, check its source and validity, or try it against a similar case." />
       <div className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-4 py-2.5">
         <Tabs<Tab>
           value={tab}
           onChange={setTab}
           items={[
-            { id: 'table', label: 'Table', count: rows.length },
+            { id: 'table', label: 'Knowledge library', count: rows.length },
             { id: 'timeline', label: 'Timeline' },
-            { id: 'agent', label: 'Agent tester' },
+            { id: 'agent', label: 'Try a case' },
           ]}
         />
         {tab !== 'agent' && (
           <>
             <div className="relative ml-2 w-56">
               <Search size={14} className="absolute left-2.5 top-2.5 text-muted" />
-              <Input className="pl-8" placeholder="Search knowledge" value={q} onChange={(e) => setQ(e.target.value)} />
+              <Input className="pl-8" aria-label="Search knowledge" placeholder="Search knowledge" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <Select className="w-36" value={type} onChange={(e) => setType(e.target.value as AssertionType | '')}>
+            <Select aria-label="Knowledge type" className="w-36" value={type} onChange={(e) => setType(e.target.value as AssertionType | '')}>
               <option value="">All types</option>
               {ASSERTION_TYPES.map((t) => <option key={t} value={t}>{TYPE_STYLE[t].label}</option>)}
             </Select>
-            <Select className="w-36" value={trust} onChange={(e) => setTrust(e.target.value as TrustLevel | '')}>
-              <option value="">All trust</option>
+            <Select aria-label="Reliability" className="w-36" value={trust} onChange={(e) => setTrust(e.target.value as TrustLevel | '')}>
+              <option value="">Any reliability</option>
               {TRUST_LEVELS.map((t) => <option key={t} value={t}>{TRUST_STYLE[t].label}</option>)}
             </Select>
-            <Select className="w-52" value={thread} onChange={(e) => setThread(e.target.value)}>
-              <option value="">All source threads</option>
+            <Select aria-label="Source conversation" className="w-52" value={thread} onChange={(e) => setThread(e.target.value)}>
+              <option value="">Any conversation</option>
               {sourceThreads.map((t) => <option key={t} value={t}>{threads[t]?.subject ?? t}</option>)}
             </Select>
             <Toggle checked={validNow} onChange={setValidNow} label="Valid now" />

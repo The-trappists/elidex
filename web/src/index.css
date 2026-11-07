@@ -8,17 +8,18 @@
  * rather than raw colors, so light and dark stay consistent.
  */
 :root {
+  color-scheme: light;
   /* Neutral scale: one hue, flat surfaces. */
-  --bg: #f7f7f8;
+  --bg: #f3f5f8;
   --surface: #ffffff;
   --surface-2: #f1f2f4;
   --surface-3: #e6e8ec;
   --line: #e3e5e9;
-  --text: #15171c;
+  --text: #202c42;
   --muted: #646a78;
 
   /* One accent. Everything interactive uses it; nothing else is "brand". */
-  --accent: #2f5bea;
+  --accent: #315ce7;
   --accent-2: #2f5bea;
   --accent-soft: #eaf0ff;
   --on-accent: #ffffff;
@@ -57,9 +58,20 @@
   --g-assertion: #7c5cd6;
   --g-incident: #c0262d;
   --g-link: #9aa1b2;
+
+  /* knowledge graph: one hue per kind of item */
+  --k-knowledge: #315ce7;
+  --k-person: #0f8a7e;
+  --k-equipment: #4b5568;
+  --k-site: #8a93a6;
+  --k-group: #7c5cd6;
+  --k-event: #c27a12;
+  --k-conversation: #c2417a;
+  --k-message: #a3a9b6;
 }
 
 .dark {
+  color-scheme: dark;
   --bg: #0e0f12;
   --surface: #15171c;
   --surface-2: #1b1e25;
@@ -96,11 +108,22 @@
   --g-element: #c9cedb;
   --g-site: #1c1f27;
   --g-class: #a78bfa;
+  --g-assertion: #a78bfa;
   --g-link: #4a5163;
+
+  --k-knowledge: #7b9bff;
+  --k-person: #34c7b4;
+  --k-equipment: #aab2c2;
+  --k-site: #6b7385;
+  --k-group: #a78bfa;
+  --k-event: #f0b046;
+  --k-conversation: #f07aa8;
+  --k-message: #5c6375;
 }
 
 @theme inline {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --color-bg: var(--bg);
@@ -157,8 +180,42 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
+
+/* Form controls follow the theme (native pickers, selects, scrollbars). */
+select {
+  appearance: none;
+  background-color: var(--surface);
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 0.85rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23646a78' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+.dark select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b92a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select option { background: var(--surface); color: var(--text); }
+input[type='datetime-local'],
+input[type='date'],
+input[type='time'] {
+  accent-color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+input[type='datetime-local']::-webkit-calendar-picker-indicator,
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 150ms;
+}
+input[type='datetime-local']::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+/* Hover / focus transitions everywhere, one duration. */
+button, a, input, select, textarea, [role='button'], [role='menuitem'] {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+button:not(:disabled):active { transform: translateY(0.5px); }
 
 .text-gradient {
   background: var(--brand-gradient);
@@ -191,7 +248,7 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
-. { animation: page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-page-in { animation: page-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 @keyframes drawer-in {
   from { transform: translateX(32px); opacity: 0; }
@@ -201,6 +258,27 @@ body {
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 .animate-fade-in { animation: fade-in 0.2s ease-out both; }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+.animate-fade-out { animation: fade-out 0.16s ease-in both; }
+
+/* Exit animations for modals and drawers (see usePresence). */
+@keyframes slide-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(6px) scale(0.985); } }
+.animate-slide-out { animation: slide-out 0.16s ease-in both; }
+@keyframes drawer-out { from { transform: none; opacity: 1; } to { transform: translateX(32px); opacity: 0; } }
+.animate-drawer-out { animation: drawer-out 0.18s ease-in both; }
+
+/* Items entering a list (messages, flags, cards, rows). Add style="--i: n" to stagger, capped at 8. */
+@keyframes item-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+.animate-item-in { animation: item-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(min(var(--i, 0), 8) * 30ms); }
+
+/* New knowledge or flags: a brief accent wash that fades out. */
+@keyframes flash-in {
+  from { background-color: color-mix(in srgb, var(--accent) 16%, transparent); }
+  to { background-color: transparent; }
+}
+.animate-flash-in { animation: flash-in 1.4s ease-out both; }
 
 @keyframes shimmer {
   from { background-position: -200% 0; }
@@ -230,4 +308,93 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Context workspace: quiet surfaces, a connected path, generous reading space. */
+.app-sidebar { width: 224px; }
+.font-display { font-family: var(--font-display); }
+.skip-link { position: fixed; top: -5rem; left: 1rem; z-index: 100; padding: .75rem 1rem; background: var(--surface); border: 2px solid var(--accent); border-radius: .5rem; }
+.skip-link:focus { top: 1rem; }
+.flow-stop + .flow-stop { border-left: 1px solid var(--line); }
+.overview-feeds { flex-basis: 340px; }
+.conversation-tabs { display: none; }
+.clock-toggle { display: none; }
+@media (max-width: 1439px) {
+  .clock-toggle { display: inline-flex; }
+  .simulation-controls { display: none; }
+  .simulation-controls[data-open="true"] { display: flex; order: 10; width: 100%; }
+  .conversation-tabs { display: flex; }
+  .conversation-list { width: 260px; }
+  .conversation-pipeline { display: none; }
+  .conversation-layout[data-pane='pipeline'] .conversation-pipeline { display: block; width: min(100%, 540px); flex: 1; }
+  .conversation-layout[data-pane='pipeline'] .conversation-messages { display: none; }
+}
+@media (max-width: 1100px) {
+  .app-sidebar { width: 76px; }
+  .sidebar-brand { padding: 0; justify-content: center; }
+  .sidebar-brand > div, .nav-label, .nav-group-label, .sidebar-footer { display: none; }
+  .sidebar-links { padding: 16px 10px; }
+  .sidebar-links a { justify-content: center; position: relative; min-height: 44px; padding: 12px; }
+  .sidebar-links a > span:last-child:not(.nav-label) { position: absolute; top: 0; right: 0; font-size: 9px; }
+}
+@media (max-width: 767px) {
+  .app-topbar { padding: 12px; gap: 10px; }
+  .topbar-controls { margin-left: 0; width: 100%; gap: 8px; }
+  .topbar-controls > a { display: none; }
+  .topbar-controls > [role='status'] { margin-right: auto; }
+
+  .overview-page { padding: 16px; gap: 20px; }
+  .overview-feeds { display: flex; flex-direction: column; flex: none; }
+  .overview-feeds > div { min-height: 280px; max-height: 500px; }
+  .flow-stop + .flow-stop { border-left: 0; border-top: 1px solid var(--line); }
+  .flow-stop { padding: 14px 16px; }
+  .conversation-list, .conversation-messages, .conversation-pipeline { display: none; }
+  .conversation-layout[data-pane='threads'] .conversation-list { display: block; width: 100%; }
+  .conversation-layout[data-pane='messages'] .conversation-messages { display: flex; }
+  .conversation-layout[data-pane='pipeline'] .conversation-pipeline { display: block; width: 100%; }
+  .conversation-tabs { overflow-x: auto; }
+  .conversation-tabs button { padding: 10px 6px; font-size: 12px; }
+}
+
+.landing { scroll-behavior: smooth; }
+.story-connector { height: 58px; border-left: 1px solid var(--line); margin-left: 18px; display: flex; align-items: center; padding-left: 20px; }
+.story-connector span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .landing { scroll-behavior: auto; } }
+
+@media (max-width: 767px) {
+  .thread-heading { flex-basis: calc(100% - 48px); }
+  .conversation-messages > header > button { margin-top: 4px; }
+}
+
+/* Graph explorers: a canvas that always fits its box, next to a readable, keyboard-accessible item list. */
+.diagram-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: 24px; gap: 20px; }
+.diagram-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-shrink: 0; }
+.diagram-body { display: grid; grid-template-columns: minmax(0, 1fr) clamp(260px, 26vw, 340px); flex: 1; min-height: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.diagram-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
+.diagram-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--line); }
+.diagram-toolbar:empty { display: none; }
+.diagram-canvas { position: relative; flex: 1; min-height: 260px; background-color: var(--bg); }
+.diagram-details { min-width: 0; overflow: auto; border-left: 1px solid var(--line); overscroll-behavior: contain; }
+.diagram-key { padding: 10px 14px; border-top: 1px solid var(--line); }
+.diagram-view-switch { display: none; gap: 6px; }
+.graph-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--muted); }
+.graph-key li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.graph-caption { flex-shrink: 0; padding: 6px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); }
+@media (max-width: 1100px) {
+ .diagram-workspace { padding: 16px; gap: 12px; }
+ .diagram-body { grid-template-columns: minmax(0, 1fr); }
+ .diagram-view-switch { display: flex; }
+ .diagram-heading { flex-wrap: wrap; }
+ .diagram-details { display: none; border: 0; }
+ .diagram-workspace[data-view='list'] .diagram-main, .diagram-workspace[data-view='details'] .diagram-main { display: none; }
+ .diagram-workspace[data-view='list'] .diagram-details, .diagram-workspace[data-view='details'] .diagram-details { display: block; }
+}
+@media (max-width: 600px) {
+ .diagram-workspace { padding: 10px; overflow: auto; }
+ .diagram-workspace[data-view='map'] .diagram-canvas { min-height: max(360px, 58vh); }
+ .diagram-heading h2 { font-size: 21px; }
+ .diagram-heading p { font-size: 12px; }
+ .diagram-body { min-height: 360px; }
+ .diagram-toolbar > div:first-child { flex-basis: 100%; }
+ .graph-key { gap: 4px 12px; font-size: 10px; }
 }

@@ -77,6 +77,8 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 | `POST /sim/generate` | `GenerateBody` | `Scenario` (stored, origin `generated`); 503 if no LLM, 422 if the output is invalid |
 | `POST /elements`, `PUT /elements/{id}`, `DELETE /elements/{id}` | `WbElement` | `WbElement` / 204 |
 | same for `/sites` (`WbSite`), `/links` (`TopologyLink`), `/personas` (`Persona`) | | |
+
+`PUT` on these collections replaces the whole object: fields omitted from the body are reset to their default (usually `null`), not kept. Send the full object (`id` and `origin` are kept from the stored one). `POST` and `PUT` answer 422 when an element's `site_id` is not a known site, or when a link's `a` or `b` is not a known element (the element `type` stays free text). Only the HTTP layer checks; the seed and the Slack bridge write directly.
 | `POST /threads` | `NewThreadBody` | `LiveThread` (origin `manual`) |
 | `POST /threads/{id}/messages` | `PostMessageBody` | `Message` |
 | `POST /threads/{id}/process` | | 202, job runs now |
@@ -109,7 +111,8 @@ The `/graph/*` views are rebuilt on each call from the live store and live threa
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |
 | `DELETE /data/generated` | | `{removed: {kind: count}}`, then emits `state.reset` |
 | `GET /data/export` | | the full state JSON (attachment) |
-| `POST /data/import` | the export JSON | 204, then emits `state.reset` |
+| `POST /data/import` | the export JSON | 204, then emits `state.reset`. 422 when an element's `site_id` or a link's end is unknown (same rules as `POST /elements` and `/links`). The optional key `process_on_import` (thread ids) is processed right away, as the seed is at first start |
+| `POST /data/load-dataset` | `{sites=40 (9-150), threads=300 (0-1000), seed=42}` | the sample summary (counts, `connected_components`). Builds a connected sample of the company dataset on the fly (`DATASET_DIR`, else `out/dataset/tiny`, generated in 2 s when missing) and replaces the state like an import. 422 for a dataset over 500k threads (use the CLI); the Data page button "Load company dataset" calls it |
 | `GET /settings`, `PUT /settings` | `SettingsPatch` | `Settings` |
 | `GET /slack/status` | | `{connected, channel, error}` |
 | `GET /llm/calls?purpose=&thread_id=&limit=` | | `LlmCall[]`, newest first, read from the JSONL |
@@ -173,6 +176,25 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 - a sink that publishes `llm.call` (thread-safe).
 
 `LLMExtractor.last_traces` gives the call ids to put in `job.llm_call_ids`. API keys are never traced.
+
+### Human activity from the sources (`workbench/sources.py`)
+
+Read on demand for one element, never from the Workbench's own threads. Three endpoints, so one failing source never blocks the others. Every answer has `source` (`files`, `atlas`, `tiger`, `workbench`), `status` (`ok`, `not_configured`, `error`, `timeout`) and `detail`; when a cloud source fails and the files can answer, `source` is `files` and `fallback_from` says why. No endpoint raises: cloud calls run in a thread with short timeouts (4 s connect, 5 s query; 6 s overall), and a file scan is cut after 8 s.
+
+| Method and path | Returns | Source |
+| --- | --- | --- |
+| `GET /sources` | what is configured (no network call) | config only |
+| `GET /sources/elements/{id}/threads?limit=&offset=` | `{total, has_more, items[{id, subject, started_at, n_messages, authors, preview[3], in_workbench}]}`, newest first, limit 1-50 | Atlas `threads.mentions` index if `MONGODB_URI`, else a scan of the dataset files (cached per element) |
+| `GET /sources/elements/{id}/freshness` | `{last_discussed, days_since, messages, active_days, by_month[{month, messages, people}]}`; `days_since` counts from the **simulated** now | Tiger `daily_mentions` + `activity` if `TIGER_DATABASE_URL`, else computed on the files, same shape |
+| `GET /sources/similar?q=&entity=&limit=` | `{items[{id, topic, summary, score, trust}], mode}` | Atlas `$vectorSearch` (embeddings from `EMBEDDING_MODEL`) if `MONGODB_URI`; else, or when Atlas fails, an **offline** ranking of the Workbench's own assertions by hashed words (finds similar wording, not meaning) |
+
+The files source is `DATASET_DIR` (default `out/dataset/demo`), else `out/dataset/tiny`; with none, the status is `not_configured` with the command to generate one. The existing core endpoints `GET /similar` and `GET /freshness/{id}` (api.py) stay as they were.
+
+UI: the element panel of the Network page has a "Human activity" section (summary sentence, messages per month, expandable threads with a message preview and an "Open conversation" button for threads the Workbench holds, "Similar knowledge" with a free-text query). Each block has loading, empty, not-configured and error (with Retry) states.
+
+### Company dataset sample
+
+`uv run ctx dataset export-workbench out/dataset/tiny [--sites 40 --threads 300 --out out/workbench-sample.json --seed 42]` writes an export file (loadable with Import or `POST /data/import`): a connected sub-network grown from the Elisa seed by walking links (TRN-042 and its hub stay), the people who write, a thread mix (knowledge 30 %, hard negatives 15 %, noise naming sub-network elements 35 %, other noise; never a thread naming an element outside the sample; none after the sim start), the true facts of those threads linked into assertions, the hand-written scenarios and the seed threads (processed on load). Deterministic for the same dataset, options and seed. With the default 40 sites, `tiny` gives about 160 elements and 147 links, which the Network page draws without lag. Never use `large` as the Workbench source of truth: only the small sample goes in.
 
 ## Seed data (`data/workbench/`)
 

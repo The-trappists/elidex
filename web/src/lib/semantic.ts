@@ -14,6 +14,13 @@ export const TRUST_STYLE: Record<TrustLevel, { label: string; cls: string }> = {
   verified: { label: 'Verified', cls: 'bg-ok/10 text-ok' },
 }
 
+/** Trust is how the knowledge was established. It is separate from confidence, which is how sure the system is. */
+export const TRUST_HELP: Record<TrustLevel, string> = {
+  hunch: 'Trust: a guess or a hedge. Not the same as confidence.',
+  stated: 'Trust: an expert stated it. Not the same as confidence.',
+  verified: 'Trust: a later message reported that it worked. Not the same as confidence, which is how sure the system is of its reading.',
+}
+
 export const SOURCE_STYLE: Record<SourceKind, { label: string; cls: string; hex: string }> = {
   teams: { label: 'Teams', cls: 'bg-surface-2 text-muted', hex: '#5b5fc7' },
   email: { label: 'Email', cls: 'bg-surface-2 text-muted', hex: '#0ea5e9' },

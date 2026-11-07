@@ -6,6 +6,7 @@ import asyncio
 import json
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -28,6 +29,7 @@ from .contracts import (
     IncidentSpec,
     LiveThread,
     LlmCall,
+    LoadDatasetBody,
     LlmCheckResult,
     NewThreadBody,
     OperatorEdit,
@@ -181,11 +183,22 @@ async def generate(body: GenerateBody, request: Request) -> Scenario:
 # ---------------------------------------------------------------- inventory and people
 
 
+def _check_refs(wb: Workbench, kind: str, body) -> None:
+    """422 on dangling references: an element's site, a link's two ends. Only the HTTP layer checks."""
+    if kind == "elements" and body.site_id is not None and body.site_id not in wb.sites:
+        raise HTTPException(422, f"unknown site {body.site_id}")
+    if kind == "links":
+        for end in (body.a, body.b):
+            if end not in wb.elements:
+                raise HTTPException(422, f"unknown element {end}")
+
+
 def _crud(path: str, kind: str, model: type, label: str) -> None:
     async def create(body, request: Request):
         wb = get_wb(request)
         if body.id in getattr(wb, kind):
             raise HTTPException(409, f"{label} {body.id} already exists")
+        _check_refs(wb, kind, body)
         body.origin = "manual"
         wb.upsert_item(kind, body)
         return body
@@ -195,6 +208,7 @@ def _crud(path: str, kind: str, model: type, label: str) -> None:
         old = getattr(wb, kind).get(item_id)
         if old is None:
             raise HTTPException(404, f"unknown {label} {item_id}")
+        _check_refs(wb, kind, body)
         body.id, body.origin = item_id, old.origin
         wb.upsert_item(kind, body)
         return body
@@ -640,6 +654,47 @@ async def data_import(request: Request) -> Response:
     except Exception as e:  # noqa: BLE001
         raise HTTPException(422, f"invalid export file: {e}") from e
     return Response(status_code=204)
+
+
+MAX_ONTHEFLY_THREADS = 500_000  # scanning more than the demo scale takes too long for a button: use the CLI
+
+
+def dataset_root() -> Path:
+    """The dataset the Workbench samples: DATASET_DIR, else out/dataset/tiny (generated in 2 s when missing)."""
+    for root in (config.DATASET_DIR, config.OUT_DIR / "dataset" / "tiny"):
+        if (root / "manifest.json").exists():
+            return root
+    from ..dataset.build import generate
+
+    root = config.OUT_DIR / "dataset" / "tiny"
+    generate(root, "tiny", seed=42, workers=2, log=lambda *_: None)
+    return root
+
+
+def build_sample(body: LoadDatasetBody) -> tuple[dict, str]:
+    from ..dataset.bench import read_manifest
+    from ..dataset.workbench_export import export_workbench
+
+    root = dataset_root()
+    n = read_manifest(root)["conversations"]["threads"]
+    if n > MAX_ONTHEFLY_THREADS:
+        raise ValueError(f"{root.name} has {n:,} threads: too big to sample from a button. Run `ctx dataset export-workbench {root}` and import the file.")
+    return export_workbench(root, n_sites=body.sites, n_threads=body.threads, seed=body.seed), root.name
+
+
+@router.post("/data/load-dataset")
+async def data_load_dataset(body: LoadDatasetBody, request: Request) -> dict:
+    """Replace the state with a connected sample of the company dataset (`ctx dataset export-workbench`, on the fly).
+    The hand-written scenarios and Elisa's seed stay; the network, people, threads and true facts come from the dataset."""
+    wb = get_wb(request)
+    try:
+        data, name = await asyncio.to_thread(build_sample, body)
+        wb.replace_state(data)
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+    except OSError as e:
+        raise HTTPException(409, f"dataset unavailable: {e}") from e
+    return {**data["sample"], "dataset": name}
 
 
 @router.get("/settings")

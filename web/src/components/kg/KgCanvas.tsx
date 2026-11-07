@@ -1,11 +1,13 @@
 // Cytoscape canvas for the knowledge graph. Elements are diffed in place; the layout re-runs only
-// when the set of visible nodes changes, from hash-seeded positions so it looks the same on each visit.
+// when the visible nodes or the box orientation change. The view always fits the box: no hand zooming.
 import cytoscape from 'cytoscape'
-import fcose from 'cytoscape-fcose'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { exploreGraph } from '../graph/exploreGraph'
+import { capacity, fitAll, leafPositions, place, STATIC_VIEW, useBoxSize } from '../graph/viewport'
+import { knowledgeLayout } from './knowledgeLayout'
+import { KIND } from './kgStyle'
+import type { KgKind } from '../../api/types'
 import { kgStyle } from './kgStyle'
-
-cytoscape.use(fcose)
 
 const hash = (s: string) => {
   let h = 0
@@ -13,18 +15,16 @@ const hash = (s: string) => {
   return h
 }
 
-export interface KgCanvasHandle {
-  fit: () => void
-}
+/** Cytoscape wraps only at spaces: give long IDs like `teams/2025-05/s004` places to break. */
+const breakable = (label: string) => label.replace(/\S{18,}/g, (word) => word.replace(/([/_])/g, '$1 '))
 
 export function KgCanvas({
-  defs,
+  defs: allDefs,
   selectedId,
   matchIds,
   targetHighlightId,
   evidenceIds = [],
   onSelect,
-  handle,
 }: {
   defs: cytoscape.ElementDefinition[]
   selectedId: string | null
@@ -32,18 +32,32 @@ export function KgCanvas({
   targetHighlightId?: string | null
   evidenceIds?: string[]
   onSelect: (id: string | null) => void
-  handle?: React.MutableRefObject<KgCanvasHandle | null>
 }) {
   const host = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
-  const nodeKey = useRef('')
+  const shownRef = useRef(false)
+  const [layoutError, setLayoutError] = useState(false)
+  const size = useBoxSize(host)
+  // Flow left to right on wide boxes, top to bottom on tall or narrow ones.
+  const vertical = size.w < 640 || size.h > size.w * 1.1
+  // As many items as stay readable in this box; the nearest connections of the focus come first.
+  const limit = capacity(size.w, size.h, 20000, 4, 40, 3)
+  // Each layout layer holds mostly one kind; keep a layer within the box at a readable zoom.
+  const perKind = Math.max(2, Math.floor(vertical ? size.w / 190 : size.h / 100))
+  const focus = selectedId ?? targetHighlightId ?? null
   const evidenceKey = evidenceIds.join('|')
+  const projection = useMemo(
+    () => (size.w ? exploreGraph(allDefs, focus, limit, 2, evidenceKey ? evidenceKey.split('|') : [], perKind) : { defs: [], shown: 0, available: 0, total: 0 }),
+    [allDefs, focus, limit, perKind, evidenceKey, size.w],
+  )
+  const defs = projection.defs
+  const structure = JSON.stringify(defs.map((d) => [d.data.id, d.data.source, d.data.target]))
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
   useEffect(() => {
     if (!host.current) return
-    const cy = cytoscape({ container: host.current, style: kgStyle(), minZoom: 0.15, maxZoom: 3 })
+    const cy = cytoscape({ container: host.current, style: kgStyle(), ...STATIC_VIEW })
     cyRef.current = cy
     cy.on('tap', 'node', (ev) => onSelectRef.current(ev.target.id()))
     cy.on('tap', (ev) => ev.target === cy && onSelectRef.current(null))
@@ -51,23 +65,26 @@ export function KgCanvas({
     cy.on('mouseout', 'node', () => cy.container()?.style.removeProperty('cursor'))
     const mo = new MutationObserver(() => cy.style(kgStyle()))
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    const ro = new ResizeObserver(() => cy.resize())
-    ro.observe(host.current)
-    if (handle) handle.current = { fit: () => cy.animate({ fit: { eles: cy.elements(), padding: 40 } }, { duration: 250 }) }
     return () => {
       mo.disconnect()
-      ro.disconnect()
       cy.destroy()
       cyRef.current = null
-      nodeKey.current = ''
+      shownRef.current = false
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || !size.w || !size.h) return
+    cy.resize()
+    fitAll(cy)
+  }, [size])
 
   // diff elements in
   useEffect(() => {
     const cy = cyRef.current
     if (!cy) return
-    const evidence = new Set(evidenceIds)
+    const evidence = new Set(evidenceKey ? evidenceKey.split('|') : []) // from the stable key: the default [] is a new array each render
     const agentMode = !!targetHighlightId || evidence.size > 0
     const usedNodes = new Set<string>([...evidence, ...(targetHighlightId ? [targetHighlightId] : [])])
     const usedEdges = new Set<string>()
@@ -153,7 +170,7 @@ export function KgCanvas({
       for (const d of defs) {
         const ele = cy.getElementById(d.data.id as string)
         if (!ele.empty()) {
-          ele.data(d.data)
+          ele.data({ ...d.data, displayLabel: d.group === 'nodes' ? `${(KIND[d.data.kind as KgKind]?.label ?? String(d.data.kind)).toUpperCase()}\n${breakable(String(d.data.short || d.data.id))}` : undefined })
           if (d.group === 'nodes' && targetHighlightId === d.data.id) ele.addClass('agent-target')
           else ele.removeClass('agent-target')
           if (d.group === 'nodes' && evidence.has(d.data.id as string)) ele.addClass('agent-evidence')
@@ -174,31 +191,27 @@ export function KgCanvas({
     const flowEdges = cy.edges('.agent-evidence-edge')
     flowEdges.stop(true)
     flowEdges.style('line-dash-offset', 0)
-    // Keep the graph responsive while the retrieval animation is being reworked. The
-    // Cytoscape animation completion callbacks were recursively scheduling work on every
-    // edge and could starve the page after the agent populated a larger result graph.
-    const key = cy
-      .nodes()
-      .map((n) => n.id())
-      .sort()
-      .join('|')
-    if (key !== nodeKey.current && cy.nodes().length) {
-      const first = nodeKey.current === ''
-      nodeKey.current = key
-      cy.layout({
-        name: 'fcose',
-        animate: !first,
-        animationDuration: 400,
-        randomize: false,
-        fit: true,
-        padding: 40,
-        nodeDimensionsIncludeLabels: true,
-        nodeRepulsion: () => 7000,
-        idealEdgeLength: () => 70,
-        gravity: 0.25,
-      } as unknown as cytoscape.LayoutOptions).run()
-    }
   }, [defs, targetHighlightId, evidenceKey])
+
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy || !cy.nodes().length) return
+    let cancelled = false
+    const before = shownRef.current ? leafPositions(cy) : null
+    const task = knowledgeLayout(cy, vertical)
+    task.done.then((positions) => {
+      if (cancelled || cy.destroyed()) return
+      place(cy, positions, before)
+      shownRef.current = true
+      setLayoutError(false)
+    }).catch(() => {
+      if (cancelled || cy.destroyed()) return
+      cy.layout({ name: 'grid', fit: false, avoidOverlap: true, spacingFactor: 1.2 }).run()
+      fitAll(cy)
+      setLayoutError(true)
+    }).finally(() => task.cancel())
+    return () => { cancelled = true; task.cancel() }
+  }, [structure, vertical])
 
   // focus on the selection and its neighbourhood
   const matchKey = matchIds.join('|')
@@ -206,25 +219,29 @@ export function KgCanvas({
     const cy = cyRef.current
     if (!cy) return
     cy.batch(() => {
-      cy.elements().removeClass('faded focus match')
+      cy.elements().removeClass('faded focus match chosen')
       const sel = selectedId ? cy.getElementById(selectedId) : null
       if (sel && sel.nonempty()) {
         const hood = sel.closedNeighborhood()
         cy.elements().not(hood).addClass('faded')
         hood.addClass('focus')
+        sel.addClass('chosen')
       }
       for (const id of matchIds) cy.getElementById(id).addClass('match')
     })
-    if (selectedId) {
-      const n = cy.getElementById(selectedId)
-      if (n.nonempty() && !n.renderedBoundingBox().w) return
-      if (n.nonempty()) {
-        const bb = n.renderedPosition()
-        const { w, h } = { w: cy.width(), h: cy.height() }
-        if (bb.x < 40 || bb.y < 40 || bb.x > w - 40 || bb.y > h - 40) cy.animate({ center: { eles: n } }, { duration: 250 })
-      }
-    }
+
   }, [selectedId, matchKey, defs]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <div ref={host} className="h-full w-full" />
+  return (
+    <div className="absolute inset-0 flex flex-col overflow-hidden">
+      <div ref={host} role="img" aria-label="Knowledge connections. Use Browse to select items with the keyboard." className="min-h-0 w-full flex-1" />
+      {(projection.shown < projection.available || layoutError) && (
+        <span className="graph-caption" role="status">
+          {layoutError
+            ? 'Using a simple layout. Connections and details are still available.'
+            : `Showing the ${projection.shown} ${focus ? 'closest' : 'most connected'} of ${projection.available} items`}
+        </span>
+      )}
+    </div>
+  )
 }

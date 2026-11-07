@@ -144,9 +144,9 @@ export function ScenariosTab() {
             extraActions={<Button size="sm" icon={<Sparkles size={13} />} onClick={() => setGenerating(true)}>Generate with LLM</Button>}
             rowActions={(s) => (
               <>
-                <IconButton title="Run" className="hover:!text-ok" onClick={() => withToast(() => api.runScenario(s.id), 'Scenario started')}><Play size={14} /></IconButton>
-                <IconButton title="View / edit JSON" onClick={() => setEditing(s)}><FileJson size={14} /></IconButton>
-                <IconButton title="Duplicate" onClick={() => duplicate(s)}><Copy size={14} /></IconButton>
+                <IconButton aria-label="Run" className="hover:!text-ok" onClick={() => withToast(() => api.runScenario(s.id), 'Scenario started')}><Play size={14} /></IconButton>
+                <IconButton aria-label="View / edit JSON" onClick={() => setEditing(s)}><FileJson size={14} /></IconButton>
+                <IconButton aria-label="Duplicate" onClick={() => duplicate(s)}><Copy size={14} /></IconButton>
               </>
             )}
             columns={[

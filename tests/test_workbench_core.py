@@ -239,3 +239,20 @@ def test_agent_outcome_flags_failing_knowledge(client):
     assert r["track_record"]["status"] == "contested"
     hits = client.post("/api/agent/run", json={"entity_id": "TRN-117", "at": "2026-10-22T08:00:00"}).json()["hits"]
     assert next(h for h in hits if h["id"] == aid)["track_record"]["status"] == "contested"
+
+
+def test_elements_and_links_reject_dangling_references(client):
+    state = seeded(client)
+    el = state["elements"][0]
+    site = state["sites"][0]["id"]
+    bad = client.post("/api/elements", json={**el, "id": "NEW-1", "site_id": "NO-SUCH-SITE"})
+    assert bad.status_code == 422 and "NO-SUCH-SITE" in bad.json()["detail"]
+    assert client.post("/api/elements", json={**el, "id": "NEW-1", "site_id": site}).status_code == 200
+    assert client.post("/api/elements", json={**el, "id": "NEW-2", "site_id": None}).status_code == 200  # no site is fine
+    assert client.put(f"/api/elements/{el['id']}", json={**el, "site_id": "NO-SUCH-SITE"}).status_code == 422
+    link = {"id": "L-NEW", "a": el["id"], "b": "NEW-1", "kind": "fiber"}
+    assert client.post("/api/links", json={**link, "b": "GHOST"}).status_code == 422
+    assert client.post("/api/links", json={**link, "a": "GHOST"}).status_code == 422
+    assert client.post("/api/links", json=link).status_code == 200
+    assert client.put("/api/links/L-NEW", json={**link, "b": "GHOST"}).status_code == 422
+    assert client.put("/api/links/L-NEW", json=link).status_code == 200

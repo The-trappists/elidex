@@ -117,7 +117,7 @@ The two databases are in the cloud, so the VM needs **no copy of the dataset**: 
 4. Check from the VM: `docker compose -f deploy/docker-compose.yml exec <app-service> ctx dataset db-check` (service name in the compose file).
 5. Run the loads from your laptop, not the VM (the 2 GB VM has no `out/dataset/`): `ctx dataset load-mongo out/dataset/demo`, `load-tiger out/dataset/demo --drop --analytics`.
 
-Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. Not done yet: the Workbench still keeps its own threads in memory and does not read these sources.
+Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. The Workbench uses these sources in two ways (see [workbench.md](workbench.md)): a connected **sample** of the dataset can be loaded into it (`ctx dataset export-workbench`, Data page button "Load company dataset"), and the element panel reads **human activity on demand** (threads, freshness, similar knowledge) from Atlas / Tiger Data when configured, else from the dataset files, without loading the dataset in memory.
 
 Status: the pure parts (mentions, documents, rows, file source) are tested offline. The loaders and queries against real Atlas and Tiger Data were **not run by the assistant** (AI agents must not use `.env` credentials), so the first run is yours: start with `db-check`.
 
@@ -135,7 +135,7 @@ Status: the pure parts (mentions, documents, rows, file source) are tested offli
 ## Using it
 
 - Core and bench: `Inventory.load(root / "network")`; `ctx dataset bench` feeds the linker with the true extractions, so it measures linking and storing, **not the LLM**. For the LLM, read threads of `conversations/` and score the output against `facts.jsonl`.
-- The **Workbench loads everything in memory** and Cytoscape draws every node: use `tiny` or `demo` there, never `large`.
+- The **Workbench loads everything in memory** and Cytoscape draws every node: never `large`. Take a sample instead: `ctx dataset export-workbench out/dataset/tiny` (or the Data page button "Load company dataset"), see [workbench.md](workbench.md#company-dataset-sample).
 - Load shards lazily (one line at a time); do not `json.load` a whole shard of `large` (~80 MB each is fine, all of them is not).
 
 ## Findings from `ctx dataset bench` on `large` (2026-11-07)
