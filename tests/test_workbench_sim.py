@@ -378,3 +378,37 @@ def test_extractor_prompt_pins_disagreement_topic_and_replacement():
 
     assert "exact same topic slug" in SYSTEM_PROMPT
     assert "the replacement with its own, different topic slug" in SYSTEM_PROMPT
+
+
+def test_disagreement_is_flagged_when_the_class_scopes_differ_but_the_node_is_the_same():
+    """The LLM scoped one advice to TX-3000 and the other to TX-3000 up to 2019: different class ids, same TRN-088."""
+    from context_layer.mvp.lifecycle import reconcile
+    from context_layer.store import ContextStore
+
+    s = SCENARIOS["expert-disagreement"]
+    erkki, aino = s.expected.items
+    wide = erkki.scope.model_copy(update={"element_class": erkki.scope.element_class.model_copy(update={"install_year_max": None})})
+    linker, store = Linker(INVENTORY), ContextStore(INVENTORY)
+    a, _ = store.add_assertion(linker.link(erkki.model_copy(update={"scope": wide}), _thread(s)).assertion)
+    reconcile(store, a)
+    b, _ = store.add_assertion(linker.link(aino, _thread(s)).assertion)
+    assert a.applies_to != b.applies_to  # the class ids really differ
+    reconcile(store, b)
+    reconcile(store, b)  # running it again must not duplicate the flag
+    assert a.conflicts_with == [b.id] and b.conflicts_with == [a.id]
+
+
+def test_same_topic_advice_on_other_nodes_is_not_a_conflict():
+    from context_layer.mvp.lifecycle import reconcile
+    from context_layer.store import ContextStore
+
+    s = SCENARIOS["expert-disagreement"]
+    erkki, aino = s.expected.items
+    other_node = aino.scope.model_copy(update={"instance_ids": ["TRN-117"], "element_class": None, "site_ids": ["SITE-OUL-011"]})
+    wide = erkki.scope.model_copy(update={"element_class": None, "instance_ids": ["TRN-088"]})
+    linker, store = Linker(INVENTORY), ContextStore(INVENTORY)
+    a, _ = store.add_assertion(linker.link(erkki.model_copy(update={"scope": wide}), _thread(s)).assertion)
+    reconcile(store, a)
+    b, _ = store.add_assertion(linker.link(aino.model_copy(update={"scope": other_node}), _thread(s)).assertion)
+    reconcile(store, b)
+    assert not a.conflicts_with and not b.conflicts_with
