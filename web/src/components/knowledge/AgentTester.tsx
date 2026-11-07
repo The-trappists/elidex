@@ -34,6 +34,13 @@ const PRESETS: Preset[] = [
     planned: '',
   },
   { label: 'SFP swap, planned action', entity: 'TRN-042', description: SFP_TEXT, obs: {}, planned: 'Replace the SFP module again' },
+  {
+    label: 'Firmware 4.2 check (TRN-117)',
+    entity: 'TRN-117',
+    description: 'SFP swapped on TRN-117 after firmware 4.2 rollout.',
+    obs: { sfp_replaced: 'true', interface_status: 'UP', optical_levels: 'normal', traffic_counters: '0', alarms: 'cleared', firmware: '4.2' },
+    planned: '',
+  },
 ]
 
 const CHECK_STYLE: Record<string, { label: string; cls: string }> = {

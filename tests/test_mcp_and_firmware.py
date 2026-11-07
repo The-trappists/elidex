@@ -7,7 +7,7 @@ import pytest
 
 from context_layer.agent import Case, run_agent
 from context_layer.link import Inventory
-from context_layer.mcp_server import get_context
+from context_layer.mcp_server import check_action, get_assertion, get_context, mcp
 from context_layer.models import (
     Check,
     Condition,
@@ -41,6 +41,14 @@ def test_check_evaluate_numeric_versions():
     assert chk_gte.evaluate({"firmware": "3.8"}) is False
     assert chk_gte.evaluate({"firmware": "4.2"}) is True
     assert chk_gte.evaluate({"firmware": "4.10"}) is True
+
+    # Semver padding edge cases: "4.2" should match "4.2.0"
+    chk_eq = Check(field="firmware", op="==", value="4.2")
+    assert chk_eq.evaluate({"firmware": "4.2.0"}) is True
+    assert chk_lt.evaluate({"firmware": "4.2.0"}) is False
+    assert chk_lt.evaluate({"firmware": "4.2.1"}) is False
+    chk_lt_patch = Check(field="firmware", op="<", value="4.2.1")
+    assert chk_lt_patch.evaluate({"firmware": "4.2"}) is True
 
     # Missing field
     assert chk_lt.evaluate({}) is None
@@ -180,3 +188,72 @@ def test_mcp_get_context_with_observations():
         assert len(res_full) == 1
         assert res_full[0]["check_status"] == "fully checked"
         assert res_full[0]["condition_applies"] is True
+
+
+def test_mcp_get_assertion_and_include_expired():
+    elements = [
+        NetworkElement(id="TRN-042", type="transmission_node", model="TX-3000", install_year=2019, firmware="3.8"),
+    ]
+    inv = Inventory(elements, [])
+    store = ContextStore(inv)
+    rule = ContextAssertion(
+        id="ctx_0001",
+        type="workaround",
+        topic="sfp-bounce",
+        summary="Bounce interface",
+        bound_to=[{"entity": "TRN-042", "role": "applies_to"}],
+        valid_from=datetime(2026, 10, 20, 10, 0),
+        valid_to=datetime(2026, 10, 22, 10, 0),
+        trust=Trust(level="verified", stated_by="Erkki Expert"),
+        sources=[SourceRef(source="teams", file="chat.json", seq=[1])],
+        confidence=0.9,
+    )
+    store.add_assertion(rule)
+
+    with patch("context_layer.mcp_server._store", return_value=store):
+        # get_assertion by id
+        fetched = get_assertion("ctx_0001")
+        assert fetched is not None and fetched["id"] == "ctx_0001"
+        assert fetched["track_record"]["status"] == "untested"
+        assert get_assertion("ctx_9999") is None
+
+        # Expired at 2026-10-25: default returns empty
+        assert len(get_context("TRN-042", at="2026-10-25T10:00:00")) == 0
+        # include_expired=True returns the expired assertion
+        assert len(get_context("TRN-042", at="2026-10-25T10:00:00", include_expired=True)) == 1
+
+
+def test_mcp_check_action_with_firmware_autofill():
+    # TRN-042 has firmware 3.8 (< 4.2), so rule condition applies and avoid "reboot" triggers an adapt verdict
+    elements = [
+        NetworkElement(id="TRN-042", type="transmission_node", model="TX-3000", install_year=2019, firmware="3.8"),
+        NetworkElement(id="TRN-117", type="transmission_node", model="TX-3000", install_year=2018, firmware="4.2"),
+    ]
+    inv = Inventory(elements, [])
+    store = ContextStore(inv)
+    rule = ContextAssertion(
+        id="ctx_0001",
+        type="workaround",
+        topic="sfp-bounce",
+        summary="Bounce interface first",
+        action="Bounce interface",
+        avoid=["reboot"],
+        conditions=[Condition(text="firmware < 4.2", check=Check(field="firmware", op="<", value="4.2"))],
+        bound_to=[{"entity": "TRN-042", "role": "applies_to"}, {"entity": "TRN-117", "role": "applies_to"}],
+        valid_from=datetime(2026, 10, 20, 10, 0),
+        trust=Trust(level="verified", stated_by="Erkki Expert"),
+        sources=[SourceRef(source="teams", file="chat.json", seq=[1])],
+        confidence=0.9,
+    )
+    store.add_assertion(rule)
+
+    with patch("context_layer.mcp_server._store", return_value=store):
+        # TRN-042: firmware 3.8 < 4.2 applies, so reboot is avoided -> decision is adapt
+        v_042 = check_action("reboot TRN-042", "TRN-042", at="2026-10-25T10:00:00", observations={})
+        assert v_042["decision"] == "adapt"
+        assert "Bounce interface" in v_042["steps"]
+
+        # TRN-117: firmware 4.2 is not < 4.2, condition fails -> decision is go
+        v_117 = check_action("reboot TRN-117", "TRN-117", at="2026-10-25T10:00:00", observations={})
+        assert v_117["decision"] == "go"
+

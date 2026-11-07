@@ -161,8 +161,11 @@ class Check(BaseModel):
             v_act = parse_version(actual)
             v_exp = parse_version(expected)
             if v_act is not None and v_exp is not None:
+                max_len = max(len(v_act), len(v_exp))
+                p_act = v_act + (0,) * (max_len - len(v_act))
+                p_exp = v_exp + (0,) * (max_len - len(v_exp))
                 try:
-                    return bool(_OPS[self.op](v_act, v_exp))
+                    return bool(_OPS[self.op](p_act, p_exp))
                 except TypeError:
                     return None
         if isinstance(actual, str) and isinstance(expected, str):

@@ -10,7 +10,16 @@ from .link import Inventory
 from .mvp import conditions, feedback, guard
 from .store import ContextStore
 
-mcp = MCPServer("context-layer")
+mcp = MCPServer(
+    "context-layer",
+    instructions=(
+        "Context layer for autonomous network operations. "
+        "Provides human operational knowledge (workarounds, site access, tribal facts) "
+        "extracted silently from operator chats and emails. Use get_context before acting on "
+        "a network element, check_action to guard sensitive operations, find_experts when no "
+        "rules exist, and get_patterns for recurring failure leads."
+    ),
+)
 
 
 def _store() -> ContextStore:
@@ -18,14 +27,20 @@ def _store() -> ContextStore:
 
 
 @mcp.tool()
-def get_context(entity_id: str, at: str | None = None, observations: dict[str, Any] | None = None) -> list[dict]:
+def get_context(
+    entity_id: str,
+    at: str | None = None,
+    observations: dict[str, Any] | None = None,
+    include_expired: bool = False,
+) -> list[dict]:
     """Human knowledge (workarounds, site access...) valid at time `at` (ISO, default now) for a network
     element or site, including what applies to its class and its site. Each item has source, trust and validity.
     When `observations` is provided, each item is annotated with check_status ("fully checked", "not fully checked",
-    "failed", "text only"), to_read (fields to observe), condition_applies, and track_record."""
+    "failed", "text only"), to_read (fields to observe), condition_applies, and track_record.
+    Set `include_expired=True` to include superseded or expired knowledge."""
     store = _store()
     at_dt = datetime.fromisoformat(at) if at else None
-    hits = store.get_context(entity_id, at=at_dt)
+    hits = store.get_context(entity_id, at=at_dt, include_expired=include_expired)
     obs = dict(observations) if observations is not None else None
     if obs is not None and "firmware" not in obs:
         el = store.inventory.resolve_element(entity_id)
@@ -42,6 +57,19 @@ def get_context(entity_id: str, at: str | None = None, observations: dict[str, A
             row["condition_applies"] = cr.applies
         out.append(row)
     return out
+
+
+@mcp.tool()
+def get_assertion(assertion_id: str) -> dict | None:
+    """Look up a specific assertion by ID (e.g. ctx_0001), including its trust, sources, conditions and validity.
+    Use it to inspect referenced conflicts (conflicts_with) or invalidating rules (closed_by)."""
+    store = _store()
+    a = store.assertions.get(assertion_id)
+    if not a:
+        return None
+    res = a.model_dump(mode="json")
+    res["track_record"] = feedback.track_record(a).to_dict()
+    return res
 
 
 def _graph():
@@ -104,4 +132,24 @@ def check_action(action: str, entity_id: str, at: str | None = None, observation
     """Before acting on an element (reboot, replace, dispatch...), check it against human knowledge.
     Returns decision 'go' or 'adapt' with the steps to take first and the cited sources."""
     v = guard.check(_store(), action, entity_id, at=datetime.fromisoformat(at) if at else None, observations=observations)
-    return {"decision": v.decision, "steps": v.steps, "reasons": v.reasons}
+    return {"decision": v.decision, "action": v.action, "steps": v.steps, "reasons": v.reasons}
+
+
+@mcp.resource("context://summary")
+def get_summary() -> str:
+    """Summary of current context layer knowledge store."""
+    store = _store()
+    return (
+        f"Context Layer: {len(store.assertions)} assertions, "
+        f"{len(store.inventory.elements)} network elements, {len(store.inventory.sites)} sites."
+    )
+
+
+@mcp.prompt()
+def operational_guidance(entity_id: str) -> str:
+    """Prompt template for diagnosing and handling an issue on a network element using context knowledge."""
+    return (
+        f"You are an autonomous network operations agent. Investigate network element '{entity_id}'. "
+        f"First call get_context(entity_id='{entity_id}') with any known telemetry or observations. "
+        f"Check conditions and track record before recommending an operational action."
+    )
