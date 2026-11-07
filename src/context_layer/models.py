@@ -236,5 +236,10 @@ class ContextAssertion(BaseModel):
     def applies_to(self) -> set[str]:
         return {b.entity for b in self.bound_to if b.role == "applies_to"}
 
+    @property
+    def about(self) -> set[str]:
+        """Everything the assertion is bound to except its trigger: its scope plus the instances it was seen on."""
+        return {b.entity for b in self.bound_to if b.role != "trigger"}
+
     def is_valid_at(self, t: datetime) -> bool:
         return self.valid_from <= t and (self.valid_to is None or t < self.valid_to)
