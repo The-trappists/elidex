@@ -32,7 +32,7 @@ Risks, and how they are contained:
 - `RuleApplication` stays the link between an agent action and its thread. Its `method` may now also be `observation`.
 - Both paths record through `mvp/feedback.py`, then call one function, `outcome.settle`, that applies the effects once per recorded outcome:
   - failed: confidence x0.7 and a `low_confidence` flag (one per failed outcome; observation failures now do this too);
-  - worked and no failed outcome in the ledger, from a human reply: trust `verified` (stated_by the author, evidence the quote), thread added as source, `judge_decision` flag;
+  - worked and no failed outcome in the ledger, from a human reply: trust `verified` (the reply's author added to `confirmed_by`, `stated_by` keeps the rule's author, evidence the quote), thread added as source, `judge_decision` flag;
   - worked but the ledger also holds a failure: mixed evidence, trust is not upgraded, a flag says so;
   - observation-based worked: trust unchanged (a machine observation is not a person's word), as in main.
 - `track_record.status` keeps main's rule (contested = at least 2 failures and more failures than successes). A rule is never auto-dropped.

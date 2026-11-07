@@ -47,9 +47,12 @@ export function capacity(w: number, h: number, cell: number, min: number, max: n
   return Math.max(min, Math.min(max, Math.floor((w * h) / cell / step) * step))
 }
 
-export function fitAll(cy: cytoscape.Core) {
+export type Frame = (cy: cytoscape.Core) => cytoscape.CollectionReturnValue | null
+
+/** Fit the box to `frame` (default: everything visible). */
+export function fitAll(cy: cytoscape.Core, frame?: Frame) {
   if (cy.destroyed() || !cy.width() || !cy.height()) return
-  const eles = cy.elements(':visible')
+  const eles = frame?.(cy) ?? cy.elements(':visible')
   if (eles.nonempty()) cy.fit(eles, padding(cy))
 }
 
@@ -68,14 +71,14 @@ export function orient(positions: Map<string, Point>, w: number, h: number) {
 }
 
 /** Move nodes to their new places and fit the box, gliding from `before` when the graph was already shown. */
-export function place(cy: cytoscape.Core, positions: Map<string, Point>, before: Map<string, Point> | null) {
+export function place(cy: cytoscape.Core, positions: Map<string, Point>, before: Map<string, Point> | null, frame?: Frame) {
   if (cy.destroyed()) return
   const leaves = cy.nodes(':childless')
   cy.stop(true)
   leaves.stop(true)
   const view = { zoom: cy.zoom(), pan: { ...cy.pan() } }
   cy.batch(() => leaves.forEach((n) => { const p = positions.get(n.id()); if (p) n.position(p) }))
-  fitAll(cy)
+  fitAll(cy, frame)
   if (!before || calm()) return
   const target = { zoom: cy.zoom(), pan: { ...cy.pan() } }
   // New nodes appear in place; known nodes glide there with the viewport.

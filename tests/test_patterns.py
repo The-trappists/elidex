@@ -149,20 +149,20 @@ def test_the_same_workaround_three_times_is_an_insight():
     assert any("No lasting fix" in h.text for h in p.hypotheses)
 
 
-def test_twice_is_only_a_watch():
+def test_twice_is_not_reported():
+    """Only problems that keep coming back are shown: twice can be chance, and the page stays short."""
     store, times = _store(), {}
     _breaker_trips(store, times, n=2)
-    [p] = find_patterns(store, LINKS, times, AT)
-    assert p.level == "watch"
+    assert find_patterns(store, LINKS, times, AT) == []
 
 
 def test_chat_and_email_about_the_same_case_count_once():
     store, times = _store(), {}
-    a = _breaker_trips(store, times, n=2)
+    a = _breaker_trips(store, times, n=3)
     a.sources.append(SourceRef(source="email", file="mail", seq=[1]))
     times["mail"] = T0 + timedelta(hours=2)
     [p] = find_patterns(store, LINKS, times, AT)
-    assert p.count == 2 and p.occurrences[0].sources == ["trip0", "mail"]
+    assert p.count == 3 and p.occurrences[0].sources == ["trip0", "mail"]
 
 
 def test_a_proposal_does_not_close_it_but_a_done_fix_does():
@@ -184,11 +184,14 @@ def test_a_firmware_fix_not_rolled_out_keeps_it_open():
     _report(store, "K-1", "sfp-forwarding", T0, "x1", action="Bounce the interface.", thread_times=times)
     _report(store, "E-1", "sfp-forwarding", T0 + timedelta(days=5), "x2", action="Bounce the interface.",
             thread_times=times)
+    _report(store, "K-1", "sfp-forwarding", T0 + timedelta(days=7), "x3", action="Bounce the interface.",
+            thread_times=times)
     _report(store, "K-1", "sfp-forwarding", T0 + timedelta(days=9), "fw", action="Upgrade to firmware 4.2.",
             atype="invalidation", by="Aino", bind=["K-1", "E-1"], thread_times=times)
     [p] = find_patterns(store, LINKS, times, AT)
     assert p.level == "insight" and "not rolled out" in p.status_note
     assert "K-1 still runs 3.8" in " ".join(p.hypotheses[0].basis)
+    assert p.headline.startswith("Lasting fix known (Upgrade to firmware 4.2), not rolled out")
 
 
 # ---------------------------------------------------------------- safety
@@ -325,8 +328,8 @@ def _check_apart(groups):
 def test_same_words_on_unrelated_elements_stay_apart():
     """Two radios at other sites, other models: similar topic names are not the same problem."""
     store, times = _store(), {}
-    for i, el in enumerate(["A-1", "D-1", "A-1", "D-1"]):  # TX-5000 at S-1 and RU-400 at S-4, never linked
-        _report(store, el, f"{el.lower()}-power-reset", T0 + timedelta(days=7 * i), f"x{i}",
+    for i, el in enumerate(["A-1", "D-1"] * 3):  # TX-5000 at S-1 and RU-400 at S-4, never linked
+        _report(store, el, f"{el.lower()}-power-reset", T0 + timedelta(days=4 * i), f"x{i}",
                 action="Reset the power supply.", thread_times=times)
     rec = [p for p in find_patterns(store, LINKS, times, AT) if p.kind == "recurring"]
     assert sorted(p.elements for p in rec) == [["A-1"], ["D-1"]]
@@ -368,8 +371,8 @@ def _three_trips(store, times, third_conditions=(DOWN,), third_action="Push the 
 def test_same_problem_in_other_words_needs_meaning():
     store, times = _store(), {}
     _three_trips(store, times)
-    [words_only] = [p for p in find_patterns(store, LINKS, times, AT, embedder=None) if p.kind == "recurring"]
-    assert words_only.count == 2 and words_only.level == "watch"  # the third trip is missed by words alone
+    # Words alone see only 2 trips: not reported. Meaning sees the third: an insight.
+    assert not [p for p in find_patterns(store, LINKS, times, AT, embedder=None) if p.kind == "recurring"]
 
     from context_layer.mvp.patterns import analyze
     report = analyze(store, LINKS, times, AT, embedder=_concepts(POWER))
@@ -384,13 +387,11 @@ def test_guards_win_over_meaning():
     everything_same = _concepts(("",))  # every text gets the same vector
     store, times = _store(), {}
     _three_trips(store, times, third_conditions=(UP,))  # radio UP the third time: another problem
-    [p] = [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
-    assert p.count == 2
+    assert not [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
 
     store, times = _store(), {}
     _three_trips(store, times, third_action="Rewire the absorber onto its own circuit.")  # the cure, not a trip
-    [p] = [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
-    assert p.count == 2
+    assert not [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
 
 
 def test_a_failing_model_falls_back_to_words():
@@ -402,7 +403,7 @@ def test_a_failing_model_falls_back_to_words():
     store, times = _store(), {}
     _three_trips(store, times)
     report = analyze(store, LINKS, times, AT, embedder=broken)
-    assert report.meaning.startswith("failed (ConnectionError") and report.patterns[0].count == 2
+    assert report.meaning.startswith("failed (ConnectionError") and report.patterns == []  # words: 2 trips only
 
 
 def test_model_embedder_is_off_without_a_model_and_caches_with_one(tmp_path, monkeypatch):
@@ -442,8 +443,10 @@ def test_meaning_needs_a_real_shared_place_not_just_a_model():
     _report(store, "K-1", "frost-margin-dip", T0, "k1", action="Wait for the heater.", thread_times=times)
     _report(store, "E-1", "iced-dish-flap", T0 + timedelta(days=9), "e1", action="Wait for the sun.", thread_times=times)
     _report(store, "E-1", "iced-dish-flap", T0 + timedelta(days=19), "e2", action="Wait for the sun.", thread_times=times)
+    _report(store, "K-1", "frost-margin-dip", T0 + timedelta(days=12), "k2", action="Wait for the heater.",
+            thread_times=times)
     rec = [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
-    assert [p.elements for p in rec] == [["E-1"]] and rec[0].count == 2
+    assert not rec  # 2 on K-1 and 2 on E-1: never 3 of one problem, since a shared model is not enough for meaning
     _report(store, "E-1", "dish-ice-morning", T0 + timedelta(days=29), "e3", action="Let it thaw.", thread_times=times)
     rec = [p for p in find_patterns(store, LINKS, times, AT, embedder=everything_same) if p.kind == "recurring"]
     assert [p.elements for p in rec] == [["E-1"]] and rec[0].count == 3  # same element: meaning groups it
@@ -473,3 +476,13 @@ def test_cli_check_meaning(monkeypatch, capsys):
     cli.main(["patterns", "--check-meaning"])
     out = capsys.readouterr().out
     assert "stop = shares only a model" in out and "highest 'different' pair that reaches meaning" in out
+
+
+def test_linked_pattern_tells_the_map_what_to_light_up():
+    """The page draws the problems in red, the suspect apart, and the links between them."""
+    store, times = _store(), {}
+    _report(store, "A-1", "sync-loss", T0, "t1", action="Reset the timing port.", thread_times=times)
+    _report(store, "K-1", "traffic-drop", T0 + timedelta(minutes=30), "t2", thread_times=times)
+    [p] = _linked(store, times)
+    assert p.elements == ["A-1", "K-1"] and p.suspects == ["C-1"] and p.links == ["L-1", "L-2"]
+    assert p.headline == "Possible common cause: C-1 (nobody reported it)"

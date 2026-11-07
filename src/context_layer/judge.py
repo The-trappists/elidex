@@ -267,8 +267,7 @@ def apply_verdicts(
             for src in new.sources:
                 if src not in old.sources:
                     old.sources.append(src)
-            if upgraded:
-                old.trust = new.trust
+            old.trust.add_confirmation(new.trust)  # the original author stays; new's author confirms
             record(
                 old,
                 "supports",

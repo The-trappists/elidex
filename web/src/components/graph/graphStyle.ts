@@ -13,6 +13,7 @@ export function buildStyle(): cytoscape.StylesheetJson {
   const knowledge = css('--g-assertion')
   const link = css('--g-link')
   const bad = css('--bad')
+  const warn = css('--warn')
   const accent = css('--accent')
   const font = { 'font-family': 'Public Sans, ui-sans-serif, system-ui, sans-serif', color: text, 'min-zoomed-font-size': 7 } as const
   return [
@@ -167,6 +168,12 @@ export function buildStyle(): cytoscape.StylesheetJson {
     { selector: 'node.hl', style: { 'border-color': accent, 'border-width': 3, 'overlay-color': accent, 'overlay-opacity': 0.14, 'overlay-padding': 6 } },
     { selector: 'node.sel', style: { 'border-color': accent, 'border-width': 3, 'overlay-color': accent, 'overlay-opacity': 0.16, 'overlay-padding': 6 } },
     { selector: 'node.site.sel', style: { 'border-width': 1.5, 'border-style': 'solid', 'overlay-opacity': 0 } },
+    // pattern focus (Insights page): the problems in red, the possible common cause in amber, the links between them
+    { selector: 'edge.dim, node.dim', style: { opacity: 0.14 } },
+    { selector: 'node.pb', style: { 'border-color': bad, 'border-width': 4, 'overlay-color': bad, 'overlay-opacity': 0.18, 'overlay-padding': 8, 'font-weight': 'bold' } },
+    { selector: 'node.suspect', style: { 'border-color': warn, 'border-width': 5, 'border-style': 'double', 'overlay-color': warn, 'overlay-opacity': 0.26, 'overlay-padding': 12, 'font-weight': 'bold' } },
+    { selector: 'edge.pl', style: { 'line-color': bad, 'line-style': 'solid', width: 4, opacity: 1, 'z-index': 10, 'underlay-color': bad, 'underlay-opacity': 0.22, 'underlay-padding': 5, 'transition-property': 'underlay-opacity, underlay-padding', 'transition-duration': 600 } },
+    { selector: 'edge.pl.pulse', style: { 'underlay-opacity': 0.45, 'underlay-padding': 9 } },
     { selector: '.hover-fade', style: { opacity: 0.2 } },
     { selector: 'node.hover-on', style: { 'overlay-color': accent, 'overlay-opacity': 0.1, 'overlay-padding': 5 } },
     { selector: 'edge.hover-on', style: { width: 2.5, 'line-color': accent, opacity: 1 } },

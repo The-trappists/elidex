@@ -9,7 +9,7 @@ import { useLive } from '../../store/live'
 import { buildGraph, type NodeKind } from './graphModel'
 import { buildStyle } from './graphStyle'
 import { exploreGraph, networkOverview } from './exploreGraph'
-import { capacity, fitAll, leafPositions, orient, place, STATIC_VIEW, useBoxSize } from './viewport'
+import { capacity, fitAll, type Frame, leafPositions, orient, place, STATIC_VIEW, useBoxSize } from './viewport'
 
 cytoscape.use(fcose)
 
@@ -18,7 +18,22 @@ export interface NetworkGraphProps {
   selectedId?: string | null
   onSelect?: (id: string | null, kind: NodeKind | null) => void
   highlightIds?: string[]
+  /** Draw the knowledge (assertions, classes) next to the equipment. Default true. */
+  knowledge?: boolean
+  /** Insights page: problem elements in red, suspected common causes in amber; the links between them (and these
+   * link ids) light up; the rest dims. */
+  focus?: { problem: string[]; suspect: string[]; links: string[] } | null
   className?: string
+}
+
+type Focus = NonNullable<NetworkGraphProps['focus']>
+
+/** What the view frames when there is a focus: the focused elements and their direct neighbours. */
+const focusFrame = (focus: Focus | null | undefined): Frame => (cy) => {
+  if (!focus) return null
+  const ids = new Set([...focus.problem, ...focus.suspect])
+  const f = cy.nodes().filter((n) => ids.has(String(n.data('rawId'))))
+  return f.nonempty() ? f.union(f.neighborhood('node.element')) : null
 }
 
 const aKey = (n: cytoscape.NodeSingular) => String(n.data('rawId'))
@@ -102,16 +117,16 @@ function compact(cy: cytoscape.Core, w: number) {
 }
 
 /** Free-form layout, compacted for small boxes, turned to the box, then placed. */
-function relayout(cy: cytoscape.Core, { w, h }: { w: number; h: number }, before: Map<string, { x: number; y: number }> | null) {
+function relayout(cy: cytoscape.Core, { w, h }: { w: number; h: number }, before: Map<string, { x: number; y: number }> | null, frame?: Frame) {
   const layout = cy.layout(LAYOUT)
   layout.one('layoutstop', () => {
     if (cramped(cy, w, h)) compact(cy, w)
-    place(cy, orient(leafPositions(cy), w, h), before)
+    place(cy, orient(leafPositions(cy), w, h), before, frame)
   })
   layout.run()
 }
 
-export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className }: NetworkGraphProps) {
+export function NetworkGraph({ at, selectedId, onSelect, highlightIds, knowledge = true, focus, className }: NetworkGraphProps) {
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
   const links = useLive((s) => s.links)
@@ -128,6 +143,9 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
   const size = useBoxSize(host)
   const sizeRef = useRef(size)
   sizeRef.current = size
+  const frameRef = useRef(focusFrame(focus))
+  frameRef.current = focusFrame(focus)
+  const fKey = focus ? `${focus.problem.join(',')}|${focus.suspect.join(',')}|${focus.links.join(',')}` : ''
   // Budget of nodes from the box: a phone shows a neighbourhood, a wide screen a region.
   const limit = capacity(size.w, size.h, 15000, 4, 60)
 
@@ -140,11 +158,11 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
         classes: Object.values(classesMap),
         assertions: Object.values(assertionsMap),
         incidents: Object.values(incidentsMap),
-        knowledge: true,
+        knowledge,
         fadeExpired: true,
         at,
       }),
-    [elements, sites, links, classesMap, assertionsMap, incidentsMap, Math.floor(at.getTime() / 60000)], // eslint-disable-line react-hooks/exhaustive-deps
+    [elements, sites, links, classesMap, assertionsMap, incidentsMap, knowledge, Math.floor(at.getTime() / 60000)], // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const built = useMemo(() => {
@@ -153,13 +171,20 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
     const expanded = new Set<string>()
     if (selected?.data.kind === 'site') expanded.add(String(selected.data.id))
     if (selected?.data.parent) expanded.add(String(selected.data.parent))
+    // A pattern focus opens the sites of its elements and keeps them in the node budget.
+    const focusIds = new Set(focus ? [...focus.problem, ...focus.suspect] : [])
+    const focused = raw.defs.filter((d) => !d.data.source && focusIds.has(String(d.data.rawId)))
+    for (const d of focused) if (d.data.parent) expanded.add(String(d.data.parent))
     // A class or assertion is already a focused query; keep its actual binding endpoints.
     const focusedKnowledge = selected && ['class', 'assertion'].includes(String(selected.data.kind))
     const defs = focusedKnowledge ? raw.defs : networkOverview(raw.defs, expanded)
-    const priority = selected ? [String(selected.data.id), ...defs.filter((d) => d.data.parent === selected.data.id).map((d) => String(d.data.id))] : []
+    const priority = [
+      ...focused.map((d) => String(d.data.id)),
+      ...(selected ? [String(selected.data.id), ...defs.filter((d) => d.data.parent === selected.data.id).map((d) => String(d.data.id))] : []),
+    ]
     const view = exploreGraph(defs, focusedKnowledge ? String(selected.data.id) : null, limit, 2, priority)
     return { ...view, structure: JSON.stringify(view.defs.map((d) => [d.data.id, d.data.parent, d.data.source, d.data.target])) }
-  }, [raw, selectedId, limit])
+  }, [raw, selectedId, limit, fKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // create the instance once; restyle when the theme toggles; pulse open incidents
   useEffect(() => {
@@ -188,6 +213,7 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
       on = !on
       cy.nodes('[?incident]').toggleClass('pulse', on)
+      cy.edges('.pl').toggleClass('pulse', on)
     }, 900)
     return () => {
       clearInterval(pulse)
@@ -208,8 +234,8 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
     const added = sync(cy, built.defs)
     const changed = structureRef.current !== built.structure
     structureRef.current = built.structure
-    if (changed && cy.nodes().length) relayout(cy, sizeRef.current, before)
-    else if (added.size) fitAll(cy)
+    if (changed && cy.nodes().length) relayout(cy, sizeRef.current, before, frameRef.current)
+    else if (added.size) fitAll(cy, frameRef.current)
     // glow newly upserted assertions
     const prev = prevAssertions.current
     prevAssertions.current = assertionsMap
@@ -232,9 +258,9 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
     cy.resize()
     const now = leafPositions(cy)
     const turned = orient(now, size.w, size.h)
-    if (cramped(cy, size.w, size.h)) relayout(cy, size, now)
-    else if (turned !== now) place(cy, turned, now)
-    else fitAll(cy)
+    if (cramped(cy, size.w, size.h)) relayout(cy, size, now, frameRef.current)
+    else if (turned !== now) place(cy, turned, now, frameRef.current)
+    else fitAll(cy, frameRef.current)
   }, [size])
 
   // selection and highlights
@@ -250,6 +276,30 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, className
       })
     })
   }, [selectedId, hlKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // pattern focus: problems red, possible common cause amber, their links red, the rest dimmed
+  useEffect(() => {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.batch(() => {
+      cy.elements().removeClass('pb suspect pl dim pulse')
+      if (!focus) return
+      const problem = new Set(focus.problem)
+      const suspect = new Set(focus.suspect)
+      const links = new Set(focus.links.map((id) => `lk:${id}`))
+      const on = cy.collection()
+      const concerned = (n: cytoscape.NodeSingular) => problem.has(aKey(n)) || suspect.has(aKey(n))
+      cy.nodes().forEach((n) => {
+        if (problem.has(aKey(n))) on.merge(n.addClass('pb'))
+        else if (suspect.has(aKey(n))) on.merge(n.addClass('suspect'))
+      })
+      // Light every link between two concerned nodes, plus the links the pattern names.
+      cy.edges().forEach((e) => {
+        if (links.has(e.id()) || (concerned(e.source()) && concerned(e.target()))) on.merge(e.addClass('pl'))
+      })
+      cy.elements().not(on).not('node.site:parent').addClass('dim')
+    })
+  }, [fKey, built]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className={cn('absolute inset-0 flex flex-col overflow-hidden', className)}>

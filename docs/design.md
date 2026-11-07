@@ -131,9 +131,9 @@ Also in the workbench contract: `ReviewFlag`, `CriticVerdict` and `JudgeVerdict`
 
 | Field | Hard point | Rule |
 | --- | --- | --- |
-| `bound_to[]` with roles | Linking | Instance as evidence, class as scope; never bind when unsure |
+| `bound_to[]` with roles | Linking | Instance as evidence, class as scope; never bind when unsure: ids must be named in the thread, a class needs a type or model and must contain the units it was stated for |
 | `valid_from` / `valid_to` | Time | `null` = still believed true; closed by a later contradicting message |
-| `trust` + `stated_by` + role | Trust | `hunch` / `stated` / `verified`; an observed outcome upgrades it (implemented: the passive outcome loop and the judge's `supports` verdict) |
+| `trust` + `stated_by` + role | Trust | `hunch` / `stated` / `verified`; an observed outcome upgrades it (implemented: the passive outcome loop and the judge's `supports` verdict). `stated_by` stays the author; who confirmed it goes to `confirmed_by` |
 | `conflicts_with[]` | Trust | Two experts disagree: keep both, flag it |
 | `sources[]` | Traceability | Chat and email of the same case = one assertion, two sources |
 | `conditions`, `action`, `avoid` | Agent-ready | An agent can act without reading free text |

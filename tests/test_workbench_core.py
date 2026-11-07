@@ -97,7 +97,7 @@ def test_scripted_thread_through_the_pipeline(client):
     seeded(client)
     t = client.post("/api/threads", json={"source": "teams", "subject": "Test"}).json()
     assert t["id"].startswith("live/") and t["origin"] == "manual"
-    for text in ("first", "second"):
+    for text in ("first on TRN-042", "second"):  # the linker binds only ids the thread names
         r = client.post(f"/api/threads/{t['id']}/messages", json={"author": "Erkki", "text": text})
         assert r.status_code == 200
     assert r.json()["seq"] == 2

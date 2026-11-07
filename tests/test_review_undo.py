@@ -50,7 +50,7 @@ def test_undo_by_id_errors(client):
 def test_undo_edit_of_another_assertion_is_unknown(client):
     seeded(client)
     _, j1 = run_thread(client, [item("undo-a")], sid="ua")
-    _, j2 = run_thread(client, [item("undo-b", instance="TRN-117")], sid="ub")
+    _, j2 = run_thread(client, [item("undo-b", instance="TRN-117")], text="TRN-117 needs a wait", sid="ub")
     other = edit(client, j2["assertion_ids"][0], summary="x").json()["edit"]
     edit(client, j1["assertion_ids"][0], summary="y")
     assert undo(client, j1["assertion_ids"][0], other["id"]).status_code == 404

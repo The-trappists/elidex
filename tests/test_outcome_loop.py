@@ -119,7 +119,9 @@ def test_worked_upgrades_trust_and_adds_source(loop):
         loop, {"outcome": "worked", "quote": "Traffic is back", "reason": "reports recovery"}
     )
     a = assertion(client, aid)
-    assert a["trust"]["level"] == "verified" and a["trust"]["stated_by"] == "Jaakko Junnila"
+    # the technician confirms; the expert who stated the rule stays its author
+    assert a["trust"]["level"] == "verified" and a["trust"]["stated_by"] == "Erkki Expert"
+    assert a["trust"]["confirmed_by"] == ["Jaakko Junnila"]
     assert a["trust"]["evidence"] == "Traffic is back"
     assert any(s["file"] == tid and s["seq"] == [2] for s in a["sources"])
     (app,) = [x for x in client.get("/api/applications", params={"assertion_id": aid}).json()]

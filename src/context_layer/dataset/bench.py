@@ -69,7 +69,9 @@ def bench(root: Path, max_facts: int | None = None, queries: int = 500, log=prin
     for f in facts:
         item = ExtractedItem.model_validate(f["item"])
         when = datetime.fromisoformat(f["valid_from"])
-        thread = Thread(id=f["sources"][0]["thread_id"], source="slack", messages=[Message(thread_id="x", source="slack", seq=s, author=item.stated_by, sent_at=when, text="") for s in item.cited_seq or [1]])
+        # A stand-in thread: the real one names these ids (the linker binds only ids named in the thread).
+        named = " ".join([*item.scope.instance_ids, *item.scope.site_ids])
+        thread = Thread(id=f["sources"][0]["thread_id"], source="slack", messages=[Message(thread_id="x", source="slack", seq=s, author=item.stated_by, sent_at=when, text=named) for s in item.cited_seq or [1]])
         t = time.perf_counter()
         res = linker.link(item, thread)
         link_t.append(time.perf_counter() - t)

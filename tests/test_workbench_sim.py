@@ -407,8 +407,11 @@ def test_same_topic_advice_on_other_nodes_is_not_a_conflict():
     other_node = aino.scope.model_copy(update={"instance_ids": ["TRN-117"], "element_class": None, "site_ids": ["SITE-OUL-011"]})
     wide = erkki.scope.model_copy(update={"element_class": None, "instance_ids": ["TRN-088"]})
     linker, store = Linker(INVENTORY), ContextStore(INVENTORY)
-    a, _ = store.add_assertion(linker.link(erkki.model_copy(update={"scope": wide}), _thread(s)).assertion)
+    thread = _thread(s)
+    last = thread.messages[-1]  # the linker binds only ids the thread names: Aino names the other node
+    thread.messages.append(last.model_copy(update={"seq": last.seq + 1, "author": aino.stated_by, "text": "Same on TRN-117 at SITE-OUL-011."}))
+    a, _ = store.add_assertion(linker.link(erkki.model_copy(update={"scope": wide}), thread).assertion)
     reconcile(store, a)
-    b, _ = store.add_assertion(linker.link(aino.model_copy(update={"scope": other_node}), _thread(s)).assertion)
+    b, _ = store.add_assertion(linker.link(aino.model_copy(update={"scope": other_node}), thread).assertion)
     reconcile(store, b)
     assert not a.conflicts_with and not b.conflicts_with

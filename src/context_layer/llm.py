@@ -223,34 +223,61 @@ def complete_traced(
     """Call the primary provider, then the fallback on a retryable error.
 
     Returns (text, traces of every attempt). Raises the last error if every provider failed.
-    `validate(text)` should raise on bad output; it only marks parsed_ok in the trace.
+    `validate(text)` should raise on bad output. An answer that fails it is retried once on the same provider with
+    the error appended, then the next provider is tried. If no provider gives a valid answer, the last answer is
+    returned as it is (the caller's parse raises, as before).
     """
     chain = providers(role, model)
     if not chain:
         raise RuntimeError("LLM not configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
     traces: list[dict[str, Any]] = []
     last: Exception | None = None
+    invalid: str | None = None  # the latest answer that failed validation
     for i, p in enumerate(chain):
-        text, trace, exc = call_provider(
-            p,
-            system,
-            user,
-            json=json_mode,
-            schema=schema,
-            purpose=purpose,
-            thread_id=thread_id,
-            sim_time=sim_time,
-            validate=validate,
-            fallback_used=i > 0,
-        )
-        traces.append(trace)
-        if exc is None:
-            return text or "", traces
-        last = exc
-        if not _retryable(exc):
-            break
+        prompt = user
+        for _ in range(2):  # the answer, then one repair on a validation error
+            text, trace, exc = call_provider(
+                p,
+                system,
+                prompt,
+                json=json_mode,
+                schema=schema,
+                purpose=purpose,
+                thread_id=thread_id,
+                sim_time=sim_time,
+                validate=validate,
+                fallback_used=i > 0,
+            )
+            traces.append(trace)
+            if exc is not None:
+                break
+            error = _invalid(validate, text or "")
+            if error is None:
+                return text or "", traces
+            invalid = text or ""
+            prompt = (
+                f"{user}\n\nYour previous answer could not be used: {error[:500]}\n"
+                "Answer again with the complete, valid JSON only."
+            )
+        if exc is not None:
+            last = exc
+            if not _retryable(exc):
+                break
+    if invalid is not None:
+        return invalid, traces
     assert last is not None
     raise last
+
+
+def _invalid(validate: Callable[[str], Any] | None, text: str) -> str | None:
+    """The validation error of an answer, or None when it is valid (or nothing validates it)."""
+    if validate is None:
+        return None
+    try:
+        validate(text)
+        return None
+    except Exception as e:  # noqa: BLE001 - any parse or schema error
+        return f"{type(e).__name__}: {e}"
 
 
 def complete(system: str, user: str, json_mode: bool = False, **kwargs: Any) -> str:

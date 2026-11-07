@@ -23,6 +23,8 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 
 ### 1. Correct linking with the real LLM
 
+> **Partly done** (see [backend-review.md](backend-review.md#applied-so-far-2026-11-07)): a class with no type and no model is refused, a model alone gets its type, and a class that leaves out the cited unit is dropped. The vague-word rule (bind the instance only) is still open.
+
 - **Why the judges care:** "correctness of linking" is a secondary criterion, and Elisa's slides say "a wrong link is worse than none".
 - **Evidence** (`out/eval/report-llm.md`, `out/eval/extractions.json`):
   - Only 41% of bindings are exact.
@@ -37,6 +39,8 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 - **Done when:** `uv run ctx eval --extractor cache` shows higher exact binding and fewer noise items, with no lost solution. `uv run pytest` passes.
 
 ### 2. Stale knowledge in live mode: lifecycle compares binding IDs
+
+> **Done for invalidations** (see [backend-review.md](backend-review.md#applied-so-far-2026-11-07)): `ContextStore.reach` and a subset rule; `sfp-after-firmware-trn117` passes with `--extractor cache`. Conflict detection still compares bound ids (instances included).
 
 - **Why the judges care:** this is hard point 3 (Time): "firmware fixes the bug; when does it stop being true?"
 - **Evidence:** [lifecycle.py:27](../src/context_layer/mvp/lifecycle.py#L27) closes an older assertion only when the two `applies_to` ID sets intersect.
@@ -140,7 +144,7 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 
 | Bug | Verdict |
 | --- | --- |
-| `same_knowledge` merges two people's different facts when both have no action (`"" == ""`, [store.py:36](../src/context_layer/store.py#L36)) | **Real. Fix** (~10 min): when both actions are empty, compare `fact` / `summary` instead |
+| `same_knowledge` merges two people's different facts when both have no action (`"" == ""`, [store.py:36](../src/context_layer/store.py#L36)) | **Fixed**: when both actions are empty, `fact` is compared ([backend-review.md](backend-review.md#applied-so-far-2026-11-07)) |
 | Same-timestamp invalidation ([lifecycle.py:31](../src/context_layer/mvp/lifecycle.py#L31)) | **Do not apply the suggested `>=` → `>` change.** The `>=` is deliberate: it keeps a replacement given in the same message open. The change would close the new key code |
 | Guard negation ("Never reboot") | Low priority: a planned action is never a negation, and `avoid` is already matched as "things to avoid" |
 | Layperson entities dropped, site substring matching | Low priority for the demo |
