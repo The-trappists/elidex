@@ -26,7 +26,6 @@ SCALES = {
     "tiny": dict(sites=60, staff=60, facts=40, threads=2_000),
     "demo": dict(sites=500, staff=600, facts=300, threads=150_000),  # ~150 MB, fits the Workbench-sized experiments
     "large": dict(sites=5_000, staff=3_000, facts=3_000, threads=3_000_000),  # ~3 GB, a mid-size operator
-    "xl": dict(sites=15_000, staff=8_000, facts=9_000, threads=10_000_000),  # ~10 GB, stress test
 }
 _STATE: dict = {}  # filled before the pool forks, so workers share the world without pickling it
 

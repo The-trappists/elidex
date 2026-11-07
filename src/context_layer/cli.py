@@ -164,6 +164,18 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         else:
             print("Tiger Data: TIGER_DATABASE_URL not set")
         return
+    if args.dataset_cmd == "tiger-verify":
+        from .dataset import tiger
+
+        expected = None
+        manifest = Path(args.path or config.DATASET_DIR) / "manifest.json"
+        if manifest.exists():
+            expected = json.loads(manifest.read_text(encoding="utf-8"))["conversations"]["messages"]
+        with tiger.connect() as conn:
+            checks = tiger.verify(conn, expected)
+        for status, name, detail in checks:
+            print(f"[{status:>4}] {name}: {detail}")
+        sys.exit(1 if any(c[0] == "FAIL" for c in checks) else 0)
     if args.dataset_cmd in ("tiger-analytics", "freshness"):
         from .dataset import tiger
 
@@ -286,8 +298,8 @@ def main(argv: list[str] | None = None) -> None:
 
     ds = sub.add_parser("dataset", help="synthetic company dataset: network graph, staff, conversations, ground truth (docs/dataset.md)")
     dsub = ds.add_subparsers(dest="dataset_cmd", required=True)
-    gen = dsub.add_parser("generate", help="write a dataset under out/dataset/<scale> (tiny, demo ~150 MB, large ~3 GB, xl ~10 GB)")
-    gen.add_argument("--scale", choices=["tiny", "demo", "large", "xl"], default="demo")
+    gen = dsub.add_parser("generate", help="write a dataset under out/dataset/<scale> (tiny, demo ~150 MB, large ~3 GB)")
+    gen.add_argument("--scale", choices=["tiny", "demo", "large"], default="demo")
     gen.add_argument("--seed", type=int, default=42, help="same seed and scale = same files")
     gen.add_argument("--out", help="folder (default: out/dataset/<scale>)")
     gen.add_argument("--workers", type=int, help="processes for the conversations (default: min(8, cpus))")
@@ -307,6 +319,8 @@ def main(argv: list[str] | None = None) -> None:
     lt.add_argument("path", nargs="?")
     lt.add_argument("--drop", action="store_true", help="truncate the messages table first (re-running without it fails on duplicates)")
     lt.add_argument("--analytics", action="store_true", help="then build the analytics layer (compression, daily_mentions); time-series service only")
+    tv = dsub.add_parser("tiger-verify", help="checklist of what the project needs from Tiger Data (hypertable, row count, compression, aggregate)")
+    tv.add_argument("path", nargs="?", help="dataset folder whose message count to compare with (default: DATASET_DIR)")
     dsub.add_parser("tiger-analytics", help="(re)build the Tiger Data analytics layer from the loaded messages")
     fr = dsub.add_parser("freshness", help="Tiger Data: when humans last talked about an element, from daily_mentions")
     fr.add_argument("element")

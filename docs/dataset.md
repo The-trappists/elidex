@@ -7,7 +7,6 @@ Why: our hand-written data has 20 elements and a few dozen messages. Knowledge a
 ```bash
 uv run ctx dataset generate --scale demo      # 150k threads, ~150 MB, 2 s
 uv run ctx dataset generate --scale large     # 3M threads, ~3 GB, ~30 s on 12 workers
-uv run ctx dataset generate --scale xl        # 10M threads, ~10 GB
 uv run ctx dataset stats out/dataset/large    # manifest
 uv run ctx dataset bench out/dataset/large    # link + store the true facts, time lookups
 ```
@@ -96,7 +95,7 @@ uv run ctx dataset activity TRN-042                      # Tiger Data: messages 
 
 Tiger Data service type matters: a **Time-series and analytics** service gives a TimescaleDB hypertable (`load-tiger` prints `Table mode: hypertable`); a plain **PostgreSQL** service works too (`Table mode: plain`: same table with a BRIN index on the date, and `activity` uses `date_trunc`). For the "Best Use of Tiger Data" prize, prefer the time-series type so the demo really uses TimescaleDB.
 
-Analytics layer (Time-series service only): `load-tiger --analytics`, or `ctx dataset tiger-analytics` on data already loaded, compresses chunks older than 30 days and builds `message_mentions` plus the continuous aggregate `daily_mentions` (messages per element per day). `ctx dataset freshness TRN-042` then answers "when did humans last talk about this node?" from it. Both are safe to run again.
+Analytics layer (Time-series service only): `load-tiger --analytics`, or `ctx dataset tiger-analytics` on data already loaded, compresses chunks older than 30 days and builds `message_mentions` plus the continuous aggregate `daily_mentions` (messages per element per day). `ctx dataset freshness TRN-042` then answers "when did humans last talk about this node?" from it. Both are safe to run again. `ctx dataset tiger-verify [folder]` prints a checklist (`ok` / `FAIL`) of what the project needs from Tiger Data: TimescaleDB present, `messages` is a hypertable, row count equal to the manifest, indexes, compression and its policy, `message_mentions`, `daily_mentions`, and a real query. It exits with code 1 if anything fails, so it can gate a deployment.
 
 ### On the deployed version (Vultr)
 

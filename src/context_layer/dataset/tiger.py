@@ -169,6 +169,47 @@ def analytics(conn, log=print) -> None:
     log("analytics layer ready: messages compressed after 30 days, message_mentions, daily_mentions")
 
 
+def verify(conn, expected_messages: int | None = None) -> list[tuple[str, str, str]]:
+    """Checklist of what the project needs from Tiger Data: [(status, check, detail)], status "ok", "FAIL" or "n/a".
+
+    Each check runs on its own so one missing view or table does not hide the others."""
+
+    def one(sql: str, *params):
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            return cur.fetchone()
+
+    checks: list[tuple[str, str, str]] = []
+
+    def run(name: str, fn) -> None:
+        try:
+            status, detail = fn()
+        except Exception as e:  # noqa: BLE001 - report it, keep checking
+            conn.rollback()
+            status, detail = "FAIL", f"{type(e).__name__}: {str(e).splitlines()[0][:120]}"
+        checks.append((status, name, detail))
+
+    run("connection", lambda: ("ok", one("SELECT version();")[0].split(",")[0]))
+    run("TimescaleDB extension (Time-series service)", lambda: ("ok", "installed") if has_timescale(conn) else ("FAIL", "plain PostgreSQL: create a Time-series and analytics service"))
+    run("messages is a hypertable", lambda: ("ok", "partitioned by sent_at") if one("SELECT 1 FROM timescaledb_information.hypertables WHERE hypertable_name = 'messages'") else ("FAIL", "plain table: run load-tiger --drop on a time-series service"))
+
+    def rows():
+        n = one("SELECT count(*) FROM messages")[0]
+        if expected_messages is None:
+            return ("ok" if n else "FAIL", f"{n:,} rows (pass a dataset folder to compare with the manifest)")
+        return ("ok", f"{n:,} rows") if n == expected_messages else ("FAIL", f"{n:,} rows, the dataset has {expected_messages:,} messages: reload with --drop")
+
+    run("messages row count", rows)
+    run("elements named per message (average)", lambda: ("ok", f"{one('SELECT round(avg(cardinality(mentions))::numeric, 2) FROM messages')[0]} per message"))
+    run("indexes (pk, mentions GIN, author)", lambda: ("ok", "all 3") if one("SELECT count(*) FROM pg_indexes WHERE tablename = 'messages' AND indexname IN ('messages_pk', 'messages_mentions', 'messages_author')")[0] == 3 else ("FAIL", "missing: re-run load-tiger"))
+    run("compression enabled", lambda: ("ok", "on") if one("SELECT compression_enabled FROM timescaledb_information.hypertables WHERE hypertable_name = 'messages'")[0] else ("FAIL", "run tiger-analytics"))
+    run("compression policy (30 days)", lambda: ("ok", "scheduled") if one("SELECT 1 FROM timescaledb_information.jobs WHERE proc_name = 'policy_compression' AND hypertable_name = 'messages'") else ("FAIL", "run tiger-analytics"))
+    run("message_mentions filled", lambda: ("ok", f"{one('SELECT count(*) FROM message_mentions')[0]:,} rows") if one("SELECT count(*) FROM message_mentions")[0] else ("FAIL", "run tiger-analytics"))
+    run("continuous aggregate daily_mentions", lambda: ("ok", f"{one('SELECT count(*) FROM daily_mentions')[0]:,} rows") if one("SELECT 1 FROM timescaledb_information.continuous_aggregates WHERE view_name = 'daily_mentions'") else ("FAIL", "run tiger-analytics"))
+    run("query: activity of the busiest element", lambda: ("ok", "answers") if activity(conn, one("SELECT element FROM message_mentions GROUP BY 1 ORDER BY count(*) DESC LIMIT 1")[0]) else ("FAIL", "no result"))
+    return checks
+
+
 def freshness(conn, element: str) -> tuple:
     """(last day humans talked about the element, total messages, number of active days)."""
     with conn.cursor() as cur:
