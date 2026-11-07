@@ -20,7 +20,7 @@ export function Tabs<T extends string>({ items, value, onChange, className }: { 
           )}
         >
           {t.label}
-          {t.count !== undefined && <span className="rounded bg-line/60 px-1 text-[10px] text-muted">{t.count}</span>}
+          {t.count !== undefined && <span className="rounded bg-line/60 px-1 text-xs text-muted">{t.count}</span>}
         </button>
       ))}
     </div>

@@ -6,7 +6,7 @@ export function Badge({ className, children, title }: { className?: string; chil
   return (
     <span
       title={title}
-      className={cn('inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[11px] font-medium leading-none whitespace-nowrap', className ?? 'bg-surface-2 text-muted')}
+      className={cn('inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-xs font-medium leading-none whitespace-nowrap', className ?? 'bg-surface-2 text-muted')}
     >
       {children}
     </span>
@@ -18,7 +18,7 @@ export function IdChip({ children, className, onClick }: { children: ReactNode; 
   return (
     <span
       onClick={onClick}
-      className={cn('inline-flex items-center rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-text transition', onClick && 'cursor-pointer hover:border-accent hover:text-accent', className)}
+      className={cn('inline-flex items-center rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-xs text-text transition', onClick && 'cursor-pointer hover:border-accent hover:text-accent', className)}
     >
       {children}
     </span>

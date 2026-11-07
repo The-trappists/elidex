@@ -71,22 +71,29 @@ export function Stat({
           {suffix && <span className="ml-0.5 text-sm font-medium text-muted">{suffix}</span>}
         </span>
         <span className="mt-1.5 block truncate text-xs font-medium">{label}</span>
-        {hint && <span className="block truncate text-[11px] text-muted">{hint}</span>}
+        {hint && <span className="block truncate text-xs text-muted">{hint}</span>}
       </span>
     </button>
   )
 }
 
 /** Human explanation of an error, with the raw technical text folded away. */
-export function ErrorNote({ explained, raw, className }: { explained: Explained; raw?: string | null; className?: string }) {
+export function ErrorNote({ explained, raw, className, count, since }: { explained: Explained; raw?: string | null; className?: string; count?: number; since?: string }) {
   return (
     <div className={cn('rounded-xl border border-bad/30 bg-bad/8 p-3 animate-slide-in', className)}>
       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-bad/15 text-bad">
+        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-xl bg-bad/15 text-bad">
           <AlertTriangle size={14} />
         </span>
         <div className="min-w-0 text-sm">
-          <div className="font-semibold text-bad">{explained.title}</div>
+          <div className="flex flex-wrap items-center gap-2 font-semibold text-bad">
+            {explained.title}
+            {count != null && count > 1 && (
+              <span className="rounded-full bg-bad/15 px-2 py-0.5 text-xs font-medium">
+                happened {count} times{since ? ` since ${new Date(since).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}` : ''}
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-[13px] leading-snug">{explained.detail}</p>
           {explained.hint && (
             <p className="mt-1.5 flex items-start gap-1.5 text-xs text-muted">
@@ -95,7 +102,7 @@ export function ErrorNote({ explained, raw, className }: { explained: Explained;
             </p>
           )}
           {raw && (
-            <details className="mt-2 text-[11px] text-muted">
+            <details className="mt-2 text-xs text-muted">
               <summary className="cursor-pointer select-none hover:text-text">Technical details</summary>
               <pre className="mt-1 whitespace-pre-wrap break-words rounded-md bg-surface-2 p-2 font-mono">{raw}</pre>
             </details>

@@ -62,12 +62,12 @@ export function NewThreadModal({ open, onClose }: { open: boolean; onClose: () =
                 key={p.id}
                 type="button"
                 onClick={() => toggle(p.name)}
-                className={cn('flex items-center gap-2 rounded-lg border px-2 py-1.5 text-left text-sm transition', picked.includes(p.name) ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-2')}
+                className={cn('flex items-center gap-2 rounded-xl border px-2 py-1.5 text-left text-sm transition', picked.includes(p.name) ? 'border-accent bg-accent-soft' : 'border-line hover:bg-surface-2')}
               >
                 <Avatar name={p.name} color={p.avatar_color} size={24} />
                 <span className="min-w-0">
                   <span className="block truncate text-xs font-medium">{p.name}</span>
-                  <span className="block truncate text-[10px] text-muted">{p.role}</span>
+                  <span className="block truncate text-xs text-muted">{p.role}</span>
                 </span>
               </button>
             ))}

@@ -49,13 +49,13 @@ export function Sidebar() {
         <img src="/favicon.svg" alt="" className="size-9 rounded-xl shadow-[var(--glow)]" />
         <div className="leading-tight">
           <div className="text-[15px] font-semibold tracking-tight">Context Workbench</div>
-          <div className="text-[11px] text-muted">what the humans know</div>
+          <div className="text-xs text-muted">what the humans know</div>
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-5 overflow-auto px-3 py-3">
         {NAV_GROUPS.map((g) => (
           <div key={g.label}>
-            <div className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted/80">{g.label}</div>
+            <div className="mb-1.5 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted/80">{g.label}</div>
             <div className="flex flex-col gap-0.5">
               {g.items.map(({ to, label, icon: Icon, end }) => {
                 const b = badge[to]
@@ -76,7 +76,7 @@ export function Sidebar() {
                         <span className={cn('absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand transition-all duration-300', isActive ? 'opacity-100' : 'h-0 opacity-0')} />
                         <Icon size={17} className="transition-transform duration-200 group-hover:scale-110" />
                         {label}
-                        {!!b?.n && <span className={cn('ml-auto min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold tabular-nums', b.tone)}>{b.n}</span>}
+                        {!!b?.n && <span className={cn('ml-auto min-w-5 rounded-full px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums', b.tone)}>{b.n}</span>}
                       </>
                     )}
                   </NavLink>
@@ -86,7 +86,7 @@ export function Sidebar() {
           </div>
         ))}
       </div>
-      <div className="m-3 rounded-xl border border-line bg-surface-2/60 p-3 text-[11px] leading-snug text-muted">
+      <div className="m-3 rounded-xl border border-line bg-surface-2/60 p-3 text-xs leading-snug text-muted">
         <div className="font-semibold text-text">Since AI 2026</div>
         Elisa challenge · capturing human knowledge for autonomous networks
       </div>

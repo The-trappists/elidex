@@ -11,7 +11,7 @@ import { callStatus, fmtCost, STATUS_LABEL, tryParse } from './status'
 
 const Meta = ({ k, v }: { k: string; v: React.ReactNode }) => (
   <div className="min-w-0">
-    <div className="text-[10px] uppercase tracking-wide text-muted">{k}</div>
+    <div className="text-xs uppercase tracking-wide text-muted">{k}</div>
     <div className="truncate text-xs">{v}</div>
   </div>
 )
@@ -73,7 +73,7 @@ export function LlmDrawer({ call, id, onClose }: { call: LlmCall | undefined; id
                 (parsed.ok ? (
                   <CopyBlock title="Parsed JSON" text={JSON.stringify(parsed.value, null, 2)} />
                 ) : (
-                  <div className="rounded-lg border border-warn/40 bg-warn/10 p-3 text-xs">
+                  <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs">
                     <b className="text-warn">Not valid JSON:</b> <span className="font-mono">{parsed.error}</span>
                     {call.parse_error && <div className="mt-1 text-muted">Backend: {call.parse_error}</div>}
                   </div>

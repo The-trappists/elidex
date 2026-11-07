@@ -98,7 +98,7 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
                     focused && !isFocus && 'opacity-50',
                   )}
                 >
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted">
+                  <div className="flex items-center gap-1.5 text-xs text-muted">
                     <span className="font-mono">#{m.seq}</span>
                     <b className="font-medium text-text">{m.author}</b>
                     {m.role && <span>{m.role}</span>}
@@ -132,15 +132,15 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
         </Section>
       )}
 
-      <Section title="Assertions" count={job.assertion_ids.length}>
+      <Section title="Knowledge saved" count={job.assertion_ids.length}>
         {job.assertion_ids.length || job.removed_assertion_ids.length ? (
           <div className="flex flex-wrap items-center gap-1.5">
             {job.assertion_ids.map((id) => <IdChip key={id} onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(id)}`)}>{id}</IdChip>)}
             {job.removed_assertion_ids.map((id) => <IdChip key={id} className="line-through opacity-60">{id}</IdChip>)}
-            {job.removed_assertion_ids.length > 0 && <span className="text-[11px] text-muted">struck through = removed on re-processing</span>}
+            {job.removed_assertion_ids.length > 0 && <span className="text-xs text-muted">struck through = removed on re-processing</span>}
           </div>
         ) : (
-          <p className="text-xs text-muted">No assertion created or merged.</p>
+          <p className="text-xs text-muted">No knowledge created or merged.</p>
         )}
       </Section>
 
@@ -153,10 +153,10 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
       {ev && (
         <Section title="Evaluation against expected">
           <div className="space-y-3">
-            {ev.matched.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-ok">Matched ({ev.matched.length})</div><List items={ev.matched} tone="ok" /></div>}
-            {ev.missed.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-bad">Missed ({ev.missed.length})</div><List items={ev.missed} tone="bad" /></div>}
-            {ev.unexpected.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-bad">Unexpected ({ev.unexpected.length})</div><List items={ev.unexpected} tone="bad" /></div>}
-            {ev.binding_diffs.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-bad">Binding differences</div><List items={ev.binding_diffs} tone="bad" /></div>}
+            {ev.matched.length > 0 && <div><div className="mb-1 text-xs font-medium text-ok">Matched ({ev.matched.length})</div><List items={ev.matched} tone="ok" /></div>}
+            {ev.missed.length > 0 && <div><div className="mb-1 text-xs font-medium text-bad">Missed ({ev.missed.length})</div><List items={ev.missed} tone="bad" /></div>}
+            {ev.unexpected.length > 0 && <div><div className="mb-1 text-xs font-medium text-bad">Unexpected ({ev.unexpected.length})</div><List items={ev.unexpected} tone="bad" /></div>}
+            {ev.binding_diffs.length > 0 && <div><div className="mb-1 text-xs font-medium text-bad">Binding differences</div><List items={ev.binding_diffs} tone="bad" /></div>}
           </div>
         </Section>
       )}

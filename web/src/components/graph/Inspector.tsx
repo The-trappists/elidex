@@ -13,8 +13,8 @@ import { classMembers, classesOf, type NodeKind } from './graphModel'
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
   <section className="border-b border-line px-4 py-3 last:border-0">
     <div className="mb-2 flex items-center gap-1.5">
-      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted">{title}</h4>
-      {count !== undefined && <span className="rounded bg-surface-2 px-1 text-[10px] text-muted">{count}</span>}
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</h4>
+      {count !== undefined && <span className="rounded bg-surface-2 px-1 text-xs text-muted">{count}</span>}
       <div className="ml-auto">{action}</div>
     </div>
     {children}
@@ -37,7 +37,7 @@ const bound = (a: ContextAssertion, id: string) => a.bound_to.some((b) => b.enti
 
 export function Inspector({ id, kind, at, onSelect }: { id: string | null; kind: NodeKind | null; at: Date; onSelect: (id: string, kind: NodeKind) => void }) {
   if (!id || !kind)
-    return <EmptyState icon={<MousePointerClick size={26} />} title="Select a node" hint="Click an element, site, class or assertion in the graph to see what is known about it at the chosen time." />
+    return <EmptyState icon={<MousePointerClick size={26} />} title="Select a node" hint="Click an element, site, class or piece of knowledge in the graph to see what is known about it at the chosen time." />
   const props = { id, at, onSelect }
   return kind === 'element' ? <ElementInfo {...props} /> : kind === 'site' ? <SiteInfo {...props} /> : kind === 'class' ? <ClassInfo {...props} /> : <AssertionInfo {...props} />
 }
@@ -47,7 +47,7 @@ type P = { id: string; at: Date; onSelect: (id: string, kind: NodeKind) => void 
 function Title({ kind, title, sub }: { kind: string; title: string; sub?: ReactNode }) {
   return (
     <div className="border-b border-line px-4 py-3">
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted">{kind}</div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted">{kind}</div>
       <div className="break-words text-base font-semibold">{title}</div>
       {sub && <div className="mt-1 flex flex-wrap items-center gap-1.5">{sub}</div>}
     </div>
@@ -88,9 +88,9 @@ function ElementInfo({ id, at, onSelect }: P) {
       <Section title="Classes" count={its.length}>
         {its.length ? <div className="flex flex-wrap gap-1.5">{its.map((c) => <IdChip key={c.id} onClick={() => onSelect(c.id, 'class')}>{c.label}</IdChip>)}</div> : <None>Not in any known class.</None>}
       </Section>
-      <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-[11px] text-muted">Include expired</span>} />}>
+      <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>
         {hits === null || (loading && !hits.length) ? (
-          <div className="h-16 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-16 animate-pulse rounded-xl bg-surface-2" />
         ) : hits.length ? (
           <div className="space-y-2">{hits.map((h) => <ContextCard key={h.id} a={h} at={at} />)}</div>
         ) : (
@@ -108,7 +108,7 @@ function ElementInfo({ id, at, onSelect }: P) {
                   <Badge className={i.status === 'open' ? 'ml-auto bg-bad/15 text-bad' : 'ml-auto bg-ok/15 text-ok'}>{i.status}</Badge>
                 </div>
                 <p className="mt-1 text-muted">{i.summary}</p>
-                <div className="mt-1 text-[10.5px] text-muted">{fmtAgo(i.opened_at, at)}</div>
+                <div className="mt-1 text-xs text-muted">{fmtAgo(i.opened_at, at)}</div>
               </li>
             ))}
           </ul>
@@ -149,7 +149,7 @@ function SiteInfo({ id, at, onSelect }: P) {
       <Section title="Elements" count={els.length}>
         {els.length ? <div className="flex flex-wrap gap-1.5">{els.map((e) => <IdChip key={e.id} onClick={() => onSelect(e.id, 'element')}>{e.id}</IdChip>)}</div> : <None>No element on this site.</None>}
       </Section>
-      <Section title="Assertions bound to the site" count={as.length}>
+      <Section title="Knowledge about this site" count={as.length}>
         {as.length ? <div className="space-y-2">{as.map((a) => <ContextCard key={a.id} a={a} at={at} />)}</div> : <None>Nothing is bound to this site.</None>}
       </Section>
     </div>
@@ -170,7 +170,7 @@ function ClassInfo({ id, at, onSelect }: P) {
       <Section title="Members" count={members.length}>
         {members.length ? <div className="flex flex-wrap gap-1.5">{members.map((e) => <IdChip key={e.id} onClick={() => onSelect(e.id, 'element')}>{e.id}</IdChip>)}</div> : <None>No element matches this class.</None>}
       </Section>
-      <Section title="Assertions about the class" count={as.length}>
+      <Section title="Knowledge about this group of equipment" count={as.length}>
         {as.length ? <div className="space-y-2">{as.map((a) => <ContextCard key={a.id} a={a} at={at} />)}</div> : <None>No assertion is bound to this class.</None>}
       </Section>
     </div>
@@ -180,10 +180,10 @@ function ClassInfo({ id, at, onSelect }: P) {
 function AssertionInfo({ id, at }: P) {
   const nav = useNavigate()
   const a = useLive((s) => s.assertions[id])
-  if (!a) return <EmptyState title="Assertion not found" hint={id} />
+  if (!a) return <EmptyState title="Knowledge not found" hint={id} />
   return (
     <div>
-      <Title kind="Assertion" title={a.topic} sub={<><Badge className={TYPE_STYLE[a.type].cls}>{TYPE_STYLE[a.type].label}</Badge><IdChip>{a.id}</IdChip></>} />
+      <Title kind="Knowledge" title={a.topic} sub={<><Badge className={TYPE_STYLE[a.type].cls}>{TYPE_STYLE[a.type].label}</Badge><IdChip>{a.id}</IdChip></>} />
       <div className="p-4">
         <ContextCard a={a} at={at} />
         <Button className="mt-3 w-full" onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(a.id)}`)}>Open in Knowledge</Button>

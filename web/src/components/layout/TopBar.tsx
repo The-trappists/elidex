@@ -95,7 +95,7 @@ export function TopBar() {
       {/* sim clock */}
       <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 py-1 pl-1 pr-3">
         <button
-          className={cn('flex size-7 items-center justify-center rounded-lg text-white transition hover:scale-105 active:scale-95', clock?.running ? 'bg-warn' : 'bg-ok')}
+          className={cn('flex size-7 items-center justify-center rounded-xl text-white transition hover:scale-105 active:scale-95', clock?.running ? 'bg-warn' : 'bg-ok')}
           title={clock?.running ? 'Pause the simulation' : 'Start the simulation'}
           onClick={() => void withToast(() => (clock?.running ? api.simPause() : api.simStart()))}
         >
@@ -103,7 +103,7 @@ export function TopBar() {
         </button>
         <div className="leading-tight">
           <div className="font-mono text-sm font-medium tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) + ':' + String(now.getSeconds()).padStart(2, '0') : '—'}</div>
-          <div className="text-[10px] uppercase tracking-wide text-muted">{clock?.running ? 'Simulated time · running' : 'Simulated time · paused'}</div>
+          <div className="text-xs uppercase tracking-wide text-muted">{clock?.running ? 'Simulated time · running' : 'Simulated time · paused'}</div>
         </div>
       </div>
       <div className="flex rounded-xl border border-line bg-surface-2 p-0.5">
@@ -111,7 +111,7 @@ export function TopBar() {
           <button
             key={s}
             onClick={() => void withToast(() => api.simSpeed(s))}
-            className={cn('rounded-lg px-2 py-1 font-mono text-xs transition', clock?.speed === s ? 'bg-brand text-white shadow-sm' : 'text-muted hover:text-text')}
+            className={cn('rounded-xl px-2 py-1 font-mono text-xs transition', clock?.speed === s ? 'bg-brand text-white shadow-sm' : 'text-muted hover:text-text')}
           >
             ×{s}
           </button>

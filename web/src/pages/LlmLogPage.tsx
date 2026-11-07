@@ -38,12 +38,12 @@ function useColumns(maxLatency: number): Column<LlmCall>[] {
   return [
     {
       key: 'time',
-      header: 'When',
+      header: 'When (real time)',
       className: 'whitespace-nowrap',
       cell: (c) => (
         <>
           <div className="text-[13px] font-medium">{formatDistanceToNowStrict(new Date(c.ts), { addSuffix: true })}</div>
-          <div className="text-[11px] text-muted" title="Real time">{fmtDateTime(c.ts)}</div>
+          <div className="text-xs text-muted" title={c.sim_time ? `Simulated time: ${fmtDateTime(c.sim_time)}` : undefined}>{fmtDateTime(c.ts)}{c.sim_time && <span className="ml-1 opacity-70">· sim {fmtDateTime(c.sim_time).slice(5)}</span>}</div>
         </>
       ),
     },
@@ -82,7 +82,7 @@ function useColumns(maxLatency: number): Column<LlmCall>[] {
       header: 'Model',
       cell: (c) => (
         <span className="flex flex-col gap-1">
-          <span className="font-mono text-[11px]">{c.model}</span>
+          <span className="font-mono text-xs">{c.model}</span>
           {c.fallback_used && <Badge className="w-fit bg-warn/15 text-warn">backup used</Badge>}
         </span>
       ),
@@ -105,7 +105,7 @@ function useColumns(maxLatency: number): Column<LlmCall>[] {
 
 const dl = (href: string, label: string) => (
   <a href={href} download>
-    <Button size="sm" icon={<Download size={13} />}>{label}</Button>
+    <Button size="sm" variant="ghost" icon={<Download size={13} />}>{label}</Button>
   </a>
 )
 
@@ -116,7 +116,7 @@ export default function LlmLogPage() {
   const openId = params.get('call')
   const [purpose, setPurpose] = useState('')
   const [model, setModel] = useState('')
-  const [status, setStatus] = useState<CallStatus | ''>('')
+  const [status, setStatus] = useState<CallStatus | 'problem' | ''>('')
   const [q, setQ] = useState('')
   const [check, setCheck] = useState(false)
 
@@ -142,7 +142,7 @@ export default function LlmLogPage() {
     (c) =>
       (!purpose || c.purpose === purpose) &&
       (!model || c.model === model) &&
-      (!status || callStatus(c) === status) &&
+      (!status || (status === 'problem' ? callStatus(c) !== 'ok' : callStatus(c) === status)) &&
       (!q || (c.thread_id ?? '').toLowerCase().includes(q.toLowerCase())),
   )
 
@@ -150,6 +150,9 @@ export default function LlmLogPage() {
   const columns = useColumns(maxLatency)
   const stats = useMemo(() => {
     const failed = calls.filter((c) => callStatus(c) !== 'ok')
+    // Failures that share the headline of the latest one (calls are newest first).
+    const headline = (c?: LlmCall) => explainError(c?.error ?? c?.parse_error)?.title
+    const same = failed.filter((c) => headline(c) === headline(failed[0]))
     const timed = calls.filter((c) => c.latency_ms != null && !c.error)
     return {
       total: calls.length,
@@ -157,10 +160,12 @@ export default function LlmLogPage() {
       avg: timed.length ? Math.round(timed.reduce((n, c) => n + (c.latency_ms ?? 0), 0) / timed.length / 100) / 10 : 0,
       failed: failed.length,
       lastFailure: failed[0],
+      sameAsLast: same.length,
+      firstSame: same[same.length - 1]?.ts,
     }
   }, [calls])
 
-  const chip = (k: CallStatus | '', label: string, n: number) => (
+  const chip = (k: CallStatus | 'problem' | '', label: string, n: number) => (
     <button
       key={k || 'all'}
       onClick={() => setStatus(k)}
@@ -170,7 +175,7 @@ export default function LlmLogPage() {
       )}
     >
       {label}
-      <span className="rounded-full bg-surface-3 px-1.5 text-[10px] tabular-nums">{n}</span>
+      <span className="rounded-full bg-surface-3 px-1.5 text-xs tabular-nums">{n}</span>
     </button>
   )
 
@@ -180,13 +185,15 @@ export default function LlmLogPage() {
         <Stat icon={<Send size={18} />} label="Requests to the AI" value={stats.total} hint="since the server started" tone="accent" />
         <Stat icon={<CheckCircle2 size={18} />} label="Went through" value={stats.okPct} suffix="%" hint={stats.failed ? `${stats.failed} did not` : 'no failure'} tone={stats.okPct >= 90 ? 'ok' : stats.okPct >= 60 ? 'warn' : 'bad'} />
         <Stat icon={<Gauge size={18} />} label="Average answer time" value={stats.avg} suffix="s" hint="successful requests only" />
-        <Stat icon={<XCircle size={18} />} label="Problems" value={stats.failed} hint={stats.failed ? 'click "Problems" to read them' : 'all good'} tone={stats.failed ? 'bad' : 'ok'} onClick={stats.failed ? () => setStatus('api_error') : undefined} />
+        <Stat icon={<XCircle size={18} />} label="Problems" value={stats.failed} hint={stats.failed ? 'click to see them' : 'all good'} tone={stats.failed ? 'bad' : 'ok'} onClick={stats.failed ? () => setStatus('problem') : undefined} />
       </div>
 
       {stats.lastFailure && status === '' && (
         <ErrorNote
           explained={explainError(stats.lastFailure.error ?? stats.lastFailure.parse_error)!}
           raw={stats.lastFailure.error ?? stats.lastFailure.parse_error}
+          count={stats.sameAsLast}
+          since={stats.firstSame}
         />
       )}
 
@@ -195,8 +202,7 @@ export default function LlmLogPage() {
           <div className="flex gap-1.5">
             {chip('', 'All', calls.length)}
             {chip('ok', 'Succeeded', calls.filter((c) => callStatus(c) === 'ok').length)}
-            {chip('api_error', 'Problems', calls.filter((c) => callStatus(c) === 'api_error').length)}
-            {chip('parse_error', 'Unusable answers', calls.filter((c) => callStatus(c) === 'parse_error').length)}
+            {chip('problem', 'Problems', stats.failed)}
           </div>
           <Select className="ml-2 w-52" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
             <option value="">Every kind of request</option>
@@ -208,10 +214,14 @@ export default function LlmLogPage() {
           </Select>
           <Input className="w-48" placeholder="Search a conversation" value={q} onChange={(e) => setQ(e.target.value)} />
           <span className="text-xs text-muted">{rows.length} shown</span>
-          <div className="ml-auto flex flex-wrap items-center gap-1.5">
-            {dl(api.exportLlmCallsUrl, 'Export log')}
-            {dl(api.exportSessionUrl, 'Export session')}
-            {dl(api.exportTranscriptUrl(), 'Export transcripts')}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted">Export</span>
+            <div className="flex gap-1">
+              {dl(api.exportLlmCallsUrl, 'Log')}
+              {dl(api.exportSessionUrl, 'Session')}
+              {dl(api.exportTranscriptUrl(), 'Transcripts')}
+            </div>
+            <span className="mx-1 h-5 w-px bg-line" />
             <Button size="sm" variant="primary" icon={<FlaskConical size={13} />} onClick={() => setCheck(true)}>Test the AI connection</Button>
           </div>
         </div>

@@ -43,13 +43,13 @@ export function CheckModal({ open, onClose }: { open: boolean; onClose: () => vo
       ) : (
         <div className="space-y-5">
           {results?.map((r) => (
-            <div key={r.provider + r.model} className="rounded-lg border border-line p-3">
+            <div key={r.provider + r.model} className="rounded-xl border border-line p-3">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{r.provider}</span>
                 <span className="font-mono text-xs text-muted">{r.model}</span>
                 <Badge className={r.ping_ok ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'}>{r.ping_ok ? 'ping ok' : 'ping failed'}</Badge>
               </div>
-              <div className="text-[11px] text-muted">{r.base_url}</div>
+              <div className="text-xs text-muted">{r.base_url}</div>
               <table className="mt-2 w-full text-xs">
                 <thead><tr className="text-left text-muted"><th className="py-1 font-medium">JSON mode</th><th className="font-medium">Result</th><th className="font-medium">Latency</th><th className="font-medium">Items</th><th className="font-medium">Error</th></tr></thead>
                 <tbody>
@@ -74,7 +74,7 @@ export function CheckModal({ open, onClose }: { open: boolean; onClose: () => vo
             </div>
           ))}
           {results?.length === 0 && <div className="text-sm text-muted">No provider returned a result.</div>}
-          <div className="text-[11px] text-muted">Every check call is also listed in the <Link to="/llm" className="text-accent" onClick={onClose}>LLM log</Link> (purpose "check").</div>
+          <div className="text-xs text-muted">Every check call is also listed in the <Link to="/llm" className="text-accent" onClick={onClose}>LLM log</Link> (purpose "check").</div>
         </div>
       )}
     </Modal>

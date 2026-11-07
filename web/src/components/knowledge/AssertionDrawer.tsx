@@ -9,7 +9,7 @@ import { assertionHref, BindingChips, TrustBadge, TypeBadge, threadHref } from '
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mt-5">
-    <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">{title}</h4>
+    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{title}</h4>
     {children}
   </section>
 )
@@ -44,7 +44,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
       }
     >
       {!a ? (
-        <div className="text-sm text-muted">Assertion "{id}" not found. It may have been deleted.</div>
+        <div className="text-sm text-muted">Knowledge "{id}" not found. It may have been deleted.</div>
       ) : (
         <div className="text-sm">
           <p>{a.summary}</p>
@@ -64,9 +64,9 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             <Section title="Conditions">
               <ul className="space-y-1">
                 {a.conditions.map((c, i) => (
-                  <li key={i} className="rounded-lg border border-line px-2.5 py-1.5 text-xs">
+                  <li key={i} className="rounded-xl border border-line px-2.5 py-1.5 text-xs">
                     {c.text}
-                    <div className="mt-0.5 font-mono text-[11px] text-muted">{c.check ? `check: ${c.check.field} ${c.check.op} ${JSON.stringify(c.check.value)}` : 'no machine check (read by humans only)'}</div>
+                    <div className="mt-0.5 font-mono text-xs text-muted">{c.check ? `check: ${c.check.field} ${c.check.op} ${JSON.stringify(c.check.value)}` : 'no machine check (read by humans only)'}</div>
                   </li>
                 ))}
               </ul>
@@ -142,7 +142,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             title={`Delete ${a.id}?`}
             footer={<><Button onClick={() => setConfirm(false)}>Cancel</Button><Button variant="danger" onClick={remove}>Delete</Button></>}
           >
-            <p className="text-sm">This removes the assertion from the knowledge store. Re-processing its source thread can bring it back.</p>
+            <p className="text-sm">This removes this knowledge from the store. Re-processing its source thread can bring it back.</p>
           </Modal>
         </div>
       )}

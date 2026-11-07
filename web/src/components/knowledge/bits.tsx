@@ -21,7 +21,7 @@ export function isValidAt(a: ContextAssertion, at: Date | null): boolean {
 export function Validity({ a }: { a: ContextAssertion }) {
   return (
     <span className="text-xs text-muted">
-      {a.valid_to ? `${fmtDate(a.valid_from)} → ${fmtDate(a.valid_to)}` : `since ${fmtDate(a.valid_from)}`}
+      {a.valid_to ? `Valid ${fmtDate(a.valid_from)} → ${fmtDate(a.valid_to)}` : `Valid since ${fmtDate(a.valid_from)}`}
       {a.valid_to && a.closed_by && (
         <>
           {' '}
@@ -43,7 +43,7 @@ export function BindingChips({ bound }: { bound: Binding[] }) {
       {bound.map((b, i) => (
         <IdChip key={i}>
           {b.entity}
-          <span className="ml-1 text-[9px] text-muted">{b.role.replace('_', ' ')}</span>
+          <span className="ml-1 text-xs text-muted">{b.role.replace('_', ' ')}</span>
         </IdChip>
       ))}
     </div>

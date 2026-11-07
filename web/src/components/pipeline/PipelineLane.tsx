@@ -20,7 +20,7 @@ export function StageChips({ job, compact }: { job: PipelineJob; compact?: boole
           {i > 0 && <ChevronRight size={11} className="mx-px shrink-0 text-muted/60" />}
           <span
             title={`${STAGE_LABEL[s.stage]} (${STAGE_STATUS_WORD[s.status]})${s.detail ? ' · ' + s.detail : ''}`}
-            className={cn('rounded-full border px-2 py-1 text-[10px] font-medium leading-none transition-colors', STAGE_STATUS_STYLE[s.status], compact && 'px-1.5')}
+            className={cn('rounded-full border px-2 py-1 text-xs font-medium leading-none transition-colors', STAGE_STATUS_STYLE[s.status], compact && 'px-1.5')}
           >
             {STAGE_LABEL[s.stage]}
           </span>
@@ -57,11 +57,11 @@ export function PipelineLane({ limit = 15 }: { limit?: number }) {
                 {t && <Badge className={SOURCE_STYLE[t.source].cls}>{SOURCE_STYLE[t.source].label}</Badge>}
                 <Badge className="bg-surface-2 text-muted">{extractorLabel(j.extractor)}</Badge>
                 {isRunning(j) && <Badge className="bg-info/15 text-info"><span className="live-dot size-1.5 rounded-full bg-current" />Reading</Badge>}
-                <span className="w-14 text-right text-[11px] tabular-nums text-muted">{fmtMs(dur)}</span>
+                <span className="w-14 text-right text-xs tabular-nums text-muted">{fmtMs(dur)}</span>
               </div>
               <div className="mt-1.5 flex items-center gap-3">
                 <StageChips job={j} />
-                <span className={cn('min-w-0 flex-1 truncate text-[11px]', j.error ? 'text-bad' : 'text-muted')}>{describeJob(j)}</span>
+                <span className={cn('min-w-0 flex-1 truncate text-xs', j.error ? 'text-bad' : 'text-muted')}>{describeJob(j)}</span>
               </div>
             </li>
           )

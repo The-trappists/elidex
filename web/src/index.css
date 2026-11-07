@@ -15,35 +15,39 @@
   --surface-3: #e4e7f3;
   --line: #dfe2ef;
   --text: #14172b;
-  --muted: #646a86;
+  --muted: #5b6180;
 
   /* Brand: violet to cyan "signal" gradient */
-  --accent: #5b4bff;
+  --accent: #4f3fe0;
   --accent-2: #0ea5e9;
   --accent-soft: #ecebff;
-  --brand-gradient: linear-gradient(135deg, #6a5cff 0%, #3b82f6 55%, #0ea5e9 100%);
+  --brand-gradient: linear-gradient(135deg, #5a4cf0 0%, #2563eb 55%, #0369a1 100%);
 
   /* channels */
-  --teams: #5b5fc7;
-  --email: #0891b2;
-  --slack: #d6245f;
+  --teams: #4a4eb0;
+  --email: #0c6b82;
+  --slack: #be1850;
 
   /* assertion types */
-  --t-workaround: #8b5cf6;
-  --t-access: #d97706;
-  --t-fact: #0284c7;
-  --t-invalidation: #64748b;
+  --t-workaround: #6d28d9;
+  --t-access: #92400e;
+  --t-fact: #0369a1;
+  --t-invalidation: #475569;
 
   /* trust */
-  --trust-hunch: #d97706;
-  --trust-stated: #2563eb;
-  --trust-verified: #059669;
+  --trust-hunch: #92400e;
+  --trust-stated: #1d4ed8;
+  --trust-verified: #046649;
 
   /* status */
-  --ok: #059669;
-  --warn: #d97706;
-  --bad: #e11d48;
-  --info: #2563eb;
+  --ok: #046649;
+  --warn: #92400e;
+  --bad: #be123c;
+  --info: #1d4ed8;
+
+  /* shape: two levels only. Containers (cards, panels, modals) use rounded-2xl; controls (buttons, inputs, tabs, rows) use rounded-xl; pills use rounded-full. */
+  --radius-container: 1rem;
+  --radius-control: 0.75rem;
 
   /* depth */
   --shadow-sm: 0 1px 2px rgb(20 23 43 / 0.05), 0 1px 1px rgb(20 23 43 / 0.03);
@@ -72,7 +76,7 @@
   --accent: #8b7dff;
   --accent-2: #38bdf8;
   --accent-soft: #1d1a4d;
-  --brand-gradient: linear-gradient(135deg, #7c6cff 0%, #4f8cff 55%, #38bdf8 100%);
+  --brand-gradient: linear-gradient(135deg, #5a4cf0 0%, #2563eb 55%, #0369a1 100%);
 
   --teams: #8b8fe8;
   --email: #22d3ee;

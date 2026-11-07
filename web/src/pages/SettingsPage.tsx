@@ -88,7 +88,7 @@ export default function SettingsPage() {
           <Row label="Lifecycle" text="Lets a later message close an earlier piece of knowledge (for example 'the old workaround no longer applies').">
             <Toggle checked={st.lifecycle} onChange={(v) => save({ lifecycle: v })} />
           </Row>
-          <Row label="Conditions" text="Keeps the machine-checkable conditions of each assertion so agents can test them against observations.">
+          <Row label="Conditions" text="Keeps the machine-checkable conditions of each piece of knowledge so agents can test them against observations.">
             <Toggle checked={st.use_conditions} onChange={(v) => save({ use_conditions: v })} />
           </Row>
           <Row label="Guard" text="Checks an agent's planned action against the knowledge and says go or adapt.">

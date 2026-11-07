@@ -15,7 +15,7 @@ export function HitRow({ hit, onClick }: { hit: ContextHit; onClick?: () => void
         <Badge className={`${TRUST_STYLE[hit.trust.level].cls} ml-auto`}>{TRUST_STYLE[hit.trust.level].label}</Badge>
       </div>
       <p className="mt-1 leading-snug text-muted">{hit.summary}</p>
-      <div className="mt-1.5 flex items-center gap-2 text-[10px] text-muted">
+      <div className="mt-1.5 flex items-center gap-2 text-xs text-muted">
         <span className="rounded bg-surface-2 px-1 py-0.5 font-mono">via {hit.matched_via}</span>
         <span>{hit.trust.stated_by}</span>
         <span className="ml-auto font-mono">{hit.id}</span>

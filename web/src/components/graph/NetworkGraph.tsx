@@ -220,7 +220,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
           variant={layers.knowledge ? 'primary' : 'secondary'}
           icon={<BookOpen size={13} />}
           onClick={() => onLayersChange?.({ ...layers, knowledge: !layers.knowledge })}
-          title="Show classes and assertions on the graph"
+          title="Show equipment groups and knowledge on the graph"
         >
           Knowledge
         </Button>
@@ -229,7 +229,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
             size="sm"
             icon={fadeExpired ? <Eye size={13} /> : <EyeOff size={13} />}
             onClick={() => setFadeExpired(!fadeExpired)}
-            title="Assertions not valid at the chosen time: fade them or hide them"
+            title="Knowledge not valid at the chosen time: fade them or hide them"
           >
             {fadeExpired ? 'Fade expired' : 'Hide expired'}
           </Button>

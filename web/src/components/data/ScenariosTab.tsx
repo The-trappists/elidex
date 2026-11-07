@@ -44,7 +44,7 @@ function JsonEditor({ scenario, onClose }: { scenario: Scenario | null; onClose:
       }
     >
       <Textarea rows={24} spellCheck={false} className="font-mono text-xs" value={text} onChange={(e) => setText(e.target.value)} />
-      <p className="mt-2 text-[11px] text-muted">Saving with an existing id replaces that scenario. Change the id to save a new one.</p>
+      <p className="mt-2 text-xs text-muted">Saving with an existing id replaces that scenario. Change the id to save a new one.</p>
     </Modal>
   )
 }
@@ -91,7 +91,7 @@ function GenerateModal({ open, onClose }: { open: boolean; onClose: () => void }
         </div>
       ) : (
         <div className="space-y-3">
-          {!configured && <div className="rounded-lg border border-warn/40 bg-warn/10 p-3 text-xs">No LLM is configured, so generation is disabled. Add a Gemini or Featherless key in <code>.env</code> (see <code>.env.example</code>) and restart the backend.</div>}
+          {!configured && <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs">No LLM is configured, so generation is disabled. Add a Gemini or Featherless key in <code>.env</code> (see <code>.env.example</code>) and restart the backend.</div>}
           <p className="text-xs text-muted">The LLM writes a short chat between personas about an incident on the chosen element. Check the result before relying on it.</p>
           <Field label="Entity" hint="Leave empty to let the generator pick one.">
             <Select value={entity} onChange={(e) => setEntity(e.target.value)}>

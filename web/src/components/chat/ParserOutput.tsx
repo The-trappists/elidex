@@ -12,7 +12,7 @@ import { explainError } from '../../lib/explain'
 import { ItemCard } from './ItemCard'
 
 const H = ({ children, count }: { children: string; count?: number }) => (
-  <h4 className="mb-1.5 mt-4 text-[11px] font-semibold uppercase tracking-wide text-muted">
+  <h4 className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-muted">
     {children}
     {count !== undefined && <span className="ml-1 font-normal">({count})</span>}
   </h4>
@@ -23,21 +23,21 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
     <div>
       <div className="flex flex-wrap items-center gap-1.5">
         {job.stages.map((s) => (
-          <span key={s.stage} title={`${s.detail}${s.duration_ms != null ? ` (${fmtMs(s.duration_ms)})` : ''}`} className={cn('rounded-md border px-1.5 py-0.5 text-[11px]', STAGE_STATUS_STYLE[s.status])}>
+          <span key={s.stage} title={`${s.detail}${s.duration_ms != null ? ` (${fmtMs(s.duration_ms)})` : ''}`} className={cn('rounded-md border px-1.5 py-0.5 text-xs', STAGE_STATUS_STYLE[s.status])}>
             {STAGE_LABEL[s.stage]}
           </span>
         ))}
       </div>
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-muted">
+      <div className="mt-2 flex items-center gap-2 text-xs text-muted">
         <span>Extractor</span>
         <IdChip>{job.extractor}</IdChip>
         <span className="ml-auto">{fmtDateTime(job.started_at)}</span>
       </div>
       {job.error && <ErrorNote className="mt-3" explained={explainError(job.error)!} raw={job.error} />}
 
-      <H count={job.items.length}>Extracted items</H>
+      <H count={job.items.length}>What the AI found in this conversation</H>
       {job.items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-line p-3 text-xs text-muted">The parser found nothing worth keeping in this thread.</div>
+        <div className="rounded-xl border border-dashed border-line p-3 text-xs text-muted">The parser found nothing worth keeping in this thread.</div>
       ) : (
         <div className="space-y-2">
           {job.items.map((it, i) => (
@@ -46,7 +46,7 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
         </div>
       )}
 
-      <H count={job.assertion_ids.length}>Resulting assertions</H>
+      <H count={job.assertion_ids.length}>Knowledge saved</H>
       {job.assertion_ids.length === 0 ? (
         <div className="text-xs text-muted">None stored.</div>
       ) : (
@@ -54,7 +54,7 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
           {job.assertion_ids.map((id) => {
             const a = assertions[id]
             return (
-              <Link key={id} to={assertionHref(id)} className="flex items-center gap-2 rounded-lg border border-line px-2 py-1.5 text-xs hover:bg-surface-2">
+              <Link key={id} to={assertionHref(id)} className="flex items-center gap-2 rounded-xl border border-line px-2 py-1.5 text-xs hover:bg-surface-2">
                 <IdChip>{id}</IdChip>
                 {a ? (
                   <>
@@ -71,7 +71,7 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
         </div>
       )}
       {job.removed_assertion_ids.length > 0 && (
-        <div className="mt-1.5 text-[11px] text-muted">Removed by this run: {job.removed_assertion_ids.join(', ')}</div>
+        <div className="mt-1.5 text-xs text-muted">Removed by this run: {job.removed_assertion_ids.join(', ')}</div>
       )}
 
       {job.notes.length > 0 && (
@@ -99,7 +99,7 @@ function JobView({ job, assertions, hoverItem, onHoverItem }: { job: PipelineJob
       )}
       {job.llm_call_ids.length > 0 && (
         <>
-          <H count={job.llm_call_ids.length}>LLM calls</H>
+          <H count={job.llm_call_ids.length}>AI requests</H>
           <div className="flex flex-wrap gap-1">
             {job.llm_call_ids.map((id) => (
               <Link key={id} to={`/llm?call=${encodeURIComponent(id)}`}>
@@ -169,8 +169,8 @@ export function ParserOutput({
               </button>
               {showPrev &&
                 previous.map((j) => (
-                  <div key={j.id} className="mt-3 rounded-lg border border-line p-2.5 opacity-90">
-                    <div className="mb-2 text-[11px] text-muted">Job {j.id}</div>
+                  <div key={j.id} className="mt-3 rounded-xl border border-line p-2.5 opacity-90">
+                    <div className="mb-2 text-xs text-muted">Job {j.id}</div>
                     <JobView job={j} assertions={assertions} hoverItem={null} onHoverItem={() => {}} />
                   </div>
                 ))}

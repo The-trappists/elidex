@@ -78,7 +78,7 @@ export function DataActions() {
             ['seed', 'Back to the seed', 'Restores the starting data: inventory, personas, scenarios and the historical threads, already processed. Everything you added is lost.'],
             ['empty', 'Start empty', 'Keeps inventory, personas and scenarios, but drops threads, incidents, knowledge, jobs and runs. Use it to watch knowledge being built from scratch.'],
           ] as const).map(([k, title, text]) => (
-            <label key={k} className={cn('flex cursor-pointer gap-3 rounded-lg border p-3', mode === k ? 'border-accent bg-accent-soft' : 'border-line')}>
+            <label key={k} className={cn('flex cursor-pointer gap-3 rounded-xl border p-3', mode === k ? 'border-accent bg-accent-soft' : 'border-line')}>
               <input type="radio" checked={mode === k} onChange={() => setMode(k)} />
               <span><b>{title}</b><span className="block text-xs text-muted">{text}</span></span>
             </label>

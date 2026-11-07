@@ -47,14 +47,14 @@ export function IncidentCard({
         {Object.keys(incident.observations).length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {Object.entries(incident.observations).map(([k, v]) => (
-              <span key={k} className="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10.5px]">
+              <span key={k} className="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-xs">
                 {k}: <b className="font-semibold">{fmtVal(v)}</b>
               </span>
             ))}
           </div>
         )}
 
-        <div className="mt-2 flex items-center gap-2 text-[11px] text-muted">
+        <div className="mt-2 flex items-center gap-2 text-xs text-muted">
           <span>{fmtDateTime(incident.opened_at)}</span>
           <span>· {fmtAgo(incident.opened_at, now)}</span>
           {incident.thread_id && (
@@ -69,7 +69,7 @@ export function IncidentCard({
         <div className="border-t border-line bg-accent-soft/60 p-3">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-accent">
             <BrainCircuit size={14} /> What the context layer knows
-            {hits && <span className="rounded bg-accent/15 px-1.5 text-[10px]">{hits.length}</span>}
+            {hits && <span className="rounded bg-accent/15 px-1.5 text-xs">{hits.length}</span>}
           </div>
           {hits === null || (loading && !hits.length) ? (
             <div className="h-10 animate-pulse rounded-md bg-surface/70" />
@@ -78,7 +78,7 @@ export function IncidentCard({
               {hits.slice(0, 3).map((h) => (
                 <HitRow key={h.id} hit={h} onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(h.id)}`)} />
               ))}
-              {hits.length > 3 && <div className="text-center text-[11px] text-muted">+{hits.length - 3} more in the agent run</div>}
+              {hits.length > 3 && <div className="text-center text-xs text-muted">+{hits.length - 3} more in the agent run</div>}
             </div>
           ) : (
             <p className="text-xs text-muted">Nothing known about {incident.entity_id} yet. Once colleagues talk about it, it shows up here.</p>
