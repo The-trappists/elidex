@@ -123,6 +123,19 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
     cyRef.current = cy
     cy.on('tap', 'node', (ev) => onSelectRef.current?.(aKey(ev.target), ev.target.data('kind')))
     cy.on('tap', (ev) => ev.target === cy && onSelectRef.current?.(null, null))
+    // Hover: spotlight the node and its neighbours, softly fade the rest.
+    cy.on('mouseover', 'node', (ev) => {
+      const n = ev.target
+      if (n.hasClass('site')) return
+      const hood = n.closedNeighborhood()
+      cy.elements().not(hood).not('node.site').addClass('hover-fade')
+      hood.addClass('hover-on')
+      cy.container()?.style.setProperty('cursor', 'pointer')
+    })
+    cy.on('mouseout', 'node', () => {
+      cy.elements().removeClass('hover-fade hover-on')
+      cy.container()?.style.removeProperty('cursor')
+    })
     const mo = new MutationObserver(() => cy.style(buildStyle()))
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
     // Fit once the container has a real size (the first layout may run while it is 0 px tall).
@@ -207,7 +220,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
           variant={layers.knowledge ? 'primary' : 'secondary'}
           icon={<BookOpen size={13} />}
           onClick={() => onLayersChange?.({ ...layers, knowledge: !layers.knowledge })}
-          title="Show classes and assertions on the graph"
+          title="Show equipment groups and knowledge on the graph"
         >
           Knowledge
         </Button>
@@ -216,7 +229,7 @@ export function NetworkGraph({ at, layers, onLayersChange, selectedId, onSelect,
             size="sm"
             icon={fadeExpired ? <Eye size={13} /> : <EyeOff size={13} />}
             onClick={() => setFadeExpired(!fadeExpired)}
-            title="Assertions not valid at the chosen time: fade them or hide them"
+            title="Knowledge not valid at the chosen time: fade them or hide them"
           >
             {fadeExpired ? 'Fade expired' : 'Hide expired'}
           </Button>

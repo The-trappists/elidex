@@ -1,5 +1,6 @@
-import { Bot, ChevronDown, Moon, Pause, Play, PlayCircle, Hash, Sun, Wifi, WifiOff } from 'lucide-react'
+import { Bot, ChevronDown, Moon, Pause, Play, PlayCircle, Hash, Sun, WifiOff } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
 import { cn } from '../../lib/cn'
 import { fmtDateTime, toNaiveIso } from '../../lib/format'
@@ -7,6 +8,7 @@ import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
 import { useLive } from '../../store/live'
 import { Badge, Button, withToast } from '../ui'
+import { ALL_NAV } from './Sidebar'
 
 const SPEEDS = [1, 10, 60, 600]
 
@@ -25,12 +27,12 @@ function ScenarioLauncher() {
         Run scenario <ChevronDown size={14} />
       </Button>
       {open && (
-        <div className="absolute right-0 top-11 z-30 max-h-[70vh] w-96 overflow-auto rounded-xl border border-line bg-surface p-1.5 shadow-xl animate-slide-in">
+        <div className="absolute right-0 top-11 z-30 max-h-[70vh] w-96 overflow-auto rounded-2xl border border-line glass p-1.5 shadow-[var(--shadow-lg)] animate-slide-in">
           {scenarios.length === 0 && <div className="p-3 text-sm text-muted">No scenario yet. Add one in Data.</div>}
           {scenarios.map((s) => (
             <button
               key={s.id}
-              className="flex w-full flex-col items-start gap-1 rounded-lg px-3 py-2 text-left hover:bg-surface-2"
+              className="flex w-full flex-col items-start gap-1 rounded-xl px-3 py-2 text-left transition hover:bg-accent-soft"
               onClick={() => {
                 setOpen(false)
                 void withToast(() => api.runScenario(s.id), `Started: ${s.title}`)
@@ -77,16 +79,23 @@ export function TopBar() {
   const connection = useLive((s) => s.connection)
   const now = useSimNow(500)
   const [dark, setDark] = useTheme()
+  const { pathname } = useLocation()
+  const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? ALL_NAV[0]
 
   const mode = settings?.extractor_mode ?? 'auto'
   const llmOn = !!settings?.llm_configured && mode !== 'scripted'
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-surface px-4">
+    <header className="glass sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-line px-5">
+      <div className="hidden min-w-0 xl:block">
+        <h1 className="truncate text-base font-semibold leading-tight tracking-tight">{page.title}</h1>
+        <p className="truncate text-xs text-muted">{page.subtitle}</p>
+      </div>
+      <div className="hidden h-8 w-px bg-line xl:block" />
       {/* sim clock */}
-      <div className="flex items-center gap-2 rounded-lg border border-line bg-surface-2 py-1 pl-1 pr-3">
+      <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 py-1 pl-1 pr-3">
         <button
-          className={cn('flex size-7 items-center justify-center rounded-md text-white', clock?.running ? 'bg-warn' : 'bg-ok')}
+          className={cn('flex size-7 items-center justify-center rounded-xl text-white transition hover:scale-105 active:scale-95', clock?.running ? 'bg-warn' : 'bg-ok')}
           title={clock?.running ? 'Pause the simulation' : 'Start the simulation'}
           onClick={() => void withToast(() => (clock?.running ? api.simPause() : api.simStart()))}
         >
@@ -94,15 +103,15 @@ export function TopBar() {
         </button>
         <div className="leading-tight">
           <div className="font-mono text-sm font-medium tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) + ':' + String(now.getSeconds()).padStart(2, '0') : '—'}</div>
-          <div className="text-[10px] uppercase tracking-wide text-muted">simulated time</div>
+          <div className="text-xs uppercase tracking-wide text-muted">{clock?.running ? 'Simulated time · running' : 'Simulated time · paused'}</div>
         </div>
       </div>
-      <div className="flex rounded-lg border border-line bg-surface-2 p-0.5">
+      <div className="flex rounded-xl border border-line bg-surface-2 p-0.5">
         {SPEEDS.map((s) => (
           <button
             key={s}
             onClick={() => void withToast(() => api.simSpeed(s))}
-            className={cn('rounded-md px-2 py-1 font-mono text-xs', clock?.speed === s ? 'bg-surface text-text shadow-sm' : 'text-muted hover:text-text')}
+            className={cn('rounded-xl px-2 py-1 font-mono text-xs transition', clock?.speed === s ? 'bg-brand text-white shadow-sm' : 'text-muted hover:text-text')}
           >
             ×{s}
           </button>
@@ -111,15 +120,15 @@ export function TopBar() {
 
       <div className="ml-auto flex items-center gap-2">
         <Badge className={llmOn ? 'bg-ok/15 text-ok' : 'bg-surface-2 text-muted'} title={settings?.llm_model ?? 'No LLM key: scripted extraction'}>
-          <Bot size={12} /> {llmOn ? `LLM · ${settings?.llm_model}` : `Extractor · ${mode === 'llm' ? 'LLM (no key!)' : 'scripted'}`}
+          <Bot size={12} /> {llmOn ? `AI · ${settings?.llm_model}` : mode === 'llm' ? 'AI needs a key' : 'Scripted answers'}
         </Badge>
         <Badge className={slack.connected ? 'bg-slack/15 text-slack' : 'bg-surface-2 text-muted'} title={slack.error ?? slack.channel ?? 'Slack bridge off'}>
           <Hash size={12} /> {slack.connected ? 'Slack on' : 'Slack off'}
         </Badge>
         <Badge className={connection === 'live' ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'}>
-          {connection === 'live' ? <Wifi size={12} /> : <WifiOff size={12} />} {connection}
+          {connection === 'live' ? <span className="live-dot size-1.5 rounded-full bg-current" /> : <WifiOff size={12} />} {connection === 'live' ? 'Live' : 'Reconnecting…'}
         </Badge>
-        <button className="rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-text" onClick={() => setDark(!dark)} title="Toggle theme">
+        <button className="rounded-xl p-2 text-muted transition hover:rotate-12 hover:bg-surface-2 hover:text-text" onClick={() => setDark(!dark)} title="Toggle theme">
           {dark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <ScenarioLauncher />

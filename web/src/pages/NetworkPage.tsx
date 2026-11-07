@@ -48,17 +48,17 @@ export default function NetworkPage() {
 
   return (
     <div className="flex h-full min-h-0 gap-3 p-3">
-      <Panel title="Network at time t" icon={<Network size={15} />} className="min-w-0 flex-1" bodyClassName="flex flex-col overflow-hidden">
+      <Panel title="Network and knowledge over time" icon={<Network size={15} />} className="min-w-0 flex-1" bodyClassName="flex flex-col overflow-hidden">
         <div className="shrink-0 border-b border-line px-4 py-3">
           <div className="flex items-end gap-4">
             <div>
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted"><Clock size={12} /> t =</div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted"><Clock size={12} /> Showing the situation on</div>
               <div className="text-2xl font-semibold tabular-nums leading-tight">{format(at, 'EEE d MMM yyyy, HH:mm')}</div>
             </div>
             <Badge className={cn(state === 'now' ? 'bg-ok/15 text-ok' : state === 'past' ? 'bg-surface-2 text-muted' : 'bg-info/15 text-info')}>
               {state === 'now' ? 'Now' : state === 'past' ? 'In the past' : 'In the future'}
             </Badge>
-            <p className="hidden flex-1 text-xs text-muted xl:block">Move t to see which knowledge is valid on which element at that moment. Assertions outside their validity period fade out.</p>
+            <p className="hidden flex-1 text-xs text-muted xl:block">Drag the slider to travel in time: knowledge that was not valid yet, or no longer valid, fades out. Hover an item to see what it is connected to.</p>
             <Button className="ml-auto" size="sm" variant={t ? 'primary' : 'secondary'} disabled={!t} onClick={() => setT(null)}>
               Now
             </Button>
@@ -73,7 +73,7 @@ export default function NetworkPage() {
             onChange={(e) => setT(new Date(Number(e.target.value)))}
             aria-label="Time t"
           />
-          <div className="flex justify-between text-[10px] text-muted">
+          <div className="flex justify-between text-xs text-muted">
             <span>{format(min, 'd MMM yyyy')}</span>
             <span>sim now + 30 days: {format(max, 'd MMM yyyy')}</span>
           </div>

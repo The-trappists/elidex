@@ -52,9 +52,9 @@ export function ElementsTab() {
           { key: 'type', header: 'Type', cell: (e) => e.type },
           { key: 'model', header: 'Model', cell: (e) => e.model },
           { key: 'year', header: 'Year', cell: (e) => e.install_year },
-          { key: 'fw', header: 'Firmware', className: 'text-xs text-muted', cell: (e) => e.firmware ?? '—' },
+          { key: 'fw', header: 'Software version', className: 'text-xs text-muted', cell: (e) => e.firmware ?? '—' },
           { key: 'site', header: 'Site', cell: (e) => e.site_id ?? '—' },
-          { key: 'al', header: 'Aliases', className: 'text-xs text-muted', cell: (e) => e.aliases.join(', ') },
+          { key: 'al', header: 'Also called', className: 'text-xs text-muted', cell: (e) => e.aliases.join(', ') },
           originCol<WbElement>(),
         ]}
       />
@@ -93,7 +93,7 @@ export function SitesTab() {
           { key: 'id', header: 'ID', cell: (s) => <IdChip>{s.id}</IdChip> },
           { key: 'name', header: 'Name', cell: (s) => s.name },
           { key: 'region', header: 'Region', cell: (s) => s.region ?? '—' },
-          { key: 'pos', header: 'Lat / Lon', className: 'text-xs text-muted', cell: (s) => (s.lat != null && s.lon != null ? `${s.lat}, ${s.lon}` : '—') },
+          { key: 'pos', header: 'Position', className: 'text-xs text-muted', cell: (s) => (s.lat != null && s.lon != null ? `${s.lat}, ${s.lon}` : '—') },
           originCol<WbSite>(),
         ]}
       />
@@ -133,9 +133,9 @@ export function LinksTab() {
         onDelete={(l) => api.deleteLink(l.id)}
         columns={[
           { key: 'id', header: 'ID', cell: (l) => <IdChip>{l.id}</IdChip> },
-          { key: 'a', header: 'End A', cell: (l) => l.a },
-          { key: 'b', header: 'End B', cell: (l) => l.b },
-          { key: 'kind', header: 'Kind', cell: (l) => l.kind },
+          { key: 'a', header: 'From', cell: (l) => l.a },
+          { key: 'b', header: 'To', cell: (l) => l.b },
+          { key: 'kind', header: 'Link type', cell: (l) => l.kind },
           originCol<TopologyLink>(),
         ]}
       />

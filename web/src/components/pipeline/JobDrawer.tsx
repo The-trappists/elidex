@@ -1,14 +1,15 @@
-import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 import { fmtDateTime, fmtMs, fmtTime } from '../../lib/format'
 import { SOURCE_STYLE, STAGE_LABEL, STAGE_STATUS_STYLE } from '../../lib/semantic'
 import { useLive } from '../../store/live'
-import { Badge, Drawer, IdChip } from '../ui'
+import { Badge, Drawer, ErrorNote, IdChip } from '../ui'
+import { describeJob, explainError, STAGE_HELP } from '../../lib/explain'
 import { ItemCard } from './ItemCard'
 import { StageChips } from './PipelineLane'
-import { extractorLabel, jobDurationMs, summaryText } from './jobUtils'
+import { extractorLabel, jobDurationMs } from './jobUtils'
 
 const Section = ({ title, children, count }: { title: string; children: ReactNode; count?: number }) => (
   <section className="mb-5">
@@ -65,15 +66,10 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
     >
       <div className="mb-5 flex items-center gap-3">
         <StageChips job={job} />
-        <span className="text-xs text-muted">{summaryText(job)}</span>
+        <span className="text-sm font-medium">{describeJob(job)}</span>
       </div>
 
-      {job.error && (
-        <div className="mb-5 flex gap-2 rounded-lg border border-bad/40 bg-bad/10 p-3 text-sm text-bad">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-          <span className="whitespace-pre-wrap break-words">{job.error}</span>
-        </div>
-      )}
+      {job.error && <ErrorNote className="mb-5" explained={explainError(job.error)!} raw={job.error} />}
 
       <Section title="Stages">
         <ol className="space-y-1.5">
@@ -81,7 +77,7 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
             <li key={s.stage} className="flex items-center gap-2 text-xs">
               <span className={cn('w-20 rounded border px-1.5 py-1 text-center font-medium', STAGE_STATUS_STYLE[s.status])}>{STAGE_LABEL[s.stage]}</span>
               <span className="w-14 tabular-nums text-muted">{fmtMs(s.duration_ms)}</span>
-              <span className="min-w-0 flex-1 break-words text-muted">{s.detail || s.status}</span>
+              <span className="min-w-0 flex-1 break-words text-muted">{s.detail || STAGE_HELP[s.stage]}</span>
             </li>
           ))}
         </ol>
@@ -102,7 +98,7 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
                     focused && !isFocus && 'opacity-50',
                   )}
                 >
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted">
+                  <div className="flex items-center gap-1.5 text-xs text-muted">
                     <span className="font-mono">#{m.seq}</span>
                     <b className="font-medium text-text">{m.author}</b>
                     {m.role && <span>{m.role}</span>}
@@ -136,15 +132,15 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
         </Section>
       )}
 
-      <Section title="Assertions" count={job.assertion_ids.length}>
+      <Section title="Knowledge saved" count={job.assertion_ids.length}>
         {job.assertion_ids.length || job.removed_assertion_ids.length ? (
           <div className="flex flex-wrap items-center gap-1.5">
             {job.assertion_ids.map((id) => <IdChip key={id} onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(id)}`)}>{id}</IdChip>)}
             {job.removed_assertion_ids.map((id) => <IdChip key={id} className="line-through opacity-60">{id}</IdChip>)}
-            {job.removed_assertion_ids.length > 0 && <span className="text-[11px] text-muted">struck through = removed on re-processing</span>}
+            {job.removed_assertion_ids.length > 0 && <span className="text-xs text-muted">struck through = removed on re-processing</span>}
           </div>
         ) : (
-          <p className="text-xs text-muted">No assertion created or merged.</p>
+          <p className="text-xs text-muted">No knowledge created or merged.</p>
         )}
       </Section>
 
@@ -157,10 +153,10 @@ export function JobDrawer({ jobId, onClose }: { jobId: string | null; onClose: (
       {ev && (
         <Section title="Evaluation against expected">
           <div className="space-y-3">
-            {ev.matched.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-ok">Matched ({ev.matched.length})</div><List items={ev.matched} tone="ok" /></div>}
-            {ev.missed.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-bad">Missed ({ev.missed.length})</div><List items={ev.missed} tone="bad" /></div>}
-            {ev.unexpected.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-bad">Unexpected ({ev.unexpected.length})</div><List items={ev.unexpected} tone="bad" /></div>}
-            {ev.binding_diffs.length > 0 && <div><div className="mb-1 text-[11px] font-medium text-bad">Binding differences</div><List items={ev.binding_diffs} tone="bad" /></div>}
+            {ev.matched.length > 0 && <div><div className="mb-1 text-xs font-medium text-ok">Matched ({ev.matched.length})</div><List items={ev.matched} tone="ok" /></div>}
+            {ev.missed.length > 0 && <div><div className="mb-1 text-xs font-medium text-bad">Missed ({ev.missed.length})</div><List items={ev.missed} tone="bad" /></div>}
+            {ev.unexpected.length > 0 && <div><div className="mb-1 text-xs font-medium text-bad">Unexpected ({ev.unexpected.length})</div><List items={ev.unexpected} tone="bad" /></div>}
+            {ev.binding_diffs.length > 0 && <div><div className="mb-1 text-xs font-medium text-bad">Binding differences</div><List items={ev.binding_diffs} tone="bad" /></div>}
           </div>
         </Section>
       )}

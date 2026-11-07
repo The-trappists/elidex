@@ -44,5 +44,8 @@ export function summaryText(job: PipelineJob): string {
 }
 
 export function extractorLabel(extractor: string): string {
-  return extractor || 'none'
+  if (!extractor) return 'Not read'
+  if (extractor.startsWith('llm:')) return `AI · ${extractor.slice(4)}`
+  if (extractor === 'scripted') return 'Scripted'
+  return extractor
 }

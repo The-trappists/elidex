@@ -29,9 +29,9 @@ export function Modal({
   useEscape(open, onClose)
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060e]/55 p-4 backdrop-blur-sm animate-fade-in" onMouseDown={onClose}>
       <div
-        className={cn('flex max-h-[90vh] w-full flex-col rounded-xl border border-line bg-surface shadow-2xl animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
+        className={cn('flex max-h-[90vh] w-full flex-col rounded-2xl border border-line bg-surface shadow-[var(--shadow-lg)] animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center border-b border-line px-5 py-3.5">
@@ -64,9 +64,9 @@ export function Drawer({
   useEscape(open, onClose)
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/25" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-40 flex justify-end bg-[#05060e]/45 backdrop-blur-[3px] animate-fade-in" onMouseDown={onClose}>
       <aside
-        className={cn('flex h-full w-full flex-col border-l border-line bg-surface shadow-2xl animate-slide-in', width)}
+        className={cn('flex h-full w-full flex-col border-l border-line bg-surface shadow-[var(--shadow-lg)] animate-drawer-in', width)}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-line px-5 py-3.5">

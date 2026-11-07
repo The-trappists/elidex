@@ -2,12 +2,15 @@ import { ChevronRight, Workflow } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { cn } from '../../lib/cn'
 import { fmtMs } from '../../lib/format'
+import { describeJob } from '../../lib/explain'
 import { SOURCE_STYLE, STAGE_LABEL, STAGE_STATUS_STYLE } from '../../lib/semantic'
 import { useLive } from '../../store/live'
 import { Badge, EmptyState } from '../ui'
 import { JobDrawer } from './JobDrawer'
-import { extractorLabel, jobDurationMs, summaryText } from './jobUtils'
+import { extractorLabel, isRunning, jobDurationMs } from './jobUtils'
 import type { PipelineJob } from '../../api/types'
+
+const STAGE_STATUS_WORD = { pending: 'waiting', running: 'in progress', done: 'done', skipped: 'skipped', error: 'failed' } as const
 
 export function StageChips({ job, compact }: { job: PipelineJob; compact?: boolean }) {
   return (
@@ -16,8 +19,8 @@ export function StageChips({ job, compact }: { job: PipelineJob; compact?: boole
         <Fragment key={s.stage}>
           {i > 0 && <ChevronRight size={11} className="mx-px shrink-0 text-muted/60" />}
           <span
-            title={`${STAGE_LABEL[s.stage]}: ${s.status}${s.detail ? ' · ' + s.detail : ''}`}
-            className={cn('rounded border px-1.5 py-0.5 text-[10px] font-medium leading-none', STAGE_STATUS_STYLE[s.status], compact && 'px-1')}
+            title={`${STAGE_LABEL[s.stage]} (${STAGE_STATUS_WORD[s.status]})${s.detail ? ' · ' + s.detail : ''}`}
+            className={cn('rounded-full border px-2 py-1 text-xs font-medium leading-none transition-colors', STAGE_STATUS_STYLE[s.status], compact && 'px-1.5')}
           >
             {STAGE_LABEL[s.stage]}
           </span>
@@ -39,7 +42,7 @@ export function PipelineLane({ limit = 15 }: { limit?: number }) {
 
   return (
     <>
-      <ul className="divide-y divide-line/60">
+      <ul className="stagger divide-y divide-line/50">
         {rows.map((j) => {
           const t = threads[j.thread_id]
           const dur = jobDurationMs(j)
@@ -47,17 +50,18 @@ export function PipelineLane({ limit = 15 }: { limit?: number }) {
             <li
               key={j.id}
               onClick={() => setOpen(j.id)}
-              className={cn('animate-slide-in cursor-pointer px-3.5 py-2 hover:bg-surface-2', j.error && 'bg-bad/5')}
+              className={cn('cursor-pointer px-4 py-2.5 transition-colors hover:bg-surface-2', j.error && 'bg-bad/5')}
             >
               <div className="flex items-center gap-2">
                 <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{t?.subject ?? j.thread_id}</span>
                 {t && <Badge className={SOURCE_STYLE[t.source].cls}>{SOURCE_STYLE[t.source].label}</Badge>}
-                <Badge className="font-mono">{extractorLabel(j.extractor)}</Badge>
-                <span className="w-14 text-right text-[11px] tabular-nums text-muted">{fmtMs(dur)}</span>
+                <Badge className="bg-surface-2 text-muted">{extractorLabel(j.extractor)}</Badge>
+                {isRunning(j) && <Badge className="bg-info/15 text-info"><span className="live-dot size-1.5 rounded-full bg-current" />Reading</Badge>}
+                <span className="w-14 text-right text-xs tabular-nums text-muted">{fmtMs(dur)}</span>
               </div>
               <div className="mt-1.5 flex items-center gap-3">
                 <StageChips job={j} />
-                <span className={cn('min-w-0 flex-1 truncate text-[11px]', j.error ? 'text-bad' : 'text-muted')}>{j.error ? j.error : summaryText(j)}</span>
+                <span className={cn('min-w-0 flex-1 truncate text-xs', j.error ? 'text-bad' : 'text-muted')}>{describeJob(j)}</span>
               </div>
             </li>
           )

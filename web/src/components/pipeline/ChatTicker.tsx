@@ -47,11 +47,11 @@ export function ChatTicker({ limit = 40 }: { limit?: number }) {
             <li
               key={`${t.id}#${m.seq}`}
               onClick={() => nav(`/conversations/${encodeURIComponent(t.id)}`)}
-              className="animate-slide-in flex cursor-pointer gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-2"
+              className="animate-slide-in flex cursor-pointer gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-2"
             >
               <Avatar name={m.author} color={p?.avatar_color} size={26} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 text-[11px]">
+                <div className="flex items-center gap-1.5 text-xs">
                   <b className="truncate text-[12px]">{m.author}</b>
                   {m.role && <span className="truncate text-muted">{m.role}</span>}
                   <span className="ml-auto shrink-0 tabular-nums text-muted">{fmtTime(m.sent_at)}</span>
@@ -59,7 +59,7 @@ export function ChatTicker({ limit = 40 }: { limit?: number }) {
                 <p className="line-clamp-3 text-[12.5px] leading-snug">{m.text}</p>
                 <div className="mt-0.5 flex items-center gap-1.5">
                   <Badge className={SOURCE_STYLE[t.source].cls}>{SOURCE_STYLE[t.source].label}</Badge>
-                  <span className="truncate text-[10.5px] text-muted">{t.subject ?? t.id}</span>
+                  <span className="truncate text-xs text-muted">{t.subject ?? t.id}</span>
                 </div>
               </div>
             </li>

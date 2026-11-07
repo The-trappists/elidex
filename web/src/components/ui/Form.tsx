@@ -5,7 +5,7 @@ import { cn } from '../../lib/cn'
 const width = (className?: string) => (/(^|\s)!?w-/.test(className ?? '') ? '' : 'w-full')
 
 const BASE =
-  'rounded-lg border border-line bg-surface px-2.5 text-sm text-text placeholder:text-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
+  'rounded-xl border border-line bg-surface-2/60 px-2.5 text-sm text-text transition placeholder:text-muted/70 hover:border-accent/40 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/25'
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(BASE, width(className), 'h-9', className)} {...rest} />
@@ -28,7 +28,7 @@ export function Field({ label, hint, children, className }: { label: ReactNode; 
     <label className={cn('block space-y-1', className)}>
       <span className="text-xs font-medium text-muted">{label}</span>
       {children}
-      {hint && <span className="block text-[11px] text-muted">{hint}</span>}
+      {hint && <span className="block text-xs text-muted">{hint}</span>}
     </label>
   )
 }
@@ -41,7 +41,7 @@ export function Toggle({ checked, onChange, label, disabled }: { checked: boolea
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={cn('relative h-5 w-9 rounded-full transition', checked ? 'bg-accent' : 'bg-line')}
+        className={cn('relative h-5 w-9 rounded-full transition', checked ? 'bg-brand' : 'bg-surface-3')}
       >
         <span className={cn('absolute top-0.5 size-4 rounded-full bg-white shadow transition-all', checked ? 'left-[18px]' : 'left-0.5')} />
       </button>
