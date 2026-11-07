@@ -29,7 +29,7 @@ The Workbench runs the loop v2 agents on top of the five pipeline steps. The loo
 - A **judge** compares each new assertion with its neighbours after the store step (hook `after_store`); the lifecycle reconcile step still runs afterwards as a fallback.
 - A **passive outcome loop** posts the demo agent's applied action in a thread and reads the technician's reply to update trust (`POST /api/agent/run`, hook `after_store`).
 - The **operator console** ("Needs a look" page, assertion editor, item re-run with history and undo) shows what the loop did and why, and never blocks it.
-- All three agents are toggles in Settings (`use_critic`, `use_judge`, `use_outcome_loop`, default off).
+- All three agents are toggles in Settings (`use_critic`, `use_judge`, `use_outcome_loop`, default on; critic and judge stay silent without an LLM key).
 
 Read more: [plan-loop-v2.md](plan-loop-v2.md) (what was built, known weaknesses), [design.md](design.md) (pipeline and fields), [evaluation.md](evaluation.md) (metric and model comparison), [demo-loop-v2.md](demo-loop-v2.md) (2m30 demo script), and the endpoint tables below.
 
@@ -143,7 +143,7 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
    - `link`: one `Linker.link` per item; its notes go to the job.
    - `store`: `add_class` and `add_assertion` (new or merged).
    - `reconcile`: `lifecycle.reconcile` when `settings.lifecycle` is on, otherwise `skipped`.
-   Hooks (`processor.register_hook(name, fn)`, sync or async, `fn(HookContext)`): `after_understand` (may return a replacement item list), `after_store` (`ctx.new_assertions` filled), `after_reconcile`. A hook exception is noted in `job.notes` and never fails the job. The critic runs in `after_understand` (inside the understand step), the judge and the outcome loop in `after_store` (the judge runs before `lifecycle.reconcile`, which stays as a fallback), and nothing is registered on `after_reconcile` by the loop v2 agents; `STAGES` is still the five steps. Toggles: `use_critic`, `use_judge`, `use_outcome_loop` (default off).
+   Hooks (`processor.register_hook(name, fn)`, sync or async, `fn(HookContext)`): `after_understand` (may return a replacement item list), `after_store` (`ctx.new_assertions` filled), `after_reconcile`. A hook exception is noted in `job.notes` and never fails the job. The critic runs in `after_understand` (inside the understand step), the judge and the outcome loop in `after_store` (the judge runs before `lifecycle.reconcile`, which stays as a fallback), and nothing is registered on `after_reconcile` by the loop v2 agents; `STAGES` is still the five steps. Toggles: `use_critic`, `use_judge`, `use_outcome_loop` (default on; critic and judge stay silent without an LLM key).
 4. Extractor choice (`settings.extractor_mode`):
    - `llm`: `LLMExtractor(cache_path=out/workbench/llm_cache.json)`; error if no key.
    - `scripted`:

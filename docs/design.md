@@ -28,7 +28,7 @@ No human confirms anything (Elisa: no extra work for specialists).
 
 ### Loop v2: three targeted agents (implemented)
 
-The five stages above are unchanged. Three agents are added at the places where text is ambiguous, each behind a `Settings` toggle (`use_critic`, `use_judge`, `use_outcome_loop`, default off) and each unable to block a job: on any failure the job notes it and goes on. Linking stays deterministic. The loop is fully automated; nothing waits for a human. The operator console only observes and can override.
+The five stages above are unchanged. Three agents are added at the places where text is ambiguous, each behind a `Settings` toggle (`use_critic`, `use_judge`, `use_outcome_loop`, default on; critic and judge stay silent without an LLM key) and each unable to block a job: on any failure the job notes it and goes on. Linking stays deterministic. The loop is fully automated; nothing waits for a human. The operator console only observes and can override.
 
 ```mermaid
 flowchart LR

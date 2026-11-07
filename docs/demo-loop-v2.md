@@ -6,8 +6,8 @@ The message of the demo: the loop is automated. Nobody types, confirms or rates 
 
 ## Before the demo (not counted in the 2m30)
 
-1. Start the Workbench: `uv run ctx workbench` (UI on `http://127.0.0.1:8010`). Check **Settings**: `extractor_mode` is `auto` (or `llm`), and `use_critic`, `use_judge` and `use_outcome_loop` are **on** (they default to off).
-2. Smoke-test the providers by hand: `uv run ctx llm-check` (a human runs it; agents never use the `.env` keys). The critic and judge should use the second provider (`LLM_CRITIC_*`, see [tech-stack.md](tech-stack.md#model-roles-and-free-access)); without it they silently use the primary chain.
+1. Start the Workbench: `uv run ctx workbench` (UI on `http://127.0.0.1:8010`). Check **Settings**: `extractor_mode` is `auto` (or `llm`), and `use_critic`, `use_judge` and `use_outcome_loop` are **on** (they default to on; the critic and judge stay silent without an LLM key).
+2. Smoke-test the providers by hand (a human runs it; agents never use the `.env` keys). `uv run ctx llm-check` covers the primary and fallback providers only, **not the critic role**: test the critic provider (`LLM_CRITIC_*`, see [tech-stack.md](tech-stack.md#model-roles-and-free-access)) with one real call, for example a single `scripts/eval_models.py --run` candidate pointing at it. Without `LLM_CRITIC_*` the critic and judge silently use the primary chain.
 3. Set the clock to real time: `POST /api/sim/speed` with `{"speed": 1}`, and make sure it runs (`POST /api/sim/start`). The outcome step needs a window of about 2 minutes between the second and the third message of `agent-outcome-followup`; at the default faster speed that window is only a few seconds. This timing is not tested: rehearse it.
 4. Reset to the seed: `POST /api/data/reset` with `{"mode": "seed"}` (or Data page). The seed already processes Elisa's historical chat and email, so the knowledge base is not empty. If you prefer to watch the rule appear from nothing, use `{"mode": "empty"}` instead: it keeps the inventory, personas and scenarios.
 5. Open the tabs: Conversations, Knowledge, Needs a look.
