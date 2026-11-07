@@ -70,12 +70,27 @@ def _jsonl(path: Path) -> Iterator[dict]:
             yield json.loads(line)
 
 
+def dataset_id(manifest: dict) -> str:
+    return f"{manifest['scale']}-seed{manifest['seed']}-{manifest['spec']['threads']}t"
+
+
+def check_same_dataset(stored: dict | None, current: str, drop: bool) -> None:
+    """Two scales share ids with different content (TRN-10001, slack/2025-01/s000-...): mixing them silently keeps the
+    old documents, so a load into a database that holds another dataset must start with --drop."""
+    if stored and stored["id"] != current and not drop:
+        raise SystemExit(f"The database holds the dataset '{stored['id']}', this folder is '{current}'. Mixing them corrupts the data: re-run with --drop (or use another MONGODB_DB).")
+
+
 def load(root: Path, db, drop: bool = False, only: set[str] | None = None, log=print) -> dict:
     """Stream a dataset folder into MongoDB. Returns the number of documents per collection."""
     want = lambda name: not only or name in only  # noqa: E731
     counts: dict[str, int] = {}
     started = time.time()
     alias_map = load_alias_map(root)
+    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+    current = dataset_id(manifest)
+    check_same_dataset(db["meta"].find_one({"_id": "dataset"}), current, drop)
+    db["meta"].replace_one({"_id": "dataset"}, {"_id": "dataset", "id": current, "scale": manifest["scale"], "seed": manifest["seed"], "spec": manifest["spec"]}, upsert=True)
 
     def prepare(name: str):
         if drop:

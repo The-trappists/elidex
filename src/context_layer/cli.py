@@ -212,6 +212,12 @@ def cmd_dataset(args: argparse.Namespace) -> None:
 
         with tiger.connect() as conn:
             print(f"Table mode: {tiger.setup(conn)}")
+            if not args.drop:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT count(*) FROM messages;")
+                    held = cur.fetchone()[0]
+                if held:
+                    sys.exit(f"messages already holds {held:,} rows (another or the same dataset). Re-run with --drop to replace them.")
             if args.drop:
                 with conn.cursor() as cur:
                     cur.execute("TRUNCATE messages;")
