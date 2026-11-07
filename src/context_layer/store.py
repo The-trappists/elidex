@@ -25,6 +25,18 @@ def _binding_key(a: ContextAssertion) -> tuple:
     return (a.type, a.topic, frozenset((b.entity, b.role) for b in a.bound_to))
 
 
+def same_knowledge(old: ContextAssertion, new: ContextAssertion) -> bool:
+    """Same binding, and either the same author or the same advice.
+
+    Two people who give different advice on the same topic and scope are not merged: both stay, and the
+    lifecycle step flags the conflict. The same author (or the same action) seen on another channel is one fact.
+    """
+    if _binding_key(old) != _binding_key(new):
+        return False
+    same_action = " ".join((old.action or "").lower().split()) == " ".join((new.action or "").lower().split())
+    return old.trust.stated_by == new.trust.stated_by or same_action
+
+
 class ContextStore:
     def __init__(self, inventory: Inventory):
         self.inventory = inventory
@@ -55,7 +67,7 @@ class ContextStore:
         Returns (stored assertion, is_new).
         """
         for old in self.assertions.values():
-            if _binding_key(old) == _binding_key(a):
+            if same_knowledge(old, a):
                 old.sources += a.sources
                 old.valid_from = min(old.valid_from, a.valid_from)
                 old.confidence = max(old.confidence, a.confidence)

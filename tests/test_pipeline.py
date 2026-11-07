@@ -70,3 +70,19 @@ def test_guard_adapts_reboot_and_dispatch(core):
     assert guard.check(core, "Reboot TRN-305", "TRN-305", at=BEFORE_FIX).decision == "go"
     dispatch = guard.check(core, "Dispatch field engineer to RAD-221", "RAD-221", at=AFTER_FIX)
     assert dispatch.decision == "adapt" and "key" in dispatch.steps[0]
+
+
+
+def test_same_author_or_same_advice_merges_other_authors_do_not(core):
+    from context_layer.store import same_knowledge
+
+    rule = _rule(core)
+    other_author = rule.model_copy(deep=True)
+    other_author.trust.stated_by, other_author.action = "Someone Else", "Reseat the module first."
+    same_advice = rule.model_copy(deep=True)
+    same_advice.trust.stated_by = "Someone Else"
+    same_author = rule.model_copy(deep=True)
+    same_author.action = "Another wording."
+    assert not same_knowledge(rule, other_author)
+    assert same_knowledge(rule, same_advice)
+    assert same_knowledge(rule, same_author)

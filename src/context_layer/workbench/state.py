@@ -14,7 +14,7 @@ from typing import Any, Callable
 from .. import config
 from ..link import Inventory
 from ..models import ContextAssertion, ElementClass, Message
-from ..store import ContextStore, _binding_key
+from ..store import ContextStore, same_knowledge
 from . import persistence, seed
 from .bus import EventBus
 from .clock import SimClock
@@ -58,7 +58,7 @@ class WbStore(ContextStore):
 
     def add_assertion(self, a: ContextAssertion) -> tuple[ContextAssertion, bool]:
         for old in self.assertions.values():
-            if _binding_key(old) == _binding_key(a):
+            if same_knowledge(old, a):
                 return super().add_assertion(a)  # merge path of the core, no id is allocated
         a.id = self._new_id()
         self._index(a)

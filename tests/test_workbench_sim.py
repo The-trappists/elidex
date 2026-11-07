@@ -336,3 +336,18 @@ def test_slack_scenarios_cover_the_workflow():
     assert len(slack) >= 6
     assert any(s.expected and not s.expected.items for s in slack) or any(len(s.expected.items) == 1 and "noise" in s.tags for s in slack)
     assert any(s.expected and s.expected.items and s.expected.items[0].trust_level == "hunch" for s in slack)
+
+
+def test_disagreement_keeps_both_assertions_and_flags_the_conflict():
+    from context_layer.mvp.lifecycle import reconcile
+    from context_layer.store import ContextStore
+
+    linker, store, s = Linker(INVENTORY), ContextStore(INVENTORY), SCENARIOS["expert-disagreement"]
+    stored = []
+    for item in s.expected.items:
+        a, is_new = store.add_assertion(linker.link(item, _thread(s)).assertion)
+        assert is_new
+        reconcile(store, a)
+        stored.append(a)
+    assert len(store.assertions) == 2
+    assert stored[0].conflicts_with == [stored[1].id] and stored[1].conflicts_with == [stored[0].id]
