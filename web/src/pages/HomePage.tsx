@@ -2,7 +2,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
-  Beer,
   Bot,
   CheckCircle2,
   FileText,
@@ -460,17 +459,26 @@ export default function HomePage() {
         <section className="relative flex h-screen w-full flex-col justify-between overflow-y-auto px-6 pt-24 pb-6 sm:px-10">
           <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center">
             {/* Team Header */}
-            <div className="mb-8 max-w-3xl">
-              <div className="mb-2 inline-flex items-center gap-2 rounded-md border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-                <Beer size={14} />
-                <span>The Minds Behind ElidEx</span>
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 max-w-5xl">
+              <div className="max-w-2xl">
+                <div className="mb-2 inline-flex items-center gap-2 rounded-md border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                  <Sparkles size={14} />
+                  <span>The Minds Behind ElidEx</span>
+                </div>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
+                  The Trappists
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+                  Combining Belgian folklore, the monastic discipline of illuminating operational manuscripts, and autonomous network telemetry, our team codifies unwritten operational knowledge for telecom NOCs.
+                </p>
               </div>
-              <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">
-                The Trappists
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-                Inspired by the ancient monastic tradition of brewing world-class ales in strict secrecy while illuminating manuscripts in scriptoriums, our team codifies unwritten operational knowledge for autonomous telecom networks.
-              </p>
+              <div className="shrink-0 flex items-center justify-start sm:justify-end">
+                <img
+                  src="/trappists-logo.png"
+                  alt="The Trappists Emblem"
+                  className="size-24 sm:size-28 rounded-2xl shadow-lg border border-accent/20 object-contain hover:scale-105 transition-transform"
+                />
+              </div>
             </div>
 
             {/* 4 Member Grid Cards */}
