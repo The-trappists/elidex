@@ -112,17 +112,68 @@ def load(root: Path, conn, log=print, batch_threads: int = 5000) -> int:
     alias_map = load_alias_map(root)
     started, total = time.time(), 0
     for shard in sorted((root / "conversations").glob("threads-*.jsonl")):
-        with open(shard, encoding="utf-8") as f, conn.cursor() as cur:
-            with cur.copy(f"COPY messages ({COLUMNS}) FROM STDIN") as copy:
-                for i, line in enumerate(f, 1):
-                    for row in message_rows(json.loads(line), alias_map):
-                        copy.write_row(row)
-                        total += 1
-                    if i % batch_threads == 0:
-                        conn.commit()
-        conn.commit()
-        log(f"  messages: {total:,} ({shard.name}, {time.time() - started:.0f} s)")
+        with open(shard, encoding="utf-8") as f:
+            for lines in chunks(f, batch_threads):
+                # One COPY per batch, committed after it ends: committing inside a running COPY hangs the connection.
+                with conn.cursor() as cur, cur.copy(f"COPY messages ({COLUMNS}) FROM STDIN") as copy:
+                    for line in lines:
+                        for row in message_rows(json.loads(line), alias_map):
+                            copy.write_row(row)
+                            total += 1
+                conn.commit()
+                log(f"  messages: {total:,} ({shard.name}, {time.time() - started:.0f} s)")
     return total
+
+
+def chunks(items, size: int):
+    """Lists of at most `size` items, read lazily."""
+    batch = []
+    for item in items:
+        batch.append(item)
+        if len(batch) >= size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
+
+
+# Analytics layer, safe to run again: compression of old chunks, a flat element-per-message hypertable and a
+# continuous aggregate (messages per element per day). Needs a Time-series and analytics service.
+ANALYTICS = [
+    "ALTER TABLE messages SET (timescaledb.compress, timescaledb.compress_segmentby = 'source', timescaledb.compress_orderby = 'sent_at DESC');",
+    "SELECT add_compression_policy('messages', INTERVAL '30 days', if_not_exists => TRUE);",
+    "CREATE TABLE IF NOT EXISTS message_mentions (sent_at timestamptz NOT NULL, thread_id text, author_id text, element text NOT NULL);",
+    "SELECT create_hypertable('message_mentions', 'sent_at', if_not_exists => TRUE);",
+    "TRUNCATE message_mentions;",
+    "INSERT INTO message_mentions SELECT sent_at, thread_id, author_id, unnest(mentions) FROM messages;",
+    "CREATE MATERIALIZED VIEW IF NOT EXISTS daily_mentions WITH (timescaledb.continuous) AS "
+    "SELECT time_bucket('1 day', sent_at) AS day, element, count(*) AS messages FROM message_mentions GROUP BY 1, 2 WITH NO DATA;",
+]
+FRESHNESS = "SELECT max(day) AS last_discussed, sum(messages)::bigint AS total, count(*) AS active_days FROM daily_mentions WHERE element = %s"
+
+
+def analytics(conn, log=print) -> None:
+    """Build or rebuild the analytics layer from the current `messages`."""
+    if not has_timescale(conn):
+        raise SystemExit("The analytics layer needs a Time-series and analytics service (TimescaleDB). See docs/dataset.md.")
+    for stmt in ANALYTICS:
+        with conn.cursor() as cur:
+            cur.execute(stmt)
+        conn.commit()
+    conn.autocommit = True  # refresh_continuous_aggregate cannot run inside a transaction block
+    try:
+        with conn.cursor() as cur:
+            cur.execute("CALL refresh_continuous_aggregate('daily_mentions', NULL, NULL);")
+    finally:
+        conn.autocommit = False
+    log("analytics layer ready: messages compressed after 30 days, message_mentions, daily_mentions")
+
+
+def freshness(conn, element: str) -> tuple:
+    """(last day humans talked about the element, total messages, number of active days)."""
+    with conn.cursor() as cur:
+        cur.execute(FRESHNESS, (element,))
+        return cur.fetchone()
 
 
 def activity(conn, element: str, bucket: str = "1 month") -> list[tuple]:

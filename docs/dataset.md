@@ -96,6 +96,17 @@ uv run ctx dataset activity TRN-042                      # Tiger Data: messages 
 
 Tiger Data service type matters: a **Time-series and analytics** service gives a TimescaleDB hypertable (`load-tiger` prints `Table mode: hypertable`); a plain **PostgreSQL** service works too (`Table mode: plain`: same table with a BRIN index on the date, and `activity` uses `date_trunc`). For the "Best Use of Tiger Data" prize, prefer the time-series type so the demo really uses TimescaleDB.
 
+Analytics layer (Time-series service only): `load-tiger --analytics`, or `ctx dataset tiger-analytics` on data already loaded, compresses chunks older than 30 days and builds `message_mentions` plus the continuous aggregate `daily_mentions` (messages per element per day). `ctx dataset freshness TRN-042` then answers "when did humans last talk about this node?" from it. Both are safe to run again.
+
+### On the deployed version (Vultr)
+
+The two databases are in the cloud, so the VM needs **no copy of the dataset**: load once from your laptop, with the same URIs, and the app only reads.
+1. Add `MONGODB_URI`, `MONGODB_DB`, `TIGER_DATABASE_URL` to the `.env` on the VM (`deploy/docker-compose.yml` passes `.env` to the container with `env_file`). Never commit them.
+2. In Atlas, Network Access: add the VM's public IP. Tiger Data may need the same, check the service settings.
+3. Redeploy: `docker compose -f deploy/docker-compose.yml --env-file .env up -d --build` (the image installs `pymongo` and `psycopg` from `uv.lock`).
+4. Check from the VM: `docker compose -f deploy/docker-compose.yml exec <app-service> ctx dataset db-check` (service name in the compose file).
+5. Run the loads from your laptop, not the VM (the 2 GB VM has no `out/dataset/`): `ctx dataset load-mongo out/dataset/demo`, `load-tiger out/dataset/demo --drop --analytics`.
+
 Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. Not done yet: the Workbench still keeps its own threads in memory and does not read these sources.
 
 Status: the pure parts (mentions, documents, rows, file source) are tested offline. The loaders and queries against real Atlas and Tiger Data were **not run by the assistant** (AI agents must not use `.env` credentials), so the first run is yours: start with `db-check`.

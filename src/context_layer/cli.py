@@ -164,6 +164,16 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         else:
             print("Tiger Data: TIGER_DATABASE_URL not set")
         return
+    if args.dataset_cmd in ("tiger-analytics", "freshness"):
+        from .dataset import tiger
+
+        with tiger.connect() as conn:
+            if args.dataset_cmd == "tiger-analytics":
+                tiger.analytics(conn)
+            else:
+                last, total, days = tiger.freshness(conn, args.element)
+                print(f"{args.element}: last discussed {last}, {total or 0} messages over {days} active days")
+        return
     if args.dataset_cmd == "activity":
         from .dataset import tiger
 
@@ -208,6 +218,8 @@ def cmd_dataset(args: argparse.Namespace) -> None:
                 conn.commit()
             n = tiger.load(root, conn)
             print(f"{n:,} messages loaded; {tiger.check(conn)}")
+            if args.analytics:
+                tiger.analytics(conn)
     else:
         print(json.dumps(ds_bench.bench(root, max_facts=args.facts, queries=args.queries), indent=2))
 
@@ -288,6 +300,10 @@ def main(argv: list[str] | None = None) -> None:
     lt = dsub.add_parser("load-tiger", help="stream the messages into Tiger Data (TIGER_DATABASE_URL in .env)")
     lt.add_argument("path", nargs="?")
     lt.add_argument("--drop", action="store_true", help="truncate the messages table first (re-running without it fails on duplicates)")
+    lt.add_argument("--analytics", action="store_true", help="then build the analytics layer (compression, daily_mentions); time-series service only")
+    dsub.add_parser("tiger-analytics", help="(re)build the Tiger Data analytics layer from the loaded messages")
+    fr = dsub.add_parser("freshness", help="Tiger Data: when humans last talked about an element, from daily_mentions")
+    fr.add_argument("element")
     dsub.add_parser("db-check", help="ping MongoDB and Tiger Data and show what they hold")
     th = dsub.add_parser("threads", help="list threads by time or element without loading the dataset")
     th.add_argument("--source", choices=["files", "mongo"], default="files")
