@@ -1,7 +1,7 @@
 {
   "id": "ambiguous-number-clash-176",
   "title": "'176' is two different elements",
-  "description": "TRN-176 (Hervanta node) and RAD-176 (Rovaniemi radio) share a number. A NOC operator says '176' and a radio specialist answers about the other one. Tests the over-linking guard: the tip belongs to RAD-176 and must not be attached to TRN-176 nor to the Rovaniemi exchange.",
+  "description": "TRN-176 (Hervanta node) and RAD-176 (Rovaniemi radio) share a number. A NOC operator says '176' and a radio specialist answers about the other one. Tests the over-linking guard: the tip belongs to RAD-176 and must not be attached to TRN-176 nor to the Rovaniemi exchange. The tip is stated as specific to this one unit ('only this unit', 'the other RU-200s are fine'), so it must not be generalised to the RU-200 class.",
   "channel": "slack",
   "subject": "#radio-field",
   "incident": null,
@@ -44,12 +44,12 @@
     {
       "persona": "raimo",
       "delay_s": 35,
-      "text": "on that RU-200 the margin dips on hard frost mornings. below minus 25"
+      "text": "on that one, RAD-176, the margin dips on hard frost mornings. below minus 25"
     },
     {
       "persona": "raimo",
       "delay_s": 10,
-      "text": "it comes back on its own when the heater has warmed the unit, about 20 min. don't go up and realign the antenna. ask me how I know. three times"
+      "text": "it comes back on its own when the heater has warmed the unit, about 20 min. only this unit tho, its antenna sits in the shade of the cliff. the other RU-200s are fine. don't go up and realign it. ask me how I know. three times"
     },
     {
       "persona": "veikko",
@@ -68,7 +68,7 @@
       {
         "type": "workaround",
         "topic": "frost-margin-dip-self-recovers",
-        "summary": "On RAD-176 (RU-200, Ounasvaara) the link margin dips on hard frost mornings (below -25 C) and recovers by itself in about 20 minutes once the heater has warmed the unit; do not realign the antenna.",
+        "summary": "On RAD-176 only (RU-200, Ounasvaara, antenna in the shade of the cliff) the link margin dips on hard frost mornings (below -25 C) and recovers by itself in about 20 minutes once the heater has warmed the unit; do not realign the antenna. Other RU-200s are not affected.",
         "scope": {
           "instance_ids": [
             "RAD-176"
@@ -90,7 +90,7 @@
         ],
         "fact": null,
         "trust_level": "stated",
-        "evidence": "seq 7-8: 'comes back on its own when the heater has warmed the unit, about 20 min'",
+        "evidence": "seq 7-8: 'comes back on its own when the heater has warmed the unit, about 20 min' / 'only this unit'",
         "stated_by": "Raimo Rantanen",
         "cited_seq": [
           5,
