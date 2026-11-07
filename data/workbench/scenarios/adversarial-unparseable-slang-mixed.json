@@ -50,5 +50,13 @@
       "delay_s": 15,
       "text": "bet, meen swappaa palikan nousee gg ez"
     }
-  ]
+  ],
+  "tags": [
+    "slack",
+    "adversarial",
+    "slang",
+    "noise",
+    "synthetic"
+  ],
+  "origin": "synthetic"
 }
