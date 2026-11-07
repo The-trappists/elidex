@@ -900,6 +900,22 @@ async def company_stop(request: Request) -> CompanyState:
     return get_company(request).stop()
 
 
+@router.post("/company/archive/clear")
+async def company_archive_clear(request: Request) -> dict:
+    """Empty the cold archive (files, wb_* Atlas collections, wb_company_metrics). 409 while a day runs or is paused."""
+    day = get_company(request)
+    try:
+        if day.st.status in ("running", "paused"):
+            raise RuntimeError("stop the company day before emptying the archive")
+        result = await asyncio.to_thread(day.archive.clear)
+    except RuntimeError as e:
+        raise HTTPException(409, str(e)) from e
+    from .company import summarize_clear
+
+    day._log("info", "archive cleared: " + summarize_clear(result))
+    return result
+
+
 @router.get("/company/archive/stats")
 async def company_archive_stats(request: Request) -> dict:
     return get_company(request).archive.stats()

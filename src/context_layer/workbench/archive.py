@@ -27,6 +27,9 @@ KINDS = ("threads", "incidents", "jobs")
 MAX_QUEUE = 5000
 RECENT_THREADS = 300  # archived threads kept in memory so a lookup works before the queue is written
 METRICS_TABLE = "wb_company_metrics"
+# The only cloud objects clear() may ever touch. Hard-coded on purpose: never build these from input or config.
+CLEARABLE_COLLECTIONS = ("wb_threads", "wb_incidents", "wb_jobs")
+CLEARABLE_TABLE = "wb_company_metrics"
 METRICS_SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS {METRICS_TABLE} (
     sim_time timestamptz NOT NULL,
@@ -85,6 +88,8 @@ class Archive:
         self._counted_files = False
         self._dropped = 0
         self.session = secrets.token_hex(3)
+        self._epoch = 0  # bumped by clear(): queued items of an older epoch are dropped by the worker
+        self._io = threading.Lock()  # held by the worker while it writes and by clear() while it wipes
 
     # ------------------------------------------------------------ public
 
@@ -103,14 +108,14 @@ class Archive:
                     self._recent[doc["id"]] = doc
                     while len(self._recent) > RECENT_THREADS:
                         self._recent.popitem(last=False)
-            self._enqueue(("doc", kind, doc))
+            self._enqueue((self._epoch, "doc", kind, doc))
         except Exception as e:  # noqa: BLE001
             log.warning("archive: could not queue a %s document (%s)", kind, e)
 
     def put_metrics(self, row: dict) -> None:
         """One row per sync cycle for the Tiger sink. Ignored when no sink is configured."""
         if self._tiger_ok:
-            self._enqueue(("metrics", "metrics", row))
+            self._enqueue((self._epoch, "metrics", "metrics", row))
 
     def get_thread(self, thread_id: str) -> dict | None:
         """The archived thread (dict with messages) or None. Reads memory, then Atlas, then the file."""
@@ -151,6 +156,78 @@ class Archive:
         threading.Thread(target=lambda: (self._q.join(), done.set()), daemon=True).start()
         return done.wait(timeout)
 
+    # ------------------------------------------------------------ clear
+
+    def discard_pending(self) -> int:
+        """First half of clear(), instant: queued writes and the in-memory thread cache are dropped from now on.
+        Returns the new epoch (pass it to `clear`)."""
+        with self._lock:
+            self._epoch += 1
+            self._recent.clear()
+            return self._epoch
+
+    def clear(self, epoch: int | None = None) -> dict:
+        """Empty the archive: JSONL files, counters and, when configured, the three Atlas collections (delete_many({}),
+        indexes survive) and the Tiger table (TRUNCATE, never DROP). Never raises, never puts a URI or credential in
+        a message. Pass the epoch from `discard_pending()` when it was called earlier; writes queued after that
+        point are kept and simply wait for the wipe to finish."""
+        if epoch is None:
+            epoch = self.discard_pending()
+        result: dict = {"files_removed": 0, "atlas": "off", "tiger": "off"}
+        with self._io:  # waits for the write in flight; the worker then drops stale items and holds new ones
+            result["files_removed"] = self._clear_files()
+            if self._atlas_factory is not None:
+                result["atlas"] = self._clear_atlas()
+            if self._tiger_factory is not None:
+                result["tiger"] = self._clear_tiger()
+        failed = [f"{k}: {v}" for k, v in result.items() if isinstance(v, str) and v.startswith("failed")]
+        if failed:
+            log.warning("archive: clear incomplete (%s); the files are cleared", "; ".join(failed))
+        return result
+
+    def _clear_files(self) -> int:
+        removed = 0
+        if self.dir is not None:
+            for kind in KINDS:
+                path = self.dir / f"{kind}.jsonl"
+                try:
+                    if path.exists():
+                        path.unlink()
+                        removed += 1
+                except OSError as e:
+                    log.warning("archive: could not remove %s (%s)", path.name, type(e).__name__)
+        self._counts = {k: 0 for k in (*KINDS, "metrics")}
+        self._counted_files = True  # nothing left to count
+        self._dropped = 0
+        return removed
+
+    def _clear_atlas(self) -> dict | str:
+        out: dict = {}
+        try:
+            db = self._atlas()
+            for name in CLEARABLE_COLLECTIONS:
+                assert name in ("wb_threads", "wb_incidents", "wb_jobs"), name
+                out[name] = int(db[name].delete_many({}).deleted_count)
+            return out
+        except Exception as e:  # noqa: BLE001 - only the class name: messages can carry the URI
+            self._atlas_db = None
+            return f"failed: {type(e).__name__}"
+
+    def _clear_tiger(self) -> str:
+        try:
+            assert CLEARABLE_TABLE == "wb_company_metrics"
+            conn = self._tiger()
+            with conn.cursor() as cur:
+                cur.execute("SELECT to_regclass(%s)", (CLEARABLE_TABLE,))
+                row = cur.fetchone()
+                if row and row[0]:
+                    cur.execute("TRUNCATE TABLE wb_company_metrics")
+            conn.commit()
+            return "truncated"
+        except Exception as e:  # noqa: BLE001
+            self._tiger_conn = None
+            return f"failed: {type(e).__name__}"
+
     # ------------------------------------------------------------ worker
 
     def _enqueue(self, item: tuple) -> None:
@@ -169,12 +246,15 @@ class Archive:
 
     def _run(self) -> None:
         while True:
-            what, kind, doc = self._q.get()
+            epoch, what, kind, doc = self._q.get()
             try:
-                if what == "metrics":
-                    self._write_metrics(doc)
-                else:
-                    self._write_doc(kind, doc)
+                with self._io:
+                    if epoch != self._epoch:
+                        continue  # queued before a clear(): must not land after it
+                    if what == "metrics":
+                        self._write_metrics(doc)
+                    else:
+                        self._write_doc(kind, doc)
             except Exception as e:  # noqa: BLE001 - the worker never dies
                 log.warning("archive: write failed (%s: %s)", type(e).__name__, e)
             finally:

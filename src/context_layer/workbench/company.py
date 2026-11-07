@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import random
+import threading
 import time
 from datetime import datetime, timedelta
 from typing import Any
@@ -181,6 +182,13 @@ class _Stale(Exception):
     """The session ended (stop or restart) while a sync was waiting for the agent."""
 
 
+def summarize_clear(r: dict) -> str:
+    atlas = r["atlas"]
+    if isinstance(atlas, dict):
+        atlas = ", ".join(f"{k}={v}" for k, v in atlas.items())
+    return f"{r['files_removed']} files, atlas {atlas}, tiger {r['tiger']}"
+
+
 class CompanyDay:
     def __init__(self, wb: Workbench, sim: Simulator, timeline_path=DAY_FILE, burst_p: float = 0.12, archive: Archive | None = None):
         self.wb = wb
@@ -247,6 +255,8 @@ class CompanyDay:
         if body.reset == "empty":
             wb.reset("empty")
         self._gen += 1
+        if body.reset == "empty" and body.clear_archive:
+            self._clear_archive_async(self._gen)
         self._auto_sim_before = wb.settings.auto_sim
         wb.update_settings(SettingsPatch(auto_sim=False))  # the timeline is the only source of chats (restored on stop)
         now = wb.now()
@@ -283,6 +293,22 @@ class CompanyDay:
         self._emit_state()
         wb.emit("clock", wb.clock.state())
         return self.state()
+
+    def _clear_archive_async(self, gen: int | None = None) -> None:
+        """Empty the cold archive in a worker thread. Pending writes are discarded right now; writes of the new day
+        wait inside the archive until the wipe is done, so nothing stale or new is lost or left over."""
+        epoch = self.archive.discard_pending()
+        loop = self.wb.bus.loop
+
+        def work() -> None:
+            result = self.archive.clear(epoch)
+            if gen is not None and gen != self._gen:
+                return  # the session ended meanwhile: nothing to report to it
+            text = "archive cleared: " + summarize_clear(result)
+            if loop is not None and not loop.is_closed():
+                loop.call_soon_threadsafe(self._log, "info", text)
+
+        threading.Thread(target=work, name="wb-archive-clear", daemon=True).start()
 
     def pause(self) -> CompanyState:
         if self.st.status == "running":

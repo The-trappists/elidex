@@ -616,4 +616,5 @@ class CompanyStartBody(BaseModel):
     day_minutes: int = Field(480, ge=0, le=1440)  # 0 = endless (run until stopped)
     cycle_minutes: int = Field(10, ge=1, le=60)
     reset: Literal["empty", "keep"] = "empty"  # "empty": drop threads/knowledge first so the graph grows from scratch
+    clear_archive: bool = True  # with reset "empty": also empty the cold archive (files, Atlas wb_* collections, Tiger wb_company_metrics)
     use_llm: bool = False

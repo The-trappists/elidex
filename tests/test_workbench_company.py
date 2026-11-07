@@ -869,3 +869,153 @@ def test_archive_cloud_off_when_not_configured(tmp_path, monkeypatch):
     st = a.stats()
     assert st["atlas"]["configured"] is False and st["tiger"]["configured"] is False
     a.close() if hasattr(a, "close") else None
+
+
+# ---------------------------------------------------------------- archive clean-up (Archive.clear)
+
+
+class DelRes:
+    def __init__(self, n):
+        self.deleted_count = n
+
+
+class RecColl:
+    def __init__(self, db, name):
+        self.db, self.name, self.docs = db, name, {"x": 1, "y": 2}
+
+    def replace_one(self, flt, doc, upsert=False):
+        self.docs[flt["_id"]] = doc
+
+    def delete_many(self, flt):
+        if self.db.fail:
+            raise RuntimeError("mongodb+srv://user:secret@host failed")
+        assert flt == {}
+        self.db.deleted.append(self.name)
+        n = len(self.docs)
+        self.docs.clear()
+        return DelRes(n)
+
+
+class RecDb(dict):
+    def __init__(self, fail=False):
+        super().__init__()
+        self.fail, self.deleted = fail, []
+
+    def __missing__(self, name):
+        self[name] = RecColl(self, name)
+        return self[name]
+
+
+class RecConn(FakeConn):
+    def __init__(self, exists=True, fail=False):
+        super().__init__(fail=fail)
+        self.exists, self._row = exists, None
+
+    def execute(self, sql, params=None):
+        if self.fail:
+            raise RuntimeError("postgres://user:secret@host failed")
+        self.sql.append(sql)
+        if "to_regclass" in sql:
+            self._row = ("wb_company_metrics",) if self.exists else (None,)
+
+    def fetchone(self):
+        return self._row
+
+
+def _filled(tmp_path, **kw):
+    a = Archive(tmp_path / "arch", **kw)
+    a.put("threads", {"id": "t1", "messages": []})
+    a.put("incidents", {"id": "inc_0001"})
+    a.put("jobs", {"id": "job_1"})
+    assert a.flush()
+    return a
+
+
+def test_clear_removes_files_and_counters_and_only_the_allowlisted_cloud_objects(tmp_path):
+    db, conn = RecDb(), RecConn()
+    db["threads"].docs = {"keep": 1}  # a dataset collection that must never be touched
+    db["assertions"].docs = {"keep": 1}
+    a = _filled(tmp_path, atlas=lambda: db, tiger=lambda: conn)
+    db.deleted.clear()
+    r = a.clear()
+    assert r["tiger"] == "truncated" and r["files_removed"] == 0  # the cloud held the docs, no files
+    assert sorted(db.deleted) == ["wb_incidents", "wb_jobs", "wb_threads"]
+    assert set(r["atlas"]) == {"wb_threads", "wb_incidents", "wb_jobs"} and r["atlas"]["wb_threads"] >= 1
+    assert db["threads"].docs == {"keep": 1} and db["assertions"].docs == {"keep": 1}
+    stmts = [s for s in conn.sql if "TRUNCATE" in s or "DROP" in s.upper() or "DELETE" in s.upper()]
+    assert stmts == ["TRUNCATE TABLE wb_company_metrics"]
+    assert a.stats()["counts"] == {"threads": 0, "incidents": 0, "jobs": 0, "metrics": 0}
+
+
+def test_clear_files_counters_and_no_truncate_when_the_table_is_missing(tmp_path):
+    conn = RecConn(exists=False)
+    a = _filled(tmp_path, atlas=False, tiger=lambda: conn)
+    assert (tmp_path / "arch" / "threads.jsonl").exists() and a.stats()["counts"]["threads"] == 1
+    r = a.clear()
+    assert r["files_removed"] == 3 and r["atlas"] == "off" and r["tiger"] == "truncated"
+    assert not list((tmp_path / "arch").glob("*.jsonl"))
+    assert not any("TRUNCATE" in s for s in conn.sql)
+    assert a.stats()["counts"]["threads"] == 0 and a.get_thread("t1") is None
+    assert Archive(None, atlas=False, tiger=False).clear() == {"files_removed": 0, "atlas": "off", "tiger": "off"}
+
+
+def test_clear_cloud_failure_still_clears_files_and_leaks_nothing(tmp_path, caplog):
+    a = _filled(tmp_path, atlas=False, tiger=False)
+    a._atlas_factory, a._tiger_factory = (lambda: RecDb(fail=True)), (lambda: RecConn(fail=True))
+    with caplog.at_level("WARNING"):
+        r = a.clear()
+    assert r["files_removed"] == 3
+    assert r["atlas"] == "failed: RuntimeError" and r["tiger"] == "failed: RuntimeError"
+    assert "secret" not in str(r) and "secret" not in caplog.text
+
+
+def test_pending_writes_do_not_reappear_after_clear(tmp_path):
+    a = Archive(tmp_path / "arch", atlas=False, tiger=False)
+    with a._io:  # hold the worker so the writes stay queued
+        for i in range(20):
+            a.put("incidents", {"id": f"inc_{i}"})
+        epoch = a.discard_pending()
+    r = a.clear(epoch)
+    a.put("jobs", {"id": "new"})  # written after the clear: kept
+    assert a.flush()
+    assert not (tmp_path / "arch" / "incidents.jsonl").exists()
+    assert (tmp_path / "arch" / "jobs.jsonl").exists() and a.stats()["counts"]["incidents"] == 0
+    assert r["files_removed"] == 0
+
+
+def _wait(cond, timeout=3.0):
+    import time
+
+    end = time.monotonic() + timeout
+    while time.monotonic() < end and not cond():
+        time.sleep(0.01)
+    return cond()
+
+
+@pytest.mark.parametrize("reset,clear,cleared", [("empty", True, True), ("empty", False, False), ("keep", True, False)])
+def test_company_start_clears_the_archive_only_when_asked(tmp_path, monkeypatch, reset, clear, cleared):
+    wb, sim, day = make_endless(tmp_path, monkeypatch)
+    day.archive = _filled(tmp_path, atlas=False, tiger=False)
+    f = tmp_path / "arch" / "threads.jsonl"
+    day.start(CompanyStartBody(speed=1, day_minutes=0, reset=reset, clear_archive=clear))
+    if cleared:
+        assert _wait(lambda: not f.exists())
+    else:
+        import time
+
+        time.sleep(0.1)
+        assert f.exists()
+
+
+def test_archive_clear_endpoint_409_while_running(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "WORKBENCH_LLM_CALLS_FILE", tmp_path / "llm_calls.jsonl")
+    monkeypatch.setattr(config, "WORKBENCH_LLM_CACHE_FILE", tmp_path / "llm_cache.json")
+    with TestClient(create_app(state_file=tmp_path / "state.json", background=False)) as c:
+        c.app.state.company.archive = _filled(tmp_path, atlas=False, tiger=False)
+        c.post("/api/company/start", json={"speed": 60, "reset": "keep"})
+        assert c.post("/api/company/archive/clear").status_code == 409
+        c.post("/api/company/pause")
+        assert c.post("/api/company/archive/clear").status_code == 409
+        c.post("/api/company/stop")
+        r = c.post("/api/company/archive/clear")
+        assert r.status_code == 200 and r.json()["files_removed"] == 3 and r.json()["atlas"] == "off"

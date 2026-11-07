@@ -853,5 +853,6 @@ export interface CompanyStartBody {
   day_minutes?: number
   cycle_minutes?: number
   reset?: 'empty' | 'keep'
+  clear_archive?: boolean
   use_llm?: boolean
 }

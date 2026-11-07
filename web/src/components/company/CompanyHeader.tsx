@@ -187,7 +187,7 @@ export function CompanyHeader({ c }: { c: CompanyState }) {
               ))}
             </Select>
           </label>
-          <Toggle checked={editable ? fresh : false} onChange={setFresh} disabled={!editable} label="Fresh start (empty graph)" />
+          <Toggle checked={editable ? fresh : false} onChange={setFresh} disabled={!editable} label="Fresh start (graph + archive)" />
           <Toggle checked={editable ? llm : c.use_llm} onChange={setLlm} disabled={!editable} label="Use LLM for agent calls" />
         </div>
       </div>
