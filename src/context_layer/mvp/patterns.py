@@ -137,6 +137,9 @@ class Pattern(BaseModel):
     resolved_by: str | None = None
     people: list[str] = Field(default_factory=list)  # who to ask
     grouped: list[str] = Field(default_factory=list)  # why differently named topics count as one problem
+    headline: str = ""  # one line: the likely cause, or where the fix stands
+    suspects: list[str] = Field(default_factory=list)  # elements that may be the common cause (map: highlighted)
+    links: list[str] = Field(default_factory=list)  # topology links between the problems and the suspects (map)
     note: str = HYPOTHESIS_NOTE
 
 
@@ -595,7 +598,7 @@ def find_recurring(net: _Net, occ: list[Occurrence], at: datetime, s: PatternSet
     for o in occ:
         by_problem.setdefault(o.problem or o.topic, []).append(o)
     for problem, group in by_problem.items():
-        if len(group) < 2:
+        if len(group) < s.recurring_min:  # only problems that keep coming back; twice can be chance
             continue
         store = net.store
         names = [o.topic for o in group]
@@ -611,7 +614,7 @@ def find_recurring(net: _Net, occ: list[Occurrence], at: datetime, s: PatternSet
         all_closed = bool(assertions) and all(a.valid_to is not None and a.valid_to <= at for a in assertions)
         last = group[-1].at
 
-        level: Level = "insight" if len(group) >= s.recurring_min else "watch"
+        level: Level = "insight"
         status, resolved_by = None, None
         # A proposal ("someone should rewire it") never closes a pattern; a stated or verified fix after the last
         # occurrence, or knowledge closed by a lasting fix, does.
@@ -638,8 +641,22 @@ def find_recurring(net: _Net, occ: list[Occurrence], at: datetime, s: PatternSet
             people=sorted({o.by for o in group if o.by} | {f.stated_by for _, f in lasting}),
         )
         p.hypotheses = _deduce(p, gaps, s)
+        p.headline = _recurring_headline(p, gaps)
         patterns.append(p)
     return patterns
+
+
+def _recurring_headline(p: Pattern, gaps: list[str]) -> str:
+    fixes = [f for f in p.fixes if f.kind != "unknown"]
+    if p.level == "resolved" and p.lasting_fixes:
+        return f"Fixed for good: {p.lasting_fixes[0].action.rstrip('.')} ({p.lasting_fixes[0].stated_by})"
+    if gaps and p.lasting_fixes:
+        return f"Lasting fix known ({p.lasting_fixes[0].action.rstrip('.')}), not rolled out on {len(gaps)} unit(s)"
+    if p.lasting_fixes:
+        return f"{p.lasting_fixes[0].stated_by} proposed a lasting fix, not applied yet"
+    if fixes and all(f.kind == "temporary" for f in fixes):
+        return "Only temporary fixes so far: the cause is still there"
+    return "No lasting fix known yet"
 
 
 # ---------------------------------------------------------------- linked
@@ -779,8 +796,35 @@ def find_linked(net: _Net, occ: list[Occurrence], at: datetime, s: PatternSettin
             people=sorted({o.by for o in occ_in if o.by} | {f.stated_by for _, f in lasting}),
         )
         p.hypotheses = _deduce(p, [], s)
+        _linked_focus(net, p)
         patterns.append(p)
     return patterns
+
+
+def _linked_focus(net: _Net, p: Pattern) -> None:
+    """What the map lights up (suspects, links) and the one-line headline."""
+    links: list[str] = []
+    for f in p.factors:
+        if f.kind == "dependency":
+            p.suspects.append(f.entity)
+            links += [net.adj[f.entity][e] for e in f.covers if e in net.adj.get(f.entity, {})]
+        elif f.kind == "link":
+            links.append(f.entity)
+    p.links = sorted(set(links))
+    if p.level == "resolved" and p.lasting_fixes:
+        p.headline = f"Cause found: {p.lasting_fixes[0].action.rstrip('.')} ({p.lasting_fixes[0].stated_by})"
+        return
+    top = p.factors[0]
+    if top.kind == "dependency":
+        who = "nobody reported it" if not top.reported else "it was reported too"
+        p.headline = f"Possible common cause: {top.entity} ({who})"
+    elif top.kind == "link":
+        p.headline = f"Possible common cause: the link {top.entity} between them"
+    elif top.kind == "site":
+        name = net.inv.sites[top.entity].name if top.entity in net.inv.sites else top.entity
+        p.headline = f"Possible common cause at the site: {name}"
+    else:
+        p.headline = f"Possible common cause: {top.entity}"
 
 
 # ---------------------------------------------------------------- deduction
@@ -879,12 +923,7 @@ def analyze(
     net = _Net(store, links, at)
     groups, reasons, meaning = group_topics(net, s, model_embedder() if embedder == "auto" else embedder)
     occ = collect_occurrences(store, thread_times or {}, at, s, groups)
-    linked = find_linked(net, occ, at, s)
-    # A repeat already explained by a linked pattern is not listed again on its own (one entry per cause).
-    covered = [{(o.element, o.at) for o in p.occurrences} for p in linked]
-    recurring = [p for p in find_recurring(net, occ, at, s, reasons)
-                 if p.level != "watch" or not any({(o.element, o.at) for o in p.occurrences} <= c for c in covered)]
-    patterns = recurring + linked
+    patterns = find_recurring(net, occ, at, s, reasons) + find_linked(net, occ, at, s)
     if entity_id:
         eid = store.resolve(entity_id)
         patterns = [p for p in patterns if eid in p.elements or any(f.entity == eid for f in p.factors)]

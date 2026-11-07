@@ -13,6 +13,7 @@ export function buildStyle(): cytoscape.StylesheetJson {
   const klass = css('--g-class')
   const link = css('--g-link')
   const bad = css('--bad')
+  const warn = css('--warn')
   const accent = css('--accent')
   const label = { 'font-family': 'Inter, ui-sans-serif, system-ui, sans-serif', color: text } as const
   return [
@@ -115,6 +116,10 @@ export function buildStyle(): cytoscape.StylesheetJson {
     { selector: 'node.site.sel', style: { 'border-color': accent, 'border-width': 2, 'border-style': 'solid' } },
     { selector: 'node.assertion.sel, node.assertion.hl', style: { width: 22, height: 22 } },
     { selector: 'edge.dim, node.dim', style: { opacity: 0.12 } },
+    // pattern focus (Patterns page): the problems in red, the possible common cause in amber, the links between them
+    { selector: 'node.pb', style: { 'background-color': bad, 'border-color': bad, 'border-width': 4, 'overlay-color': bad, 'overlay-opacity': 0.18, 'overlay-padding': 10, 'font-weight': 'bold' } },
+    { selector: 'node.suspect', style: { 'border-color': warn, 'border-width': 5, 'border-style': 'double', 'overlay-color': warn, 'overlay-opacity': 0.28, 'overlay-padding': 14, 'font-weight': 'bold' } },
+    { selector: 'edge.pl', style: { 'line-color': bad, width: 4, opacity: 1, 'z-index': 10 } },
     { selector: '.hover-fade', style: { opacity: 0.18 } },
     { selector: 'node.hover-on', style: { 'overlay-color': accent, 'overlay-opacity': 0.14, 'overlay-padding': 7 } },
     { selector: 'edge.hover-on', style: { width: 2.5, 'line-color': accent, opacity: 1 } },

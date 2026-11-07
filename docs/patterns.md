@@ -31,13 +31,13 @@ For each pattern it writes a short report:
 | An occurrence | A workaround bound to a named element, once per source thread, plus each field outcome | A workaround means someone had a problem and did something about it. General advice bound only to a class is not an occurrence |
 | Same problem, other name | Two topics count as one problem when they are about the **same place** (a shared element, an overlapping class or site scope, or units of the same type and model; meaning alone needs one of the first two), pass **two guards**, and **say the same thing**. The guards: no contradicting symptom check (`optical_levels` low vs normal, interface DOWN vs UP), and not a workaround vs its cure (reset F3 vs rewire the dehumidifier). They hold for every member of both groups, because grouping is transitive. "Same thing" means one of: topic words or fix words overlap by half or more (element ids and models removed first), identical symptom checks (3+), or, with an embedding model, the **same meaning** (see below). The pattern says why it grouped them | A real LLM does not always reuse a topic name ("turku-harbour-hut-breaker-f3-trip" vs "harbour-hut-breaker-trip"), and people tell the same problem in other words; without this, the repeats would be split |
 | Same case | Chat + email on the same element and problem within 24 h count once | Erkki's chat and email are one case, not two |
-| Recurring | 2 occurrences = watch, 3+ = insight | Twice can be chance |
+| Recurring | 3+ occurrences only; twice is not shown | The human-facing list is only for problems that truly keep coming back: the main flow is autonomous, and twice can be chance |
 | Linked window | Reports at most 6 h apart, fixed windows (a busy day does not chain) | |
 | Linked needs | 2+ elements from **separate** conversations, and a shared factor | If one person already linked them in one thread, it is known, not hidden |
 | Factor strength | Shared neighbour, direct link, site: strong. Same firmware: medium (only with 3+ elements or a repeat). Same model: weak (only shown, never creates a pattern) | Same firmware is common, so alone it would flood |
 | Linked levels | Seen once = watch. Seen twice, or 3+ elements = insight | |
-| One entry per cause | A repeat already explained by a linked pattern is not listed again; factors that explain the same reports merge | |
-| Watch cap | 10 most recent | |
+| One entry per cause | Factors that explain the same reports merge into one pattern | |
+| Watch cap | 10 most recent linked patterns seen once | |
 | Resolved | A *stated* or *verified* lasting fix after the last occurrence, bound to the elements (recurring) or to the shared neighbour or site (linked) | A *hunch* ("someone should rewire it") never closes a pattern |
 | Rollout gap | A lasting fix that names a firmware version keeps the pattern open while the inventory shows elements below it | "4.2 fixes it" is true for a node only once it runs 4.2 |
 | No future | Knowledge stated after `at` is ignored | The report at a past date shows what was known then |
@@ -85,7 +85,7 @@ The command prints each similarity, says whether a threshold separates the two s
 ## How to use it
 
 ```bash
-uv run ctx patterns --at 2026-10-07T08:00   # one evening: TRN-131 + TRN-229 on the watch list, TRN-117 hidden suspect
+uv run ctx patterns --at 2026-10-07T08:00   # one evening: TRN-131 + TRN-229 seen once, TRN-117 hidden suspect
 uv run ctx patterns --at 2026-10-31T12:00   # 3 insights: the linked pair (seen twice), breaker F3, firmware 4.2 not rolled out
 uv run ctx patterns --at 2026-11-07T12:00   # the linked pair is resolved by Erkki's clock module fix
 uv run ctx patterns --entity TRN-117 --json # only patterns involving an element
@@ -95,7 +95,7 @@ uv run ctx patterns --entity TRN-117 --json # only patterns involving an element
 
 | Where | What |
 | --- | --- |
-| Workbench UI | **Patterns** page (Observe group): Insight / Watch / Resolved tabs, links to the elements and the source knowledge, a Markdown report download |
+| Workbench UI | **Patterns** page (Observe group): a short list ("Possible common cause", then "Keeps coming back"; resolved ones behind a toggle), one line per pattern. Selecting one shows it on the network map: the problems in red, the possible common cause in amber, the links between them in red, the rest dimmed. Details (hypotheses, what was done, who to ask, reports) open under the selected row. Report download |
 | REST | `GET /api/patterns?at=&entity_id=` (JSON), `GET /api/patterns/report.md?at=` |
 | MCP | `get_patterns(entity_id, at)`: for agents, with the "not a rule" warning in its description |
 
