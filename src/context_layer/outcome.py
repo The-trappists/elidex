@@ -1,7 +1,8 @@
 """Passive outcome loop (loop v2, L3): the loop closes itself, nobody is asked to confirm anything.
 
 1. The demo agent applies knowledge to a case and says so in a thread, like a colleague would
-   (`post_application`, called by POST /agent/run). One RuleApplication per applied assertion, outcome "pending".
+   (`post_application`, called by POST /agent/run). One RuleApplication per assertion the recommendation cites
+   (not every retrieved one: a "fixed" reply must not verify noise), outcome "pending".
 2. The technician's next messages in that thread ("traffic is back", "still down") are read after the thread's
    job stored its knowledge (hook `after_store`). One LLM call per pending application decides worked / failed /
    unclear; without an LLM (or when it fails) a small keyword heuristic decides.
@@ -96,9 +97,17 @@ Decide whether the advice worked, failed, or whether the messages do not say.
 Only use the technician messages, never the agent message. Quote verbatim, copy the exact words of ONE message that shows the result (empty for unclear).
 Answer with JSON: {"outcome": "worked"|"failed"|"unclear", "quote": "...", "reason": "one short sentence"}."""
 
-_WORKED = re.compile(r"\b(back|fixed|worked|solved|is up|resolved)\b", re.IGNORECASE)
+# No bare "back" ("I'll get back to you") and no "is up" ("link is UP but still no traffic" is the symptom itself).
+_WORKED = re.compile(
+    r"\b(?:is|are|it'?s|came|comes?)\s+back\b|\bback\s+(?:up|online|to normal)\b"
+    r"|\b(?:fixed|worked|works now|working again|solved|resolved)\b",
+    re.IGNORECASE,
+)
 _FAILED = re.compile(
-    r"(still down|didn'?t work|did not work|no change|still zero|not working)", re.IGNORECASE
+    r"still down|still no\b|no traffic|still (?:0|zero)\b|didn'?t (?:work|help)|did not (?:work|help)|doesn'?t work"
+    r"|not working|not (?:fixed|resolved|solved)|no change|no difference|no luck|\bnope\b"
+    r"|still the same|same as before|same problem",
+    re.IGNORECASE,
 )
 
 
@@ -119,11 +128,17 @@ def _clip(text: str) -> str:
 
 
 def heuristic(messages: list) -> tuple[str, str, str, Any] | None:
-    """(outcome, quote, reason, message) from the latest message that says something clear, else None."""
+    """(outcome, quote, reason, message) from the latest message that says something about the result, else None.
+    Failure phrases are read first, and taken out before looking for success words ("not fixed" is no success).
+    A message that says both ("port 1 is back, still no traffic on port 2") is unclear: None."""
     for m in reversed(messages):
-        if _FAILED.search(m.text):  # "didn't work" before "work" words
+        failed = bool(_FAILED.search(m.text))
+        worked = bool(_WORKED.search(_FAILED.sub(" ", m.text)))
+        if failed and worked:
+            return None
+        if failed:
             return "failed", _clip(m.text), "keyword match: the message reports no improvement", m
-        if _WORKED.search(m.text):
+        if worked:
             return "worked", _clip(m.text), "keyword match: the message reports the problem is gone", m
     return None
 
@@ -173,7 +188,7 @@ def settle(
 ) -> None:
     """The effects of ONE freshly recorded outcome (`o` is already in `a.outcomes`), applied once, never again.
     failed: confidence x0.7 and a flag. worked from a human (`author`) and no failure in the ledger: trust verified
-    with the human's words, thread added as a source. worked with a failure in the ledger: mixed evidence, trust is
+    with the human's words, the human added to confirmed_by (stated_by is kept), thread added as a source. worked with a failure in the ledger: mixed evidence, trust is
     not upgraded. worked from observation: trust unchanged. A rule is never dropped."""
     from .mvp import feedback
     from .workbench.contracts import ReviewFlag
@@ -194,7 +209,9 @@ def settle(
             f"so its trust level is not upgraded. {who}"
         )
     elif author:
-        a.trust = Trust(level="verified", stated_by=author, role=role or "", evidence=o.quote or o.evidence)
+        # The technician confirms; the expert who stated the rule stays its author (docs/backend-review.md, finding 4).
+        a.trust.add_confirmation(Trust(level="verified", stated_by=author, role=role or "", evidence=o.quote or o.evidence))
+        a.trust.evidence = o.quote or o.evidence  # the latest field report is the evidence, even if already verified
         if source_ref is not None and not any(s.file == source_ref.file and set(source_ref.seq) <= set(s.seq) for s in a.sources):
             a.sources.append(source_ref)
         text = f"Confirmed in the field: '{a.topic}' worked on {o.entity}. {who}"

@@ -17,18 +17,39 @@ def _norm(text: str | None) -> str:
     return " ".join((text or "").lower().split())
 
 
+def _different_advice(old: ContextAssertion, new: ContextAssertion) -> bool:
+    """Actions differ; with no action on either side (facts), the facts differ (same rule as store.same_knowledge)."""
+    if old.action or new.action:
+        return _norm(old.action) != _norm(new.action)
+    return _norm(old.fact) != _norm(new.fact)
+
+
 def reconcile(store: ContextStore, new: ContextAssertion) -> list[str]:
-    """Update older assertions on the same topic and scope. Returns what changed."""
+    """Update older assertions on the same topic and scope. Returns what changed.
+
+    An invalidation closes an older rule when it covers every element the rule reaches (`ContextStore.reach`), not
+    when their binding ids are equal: "TX-3000 up to 2018" is closed by "transmission nodes up to 2019". A rule it
+    covers only in part stays open (closing it would end it for elements nobody spoke about); that is noted.
+    """
     events = []
+    new_reach = store.reach(new) if new.type == "invalidation" else set()
     for old in store.assertions.values():
         if old.id == new.id or old.topic != new.topic:
             continue
         if new.type == "invalidation":
-            if not (old.applies_to & new.applies_to):
-                continue
             # Only knowledge that is older than the invalidation can be closed. The replacement knowledge given
             # in the same message (same time) must stay open, even if the extractor gave it the same topic.
             if old.type == "invalidation" or old.valid_to is not None or old.valid_from >= new.valid_from:
+                continue
+            old_reach = store.reach(old)
+            if not old_reach or not (old_reach & new_reach):
+                continue
+            if not old_reach <= new_reach:
+                left = sorted(old_reach - new_reach)
+                events.append(
+                    f"{old.id} kept open: {new.id} covers {len(old_reach) - len(left)} of its {len(old_reach)} "
+                    f"elements, not {', '.join(left[:4])}{', ...' if len(left) > 4 else ''}"
+                )
                 continue
             old.valid_to = new.valid_from
             old.closed_by = new.id
@@ -40,7 +61,7 @@ def reconcile(store: ContextStore, new: ContextAssertion) -> list[str]:
             and old.valid_to is None  # closed knowledge is no longer in conflict with anything
             and new.valid_to is None
             and old.type == new.type
-            and _norm(old.action) != _norm(new.action)
+            and _different_advice(old, new)
             and old.trust.stated_by != new.trust.stated_by
         ):
             if new.id in old.conflicts_with:

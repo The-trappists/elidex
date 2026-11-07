@@ -210,7 +210,8 @@ def test_loop_v2_end_to_end(client, fakes):
     fakes.items[run["thread_id"]] = []  # the follow-up carries no new knowledge
     job_d = process(client, run["thread_id"])
     verified = next(a for a in state(client)["assertions"] if a["id"] == applied["id"])
-    assert verified["trust"]["level"] == "verified" and verified["trust"]["stated_by"] == "Jaakko Junnila"
+    assert verified["trust"]["level"] == "verified" and verified["trust"]["stated_by"] != "Jaakko Junnila"
+    assert verified["trust"]["confirmed_by"] == ["Jaakko Junnila"]  # the confirmer, not the author
     assert fakes.calls["outcome"] >= 1 and any("outcome worked" in e for e in job_d["events"])
     assert any(f["kind"] == "judge_decision" and f["assertion_id"] == applied["id"] and f["item_topic"] == "reseat-sfp-cage" for f in flags(client))
 

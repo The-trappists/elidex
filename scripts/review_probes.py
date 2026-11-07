@@ -84,7 +84,8 @@ def _():
 @probe("L4", "stated_by is not checked against the thread authors")
 def _():
     r = LINKER.link(item(scope=Scope(instance_ids=["TRN-117"]), stated_by="Matti Somebody"), TH)
-    return r.assertion is not None and r.assertion.trust.stated_by == "Matti Somebody", "author not in the thread kept"
+    who = r.assertion.trust.stated_by if r.assertion else None
+    return who == "Matti Somebody", f"thread written by Erkki Expert, stored stated_by: {who!r}"
 
 
 @probe("R1", "invalidation over the same elements but another class id does not close the rule")
@@ -108,9 +109,14 @@ def _():
 @probe("S1", "two different facts from two people are merged into one")
 def _():
     store = ContextStore(INV)
-    for who, fact in (("Pirjo", "caused by the floor scrubber"), ("Helmi", "caused by a faulty chassis fan")):
-        a = LINKER.link(item(type="fact", topic="vibration", action=None, fact=fact, stated_by=who,
-                             scope=Scope(instance_ids=["TRN-117"])), TH).assertion
+    said = (("Pirjo", "caused by the floor scrubber"), ("Helmi", "caused by a faulty chassis fan"))
+    # Both people write in the thread: the linker keeps a stated_by only when that person wrote there.
+    th = Thread(id="probe-s1", source="teams", messages=[
+        Message(thread_id="probe-s1", source="teams", seq=i, author=who, sent_at=T0 + timedelta(minutes=i),
+                text=f"TRN-117 vibration is {fact}") for i, (who, fact) in enumerate(said, 1)])
+    for i, (who, fact) in enumerate(said, 1):
+        a = LINKER.link(item(type="fact", topic="vibration", action=None, fact=fact, stated_by=who, cited_seq=[i],
+                             scope=Scope(instance_ids=["TRN-117"])), th).assertion
         store.add_assertion(a)
     return len(store.assertions) == 1, f"{len(store.assertions)} assertion(s) stored for 2 different facts"
 

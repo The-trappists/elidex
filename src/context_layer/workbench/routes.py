@@ -444,13 +444,15 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
             raise
         raise HTTPException(502, f"LLM call failed: {e}") from e
     thread_id, applications = None, []
-    if wb.settings.use_outcome_loop and report.hits and body.entity_id:
+    cited = agent_mod.cited_assertion_ids(report.recommendation, report.hits)
+    # Only the rules the recommendation relies on are applied (LLM: its citations; template: the rule it picked).
+    # Every other hit is context, and a "fixed" reply must not verify it.
+    applied = [h.assertion for h in report.hits if h.assertion.id in cited]
+    if wb.settings.use_outcome_loop and applied and body.entity_id:
         try:  # the loop is automated and optional: a failure here never breaks the agent run
             from .. import outcome
 
-            thread_id, apps = outcome.post_application(
-                wb, body.entity_id, [h.assertion for h in report.hits], body.description or ""
-            )
+            thread_id, apps = outcome.post_application(wb, body.entity_id, applied, body.description or "")
             applications = [a.model_dump(mode="json") for a in apps]
         except Exception as e:  # noqa: BLE001
             wb.emit("log", {"level": "warning", "text": f"outcome loop: could not post the agent message ({e})"})
@@ -464,11 +466,8 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
               for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,
-        cited_assertion_ids=agent_mod.cited_assertion_ids(report.recommendation, report.hits),
-        evidence_confidence=_evidence_confidence(
-            report.hits,
-            agent_mod.cited_assertion_ids(report.recommendation, report.hits),
-        ),
+        cited_assertion_ids=cited,
+        evidence_confidence=_evidence_confidence(report.hits, cited),
     )
 
 

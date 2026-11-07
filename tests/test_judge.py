@@ -190,7 +190,8 @@ def test_hunch_upgraded_to_verified_and_merged(monkeypatch):
     ver = put(store, mk("optics-wait", "Waiting worked", "Veikko", level="verified", at=T1, action="wait", file="chat2", extra=[obs]))
     job, ctx = run(store, [ver], monkeypatch, fake_llm(always("supports", "outcome confirmed the hunch")))
     assert ver.id not in store.assertions and ver.id not in store.g
-    assert hunch.trust.level == "verified" and hunch.trust.stated_by == "Veikko"
+    assert hunch.trust.level == "verified" and hunch.trust.stated_by == "Helmi"  # the author stays
+    assert hunch.trust.confirmed_by == ["Veikko"]
     assert {s.file for s in hunch.sources} == {"chat", "chat2"}
     assert hunch.id in store.assertions and set(store.g.out_edges(hunch.id, keys=True)) == edges_before
     assert ctx.new_assertions == [] and job.assertion_ids == [hunch.id]

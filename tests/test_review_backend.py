@@ -21,15 +21,16 @@ def jobs_of(client, tid):
     return [j for j in client.get("/api/state").json()["jobs"] if j["thread_id"] == tid]
 
 
-def run_thread(client, items, text="TRN-042 needs a wait after the swap", sid="rv"):
-    """New thread bound to a scripted scenario with the given items; returns (thread id, finished job)."""
+def run_thread(client, items, text="TRN-042 needs a wait after the swap", sid="rv", author="Erkki"):
+    """New thread bound to a scripted scenario with the given items; returns (thread id, finished job).
+    `author` writes the message: the linker keeps a stated_by only when that person wrote in the thread."""
     wb = client.app.state.wb
     wb.scenarios[sid] = Scenario(
         id=sid, title=sid, messages=[ScenarioMessage(persona="erkki", text=text)],
         expected=ExtractionResult(items=items),
     )
     t = client.post("/api/threads", json={"source": "teams", "subject": sid}).json()
-    client.post(f"/api/threads/{t['id']}/messages", json={"author": "Erkki", "text": text})
+    client.post(f"/api/threads/{t['id']}/messages", json={"author": author, "text": text})
     wb.threads[t["id"]].scenario_id = sid
     process(client, t["id"])
     return t["id"], jobs_of(client, t["id"])[-1]
@@ -106,7 +107,7 @@ def test_conflict_flag_is_one_per_pair(client):
     run_thread(client, [item("shared-topic", action="Restart the unit")], sid="c1")
     other = item("shared-topic", action="Never restart the unit")
     other.stated_by = "Mikko"
-    tid, job = run_thread(client, [other], sid="c2")
+    tid, job = run_thread(client, [other], sid="c2", author="Mikko")
     conflicts = [f for f in flags(client) if f["kind"] == "conflict" and f["thread_id"] == tid]
     assert len(conflicts) == 1
     c = conflicts[0]
@@ -129,7 +130,7 @@ def test_conflict_flag_dedupes_legacy_per_assertion_flags(client):
     run_thread(client, [item("legacy-topic", action="Restart the unit")], sid="l1")
     other = item("legacy-topic", action="Never restart the unit")
     other.stated_by = "Mikko"
-    tid, _ = run_thread(client, [other], sid="l2")
+    tid, _ = run_thread(client, [other], sid="l2", author="Mikko")
     (flag,) = [f for f in wb.flags.values() if f.kind == "conflict" and f.thread_id == tid]
     first, second = sorted(re.findall(r"ctx_\d{4,}", flag.detail))
     # an old store held one flag per assertion: the same pair seen from the other side is not new

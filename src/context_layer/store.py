@@ -12,7 +12,7 @@ from pathlib import Path
 import networkx as nx
 
 from .link import Inventory
-from .models import TRUST_RANK, ContextAssertion, ElementClass
+from .models import ContextAssertion, ElementClass
 
 
 @dataclass
@@ -25,16 +25,25 @@ def _binding_key(a: ContextAssertion) -> tuple:
     return (a.type, a.topic, frozenset((b.entity, b.role) for b in a.bound_to))
 
 
+def _norm(text: str | None) -> str:
+    return " ".join((text or "").lower().split())
+
+
 def same_knowledge(old: ContextAssertion, new: ContextAssertion) -> bool:
     """Same binding, and either the same author or the same advice.
 
     Two people who give different advice on the same topic and scope are not merged: both stay, and the
     lifecycle step flags the conflict. The same author (or the same action) seen on another channel is one fact.
+    With no action on either side (facts), the advice is the fact itself: two different facts from two people
+    are not the same knowledge.
     """
     if _binding_key(old) != _binding_key(new):
         return False
-    same_action = " ".join((old.action or "").lower().split()) == " ".join((new.action or "").lower().split())
-    return old.trust.stated_by == new.trust.stated_by or same_action
+    if old.action or new.action:
+        same_advice = _norm(old.action) == _norm(new.action)
+    else:
+        same_advice = _norm(old.fact) == _norm(new.fact)
+    return old.trust.stated_by == new.trust.stated_by or same_advice
 
 
 class ContextStore:
@@ -71,8 +80,7 @@ class ContextStore:
                 old.sources += a.sources
                 old.valid_from = min(old.valid_from, a.valid_from)
                 old.confidence = max(old.confidence, a.confidence)
-                if TRUST_RANK[a.trust.level] > TRUST_RANK[old.trust.level]:
-                    old.trust = a.trust
+                old.trust.add_confirmation(a.trust)
                 return old, False
         a.id = f"ctx_{len(self.assertions) + 1:04d}"
         self._index(a)
@@ -91,8 +99,7 @@ class ContextStore:
                 target.sources.append(src)
         target.valid_from = min(target.valid_from, dup.valid_from)
         target.confidence = max(target.confidence, dup.confidence)
-        if TRUST_RANK[dup.trust.level] > TRUST_RANK[target.trust.level]:
-            target.trust = dup.trust
+        target.trust.add_confirmation(dup.trust)
         have = {(b.entity, b.role) for b in target.bound_to}
         for b in dup.bound_to:
             if (b.entity, b.role) not in have:
@@ -138,6 +145,27 @@ class ContextStore:
                 elif data["role"] == "located_at":
                     scope.append((target, f"site {target}"))
         return scope
+
+    def reach(self, a: ContextAssertion) -> set[str]:
+        """The elements and sites an assertion is served for, by scope: elements it applies to, the members of its
+        classes, sites it applies to and their elements, and the elements it was seen on (get_context serves those
+        to the element itself). A site where it was only seen is not reached. Compare reaches, not binding ids:
+        two class ids can cover the same elements."""
+        out: set[str] = set()
+        for b in a.bound_to:
+            if b.role == "trigger" or b.entity not in self.g:
+                continue
+            kind = self.g.nodes[b.entity].get("kind")
+            if kind == "element":
+                out.add(b.entity)
+            elif b.role != "applies_to":
+                continue
+            elif kind == "class":
+                out |= {u for u, _, k in self.g.in_edges(b.entity, keys=True) if k == "member_of"}
+            elif kind == "site":
+                out.add(b.entity)
+                out |= {u for u, _, k in self.g.in_edges(b.entity, keys=True) if k == "located_at"}
+        return out
 
     def resolve(self, raw: str) -> str:
         el = self.inventory.resolve_element(raw)

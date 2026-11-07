@@ -203,9 +203,20 @@ class Binding(BaseModel):
 
 class Trust(BaseModel):
     level: TrustLevel
-    stated_by: str
+    stated_by: str  # who stated the knowledge; never replaced by who confirmed it
     role: str | None = None
     evidence: str | None = None
+    confirmed_by: list[str] = Field(default_factory=list)  # other people who backed it: a field report, a repeat
+
+    def add_confirmation(self, other: Trust) -> None:
+        """`other` backed the same knowledge. The original author stays (a later disagreement from the confirmer is
+        still a disagreement); the other people are added to confirmed_by; the level only goes up."""
+        for who in [other.stated_by, *other.confirmed_by]:
+            if who and who != self.stated_by and who not in self.confirmed_by:
+                self.confirmed_by.append(who)
+        if TRUST_RANK[other.level] > TRUST_RANK[self.level]:
+            self.level = other.level
+            self.evidence = other.evidence or self.evidence
 
 
 class SourceRef(BaseModel):

@@ -7,12 +7,12 @@ keep working unchanged.
 
 from __future__ import annotations
 
-import re
 from datetime import datetime
 from typing import Any, Iterable
 
 import networkx as nx
 
+from ..link import mention_pattern
 from ..listen import discover_threads
 from ..models import ContextAssertion, Thread
 from ..store import ContextStore
@@ -27,12 +27,6 @@ def _kind_for(entity_id: str) -> str:
     if entity_id.startswith("class:"):
         return S.CLASS
     return S.ELEMENT
-
-
-def _mention_pattern(key: str) -> re.Pattern:
-    """`TRN-042` also matches `TRN 042` and `trn042`; never inside a longer token."""
-    parts = [re.escape(p) for p in re.split(r"[^A-Za-z0-9]+", key) if p]
-    return re.compile(r"(?<![A-Za-z0-9])" + r"[-\s]?".join(parts) + r"(?![A-Za-z0-9])", re.IGNORECASE)
 
 
 class KnowledgeGraph:
@@ -84,8 +78,9 @@ class KnowledgeGraph:
 
     def _add_threads(self, threads: list[Thread]) -> None:
         inv = self.store.inventory
-        patterns = [(_mention_pattern(k), eid) for eid, e in inv.elements.items() for k in [eid, *e.aliases]]
-        patterns += [(_mention_pattern(sid), sid) for sid in inv.sites]
+        # The same matcher as the linker: an id the linker accepts as named is a mention here too.
+        keys = [(k, eid) for eid, e in inv.elements.items() for k in [eid, *e.aliases]] + [(sid, sid) for sid in inv.sites]
+        patterns = [(p, target) for k, target in keys if (p := mention_pattern(k)) is not None]
         for t in threads:
             tnode = S.thread_id(t.id)
             self._node(tnode, S.THREAD, label=t.subject or t.id, file=t.id, source=t.source, subject=t.subject,

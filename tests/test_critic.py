@@ -143,6 +143,7 @@ def test_linker_notes_qualifier_class_and_scales_confidence():
     crit = ClassCriteria(type=el.type, model=el.model)
     base = dict(type="workaround", topic="t", summary="s", action="a", trust_level="stated", stated_by="V", cited_seq=[1], confidence=0.8)
     th = _thread()
+    th.messages[0].text = f"power cycled {el.id}"  # the linker binds only ids the thread names
     plain = Linker(inv).link(ExtractedItem(scope=Scope(element_class=crit), **base), th)
     vague = Linker(inv).link(ExtractedItem(scope=Scope(element_class=crit, qualifier="old"), **base), th)
     assert plain.assertion.confidence == 0.8
