@@ -43,12 +43,13 @@ FROM messages WHERE mentions @> ARRAY[%s] GROUP BY 1 ORDER BY 1
 """
 
 
-def connect():
+def connect(timeout: int = 15, statement_timeout_ms: int | None = None):
     import psycopg
 
     if not config.tiger_configured():
         raise SystemExit("TIGER_DATABASE_URL is not set. Copy the line from .env.example into .env and fill it in (docs/dataset.md).")
-    return psycopg.connect(config.TIGER_DATABASE_URL, connect_timeout=15)
+    extra = {"options": f"-c statement_timeout={int(statement_timeout_ms)}"} if statement_timeout_ms else {}
+    return psycopg.connect(config.TIGER_DATABASE_URL, connect_timeout=timeout, **extra)
 
 
 def has_timescale(conn) -> bool:

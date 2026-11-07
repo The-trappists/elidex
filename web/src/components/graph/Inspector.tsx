@@ -8,6 +8,7 @@ import { useLive } from '../../store/live'
 import { useContextHits } from '../incidents/useContextHits'
 import { Badge, Button, EmptyState, IdChip, Toggle } from '../ui'
 import { ContextCard } from './ContextCard'
+import { HumanActivity } from './HumanActivity'
 import { Experts, Provenance, Reach, Timeline } from './GraphSections'
 import { classMembers, classesOf, type NodeKind } from './graphModel'
 
@@ -97,6 +98,13 @@ function ElementInfo({ id, at, onSelect }: P) {
         ) : (
           <None>Nothing known about {id} at this time.</None>
         )}
+      </Section>
+      <Section title="Human activity">
+        <HumanActivity
+          id={id}
+          defaultQuery={`${el.type.replace(/_/g, ' ')} ${el.model} installed ${el.install_year}`}
+          onSelectKnowledge={(aid) => { if (useLive.getState().assertions[aid]) onSelect(aid, 'assertion') }}
+        />
       </Section>
       <Section title="History of advice">
         <Timeline entityId={id} at={at} onSelect={(aid) => onSelect(aid, 'assertion')} />

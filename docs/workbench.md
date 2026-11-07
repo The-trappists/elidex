@@ -175,6 +175,21 @@ Demo: scenario `agent-outcome-followup` supplies the technician follow-up.
 
 `LLMExtractor.last_traces` gives the call ids to put in `job.llm_call_ids`. API keys are never traced.
 
+### Human activity from the sources (`workbench/sources.py`)
+
+Read on demand for one element, never from the Workbench's own threads. Three endpoints, so one failing source never blocks the others. Every answer has `source` (`files`, `atlas`, `tiger`, `workbench`), `status` (`ok`, `not_configured`, `error`, `timeout`) and `detail`; when a cloud source fails and the files can answer, `source` is `files` and `fallback_from` says why. No endpoint raises: cloud calls run in a thread with short timeouts (4 s connect, 5 s query; 6 s overall), and a file scan is cut after 8 s.
+
+| Method and path | Returns | Source |
+| --- | --- | --- |
+| `GET /sources` | what is configured (no network call) | config only |
+| `GET /sources/elements/{id}/threads?limit=&offset=` | `{total, has_more, items[{id, subject, started_at, n_messages, authors, preview[3], in_workbench}]}`, newest first, limit 1-50 | Atlas `threads.mentions` index if `MONGODB_URI`, else a scan of the dataset files (cached per element) |
+| `GET /sources/elements/{id}/freshness` | `{last_discussed, days_since, messages, active_days, by_month[{month, messages, people}]}`; `days_since` counts from the **simulated** now | Tiger `daily_mentions` + `activity` if `TIGER_DATABASE_URL`, else computed on the files, same shape |
+| `GET /sources/similar?q=&entity=&limit=` | `{items[{id, topic, summary, score, trust}], mode}` | Atlas `$vectorSearch` (embeddings from `EMBEDDING_MODEL`) if `MONGODB_URI`; else, or when Atlas fails, an **offline** ranking of the Workbench's own assertions by hashed words (finds similar wording, not meaning) |
+
+The files source is `DATASET_DIR` (default `out/dataset/demo`), else `out/dataset/tiny`; with none, the status is `not_configured` with the command to generate one. The existing core endpoints `GET /similar` and `GET /freshness/{id}` (api.py) stay as they were.
+
+UI: the element panel of the Network page has a "Human activity" section (summary sentence, messages per month, expandable threads with a message preview and an "Open conversation" button for threads the Workbench holds, "Similar knowledge" with a free-text query). Each block has loading, empty, not-configured and error (with Retry) states.
+
 ### Company dataset sample
 
 `uv run ctx dataset export-workbench out/dataset/tiny [--sites 40 --threads 300 --out out/workbench-sample.json --seed 42]` writes an export file (loadable with Import or `POST /data/import`): a connected sub-network grown from the Elisa seed by walking links (TRN-042 and its hub stay), the people who write, a thread mix (knowledge 30 %, hard negatives 15 %, noise naming sub-network elements 35 %, other noise; never a thread naming an element outside the sample; none after the sim start), the true facts of those threads linked into assertions, the hand-written scenarios and the seed threads (processed on load). Deterministic for the same dataset, options and seed. With the default 40 sites, `tiny` gives about 160 elements and 147 links, which the Network page draws without lag. Never use `large` as the Workbench source of truth: only the small sample goes in.

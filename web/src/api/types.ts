@@ -639,3 +639,46 @@ export interface DatasetSample {
   assertions: number
   connected_components: number
 }
+
+/** GET /sources/...: human activity around an element (docs/workbench.md). Every answer names its source and status. */
+export type SourceName = 'files' | 'atlas' | 'tiger' | 'workbench'
+export type SourceStatus = 'ok' | 'not_configured' | 'error' | 'timeout'
+export interface SourceAnswer {
+  source: SourceName
+  status: SourceStatus
+  detail: string | null
+  fallback_from?: { source: SourceName; status: SourceStatus; detail: string }
+}
+export interface SourceThread {
+  id: string
+  source: 'slack' | 'teams' | 'email'
+  subject: string | null
+  started_at: string
+  ended_at: string
+  n_messages: number
+  authors: string[]
+  preview: { seq: number | null; author: string; role: string | null; sent_at: string; text: string }[]
+  in_workbench: boolean
+}
+export interface SourceThreads extends SourceAnswer {
+  element: string
+  total: number
+  offset: number
+  limit: number
+  has_more: boolean
+  items: SourceThread[]
+}
+export interface SourceFreshness extends SourceAnswer {
+  element: string
+  last_discussed: string | null
+  days_since: number | null
+  messages: number
+  active_days: number
+  threads: number | null
+  by_month: { month: string; messages: number; people: number }[]
+}
+export interface SourceSimilar extends SourceAnswer {
+  query: string
+  mode: string
+  items: { id: string; topic: string | null; summary: string; score: number; trust: string | null; applies_to?: string[]; bound_here?: boolean }[]
+}
