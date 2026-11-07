@@ -72,6 +72,9 @@ def llm_fallback_configured() -> bool:
 MONGODB_URI = os.getenv("MONGODB_URI", "")
 MONGODB_DB = os.getenv("MONGODB_DB", "ctx")
 TIGER_DATABASE_URL = os.getenv("TIGER_DATABASE_URL", "")
+# Embeddings for the vector search: an OpenAI-compatible embedding model on the primary LLM provider.
+# Empty = offline fallback (hashed words: finds similar wording, not similar meaning).
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
 DATASET_DIR = Path(os.getenv("DATASET_DIR", OUT_DIR / "dataset" / "demo"))
 
 

@@ -38,6 +38,35 @@ def context(entity_id: str, at: datetime | None = None, include_expired: bool = 
     return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in hits]
 
 
+@app.get("/freshness/{entity_id}")
+def freshness(entity_id: str) -> dict:
+    """When humans last talked about this element, from Tiger Data (`daily_mentions`): is the knowledge going stale?"""
+    if not config.tiger_configured():
+        raise HTTPException(503, "Tiger Data is not configured (TIGER_DATABASE_URL).")
+    from .dataset import tiger
+
+    with tiger.connect() as conn:
+        last, total, days = tiger.freshness(conn, entity_id)
+    age = (datetime.now(last.tzinfo) - last).days if last else None
+    return {"entity": entity_id, "last_discussed": last, "messages": total or 0, "active_days": days, "days_since": age}
+
+
+@app.get("/similar")
+def similar(q: str, collection: str = "assertions", limit: int = 5) -> list[dict]:
+    """Knowledge nearest to a sentence, by vector search in Atlas (run `ctx dataset embed` first)."""
+    if not config.mongo_configured():
+        raise HTTPException(503, "MongoDB Atlas is not configured (MONGODB_URI).")
+    if collection not in ("assertions", "facts"):
+        raise HTTPException(422, "collection must be 'assertions' or 'facts'")
+    from . import mongo_store
+    from .dataset import mongo
+
+    try:
+        return mongo_store.similar(mongo.connect(), collection, q, limit)
+    except SystemExit as e:  # nothing embedded yet, or another embedding mode
+        raise HTTPException(409, str(e)) from e
+
+
 def _graph():
     from .graph import KnowledgeGraph
 

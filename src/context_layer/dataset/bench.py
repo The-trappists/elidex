@@ -29,7 +29,7 @@ def read_manifest(root: Path) -> dict:
     return json.loads((root / "manifest.json").read_text(encoding="utf-8"))
 
 
-def bench(root: Path, max_facts: int | None = None, queries: int = 500, log=print) -> dict:
+def bench(root: Path, max_facts: int | None = None, queries: int = 500, log=print, on_store=None) -> dict:
     out: dict = {}
     t = time.perf_counter()
     inventory = Inventory.load(root / "network")
@@ -99,6 +99,9 @@ def bench(root: Path, max_facts: int | None = None, queries: int = 500, log=prin
     out["add_assertion"] = _ms(add_t)
     out["assertions_stored"] = len(store.assertions)
     log(f"linked {stats['linked']}/{stats['facts']} facts, scope correct {stats['scope_correct']}, over-bound {stats['over_bound']}")
+
+    if on_store:  # e.g. save the linked store to Atlas (ctx dataset bench --save-mongo)
+        on_store(store)
 
     # ---- lookup: what do humans know about this element?
     now = datetime(2026, 11, 7)

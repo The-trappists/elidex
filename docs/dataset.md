@@ -97,6 +97,17 @@ Tiger Data service type matters: a **Time-series and analytics** service gives a
 
 Analytics layer (Time-series service only): `load-tiger --analytics`, or `ctx dataset tiger-analytics` on data already loaded, compresses chunks older than 30 days and builds `message_mentions` plus the continuous aggregate `daily_mentions` (messages per element per day). `ctx dataset freshness TRN-042` then answers "when did humans last talk about this node?" from it. Both are safe to run again. `ctx dataset tiger-verify [folder]` prints a checklist (`ok` / `FAIL`) of what the project needs from Tiger Data: TimescaleDB present, `messages` is a hypertable, row count equal to the manifest, indexes, compression and its policy, `message_mentions`, `daily_mentions`, and a real query. It exits with code 1 if anything fails, so it can gate a deployment.
 
+### Using the databases from the product
+
+| What | Command or endpoint | Store |
+| --- | --- | --- |
+| Pipeline assertions and classes saved to Atlas | `ctx run --save-mongo` (cached extractions), or `ctx dataset bench out/dataset/large --save-mongo` (links the 3,000 ground-truth facts of `large`) | Atlas `assertions`, `classes` |
+| Embed the knowledge text and create the vector index | `ctx dataset embed --collection assertions` (or `facts`) | Atlas field `embedding`, index `<collection>_vector`, mode recorded in `meta` |
+| Knowledge nearest to a sentence | `ctx dataset similar "port stays down after SFP swap" --collection assertions`, or `GET /similar?q=...` | Atlas `$vectorSearch` |
+| When humans last talked about an element | `ctx dataset freshness TRN-042`, or `GET /freshness/TRN-042` (adds `days_since`) | Tiger `daily_mentions` |
+
+Embeddings come from `EMBEDDING_MODEL` (an OpenAI-compatible embedding model on the primary LLM provider). Left empty, an offline fallback hashes words: it finds texts with similar *wording*, not similar *meaning*, so use a real model for the demo. The mode and the vector size are stored with the vectors and a mismatch is refused. Atlas builds the vector index in the background, give it a few minutes before the first `similar`. Not run by the assistant against the real services (credentials): the first run is yours.
+
 ### On the deployed version (Vultr)
 
 The two databases are in the cloud, so the VM needs **no copy of the dataset**: load once from your laptop, with the same URIs, and the app only reads.

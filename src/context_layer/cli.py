@@ -32,6 +32,11 @@ def cmd_run(args: argparse.Namespace) -> None:
         print(f"  note:  {line}")
     print(f"Classes: {', '.join(store.classes) or 'none'}")
     print(f"Saved to {config.STORE_FILE.relative_to(config.ROOT)}")
+    if args.save_mongo:
+        from . import mongo_store
+        from .dataset import mongo
+
+        print("Saved to Atlas:", mongo_store.save_store(store, mongo.connect()))
 
 
 def cmd_context(args: argparse.Namespace) -> None:
@@ -164,6 +169,19 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         else:
             print("Tiger Data: TIGER_DATABASE_URL not set")
         return
+    if args.dataset_cmd in ("embed", "similar"):
+        from . import embed, mongo_store
+        from .dataset import mongo
+
+        db = mongo.connect()
+        if args.dataset_cmd == "embed":
+            print(f"Embedding mode: {embed.mode()}")
+            print(mongo_store.embed_collection(db, args.collection))
+        else:
+            for d in mongo_store.similar(db, args.collection, args.text, args.limit):
+                text = mongo_store.TEXT_OF[args.collection](d)
+                print(f"{d['score']:.3f}  {d['_id']}  {text[:140]}")
+        return
     if args.dataset_cmd == "mongo-indexes":  # after an interrupted load: data is there, only the indexes are missing
         import time as _t
 
@@ -251,7 +269,13 @@ def cmd_dataset(args: argparse.Namespace) -> None:
             if args.analytics:
                 tiger.analytics(conn)
     else:
-        print(json.dumps(ds_bench.bench(root, max_facts=args.facts, queries=args.queries), indent=2))
+        on_store = None
+        if args.save_mongo:
+            from . import mongo_store
+            from .dataset import mongo
+
+            on_store = lambda s: print("Saved to Atlas:", mongo_store.save_store(s, mongo.connect()))  # noqa: E731
+        print(json.dumps(ds_bench.bench(root, max_facts=args.facts, queries=args.queries, on_store=on_store), indent=2))
 
 
 def cmd_mcp(_: argparse.Namespace) -> None:
@@ -268,6 +292,7 @@ def main(argv: list[str] | None = None) -> None:
     run = sub.add_parser("run", help="listen -> understand -> link -> store (writes out/context_store.json)")
     run.add_argument("--llm", action="store_true", help="call the LLM instead of replaying data/cache/")
     run.add_argument("--lifecycle", action="store_true", help="MVP D: later messages close validity, flag conflicts")
+    run.add_argument("--save-mongo", action="store_true", help="also save the assertions to MongoDB Atlas (MONGODB_URI in .env)")
     run.set_defaults(func=cmd_run)
 
     ctx = sub.add_parser("context", help="what humans know about an entity")
@@ -323,6 +348,7 @@ def main(argv: list[str] | None = None) -> None:
     be.add_argument("path", nargs="?")
     be.add_argument("--facts", type=int, help="only the first N facts")
     be.add_argument("--queries", type=int, default=500)
+    be.add_argument("--save-mongo", action="store_true", help="save the linked assertions to Atlas (collections assertions, classes)")
     lm = dsub.add_parser("load-mongo", help="stream a dataset into MongoDB Atlas (MONGODB_URI in .env), resumable")
     lm.add_argument("path", nargs="?", help="dataset folder (default: DATASET_DIR)")
     lm.add_argument("--drop", action="store_true", help="empty each collection first")
@@ -331,6 +357,12 @@ def main(argv: list[str] | None = None) -> None:
     lt.add_argument("path", nargs="?")
     lt.add_argument("--drop", action="store_true", help="truncate the messages table first (re-running without it fails on duplicates)")
     lt.add_argument("--analytics", action="store_true", help="then build the analytics layer (compression, daily_mentions); time-series service only")
+    em = dsub.add_parser("embed", help="embed the knowledge text in Atlas and create the vector index (EMBEDDING_MODEL, or the offline fallback)")
+    em.add_argument("--collection", choices=["assertions", "facts"], default="assertions")
+    sm = dsub.add_parser("similar", help="the knowledge nearest to a sentence, by vector search in Atlas")
+    sm.add_argument("text")
+    sm.add_argument("--collection", choices=["assertions", "facts"], default="assertions")
+    sm.add_argument("--limit", type=int, default=5)
     dsub.add_parser("mongo-indexes", help="(re)build the MongoDB indexes only, e.g. after an interrupted load-mongo")
     tv = dsub.add_parser("tiger-verify", help="checklist of what the project needs from Tiger Data (hypertable, row count, compression, aggregate)")
     tv.add_argument("path", nargs="?", help="dataset folder whose message count to compare with (default: DATASET_DIR)")
