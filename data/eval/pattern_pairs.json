@@ -1,0 +1,242 @@
+{
+  "_note": "Labelled pairs for `ctx patterns --check-meaning`: does the embedding model keep look-alikes apart (same: false) and group the same problem told with other words (same: true)? Pairs marked stopped_by_place share only a model: meaning is never compared for them (it needs the same element or an overlapping scope), so they are shown but not counted. The others pass place and guards, so only meaning decides. Calibrated on gemini-embedding-001 on 2026-11-07: same >= 0.802, counted look-alikes <= 0.691, threshold 0.78. See docs/patterns.md.",
+  "pairs": [
+    {
+      "same": true,
+      "why": "breaker F3: real LLM wording vs label",
+      "a": {
+        "source": "label of pattern-harbour-breaker-again",
+        "topic": "harbour-hut-breaker-trip",
+        "summary": "When RAD-254 at the Turku harbour hut is completely dead, breaker F3 has usually tripped; reset it and empty the dehumidifier tray before replacing the radio.",
+        "action": "Reset breaker F3 in the cabinet left of the door and empty the dehumidifier tray; check that the radio comes back before replacing it.",
+        "diagnosis": "the dehumidifier trips breaker F3 in heavy sea fog"
+      },
+      "b": {
+        "source": "real LLM (out/eval/extractions.json)",
+        "topic": "turku-harbour-hut-breaker-f3-trip",
+        "summary": "When RAD-254 is dead at Turku harbour hut due to dehumidifier tripping breaker F3 in sea fog, flip breaker F3 back up and empty the dehumidifier tray rather than replacing the radio unit.",
+        "action": "Flip F3 back up in the grey breaker cabinet left of the door and empty the dehumidifier tray.",
+        "diagnosis": "The dehumidifier trips breaker F3 in the grey cabinet left of the door when sea fog is bad or when the tray is full."
+      }
+    },
+    {
+      "same": true,
+      "why": "SFP forwarding state: real LLM wording vs label",
+      "a": {
+        "source": "label of elisa-trn042-chat",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "diagnosis": "forwarding-state issue, not a faulty SFP"
+      },
+      "b": {
+        "source": "real LLM (out/eval/extractions.json)",
+        "topic": "tx-3000-sfp-swap-zero-counters",
+        "summary": "Bounce interface (disable, wait, enable) after SFP swap when link is UP, optical levels normal, but traffic counters sit at zero",
+        "action": "Bounce the interface: disable, wait a bit, then enable",
+        "diagnosis": "No traffic after SFP swap despite link being UP and RX power normal"
+      }
+    },
+    {
+      "same": true,
+      "why": "breaker F3 told with other words",
+      "a": {
+        "source": "label of pattern-harbour-breaker-again",
+        "topic": "harbour-hut-breaker-trip",
+        "summary": "When RAD-254 at the Turku harbour hut is completely dead, breaker F3 has usually tripped; reset it and empty the dehumidifier tray before replacing the radio.",
+        "action": "Reset breaker F3 in the cabinet left of the door and empty the dehumidifier tray; check that the radio comes back before replacing it.",
+        "diagnosis": "the dehumidifier trips breaker F3 in heavy sea fog"
+      },
+      "b": {
+        "source": "hand-written paraphrase, no shared words",
+        "topic": "waterfront-shed-radio-dark-after-fog",
+        "summary": "The radio at the waterfront shed goes dark after foggy nights because the moisture absorber overloads the power cut-out.",
+        "action": "Push the popped cut-out back in and drain the absorber; leave the radio alone.",
+        "diagnosis": "the moisture absorber overloads the cut-out"
+      }
+    },
+    {
+      "same": true,
+      "why": "evening sync loss told with other words",
+      "a": {
+        "source": "label of pattern-trn229-sync-loss-again",
+        "topic": "evening-sync-loss-timing-port-reset",
+        "summary": "When TRN-229 loses sync in the evening (interfaces UP, no traffic), resetting the timing port brings sync back within minutes.",
+        "action": "Reset the timing port; sync comes back within a minute or two.",
+        "diagnosis": "lost timing sync"
+      },
+      "b": {
+        "source": "hand-written paraphrase, no shared words",
+        "topic": "clock-reference-lost-at-night",
+        "summary": "The node loses its clock reference around nine in the evening; links stay green but nothing passes.",
+        "action": "Re-initialise the PTP interface; timing lock returns after a minute or two.",
+        "diagnosis": "timing reference lost"
+      }
+    },
+    {
+      "same": true,
+      "why": "evening traffic drop told with other words",
+      "a": {
+        "source": "label of pattern-trn131-traffic-drop-again",
+        "topic": "evening-traffic-drop-line-card-reboot",
+        "summary": "When TRN-131 stops passing traffic in the evening with its ports UP and counters at zero, rebooting the line card brings traffic back.",
+        "action": "Reboot the line card.",
+        "diagnosis": null
+      },
+      "b": {
+        "source": "hand-written paraphrase, no shared words",
+        "topic": "node-silent-at-night",
+        "summary": "The node goes silent at night: green links, no packets moving.",
+        "action": "Power-cycle the forwarding card.",
+        "diagnosis": null
+      }
+    },
+    {
+      "same": true,
+      "why": "SFP forwarding state told with other words",
+      "a": {
+        "source": "label of elisa-trn042-chat",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "diagnosis": "forwarding-state issue, not a faulty SFP"
+      },
+      "b": {
+        "source": "hand-written paraphrase, no shared words",
+        "topic": "new-optic-link-green-nothing-passes",
+        "summary": "After changing the optic, the port shows green and the light level looks fine, yet nothing passes.",
+        "action": "Shut and no-shut the port; do not reload the whole box.",
+        "diagnosis": "stale forwarding entry"
+      }
+    },
+    {
+      "same": false,
+      "why": "overlapping scope (TRN-131 is a TX-3000 up to 2019): evening traffic drop vs SFP forwarding state (same symptoms UP + 0, other cause)",
+      "a": {
+        "source": "label of pattern-trn131-traffic-drop-again",
+        "topic": "evening-traffic-drop-line-card-reboot",
+        "summary": "When TRN-131 stops passing traffic in the evening with its ports UP and counters at zero, rebooting the line card brings traffic back.",
+        "action": "Reboot the line card.",
+        "diagnosis": null
+      },
+      "b": {
+        "source": "label of elisa-trn042-chat",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "diagnosis": "forwarding-state issue, not a faulty SFP"
+      }
+    },
+    {
+      "same": false,
+      "why": "same model only (TRN-305 and TRN-229, TX-5000): VLAN missing after a swap vs evening sync loss",
+      "a": {
+        "source": "label of new-unit-trn305",
+        "topic": "port-vlan-missing-after-sfp-swap",
+        "summary": "On TRN-305, after the SFP swap the new port was in the default VLAN; tagging service VLAN 120 restored traffic.",
+        "action": "Set the port to trunk and tag VLAN 120.",
+        "diagnosis": "service VLAN 120 not tagged on the new port"
+      },
+      "b": {
+        "source": "label of pattern-trn229-sync-loss-again",
+        "topic": "evening-sync-loss-timing-port-reset",
+        "summary": "When TRN-229 loses sync in the evening (interfaces UP, no traffic), resetting the timing port brings sync back within minutes.",
+        "action": "Reset the timing port; sync comes back within a minute or two.",
+        "diagnosis": "lost timing sync"
+      },
+      "stopped_by_place": true
+    },
+    {
+      "same": false,
+      "why": "same radio: ferry radar interference vs breaker F3",
+      "a": {
+        "source": "label of layperson-callcentre-ferry-evenings",
+        "topic": "evening-slowdown-ship-radar",
+        "summary": "Evening slowdowns around the Turku harbour (about 18:00 and 21:00, when the ferry docks) may come from ship radar hitting the RAD-254 sector; unverified hunch. Try moving the sector to the other channel.",
+        "action": "At the hut, move the RAD-254 sector to the other channel and compare the evenings.",
+        "diagnosis": "possible ship radar interference in the RU-400 sector"
+      },
+      "b": {
+        "source": "label of pattern-harbour-breaker-again",
+        "topic": "harbour-hut-breaker-trip",
+        "summary": "When RAD-254 at the Turku harbour hut is completely dead, breaker F3 has usually tripped; reset it and empty the dehumidifier tray before replacing the radio.",
+        "action": "Reset breaker F3 in the cabinet left of the door and empty the dehumidifier tray; check that the radio comes back before replacing it.",
+        "diagnosis": "the dehumidifier trips breaker F3 in heavy sea fog"
+      }
+    },
+    {
+      "same": false,
+      "why": "same node: slow management port after a cold start vs SFP forwarding state",
+      "a": {
+        "source": "label of ambiguous-two-turku",
+        "topic": "slow-management-port-after-cold-start",
+        "summary": "After a power cycle TRN-042 (firmware 3.8) needs about 8 minutes before its management port answers; traffic is not affected, so do not cycle it again.",
+        "action": "Wait about 8 to 10 minutes after a power cycle before checking the management port.",
+        "diagnosis": "management port is slow to come up after a cold start, the unit is not stuck"
+      },
+      "b": {
+        "source": "label of elisa-trn042-chat",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "diagnosis": "forwarding-state issue, not a faulty SFP"
+      }
+    },
+    {
+      "same": false,
+      "why": "same radio: cold morning link flap vs antenna profile lost on restart",
+      "a": {
+        "source": "label of slack-noc-handover",
+        "topic": "cold-morning-link-flap",
+        "summary": "On very cold mornings RAD-198 flaps until about 10:00 and recovers by itself; do not dispatch a crew before then.",
+        "action": "Do not dispatch a crew; wait until about 10:00 and dispatch only if the link is still flapping.",
+        "diagnosis": "ice on the dish that melts once the sun reaches it"
+      },
+      "b": {
+        "source": "label of ambiguous-old-radio-sodankyla",
+        "topic": "restart-loses-antenna-profile",
+        "summary": "After a restart RAD-198 (RU-200, firmware 2.3) comes up on the factory profile; reload 'Profile 1' from the front panel menu or the link stays degraded.",
+        "action": "After the restart, open the front panel menu and choose 'Load profile 1'.",
+        "diagnosis": "the restart resets the antenna profile on firmware 2.3"
+      }
+    },
+    {
+      "same": false,
+      "why": "other place (TRN-305 TX-5000 vs TX-3000 up to 2019): VLAN missing after a swap vs SFP forwarding state; the place check already stops it, kept as the hardest look-alike",
+      "a": {
+        "source": "label of new-unit-trn305",
+        "topic": "port-vlan-missing-after-sfp-swap",
+        "summary": "On TRN-305, after the SFP swap the new port was in the default VLAN; tagging service VLAN 120 restored traffic.",
+        "action": "Set the port to trunk and tag VLAN 120.",
+        "diagnosis": "service VLAN 120 not tagged on the new port"
+      },
+      "b": {
+        "source": "label of elisa-trn042-chat",
+        "topic": "sfp-swap-forwarding-state",
+        "summary": "On older transmission units, after an SFP swap, UP + normal optics + zero counters means a forwarding-state issue: bounce the interface before replacing hardware or rebooting.",
+        "action": "Disable the interface, wait a little, then enable it again.",
+        "diagnosis": "forwarding-state issue, not a faulty SFP"
+      },
+      "stopped_by_place": true
+    },
+    {
+      "same": false,
+      "stopped_by_place": true,
+      "why": "same model only (RU-200): RAD-176 frost margin ('on RAD-176 only') vs RAD-198 iced dish; found by the first real run (0.823)",
+      "a": {
+        "source": "label of ambiguous-number-clash-176",
+        "topic": "frost-margin-dip-self-recovers",
+        "summary": "On RAD-176 only (RU-200, Ounasvaara, antenna in the shade of the cliff) the link margin dips on hard frost mornings (below -25 C) and recovers by itself in about 20 minutes once the heater has warmed the unit; do not realign the antenna. Other RU-200s are not affected.",
+        "action": "Wait about 20 minutes and re-check the link margin.",
+        "diagnosis": "cold unit, margin recovers after the heater warms it"
+      },
+      "b": {
+        "source": "label of slack-noc-handover",
+        "topic": "cold-morning-link-flap",
+        "summary": "On very cold mornings RAD-198 flaps until about 10:00 and recovers by itself; do not dispatch a crew before then.",
+        "action": "Do not dispatch a crew; wait until about 10:00 and dispatch only if the link is still flapping.",
+        "diagnosis": "ice on the dish that melts once the sun reaches it"
+      }
+    }
+  ]
+}

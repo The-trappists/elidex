@@ -1,0 +1,12 @@
+{
+  "_note": "Extra scenarios for `ctx patterns`, replayed on top of the timeline in retrieval_cases.json. Kept apart so `ctx eval` and its numbers do not change. See docs/patterns.md.",
+  "timeline": [
+    {"scenario": "pattern-trn229-sync-loss-evening", "start": "2026-10-06T21:10"},
+    {"scenario": "pattern-trn131-traffic-drop-evening", "start": "2026-10-06T21:35"},
+    {"scenario": "pattern-harbour-breaker-again", "start": "2026-10-14T16:00"},
+    {"scenario": "pattern-trn229-sync-loss-again", "start": "2026-10-20T21:05"},
+    {"scenario": "pattern-trn131-traffic-drop-again", "start": "2026-10-20T21:40"},
+    {"scenario": "pattern-harbour-breaker-third", "start": "2026-10-29T07:15"},
+    {"scenario": "pattern-trn117-clock-module", "start": "2026-11-02T10:00"}
+  ]
+}
