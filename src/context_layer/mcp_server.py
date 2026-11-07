@@ -7,7 +7,7 @@ from mcp.server.mcpserver import MCPServer
 
 from . import config
 from .link import Inventory
-from .mvp import guard
+from .mvp import conditions, feedback, guard
 from .store import ContextStore
 
 mcp = MCPServer("context-layer")
@@ -18,11 +18,30 @@ def _store() -> ContextStore:
 
 
 @mcp.tool()
-def get_context(entity_id: str, at: str | None = None) -> list[dict]:
+def get_context(entity_id: str, at: str | None = None, observations: dict[str, Any] | None = None) -> list[dict]:
     """Human knowledge (workarounds, site access...) valid at time `at` (ISO, default now) for a network
-    element or site, including what applies to its class and its site. Each item has source, trust and validity."""
-    hits = _store().get_context(entity_id, at=datetime.fromisoformat(at) if at else None)
-    return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})} for h in hits]
+    element or site, including what applies to its class and its site. Each item has source, trust and validity.
+    When `observations` is provided, each item is annotated with check_status ("fully checked", "not fully checked",
+    "failed", "text only"), to_read (fields to observe), condition_applies, and track_record."""
+    store = _store()
+    at_dt = datetime.fromisoformat(at) if at else None
+    hits = store.get_context(entity_id, at=at_dt)
+    obs = dict(observations) if observations is not None else None
+    if obs is not None and "firmware" not in obs:
+        el = store.inventory.resolve_element(entity_id)
+        if el and el.firmware:
+            obs["firmware"] = el.firmware
+    out = []
+    for h in hits:
+        row = {"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})}
+        row["track_record"] = feedback.track_record(h.assertion, at_dt).to_dict()
+        if obs is not None:
+            cr = conditions.evaluate(h.assertion, obs)
+            row["check_status"] = cr.status
+            row["to_read"] = cr.to_read
+            row["condition_applies"] = cr.applies
+        out.append(row)
+    return out
 
 
 def _graph():
