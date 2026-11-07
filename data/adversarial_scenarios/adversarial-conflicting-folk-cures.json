@@ -1,0 +1,55 @@
+{
+  "id": "adversarial-conflicting-folk-cures",
+  "title": "Three-way engineer squabble over the flapping radio RU-200",
+  "description": "Three senior engineers in Lapland give completely contradictory advice to a junior colleague trying to fix flapping link RAD-221 at Kemijärvi hill mast (SITE-NF-017). One swears by warm boot via CLI, one insists re-seating the optical transceiver is the only cure and warm reboot causes bootloop, and the third claims it's solar flare interference and touching hardware will burn the diode. Tests conflict extraction, contradictory avoid/action handling, and trust-level discernment among competing authorities.",
+  "channel": "slack",
+  "subject": "#field-north",
+  "incident": {
+    "entity_id": "RAD-221",
+    "kind": "interface-flapping",
+    "severity": "major",
+    "summary": "Interface flapping on RAD-221",
+    "observations": {
+      "interface_status": "DOWN",
+      "alarms": "active"
+    }
+  },
+  "participants": [
+    "jaakko",
+    "veikko",
+    "erkki",
+    "aino"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "Moi guys! I'm shivering on the tower ladder at Kemijärvi hill mast (SITE-NF-017). RAD-221 (the RU-200 radio unit) is dropping packets like crazy. Interface flapping every 20 seconds. What is the approved procedure?"
+    },
+    {
+      "persona": "veikko",
+      "delay_s": 25,
+      "text": "Classic RU-200 glitch! Do NOT power cycle it physically or climb down to breaker. Just run 'system soft-restart' from the local serial console. Takes 90 seconds and traffic stabilizes every single time."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 45,
+      "text": "Hm. Absolutely do not run soft-restart on RAD-221. On firmware 2.3 a soft-restart corrupts the flash memory partition and turns the RU-200 into a paperweight. Avoid CLI reboot completely."
+    },
+    {
+      "persona": "erkki",
+      "delay_s": 20,
+      "text": "You must physically unplug the DC barrel connector, wait exactly 60 seconds for capacitors to drain, then reseat the SFP module firmly until it clicks."
+    },
+    {
+      "persona": "aino",
+      "delay_s": 50,
+      "text": "Heads up: vendor bulletin SB-881 says neither of those is correct for RU-200 at NF-017. Kemijärvi has an ungrounded mast bracket. Unplugging the DC barrel while powered arcs the transceiver diode. The only safe workaround is setting port optical attenuation to -3dB in config."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 30,
+      "text": "Wait... Veikko says soft-restart, Erkki says avoid soft-restart and pull DC cable, Aino says pulling DC cable fries the diode?? What am I supposed to do up here in the freezing wind?!"
+    }
+  ]
+}
