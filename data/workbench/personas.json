@@ -120,11 +120,21 @@
     "origin": "synthetic"
   },
   {
+    "id": "ops-agent",
+    "name": "Ops agent",
+    "role": "AI operations agent",
+    "team": "Operations",
+    "avatar_color": "#0d9488",
+    "expertise": "Applies recorded human knowledge to cases and reports what it did.",
+    "style": "Informational, one line per applied rule, never asks anyone for anything.",
+    "origin": "synthetic"
+  },
+  {
     "id": "pirjo",
     "name": "Pirjo Puhdas",
     "role": "Facility Cleaner",
     "team": "Property maintenance",
-    "avatar_color": "#0d9488",
+    "avatar_color": "#0369a1",
     "expertise": "Cleans the technical rooms. Knows where everything is and what it looks and sounds like, not what it does.",
     "style": "Polite and apologetic, describes equipment by look and sound ('big black refrigerator rack', 'little yellow rubber noodle'), reads labels aloud when asked, steps away as soon as asked.",
     "origin": "synthetic"

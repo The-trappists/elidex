@@ -98,6 +98,7 @@ class Linker:
 
         bindings: list[Binding] = []
         classes: list[ElementClass] = []
+        confidence = item.confidence
 
         # Class as scope: lets the knowledge reach *another* node of the same kind.
         crit = item.scope.element_class
@@ -111,6 +112,9 @@ class Linker:
                 cls = ElementClass(id=crit.class_id(), label=crit.label(), criteria=crit)
                 classes.append(cls)
                 bindings.append(Binding(entity=cls.id, role="applies_to"))
+                if item.scope.qualifier:
+                    notes.append(f"class wider than stated ('{item.scope.qualifier}')")
+                    confidence = round(confidence * 0.8, 4)
 
         # Instance as evidence when a class carries the scope, as scope otherwise.
         instance_role = "observed_on" if classes else "applies_to"
@@ -154,7 +158,7 @@ class Linker:
             valid_from=min(m.sent_at for m in cited),
             trust=Trust(level=item.trust_level, stated_by=item.stated_by, role=stated_role, evidence=item.evidence),
             sources=[SourceRef(source=thread.source, file=thread.id, seq=sorted(item.cited_seq))],
-            confidence=item.confidence,
+            confidence=confidence,
             link_notes=notes,
         )
         return LinkResult(assertion, classes, notes)

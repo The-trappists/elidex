@@ -1,0 +1,57 @@
+{
+  "id": "agent-outcome-followup",
+  "title": "Outcome loop: the agent applies a rule and the field confirms it",
+  "description": "Demo path for the passive outcome loop: the ops agent applies the old-unit interface-bounce rule to TRN-117 and the technician's follow-up decides its outcome, with nobody asked to confirm anything.",
+  "channel": "teams",
+  "subject": "TRN-117 no traffic after SFP swap (agent follow-up)",
+  "incident": {
+    "entity_id": "TRN-117",
+    "kind": "traffic-loss-after-sfp-swap",
+    "severity": "major",
+    "summary": "No traffic on TRN-117 after an SFP swap",
+    "observations": {
+      "sfp_replaced": true,
+      "interface_status": "UP",
+      "optical_levels": "normal",
+      "traffic_counters": 0,
+      "alarms": "cleared"
+    }
+  },
+  "participants": [
+    "jaakko",
+    "helmi"
+  ],
+  "messages": [
+    {
+      "persona": "jaakko",
+      "delay_s": 5,
+      "text": "Swapped the SFP on TRN-117 an hour ago. Link is UP, power looks normal, but counters sit at zero."
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 40,
+      "text": "NOC here, same from our side, nothing passing through."
+    },
+    {
+      "persona": "jaakko",
+      "delay_s": 150,
+      "text": "Ok, did the interface bounce just now. Traffic is back after the interface bounce!"
+    },
+    {
+      "persona": "helmi",
+      "delay_s": 30,
+      "text": "Yep, counters are moving on our side too."
+    }
+  ],
+  "resolves_incident_at_seq": 3,
+  "expected": {
+    "items": []
+  },
+  "tags": [
+    "outcome-loop",
+    "agent",
+    "trust",
+    "synthetic"
+  ],
+  "origin": "synthetic"
+}

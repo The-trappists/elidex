@@ -112,7 +112,7 @@ def _llm(case: Case, hits: list[ContextHit], checks: dict[str, conditions.Condit
     for h in hits:
         item = h.assertion.model_dump(mode="json", exclude={"link_notes", "outcomes"})
         tr = feedback.track_record(h.assertion, case.at)
-        item["track_record"] = {"status": tr.status, "worked": tr.worked, "failed": tr.failed, "failed_on": tr.failed_on}
+        item["track_record"] = tr.to_dict()
         if (c := checks.get(h.assertion.id)) is not None:
             item |= {"check_status": c.status, "to_read": c.to_read}
         context.append(item)
@@ -161,17 +161,16 @@ def run_agent(
     observations = _case_observations(case) if use_conditions else case.observations
     for hit in retrieved:
         assertion = hit.assertion
+        cr = conditions.evaluate(assertion, observations, case.description)
+        if use_conditions:
+            report.checks[assertion.id] = cr  # also for rules without conditions ("text only", see check_line)
         if not use_conditions or not assertion.conditions:
             report.hits.append(hit)
             continue
-        cr = conditions.evaluate(assertion, observations, case.description)
-        report.checks[assertion.id] = cr
-        if cr.applies is True:
-            report.hits.append(hit)
-        elif cr.failed:
+        if cr.failed:
             report.skipped.append((hit, f"{assertion.topic}: condition not met: " + "; ".join(cr.failed)))
         else:
-            report.skipped.append((hit, f"{assertion.topic}: could not confirm condition: " + "; ".join(cr.unknown)))
+            report.hits.append(hit)
     report.recommendation = _llm(case, report.hits, report.checks) if use_llm else _template(case, report.hits, report.checks)
     if use_guard and case.planned_action:
         report.verdict = guard.check(

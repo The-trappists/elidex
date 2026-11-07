@@ -47,6 +47,20 @@ def _reasoning_effort(env_name: str, base_url: str) -> str:
 LLM_REASONING_EFFORT = _reasoning_effort("LLM_REASONING_EFFORT", LLM_BASE_URL)
 LLM_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_FALLBACK_REASONING_EFFORT", LLM_FALLBACK_BASE_URL)
 
+# Optional critic provider (second opinion on extracted items; a different model family from the extractor
+# decorrelates errors). Unset: the critic silently uses the primary chain. LLM_CRITIC_FALLBACK_* is tried
+# when the critic fails (429, 5xx, timeout).
+LLM_CRITIC_BASE_URL = os.getenv("LLM_CRITIC_BASE_URL", "")
+LLM_CRITIC_API_KEY = os.getenv("LLM_CRITIC_API_KEY", "")
+LLM_CRITIC_MODEL = os.getenv("LLM_CRITIC_MODEL", "")
+LLM_CRITIC_JSON_MODE = os.getenv("LLM_CRITIC_JSON_MODE", LLM_JSON_MODE)
+LLM_CRITIC_FALLBACK_BASE_URL = os.getenv("LLM_CRITIC_FALLBACK_BASE_URL", "")
+LLM_CRITIC_FALLBACK_API_KEY = os.getenv("LLM_CRITIC_FALLBACK_API_KEY", "")
+LLM_CRITIC_FALLBACK_MODEL = os.getenv("LLM_CRITIC_FALLBACK_MODEL", "")
+LLM_CRITIC_FALLBACK_JSON_MODE = os.getenv("LLM_CRITIC_FALLBACK_JSON_MODE", LLM_CRITIC_JSON_MODE)
+LLM_CRITIC_REASONING_EFFORT = _reasoning_effort("LLM_CRITIC_REASONING_EFFORT", LLM_CRITIC_BASE_URL)
+LLM_CRITIC_FALLBACK_REASONING_EFFORT = _reasoning_effort("LLM_CRITIC_FALLBACK_REASONING_EFFORT", LLM_CRITIC_FALLBACK_BASE_URL)
+
 MIN_CONFIDENCE = float(os.getenv("MIN_CONFIDENCE", "0.5"))
 
 # Optional Neo4j mirror of the knowledge graph (`ctx graph push`, docs/knowledge-graph.md).
@@ -66,6 +80,36 @@ def llm_configured() -> bool:
 
 def llm_fallback_configured() -> bool:
     return _key_set(LLM_FALLBACK_API_KEY) and bool(LLM_FALLBACK_MODEL)
+
+
+def llm_critic_configured() -> bool:
+    return _key_set(LLM_CRITIC_API_KEY) and bool(LLM_CRITIC_MODEL)
+
+
+def llm_critic_fallback_configured() -> bool:
+    return _key_set(LLM_CRITIC_FALLBACK_API_KEY) and bool(LLM_CRITIC_FALLBACK_MODEL)
+
+
+# Big dataset storage, outside the app's memory (`ctx dataset load-mongo`, `load-tiger`; docs/dataset.md).
+MONGODB_URI = os.getenv("MONGODB_URI", "")
+MONGODB_DB = os.getenv("MONGODB_DB", "ctx")
+TIGER_DATABASE_URL = os.getenv("TIGER_DATABASE_URL", "")
+# Embeddings for the vector search: an OpenAI-compatible embedding model on the primary LLM provider.
+# Empty = offline fallback (hashed words: finds similar wording, not similar meaning).
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
+DATASET_DIR = Path(os.getenv("DATASET_DIR", OUT_DIR / "dataset" / "demo"))
+
+
+def _set(value: str) -> bool:
+    return bool(value) and "your-" not in value
+
+
+def mongo_configured() -> bool:
+    return _set(MONGODB_URI)
+
+
+def tiger_configured() -> bool:
+    return _set(TIGER_DATABASE_URL)
 
 
 # ---------------------------------------------------------------- workbench

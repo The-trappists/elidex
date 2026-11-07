@@ -4,7 +4,7 @@
 
 // ---------------------------------------------------------------- core (models.py)
 
-export type SourceKind = 'teams' | 'email' | 'slack'
+export type SourceKind = 'teams' | 'email' | 'slack' | 'operator'
 export type AssertionType = 'workaround' | 'access' | 'fact' | 'invalidation'
 export type TrustLevel = 'hunch' | 'stated' | 'verified'
 export type BindingRole = 'applies_to' | 'observed_on' | 'trigger'
@@ -65,6 +65,7 @@ export interface Scope {
   site_ids: string[]
   element_class: ClassCriteria | null
   trigger: string | null
+  qualifier: string | null
 }
 
 export interface ExtractedItem {
@@ -81,6 +82,7 @@ export interface ExtractedItem {
   evidence: string | null
   stated_by: string
   cited_seq: number[]
+  evidence_quote: string | null
   confidence: number
 }
 
@@ -140,7 +142,7 @@ export type StageStatus = 'pending' | 'running' | 'done' | 'skipped' | 'error'
 export type Severity = 'minor' | 'major' | 'critical'
 export type IncidentStatus = 'open' | 'resolved'
 export type LinkKind = 'fiber' | 'microwave' | 'backhaul'
-export type LlmPurpose = 'extract' | 'generate_scenario' | 'agent' | 'check'
+export type LlmPurpose = 'extract' | 'generate_scenario' | 'agent' | 'check' | 'critic' | 'judge'
 export type JsonMode = 'json_object' | 'json_schema' | 'prompt'
 
 export const STAGES: StageName[] = ['listen', 'understand', 'link', 'store', 'reconcile']
@@ -253,6 +255,82 @@ export interface EvalResult {
   binding_diffs: string[]
 }
 
+export type FlagKind =
+  | 'abstained'
+  | 'low_confidence'
+  | 'conflict'
+  | 'over_reach'
+  | 'critic_rejected'
+  | 'judge_decision'
+  | 'operator_edit'
+
+export interface ReviewFlag {
+  id: string
+  kind: FlagKind
+  thread_id: string
+  job_id: string
+  assertion_id: string | null
+  item_topic?: string | null // topic of the item or assertion the flag is about, when known
+  message: string
+  detail: string | null
+  created_at: string // wall
+  dismissed: boolean
+}
+
+export type ApplicationOutcome = 'pending' | 'worked' | 'failed' | 'unclear'
+
+export interface RuleApplication {
+  id: string
+  assertion_id: string
+  entity_id: string
+  thread_id: string
+  applied_at: string // sim
+  message_seq: number | null
+  outcome: ApplicationOutcome
+  outcome_quote: string | null
+  outcome_reason: string | null
+  outcome_at: string | null // sim
+  method: 'llm' | 'heuristic' | 'observation' | null
+}
+
+export interface TrackRecord {
+  status: 'untested' | 'ok' | 'contested'
+  worked: number
+  failed: number
+  failed_on: string[]
+  thread: number // outcomes that came from a human reply in a thread
+  last_at: string | null
+}
+
+export type CriticVerdictKind = 'keep' | 'downgrade' | 'reject'
+
+export interface AssertionEdit {
+  id: string
+  assertion_id: string
+  ts: string // wall
+  note: string | null
+  before: Record<string, unknown>
+  after: Record<string, unknown>
+  undone: boolean
+}
+
+export interface CriticVerdict {
+  item_topic: string
+  verdict: CriticVerdictKind
+  reason: string
+  evidence_found: boolean
+  confidence_after: number | null
+}
+
+export type JudgeVerdictKind = 'supports' | 'contradicts' | 'supersedes' | 'unrelated'
+
+export interface JudgeVerdict {
+  new_assertion_id: string
+  other_assertion_id: string
+  verdict: JudgeVerdictKind
+  reason: string
+}
+
 export interface PipelineJob {
   id: string
   thread_id: string
@@ -267,6 +345,9 @@ export interface PipelineJob {
   events: string[]
   llm_call_ids: string[]
   eval: EvalResult | null
+  flags: ReviewFlag[]
+  critic: CriticVerdict[]
+  judge: JudgeVerdict[]
   error: string | null
 }
 
@@ -282,7 +363,8 @@ export interface LlmCall {
   sim_time: string | null
   purpose: LlmPurpose
   thread_id: string | null
-  provider: string
+  provider: string // "primary" | "fallback" | "critic" | "critic_fallback"
+  role: string | null // "primary" | "critic"
   base_url: string
   model: string
   json_mode: JsonMode | null
@@ -306,6 +388,9 @@ export interface Settings {
   slack_mirror: boolean
   auto_sim: boolean
   auto_every_s: number
+  use_critic: boolean
+  use_judge: boolean
+  use_outcome_loop: boolean
   // read-only
   llm_configured: boolean
   llm_model: string | null
@@ -324,8 +409,27 @@ export type SettingsPatch = Partial<
     | 'slack_mirror'
     | 'auto_sim'
     | 'auto_every_s'
+    | 'use_critic'
+    | 'use_judge'
+    | 'use_outcome_loop'
   >
 >
+
+export interface RerunBody {
+  items?: ExtractedItem[] | null
+  model?: string | null
+  from_stage?: 'link' | 'store'
+}
+
+export interface OperatorEdit {
+  summary?: string | null
+  action?: string | null
+  avoid?: string[] | null
+  conditions?: Condition[] | null
+  valid_to?: string | null
+  trust_level?: TrustLevel | null
+  note?: string | null
+}
 
 export interface ClockState {
   sim_now: string
@@ -374,6 +478,8 @@ export type WbEvent =
   | Ev<'scenarios.changed', { scenarios: Scenario[]; runs: ScenarioRun[] }>
   | Ev<'slack.status', SlackStatus>
   | Ev<'llm.call', LlmCall>
+  | Ev<'review.flag', ReviewFlag>
+  | Ev<'application.upserted', RuleApplication>
   | Ev<'state.reset', Record<string, never>>
   | Ev<'log', { level: 'info' | 'warning' | 'error'; text: string }>
 
@@ -482,6 +588,8 @@ export interface AgentRunResult {
   hits: ContextHit[]
   skipped: { assertion_id: string; reason: string }[]
   verdict: GuardVerdict | null
+  thread_id?: string | null // outcome loop: thread the agent message was posted in
+  applications?: RuleApplication[]
   cited_assertion_ids: string[]
   evidence_confidence: number | null
 }

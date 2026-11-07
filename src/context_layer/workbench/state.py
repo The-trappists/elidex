@@ -6,6 +6,7 @@ The simulator and the Slack bridge code against the public signatures below.
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -13,12 +14,13 @@ from typing import Any, Callable
 
 from .. import config
 from ..link import Inventory
-from ..models import ContextAssertion, ElementClass, Message
+from ..models import ContextAssertion, ElementClass, Message, SourceRef, Trust
 from ..store import ContextStore, same_knowledge
 from . import persistence, seed
 from .bus import EventBus
 from .clock import SimClock
 from .contracts import (
+    AssertionEdit,
     REMOVABLE_ORIGINS,
     Incident,
     IncidentSpec,
@@ -26,7 +28,10 @@ from .contracts import (
     LlmCall,
     Origin,
     Persona,
+    OperatorEdit,
     PipelineJob,
+    ReviewFlag,
+    RuleApplication,
     Scenario,
     ScenarioRun,
     Settings,
@@ -65,6 +70,15 @@ class WbStore(ContextStore):
         return a, True
 
 
+def _flag_key(flag: ReviewFlag) -> tuple:
+    """Identity of a flag. Conflicts are keyed by the unordered pair of assertions (the detail holds the
+    other id, also in flags saved before pairs existed); flags without an assertion also compare the message."""
+    if flag.kind == "conflict" and flag.assertion_id:
+        ids = frozenset({flag.assertion_id, *re.findall(r"ctx_\d{4,}", flag.detail or "")})
+        return (flag.kind, flag.thread_id, ids)
+    return (flag.kind, flag.thread_id, flag.assertion_id, flag.message if flag.assertion_id is None else None)
+
+
 def _next_id(prefix: str, existing) -> str:
     nums = [int(k.split("_")[1]) for k in existing if k.startswith(prefix + "_") and k.split("_")[1].isdigit()]
     return f"{prefix}_{max(nums, default=0) + 1:04d}"
@@ -84,6 +98,9 @@ class Workbench:
     scenarios: dict[str, Scenario]
     runs: dict[str, ScenarioRun]
     jobs: dict[str, PipelineJob]
+    flags: dict[str, ReviewFlag]  # operator console, never blocks the loop
+    edits: dict[str, AssertionEdit]  # operator edit history
+    applications: dict[str, RuleApplication]  # outcome loop: knowledge the agent applied
     llm_calls: list[LlmCall]  # last 500 in memory; all of them in out/workbench/llm_calls.jsonl
     store: ContextStore  # core store, rebuilt when the inventory changes
 
@@ -433,11 +450,151 @@ class Workbench:
             del self.jobs[next(iter(self.jobs))]
         return job
 
+    # ------------------------------------------------------------ review flags and operator edits
+
+    def add_flag(self, flag: ReviewFlag, refresh: bool = False) -> ReviewFlag | None:
+        """Store a flag unless the same (kind, thread, assertion; for conflicts, the same pair) exists already (no duplicates across reruns;
+        flags without an assertion also compare their message). Returns the new flag, or None when it existed.
+        refresh=True updates the existing flag instead (message, job, time) and reopens it. Emits review.flag."""
+        key = _flag_key(flag)
+        for old in self.flags.values():
+            if _flag_key(old) == key:
+                if refresh:
+                    old.message, old.detail, old.job_id = flag.message, flag.detail, flag.job_id
+                    old.item_topic = flag.item_topic or old.item_topic
+                    old.created_at, old.dismissed = flag.created_at, False
+                    self.emit("review.flag", old)
+                return None
+        flag.id = _next_id("flag", self.flags)
+        self.flags[flag.id] = flag
+        self.emit("review.flag", flag)
+        return flag
+
+    def set_flag_dismissed(self, flag_id: str, dismissed: bool) -> ReviewFlag:
+        flag = self.flags[flag_id]  # KeyError when unknown
+        flag.dismissed = dismissed
+        self.emit("review.flag", flag)
+        return flag
+
+    # ------------------------------------------------------------ outcome loop
+
+    def add_application(self, app: RuleApplication) -> RuleApplication:
+        """Store a new application (id assigned) and emit application.upserted."""
+        app.id = _next_id("app", self.applications)
+        self.applications[app.id] = app
+        self.emit("application.upserted", app)
+        return app
+
+    def update_application(self, app_id: str, **fields: Any) -> RuleApplication:
+        """Change fields of an application and emit application.upserted. KeyError: unknown id."""
+        app = self.applications[app_id]
+        for k, v in fields.items():
+            if k not in RuleApplication.model_fields or k == "id":
+                raise ValueError(f"unknown application field {k}")
+            setattr(app, k, v)
+        self.emit("application.upserted", app)
+        return app
+
+    def _edit_state(self, a: ContextAssertion) -> dict[str, Any]:
+        """The fields an operator edit can touch, as JSON."""
+        d = a.model_dump(mode="json")
+        return {k: d[k] for k in ("summary", "action", "avoid", "conditions", "valid_to", "closed_by", "trust", "sources", "link_notes")}
+
+    def edit_assertion(self, assertion_id: str, edit: OperatorEdit) -> AssertionEdit:
+        """Apply an operator edit. Records an AssertionEdit, adds the "operator" source, and emits
+        assertion.upserted plus a review.flag of kind operator_edit. KeyError: unknown assertion.
+        ValueError: nothing to change."""
+        a = self.store.assertions[assertion_id]
+        given = edit.model_fields_set
+        before = self._edit_state(a)
+        if edit.summary is not None:
+            a.summary = edit.summary
+        if edit.action is not None:
+            a.action = edit.action
+        if edit.avoid is not None:
+            a.avoid = list(edit.avoid)
+        if edit.conditions is not None:
+            a.conditions = list(edit.conditions)
+        if "valid_to" in given:  # an explicit null reopens the assertion
+            a.valid_to, a.closed_by = edit.valid_to, None
+        if edit.trust_level is not None:
+            a.trust = Trust(level=edit.trust_level, stated_by="operator", role="operator", evidence=a.trust.evidence)
+        if edit.note:
+            a.link_notes.append(f"operator note: {edit.note}")
+        after = self._edit_state(a)
+        if after == before:
+            raise ValueError("nothing to change")
+        if not any(s.source == "operator" for s in a.sources):
+            a.sources.append(SourceRef(source="operator", file="operator", seq=[]))
+            after = self._edit_state(a)
+        changed = [k for k in after if after[k] != before[k]]  # the record holds only the fields the edit touched
+        rec = AssertionEdit(
+            id=_next_id("edit", self.edits), assertion_id=a.id, ts=datetime.now(), note=edit.note,
+            before={k: before[k] for k in changed}, after={k: after[k] for k in changed},
+        )
+        self.edits[rec.id] = rec
+        self.emit("assertion.upserted", a)
+        thread_id = next((s.file for s in a.sources if s.file != "operator"), "operator")
+        job_id = self.threads[thread_id].last_job_id if thread_id in self.threads else None
+        self.add_flag(
+            ReviewFlag(
+                id="", kind="operator_edit", thread_id=thread_id, job_id=job_id or "", assertion_id=a.id, item_topic=a.topic,
+                message=f"An operator changed '{a.topic}' by hand. Re-processing its thread keeps this change.",
+                detail=edit.note, created_at=datetime.now(),
+            ),
+            refresh=True,
+        )
+        return rec
+
+    def assertion_history(self, assertion_id: str) -> list[AssertionEdit]:
+        """Edits of an assertion, newest first. KeyError: unknown assertion."""
+        if assertion_id not in self.store.assertions:
+            raise KeyError(assertion_id)
+        return [e for e in reversed(self.edits.values()) if e.assertion_id == assertion_id]
+
+    def undo_edit(self, assertion_id: str, edit_id: str | None = None) -> AssertionEdit:
+        """Undo an edit and mark it undone. Without `edit_id`: the latest edit not undone yet (restores its
+        whole `before`). With `edit_id`: exactly that edit; when it is not the latest one, only the fields it
+        touched are restored, and only if no later edit changed them since.
+        KeyError: unknown assertion or edit. ValueError: nothing to undo, already undone, or not safe."""
+        a = self.store.assertions[assertion_id]
+        history = self.assertion_history(assertion_id)
+        latest = next((e for e in history if not e.undone), None)
+        if edit_id is None:
+            rec, fields = latest, None
+            if rec is None:
+                raise ValueError("nothing to undo")
+        else:
+            rec = next((e for e in history if e.id == edit_id), None)
+            if rec is None:
+                raise KeyError(edit_id)
+            if rec.undone:
+                raise ValueError(f"{edit_id} is already undone")
+            fields = None
+            if rec is not latest:
+                fields = [k for k in rec.before if rec.before[k] != rec.after.get(k)]
+                if any(e is not rec and not e.undone for e in history):
+                    fields = [k for k in fields if k != "sources"]  # the operator source stays while edits remain
+                current = self._edit_state(a)
+                busy = [k for k in fields if current[k] != rec.after.get(k)]
+                if busy:
+                    raise ValueError(
+                        f"{edit_id} cannot be undone on its own: a later edit changed {', '.join(busy)}. "
+                        "Undo the later edits first."
+                    )
+        restored = ContextAssertion.model_validate({**a.model_dump(mode="json"), **rec.before})
+        for field in fields if fields is not None else rec.before:
+            setattr(a, field, getattr(restored, field))
+        rec.undone = True
+        self.emit("assertion.upserted", a)
+        return rec
+
     # ------------------------------------------------------------ reset and removal
 
     def _clear(self) -> None:
         self.elements, self.sites, self.links, self.personas = {}, {}, {}, {}
         self.threads, self.incidents, self.scenarios, self.runs, self.jobs = {}, {}, {}, {}, {}
+        self.flags, self.edits, self.applications = {}, {}, {}
         self.processor.reset()
         old = getattr(self, "store", None)
         if old:
@@ -456,6 +613,8 @@ class Workbench:
             # available as scenarios, so knowledge never comes from the simulated future.
             start = datetime.fromisoformat(config.WORKBENCH_SIM_START)
             past = [t for t in data.threads if t.created_at <= start]
+            # The seed is processed without critic and judge (no extra LLM calls at first start).
+            self.processor.bootstrap_threads = {t.id for t in past}
             for t in sorted(past, key=lambda t: t.created_at):
                 self.threads[t.id] = t
                 t.status = "processing"

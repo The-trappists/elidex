@@ -45,17 +45,27 @@ def record(
     after: dict[str, Any],
     worked: bool | None = None,
     case_id: str | None = None,
+    *,
+    source: Literal["observation", "thread"] = "observation",
+    application_id: str | None = None,
+    quote: str | None = None,
 ) -> Outcome | None:
     """Record an outcome on the assertion. `worked` overrides the judgment (e.g. the ticket was closed).
 
-    Returns None, and records nothing, when there is no verdict.
+    Returns None, and records nothing, when there is no verdict, or when `application_id` is already in the
+    ledger (one application is one event: it is never counted twice).
     """
+    if application_id and any(o.application_id == application_id for o in assertion.outcomes):
+        return None
     verdict, evidence = judge(assertion, after)
     if worked is not None:
         verdict, evidence = worked, f"reported by the agent; {evidence}"
     if verdict is None:
         return None
-    outcome = Outcome(entity=entity, at=at, worked=verdict, evidence=evidence, case_id=case_id)
+    outcome = Outcome(
+        entity=entity, at=at, worked=verdict, evidence=evidence, case_id=case_id,
+        source=source, application_id=application_id, quote=quote,
+    )
     assertion.outcomes.append(outcome)
     return outcome
 
@@ -65,6 +75,8 @@ class TrackRecord:
     worked: int = 0
     failed: int = 0
     failed_on: list[str] = field(default_factory=list)
+    thread: int = 0  # how many of the outcomes came from a human reply in a thread
+    last_at: datetime | None = None
 
     @property
     def status(self) -> Literal["untested", "ok", "contested"]:
@@ -73,6 +85,13 @@ class TrackRecord:
         if self.failed >= CONTESTED_MIN_FAILURES and self.failed > self.worked:
             return "contested"
         return "ok"
+
+    def to_dict(self) -> dict[str, Any]:
+        """The one JSON shape of a track record (API, LLM payload, UI)."""
+        return {
+            "status": self.status, "worked": self.worked, "failed": self.failed, "failed_on": self.failed_on,
+            "thread": self.thread, "last_at": self.last_at.isoformat() if self.last_at else None,
+        }
 
     def line(self) -> str:
         where = f" (failed on {', '.join(self.failed_on)})" if self.failed_on else ""
@@ -86,6 +105,9 @@ def track_record(assertion: ContextAssertion, at: datetime | None = None) -> Tra
     for o in assertion.outcomes:
         if at is not None and o.at > at:
             continue
+        tr.thread += o.source == "thread"
+        if tr.last_at is None or o.at > tr.last_at:
+            tr.last_at = o.at
         if o.worked:
             tr.worked += 1
         else:

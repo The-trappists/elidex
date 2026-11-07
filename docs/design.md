@@ -1,6 +1,6 @@
 # Design options
 
-> **Status: proposal.** A pipeline and a schema to react to. Freeze them only once an idea is chosen; then every workstream codes against them.
+> **Status: proposal for the original sections; the loop v2 additions are marked *implemented* (on branch `worktree-loop-v2`, see [plan-loop-v2.md](plan-loop-v2.md) and [decisions.md](decisions.md)).** A pipeline and a schema to react to. Freeze them only once an idea is chosen; then every workstream codes against them.
 
 ## Pipeline
 
@@ -25,6 +25,35 @@ flowchart LR
 | Reuse | LLM agent with that tool on a new synthetic case | Rule evaluator (idea C) | Must be a **similar** case on **another** node |
 
 No human confirms anything (Elisa: no extra work for specialists).
+
+### Loop v2: three targeted agents (implemented)
+
+The five stages above are unchanged. Three agents are added at the places where text is ambiguous, each behind a `Settings` toggle (`use_critic`, `use_judge`, `use_outcome_loop`, default on; critic and judge stay silent without an LLM key) and each unable to block a job: on any failure the job notes it and goes on. Linking stays deterministic. The loop is fully automated; nothing waits for a human. The operator console only observes and can override.
+
+```mermaid
+flowchart LR
+    RAW["Listen"] --> UND["Understand<br/>LLM extractor"]
+    UND --> CRIT["Critic (second model)<br/>keep, downgrade, reject<br/>per item"]
+    CRIT --> LNK["Link<br/>deterministic<br/>qualifier lowers confidence"]
+    INV["Entity graph"] --> LNK
+    LNK --> STORE["Store"]
+    STORE --> JUDGE["Judge (second model)<br/>supports, contradicts,<br/>supersedes, unrelated"]
+    JUDGE --> REC["Reconcile<br/>lifecycle fallback"]
+    REC --> AGT["Demo agent<br/>POST /agent/run"]
+    AGT -- "posts the applied rule in the thread" --> OUT["Outcome loop<br/>reads the technician's reply"]
+    OUT -- "worked: trust verified<br/>failed: confidence x0.7" --> STORE
+    STORE --> FLAGS["Review flags<br/>informational, never a gate"]
+    FLAGS -.-> OPS["Operator console<br/>optional: observe, edit, undo"]
+```
+
+| Agent | Where it runs (hook) | What it does | Status |
+| --- | --- | --- | --- |
+| Critic (`critic.py`) | `after_understand`, only when the extractor is an LLM | A deterministic check that the verbatim `evidence_quote` appears in a cited message (not found: confidence x0.7), then one LLM call per thread (role `critic`, a different provider when `LLM_CRITIC_*` is set) that returns keep, downgrade or reject per item. Rejected items are dropped, downgraded ones get a lower confidence | Implemented, never tested against a real model |
+| Linker qualifier (`link.py`) | inside Link | A vague scope word kept in `Scope.qualifier` that ended up as a class adds the note "class wider than stated" and multiplies the confidence by 0.8. Instance-only scope is unchanged | Implemented |
+| Judge (`judge.py`) | `after_store`, then `lifecycle.reconcile` still runs | One LLM call per new assertion (role `critic`, purpose `judge`) against up to 8 neighbours found by bindings, never by topic slug. Applies the verdicts deterministically: close an older rule (supersedes, only when safe), keep both and flag (contradicts), merge into the older one or add a source and upgrade trust (supports) | Implemented, never tested against a real model |
+| Outcome loop (`outcome.py`) | `after_understand` (drops items citing the agent's own message), `after_store` | The agent's applied action is posted in a thread as one informative message; one `RuleApplication` per applied assertion. The technician's next messages decide worked, failed or unclear (LLM, else a keyword heuristic). Worked: trust becomes `verified` and the thread is added as a source. Failed: confidence x0.7. Both go through the one outcome ledger (`Assertion.outcomes`), shared with `/agent/outcome`, see [outcome-unification.md](outcome-unification.md) | Implemented |
+
+Review flags (`workbench/review.py`) are produced after a job: abstained, low confidence (below 0.7), conflict, over-reach (a rule reaching at least 6 elements the thread never names), critic and judge decisions. They are informational: the knowledge is already live.
 
 ## Entities
 
@@ -85,13 +114,26 @@ Two shapes: a **rule** when there are conditions (Erkki), a **fact** otherwise (
 
 Elisa gives no email or key location for the barrier: this one is synthetic data to generate.
 
+### Fields added by loop v2 (implemented, as they exist in code)
+
+Shared contract: `src/context_layer/models.py`; workbench-only types in `src/context_layer/workbench/contracts.py`.
+
+| Field | Where | Meaning |
+| --- | --- | --- |
+| `scope.qualifier` | `Scope` (extracted item) | The vague word the speakers used ("old", "legacy") copied as written, never turned into a year range. Not stored on the assertion; the linker turns it into the note "class wider than stated" and a x0.8 confidence |
+| `evidence_quote` | `ExtractedItem` | One short verbatim quote from a cited message that supports the item. The critic checks it appears in the cited messages |
+| source kind `operator` | `SourceKind` (`teams`, `email`, `slack`, `operator`) | Added to an assertion's `sources` when an operator edits it in the console; `stated_by` becomes `operator` only when the trust level is edited. An edit survives re-processing and can be undone |
+| `RuleApplication` | workbench contract | `id`, `assertion_id`, `entity_id`, `thread_id`, `applied_at`, `message_seq`, `outcome` (pending, worked, failed, unclear), `outcome_quote`, `outcome_reason`, `outcome_at`, `method` (llm, heuristic or observation). Its result is also an `Outcome` in `Assertion.outcomes` (`source` thread, `application_id`, `quote`). One per assertion the agent applied |
+
+Also in the workbench contract: `ReviewFlag`, `CriticVerdict` and `JudgeVerdict` (stored on the pipeline job), and `AssertionEdit` (before and after of each operator change).
+
 ### Fields and Elisa's hard points
 
 | Field | Hard point | Rule |
 | --- | --- | --- |
 | `bound_to[]` with roles | Linking | Instance as evidence, class as scope; never bind when unsure |
 | `valid_from` / `valid_to` | Time | `null` = still believed true; closed by a later contradicting message |
-| `trust` + `stated_by` + role | Trust | `hunch` / `stated` / `verified`; an observed outcome upgrades it |
+| `trust` + `stated_by` + role | Trust | `hunch` / `stated` / `verified`; an observed outcome upgrades it (implemented: the passive outcome loop and the judge's `supports` verdict) |
 | `conflicts_with[]` | Trust | Two experts disagree: keep both, flag it |
 | `sources[]` | Traceability | Chat and email of the same case = one assertion, two sources |
 | `conditions`, `action`, `avoid` | Agent-ready | An agent can act without reading free text |
@@ -99,5 +141,5 @@ Elisa gives no email or key location for the barrier: this one is synthetic data
 ## Open points
 
 - Atomic assertions only, or also a per-entity profile built on request?
-- How to choose the class ("older units" → install year? model?) when the text is vague?
-- Does a contradiction close the old assertion, or keep both with a conflict flag?
+- How to choose the class ("older units" → install year? model?) when the text is vague? Loop v2 keeps the vague word as a qualifier and lowers the confidence instead of guessing; whether that is enough is open.
+- Does a contradiction close the old assertion, or keep both with a conflict flag? Loop v2: a `supersedes` verdict closes the older rule only when it is safe (same or higher trust, or an invalidation); otherwise both stay open and are flagged.

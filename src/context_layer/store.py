@@ -78,6 +78,40 @@ class ContextStore:
         self._index(a)
         return a, True
 
+    def merge_into(self, target_id: str, dup: ContextAssertion) -> ContextAssertion:
+        """Fold `dup` (an assertion in the store or not) into the older `target_id` and drop `dup`.
+
+        Keeps the target's id and graph edges. Sources are added once, trust and confidence only go up, extra
+        bindings get their edges, and references to `dup` (conflicts, closed_by) now point at the target.
+        """
+        target = self.assertions[target_id]
+        known = {(s.source, s.file, tuple(s.seq)) for s in target.sources}
+        for src in dup.sources:
+            if (src.source, src.file, tuple(src.seq)) not in known:
+                target.sources.append(src)
+        target.valid_from = min(target.valid_from, dup.valid_from)
+        target.confidence = max(target.confidence, dup.confidence)
+        if TRUST_RANK[dup.trust.level] > TRUST_RANK[target.trust.level]:
+            target.trust = dup.trust
+        have = {(b.entity, b.role) for b in target.bound_to}
+        for b in dup.bound_to:
+            if (b.entity, b.role) not in have:
+                target.bound_to.append(b)
+                if b.entity not in self.g:
+                    self.g.add_node(b.entity, kind="event" if b.entity.startswith("event:") else "unknown")
+                self.g.add_edge(target.id, b.entity, key=b.role, role=b.role)
+        for other in self.assertions.values():
+            if dup.id in other.conflicts_with:
+                other.conflicts_with = [c for c in other.conflicts_with if c != dup.id]
+                if other.id != target.id and other.id not in target.conflicts_with:
+                    other.conflicts_with.append(target.id)
+                    target.conflicts_with.append(other.id)
+            if other.closed_by == dup.id:
+                other.closed_by = target.id
+        if dup.id and dup.id in self.assertions:
+            self.remove_assertion(dup.id)
+        return target
+
     def remove_assertion(self, assertion_id: str) -> None:
         """Drop an assertion and its graph node (its edges go with the node)."""
         self.assertions.pop(assertion_id, None)

@@ -1,7 +1,9 @@
-import type { ExtractedItem } from '../../api/types'
+import { Pencil } from 'lucide-react'
+import type { CriticVerdict, ExtractedItem } from '../../api/types'
 import { TRUST_STYLE } from '../../lib/semantic'
 import { TypeBadge } from '../knowledge/bits'
-import { Badge, IdChip } from '../ui'
+import { Badge, Button, IdChip } from '../ui'
+import { CriticBadge } from './Verdicts'
 
 export function ConfidenceBar({ value }: { value: number }) {
   return (
@@ -15,7 +17,7 @@ export function ConfidenceBar({ value }: { value: number }) {
 }
 
 /** One extracted item as a card (used in the job drawer). */
-export function ItemCard({ item, active, onHover }: { item: ExtractedItem; active?: boolean; onHover?: (on: boolean) => void }) {
+export function ItemCard({ item, active, onHover, verdict, onEdit }: { item: ExtractedItem; active?: boolean; onHover?: (on: boolean) => void; verdict?: CriticVerdict; onEdit?: () => void }) {
   const sc = item.scope
   return (
     <div
@@ -26,7 +28,10 @@ export function ItemCard({ item, active, onHover }: { item: ExtractedItem; activ
       <div className="flex flex-wrap items-center gap-1.5">
         <TypeBadge type={item.type} />
         <span className="font-semibold">{item.topic}</span>
-        <Badge className={`${TRUST_STYLE[item.trust_level].cls} ml-auto`}>{TRUST_STYLE[item.trust_level].label}</Badge>
+        <span className="ml-auto flex items-center gap-1.5">
+          {verdict && <CriticBadge v={verdict} />}
+          <Badge className={TRUST_STYLE[item.trust_level].cls}>{TRUST_STYLE[item.trust_level].label}</Badge>
+        </span>
       </div>
       <p className="mt-1.5 text-muted">{item.summary}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
@@ -49,6 +54,11 @@ export function ItemCard({ item, active, onHover }: { item: ExtractedItem; activ
         {item.cited_seq.length > 0 && <span>msgs #{item.cited_seq.join(', #')}</span>}
         <span className="ml-auto"><ConfidenceBar value={item.confidence} /></span>
       </div>
+      {onEdit && (
+        <div className="mt-2 border-t border-line pt-2">
+          <Button size="sm" variant="ghost" icon={<Pencil size={12} />} onClick={onEdit}>Edit and re-run from link</Button>
+        </div>
+      )}
     </div>
   )
 }

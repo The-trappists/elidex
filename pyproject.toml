@@ -15,6 +15,8 @@ dependencies = [
     "streamlit>=1.38",
     "slack-bolt>=1.30.0",
     "aiohttp>=3.14.5",
+    "pymongo>=4.19.0",
+    "psycopg[binary]>=3.3.8",
 ]
 
 [project.optional-dependencies]
