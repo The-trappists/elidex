@@ -194,6 +194,19 @@ class ReviewFlag(BaseModel):
     dismissed: bool = False
 
 
+class AssertionEdit(BaseModel):
+    """One operator change to an assertion. `before` and `after` hold only the fields the edit touched
+    (summary, action, avoid, conditions, valid_to, closed_by, trust, sources, link_notes), as JSON."""
+
+    id: str  # "edit_0001"
+    assertion_id: str
+    ts: datetime  # wall
+    note: str | None = None
+    before: dict[str, Any]
+    after: dict[str, Any]
+    undone: bool = False
+
+
 class CriticVerdict(BaseModel):
     """Critic pass inside understand: one verdict per extracted item."""
 
@@ -328,6 +341,7 @@ EventType = Literal[
     "scenarios.changed",  # data: {"scenarios": [...], "runs": [...]}
     "slack.status",  # data: {"connected": bool, "channel": str | None, "error": str | None}
     "llm.call",  # data: LlmCall
+    "review.flag",  # data: ReviewFlag (created, refreshed, dismissed or undismissed)
     "state.reset",  # data: {} -> clients refetch GET /api/state
     "log",  # data: {"level": "info" | "warning" | "error", "text": str}
 ]

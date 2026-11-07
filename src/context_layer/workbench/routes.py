@@ -17,6 +17,7 @@ from ..mvp import guard
 from ..models import Message
 from . import generator, persistence
 from .contracts import (
+    AssertionEdit,
     AgentRunBody,
     AgentRunResult,
     ClockBody,
@@ -31,6 +32,7 @@ from .contracts import (
     NewThreadBody,
     OperatorEdit,
     Persona,
+    PipelineJob,
     PostMessageBody,
     RerunBody,
     ResetBody,
@@ -301,25 +303,88 @@ async def delete_assertion(assertion_id: str, request: Request) -> Response:
 
 @router.patch("/assertions/{assertion_id}")
 async def edit_assertion(assertion_id: str, body: OperatorEdit, request: Request) -> dict:
-    raise HTTPException(501, "not implemented yet (lot L4: operator edit of an assertion)")
+    """Operator override. Returns {"assertion": ContextAssertion, "edit": AssertionEdit}."""
+    wb = get_wb(request)
+    try:
+        edit = wb.edit_assertion(assertion_id, body)
+    except KeyError:
+        raise HTTPException(404, f"unknown assertion {assertion_id}") from None
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from None
+    return {"assertion": wb.store.assertions[assertion_id].model_dump(mode="json"), "edit": edit.model_dump(mode="json")}
 
 
-# ---------------------------------------------------------------- review loop (stubs, lot L4)
+@router.get("/assertions/{assertion_id}/history")
+async def assertion_history(assertion_id: str, request: Request) -> list[AssertionEdit]:
+    try:
+        return get_wb(request).assertion_history(assertion_id)
+    except KeyError:
+        raise HTTPException(404, f"unknown assertion {assertion_id}") from None
+
+
+@router.post("/assertions/{assertion_id}/undo")
+async def undo_assertion_edit(assertion_id: str, request: Request) -> dict:
+    """Undo the latest edit not undone yet. Returns {"assertion": ContextAssertion, "edit": AssertionEdit (undone)}."""
+    wb = get_wb(request)
+    try:
+        edit = wb.undo_edit(assertion_id)
+    except KeyError:
+        raise HTTPException(404, f"unknown assertion {assertion_id}") from None
+    except ValueError as e:
+        raise HTTPException(409, str(e)) from None
+    return {"assertion": wb.store.assertions[assertion_id].model_dump(mode="json"), "edit": edit.model_dump(mode="json")}
+
+
+# ---------------------------------------------------------------- review loop (lot L4)
 
 
 @router.get("/review/flags")
-async def review_flags(request: Request) -> list[ReviewFlag]:
-    return []
+async def review_flags(
+    request: Request, dismissed: bool | None = None, kind: str | None = None, thread_id: str | None = None
+) -> list[ReviewFlag]:
+    """Newest first. Filters are optional."""
+    flags = [
+        f for f in get_wb(request).flags.values()
+        if (dismissed is None or f.dismissed == dismissed)
+        and (kind is None or f.kind == kind)
+        and (thread_id is None or f.thread_id == thread_id)
+    ]
+    return sorted(flags, key=lambda f: (f.created_at, f.id), reverse=True)
+
+
+def _set_dismissed(request: Request, flag_id: str, value: bool) -> ReviewFlag:
+    try:
+        return get_wb(request).set_flag_dismissed(flag_id, value)
+    except KeyError:
+        raise HTTPException(404, f"unknown flag {flag_id}") from None
 
 
 @router.post("/review/flags/{flag_id}/dismiss")
 async def dismiss_flag(flag_id: str, request: Request) -> ReviewFlag:
-    raise HTTPException(501, "not implemented yet (lot L4: dismiss a review flag)")
+    return _set_dismissed(request, flag_id, True)
+
+
+@router.post("/review/flags/{flag_id}/undismiss")
+async def undismiss_flag(flag_id: str, request: Request) -> ReviewFlag:
+    return _set_dismissed(request, flag_id, False)
 
 
 @router.post("/jobs/{job_id}/rerun", status_code=202)
-async def rerun_job(job_id: str, body: RerunBody, request: Request) -> dict:
-    raise HTTPException(501, "not implemented yet (lot L4: re-run a job from link or store)")
+async def rerun_job(job_id: str, body: RerunBody, request: Request) -> PipelineJob:
+    """Run the job's thread again from link (items: body.items, else the job's own items; no LLM call).
+    from_stage="store" is treated as "link": the linker is deterministic and cheap, so nothing is cached.
+    Returns the new job once it has finished."""
+    wb = get_wb(request)
+    if body.model:
+        raise HTTPException(422, "replay with another model is not supported yet: leave `model` empty")
+    old = wb.jobs.get(job_id)
+    if old is None:
+        raise HTTPException(404, f"unknown job {job_id}")
+    if old.thread_id not in wb.threads:
+        raise HTTPException(404, f"thread {old.thread_id} no longer exists")
+    items = body.items if body.items is not None else old.items
+    await wb.processor.process(old.thread_id, items=items)
+    return wb.jobs[wb.threads[old.thread_id].last_job_id]
 
 
 def _verdict(v: guard.Verdict) -> dict:

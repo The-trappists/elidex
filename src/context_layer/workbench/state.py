@@ -13,12 +13,13 @@ from typing import Any, Callable
 
 from .. import config
 from ..link import Inventory
-from ..models import ContextAssertion, ElementClass, Message
+from ..models import ContextAssertion, ElementClass, Message, SourceRef, Trust
 from ..store import ContextStore, same_knowledge
 from . import persistence, seed
 from .bus import EventBus
 from .clock import SimClock
 from .contracts import (
+    AssertionEdit,
     REMOVABLE_ORIGINS,
     Incident,
     IncidentSpec,
@@ -26,7 +27,9 @@ from .contracts import (
     LlmCall,
     Origin,
     Persona,
+    OperatorEdit,
     PipelineJob,
+    ReviewFlag,
     Scenario,
     ScenarioRun,
     Settings,
@@ -84,6 +87,8 @@ class Workbench:
     scenarios: dict[str, Scenario]
     runs: dict[str, ScenarioRun]
     jobs: dict[str, PipelineJob]
+    flags: dict[str, ReviewFlag]  # operator console, never blocks the loop
+    edits: dict[str, AssertionEdit]  # operator edit history
     llm_calls: list[LlmCall]  # last 500 in memory; all of them in out/workbench/llm_calls.jsonl
     store: ContextStore  # core store, rebuilt when the inventory changes
 
@@ -433,11 +438,107 @@ class Workbench:
             del self.jobs[next(iter(self.jobs))]
         return job
 
+    # ------------------------------------------------------------ review flags and operator edits
+
+    def add_flag(self, flag: ReviewFlag, refresh: bool = False) -> ReviewFlag | None:
+        """Store a flag unless the same (kind, thread, assertion) exists already (no duplicates across reruns;
+        flags without an assertion also compare their message). Returns the new flag, or None when it existed.
+        refresh=True updates the existing flag instead (message, job, time) and reopens it. Emits review.flag."""
+        key = (flag.kind, flag.thread_id, flag.assertion_id, flag.message if flag.assertion_id is None else None)
+        for old in self.flags.values():
+            if (old.kind, old.thread_id, old.assertion_id, old.message if old.assertion_id is None else None) == key:
+                if refresh:
+                    old.message, old.detail, old.job_id = flag.message, flag.detail, flag.job_id
+                    old.created_at, old.dismissed = flag.created_at, False
+                    self.emit("review.flag", old)
+                return None
+        flag.id = _next_id("flag", self.flags)
+        self.flags[flag.id] = flag
+        self.emit("review.flag", flag)
+        return flag
+
+    def set_flag_dismissed(self, flag_id: str, dismissed: bool) -> ReviewFlag:
+        flag = self.flags[flag_id]  # KeyError when unknown
+        flag.dismissed = dismissed
+        self.emit("review.flag", flag)
+        return flag
+
+    def _edit_state(self, a: ContextAssertion) -> dict[str, Any]:
+        """The fields an operator edit can touch, as JSON."""
+        d = a.model_dump(mode="json")
+        return {k: d[k] for k in ("summary", "action", "avoid", "conditions", "valid_to", "closed_by", "trust", "sources", "link_notes")}
+
+    def edit_assertion(self, assertion_id: str, edit: OperatorEdit) -> AssertionEdit:
+        """Apply an operator edit. Records an AssertionEdit, adds the "operator" source, and emits
+        assertion.upserted plus a review.flag of kind operator_edit. KeyError: unknown assertion.
+        ValueError: nothing to change."""
+        a = self.store.assertions[assertion_id]
+        given = edit.model_fields_set
+        before = self._edit_state(a)
+        if edit.summary is not None:
+            a.summary = edit.summary
+        if edit.action is not None:
+            a.action = edit.action
+        if edit.avoid is not None:
+            a.avoid = list(edit.avoid)
+        if edit.conditions is not None:
+            a.conditions = list(edit.conditions)
+        if "valid_to" in given:  # an explicit null reopens the assertion
+            a.valid_to, a.closed_by = edit.valid_to, None
+        if edit.trust_level is not None:
+            a.trust = Trust(level=edit.trust_level, stated_by="operator", role="operator", evidence=a.trust.evidence)
+        if edit.note:
+            a.link_notes.append(f"operator note: {edit.note}")
+        after = self._edit_state(a)
+        if after == before:
+            raise ValueError("nothing to change")
+        if not any(s.source == "operator" for s in a.sources):
+            a.sources.append(SourceRef(source="operator", file="operator", seq=[]))
+            after = self._edit_state(a)
+        rec = AssertionEdit(
+            id=_next_id("edit", self.edits), assertion_id=a.id, ts=datetime.now(), note=edit.note,
+            before=before, after=after,
+        )
+        self.edits[rec.id] = rec
+        self.emit("assertion.upserted", a)
+        thread_id = next((s.file for s in a.sources if s.file != "operator"), "operator")
+        job_id = self.threads[thread_id].last_job_id if thread_id in self.threads else None
+        self.add_flag(
+            ReviewFlag(
+                id="", kind="operator_edit", thread_id=thread_id, job_id=job_id or "", assertion_id=a.id,
+                message=f"An operator changed '{a.topic}' by hand. Re-processing its thread keeps this change.",
+                detail=edit.note, created_at=datetime.now(),
+            ),
+            refresh=True,
+        )
+        return rec
+
+    def assertion_history(self, assertion_id: str) -> list[AssertionEdit]:
+        """Edits of an assertion, newest first. KeyError: unknown assertion."""
+        if assertion_id not in self.store.assertions:
+            raise KeyError(assertion_id)
+        return [e for e in reversed(self.edits.values()) if e.assertion_id == assertion_id]
+
+    def undo_edit(self, assertion_id: str) -> AssertionEdit:
+        """Restore the `before` of the latest edit that is not undone and mark it undone.
+        KeyError: unknown assertion. ValueError: nothing to undo."""
+        a = self.store.assertions[assertion_id]
+        rec = next((e for e in self.assertion_history(assertion_id) if not e.undone), None)
+        if rec is None:
+            raise ValueError("nothing to undo")
+        restored = ContextAssertion.model_validate({**a.model_dump(mode="json"), **rec.before})
+        for field in rec.before:
+            setattr(a, field, getattr(restored, field))
+        rec.undone = True
+        self.emit("assertion.upserted", a)
+        return rec
+
     # ------------------------------------------------------------ reset and removal
 
     def _clear(self) -> None:
         self.elements, self.sites, self.links, self.personas = {}, {}, {}, {}
         self.threads, self.incidents, self.scenarios, self.runs, self.jobs = {}, {}, {}, {}, {}
+        self.flags, self.edits = {}, {}
         self.processor.reset()
         old = getattr(self, "store", None)
         if old:

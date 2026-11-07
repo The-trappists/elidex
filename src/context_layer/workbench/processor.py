@@ -20,6 +20,7 @@ from ..link import Linker
 from ..mvp.lifecycle import reconcile
 from ..models import ContextAssertion, ExtractedItem, Thread
 from ..understand import CachedExtractor, LLMExtractor
+from .review import collect_flags
 from .contracts import EvalResult, LiveThread, LlmCall, PipelineJob, Settings
 
 if TYPE_CHECKING:
@@ -211,7 +212,8 @@ class Processor:
             st.duration_ms = int((time.perf_counter() - t0) * 1000)
         self._touch(job)
 
-    async def process(self, thread_id: str) -> None:
+    async def process(self, thread_id: str, items: list[ExtractedItem] | None = None) -> None:
+        """Run one job. `items` (operator re-run) replaces the extractor and the after_understand hooks."""
         wb = self.wb
         if thread_id not in wb.threads:
             return
@@ -228,7 +230,7 @@ class Processor:
             before = wb.assertion_snapshot()
             failed = False
             try:
-                await self._run(job, thread, gen)
+                await self._run(job, thread, gen, items)
             except asyncio.CancelledError:
                 raise
             except Exception as e:  # noqa: BLE001 - shown in the UI
@@ -245,9 +247,10 @@ class Processor:
             self._touch(job)
             thread.status = "error" if failed else ("active" if len(thread.messages) > n_messages else "processed")
             wb._thread_event(thread)
+            collect_flags(job, wb)  # informational: the knowledge is already live
             wb.emit_changes(before)
 
-    async def _run(self, job: PipelineJob, thread: LiveThread, gen: int) -> None:
+    async def _run(self, job: PipelineJob, thread: LiveThread, gen: int, override: list[ExtractedItem] | None = None) -> None:
         wb = self.wb
         core = thread.to_thread()
 
@@ -258,11 +261,15 @@ class Processor:
         # --- understand
         t0 = time.perf_counter()
         self._stage(job, "understand", "running")
-        items = await self._extract(job, thread, core)
+        if override is not None:
+            items = list(override)
+            job.extractor = "operator"
+        else:
+            items = await self._extract(job, thread, core)
         if gen != self._generation or thread.id not in wb.threads:
             return
         hook_ctx = HookContext(wb=wb, job=job, thread=thread, core=core, items=items, settings=wb.settings)
-        if (replaced := await run_hooks("after_understand", hook_ctx)) is not None:
+        if override is None and (replaced := await run_hooks("after_understand", hook_ctx)) is not None:
             items = replaced
         if gen != self._generation or thread.id not in wb.threads:
             return

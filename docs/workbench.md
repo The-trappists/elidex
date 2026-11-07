@@ -82,10 +82,12 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 
 The `/graph/*` views are rebuilt on each call from the live store and live threads. The Network page Inspector shows them: "Where it comes from" and "What it reaches" on knowledge, "History of advice" and "Who to ask" on an element.
 | `DELETE /assertions/{id}` | | 204 |
-| `PATCH /assertions/{id}` | `OperatorEdit` | stub, L4 (501) |
-| `GET /review/flags` | | `ReviewFlag[]` (stub, L4: returns `[]`) |
-| `POST /review/flags/{id}/dismiss` | | `ReviewFlag` (stub, L4: 501) |
-| `POST /jobs/{job_id}/rerun` | `RerunBody` | 202 (stub, L4: 501) |
+| `PATCH /assertions/{id}` | `OperatorEdit` | `{assertion, edit: AssertionEdit}`. Adds source `operator`; `stated_by` becomes `operator` only when `trust_level` is edited; an explicit `valid_to: null` reopens; 404 unknown, 422 nothing to change. Survives re-processing of the thread |
+| `GET /assertions/{id}/history` | | `AssertionEdit[]`, newest first |
+| `POST /assertions/{id}/undo` | | `{assertion, edit}`: restores the `before` of the latest edit not undone (409 when none) |
+| `GET /review/flags?dismissed=&kind=&thread_id=` | | `ReviewFlag[]`, newest first. Flags are informational, nothing waits for them. Rules in `workbench/review.py`: abstained, low_confidence (below 0.7), conflict, over_reach (6 or more reached elements the thread never names), plus the flags other hooks put in `job.flags` |
+| `POST /review/flags/{id}/dismiss`, `/undismiss` | | `ReviewFlag` |
+| `POST /jobs/{job_id}/rerun` | `RerunBody` | 202 and the new finished `PipelineJob`. Skips the extractor: uses `items`, else the job's own items. `from_stage="store"` behaves as `link`. `model` is not supported yet (422) |
 | `POST /guard` | `GuardBody` | `{decision, action, steps, reasons}` |
 | `POST /agent/run` | `AgentRunBody` | `AgentRunResult` |
 | `POST /data/reset` | `ResetBody` | 204, then emits `state.reset` |

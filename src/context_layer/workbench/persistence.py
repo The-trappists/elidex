@@ -10,11 +10,13 @@ from typing import TYPE_CHECKING, Any
 
 from ..models import ContextAssertion, ElementClass
 from .contracts import (
+    AssertionEdit,
     Incident,
     LiveThread,
     LlmCall,
     Persona,
     PipelineJob,
+    ReviewFlag,
     Scenario,
     ScenarioRun,
     Settings,
@@ -50,6 +52,8 @@ def state_to_dict(wb: Workbench) -> dict[str, Any]:
         "assertions": dump(wb.store.assertions.values()),
         "classes": dump(wb.store.classes.values()),
         "jobs": dump(list(wb.jobs.values())[-MAX_JOBS:]),
+        "flags": dump(wb.flags.values()),
+        "edits": dump(wb.edits.values()),
     }
 
 
@@ -65,6 +69,7 @@ def apply_state(wb: Workbench, data: dict[str, Any]) -> None:
     scenarios, runs = parse("scenarios", Scenario), parse("runs", ScenarioRun)
     assertions, classes = parse("assertions", ContextAssertion), parse("classes", ElementClass)
     jobs = parse("jobs", PipelineJob)
+    flags, edits = parse("flags", ReviewFlag), parse("edits", AssertionEdit)
     settings = Settings.model_validate({**Settings().model_dump(), **data.get("settings", {})})
     clock = data.get("clock") or {}
 
@@ -80,6 +85,8 @@ def apply_state(wb: Workbench, data: dict[str, Any]) -> None:
     wb.scenarios = {x.id: x for x in scenarios}
     wb.runs = {x.id: x for x in runs}
     wb.jobs = {x.id: x for x in jobs}
+    wb.flags = {x.id: x for x in flags}
+    wb.edits = {x.id: x for x in edits}
     wb.settings = settings
     wb.refresh_readonly_settings()
     wb.rebuild_store(classes=classes, assertions=assertions)

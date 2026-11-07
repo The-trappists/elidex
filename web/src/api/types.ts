@@ -278,6 +278,16 @@ export interface ReviewFlag {
 
 export type CriticVerdictKind = 'keep' | 'downgrade' | 'reject'
 
+export interface AssertionEdit {
+  id: string
+  assertion_id: string
+  ts: string // wall
+  note: string | null
+  before: Record<string, unknown>
+  after: Record<string, unknown>
+  undone: boolean
+}
+
 export interface CriticVerdict {
   item_topic: string
   verdict: CriticVerdictKind
@@ -442,6 +452,7 @@ export type WbEvent =
   | Ev<'scenarios.changed', { scenarios: Scenario[]; runs: ScenarioRun[] }>
   | Ev<'slack.status', SlackStatus>
   | Ev<'llm.call', LlmCall>
+  | Ev<'review.flag', ReviewFlag>
   | Ev<'state.reset', Record<string, never>>
   | Ev<'log', { level: 'info' | 'warning' | 'error'; text: string }>
 
