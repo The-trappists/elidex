@@ -52,9 +52,7 @@ export function Sidebar() {
   return (
     <nav className="flex w-52 shrink-0 flex-col border-r border-line bg-surface">
       <div className="flex h-14 items-center gap-2.5 px-4">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-accent text-xs font-black text-white shadow-sm">
-          EX
-        </div>
+        <img src="/elidex-logo.png" alt="ElidEx" className="size-7 object-contain" />
         <div className="flex flex-col">
           <span className="text-sm font-bold tracking-tight">Elid<span className="text-accent">Ex</span></span>
           <span className="text-[10px] text-muted -mt-0.5">Context Layer</span>

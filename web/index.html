@@ -2,7 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem('theme')
+          if (theme !== 'light') document.documentElement.classList.add('dark')
+        } catch {
+          document.documentElement.classList.add('dark')
+        }
+      })()
+    </script>
+    <link rel="icon" type="image/png" href="/elidex-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Context Workbench</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
