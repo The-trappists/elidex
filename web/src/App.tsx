@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
@@ -13,7 +13,7 @@ import LlmLogPage from './pages/LlmLogPage'
 import GraphPage from "./pages/GraphPage"
 import NetworkPage from './pages/NetworkPage'
 import NotFoundPage from './pages/NotFoundPage'
-import PatternsPage from './pages/PatternsPage'
+import InsightsPage from './pages/InsightsPage'
 import ReviewPage from './pages/ReviewPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
@@ -48,7 +48,8 @@ function DashboardLayout() {
                 <Route path="/network" element={<NetworkPage />} />
                 <Route path="/graph" element={<GraphPage />} />
                 <Route path="/knowledge" element={<KnowledgePage />} />
-                <Route path="/patterns" element={<PatternsPage />} />
+                <Route path="/insights" element={<InsightsPage />} />
+                <Route path="/patterns" element={<Navigate to="/insights" replace />} />
                 <Route path="/llm" element={<LlmLogPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

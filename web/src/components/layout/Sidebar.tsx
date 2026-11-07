@@ -26,7 +26,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: '/network', label: 'Network', title: 'Network', subtitle: 'Equipment and the knowledge attached to it', icon: Network },
       { to: '/graph', label: 'Graph', title: 'Knowledge graph', subtitle: 'People, messages, knowledge and equipment, and how they connect', icon: Waypoints },
       { to: '/knowledge', label: 'Knowledge', title: 'Knowledge', subtitle: 'Everything the team has learned so far', icon: BookOpenCheck },
-      { to: '/patterns', label: 'Patterns', title: 'Patterns', subtitle: 'Problems that keep coming back, or hit several elements at once', icon: Radar },
+      { to: '/insights', label: 'Insights', title: 'Insights', subtitle: 'Problems that may share one root cause, and problems that keep coming back', icon: Radar },
     ],
   },
   {

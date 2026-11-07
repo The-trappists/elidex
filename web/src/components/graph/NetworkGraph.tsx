@@ -20,7 +20,8 @@ export interface NetworkGraphProps {
   highlightIds?: string[]
   /** Draw the knowledge (assertions, classes) next to the equipment. Default true. */
   knowledge?: boolean
-  /** Patterns page: problem elements in red, suspected common causes in amber, these link ids in red; the rest dims. */
+  /** Insights page: problem elements in red, suspected common causes in amber; the links between them (and these
+   * link ids) light up; the rest dims. */
   focus?: { problem: string[]; suspect: string[]; links: string[] } | null
   className?: string
 }
@@ -212,6 +213,7 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, knowledge
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
       on = !on
       cy.nodes('[?incident]').toggleClass('pulse', on)
+      cy.edges('.pl').toggleClass('pulse', on)
     }, 900)
     return () => {
       clearInterval(pulse)
@@ -280,18 +282,20 @@ export function NetworkGraph({ at, selectedId, onSelect, highlightIds, knowledge
     const cy = cyRef.current
     if (!cy) return
     cy.batch(() => {
-      cy.elements().removeClass('pb suspect pl dim')
+      cy.elements().removeClass('pb suspect pl dim pulse')
       if (!focus) return
       const problem = new Set(focus.problem)
       const suspect = new Set(focus.suspect)
       const links = new Set(focus.links.map((id) => `lk:${id}`))
       const on = cy.collection()
+      const concerned = (n: cytoscape.NodeSingular) => problem.has(aKey(n)) || suspect.has(aKey(n))
       cy.nodes().forEach((n) => {
         if (problem.has(aKey(n))) on.merge(n.addClass('pb'))
         else if (suspect.has(aKey(n))) on.merge(n.addClass('suspect'))
       })
+      // Light every link between two concerned nodes, plus the links the pattern names.
       cy.edges().forEach((e) => {
-        if (links.has(e.id())) on.merge(e.addClass('pl'))
+        if (links.has(e.id()) || (concerned(e.source()) && concerned(e.target()))) on.merge(e.addClass('pl'))
       })
       cy.elements().not(on).not('node.site:parent').addClass('dim')
     })

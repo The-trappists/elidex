@@ -53,7 +53,7 @@ With `EMBEDDING_MODEL` set (the same model as the vector search in [dataset.md](
 - Two topics with cosine similarity of at least `PATTERNS_SAME_MEANING` (default 0.78, calibrated on `gemini-embedding-001`, see below) count as one problem. Both guards still apply, and no similarity can overrule them (tested with a model that calls everything identical).
 - Meaning needs a **real shared place**: the same element, or an overlapping class or site scope. Units that only share a model are never grouped by meaning. The first real run grouped RAD-176's frost margin dip with RAD-198's iced dish (two RU-200s, similarity 0.82): similar kind of problem, two causes, and RAD-176's label says "on RAD-176 only". "Same model" still counts for the stronger evidence (similar words, identical checks).
 - Vectors are cached in `out/patterns/embeddings.json`, so the workbench embeds only new knowledge.
-- If the model fails (no network, quota), patterns fall back to words only and say so. The report, the API and the Patterns page show `meaning: on / off / failed`.
+- If the model fails (no network, quota), patterns fall back to words only and say so. The report, the API and the Insights page show `meaning: on / off / failed`.
 - The hashed-words fallback of `embed.py` is not used here: it compares words, which the grouping already does.
 
 **Calibrate it once on the real model** (it calls the embedding API; the assistant did not run it, credentials):
