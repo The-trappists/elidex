@@ -58,13 +58,13 @@ export function Stat({
       disabled={!onClick}
       onClick={onClick}
       className={cn(
-        'group relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-2xl border border-line bg-surface px-4 py-3 text-left shadow-[var(--shadow-sm)] lift',
+        'group relative flex min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-lg border border-line bg-surface px-4 py-3 text-left shadow-[var(--shadow-sm)] lift',
         !onClick && 'cursor-default hover:!transform-none hover:!shadow-[var(--shadow-sm)]',
         onClick && 'hover:border-accent/50',
       )}
     >
       <span className={cn('absolute inset-x-0 top-0 h-0.5 opacity-70', t.bar)} />
-      <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110', t.chip)}>{icon}</span>
+      <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-md transition-transform', t.chip)}>{icon}</span>
       <span className="min-w-0">
         <span className="block text-2xl font-semibold leading-none tracking-tight tabular-nums">
           <AnimatedNumber value={value} />
@@ -80,9 +80,9 @@ export function Stat({
 /** Human explanation of an error, with the raw technical text folded away. */
 export function ErrorNote({ explained, raw, className, count, since }: { explained: Explained; raw?: string | null; className?: string; count?: number; since?: string }) {
   return (
-    <div className={cn('rounded-xl border border-bad/30 bg-bad/8 p-3 animate-slide-in', className)}>
+    <div className={cn('rounded-md border border-bad/30 bg-bad/8 p-3 animate-slide-in', className)}>
       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-xl bg-bad/15 text-bad">
+        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-bad/15 text-bad">
           <AlertTriangle size={14} />
         </span>
         <div className="min-w-0 text-sm">

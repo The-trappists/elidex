@@ -9,7 +9,7 @@ import { SOURCE_STYLE, TRUST_STYLE, TYPE_STYLE } from '../../lib/semantic'
 import { Badge, IdChip } from '../ui'
 import { useGraphQuery } from './useGraphQuery'
 
-const Loading = () => <div className="h-12 animate-pulse rounded-xl bg-surface-2" />
+const Loading = () => <div className="h-12 animate-pulse rounded-md bg-surface-2" />
 const Note = ({ children }: { children: React.ReactNode }) => <p className="text-xs text-muted">{children}</p>
 const Failed = ({ msg }: { msg: string }) => <p className="text-xs text-bad">Could not load: {msg}</p>
 

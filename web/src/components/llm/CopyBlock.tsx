@@ -31,7 +31,7 @@ export function CopyBlock({ title, text, collapsible, extra, tone }: { title: st
           {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      {open && <pre className={cn('max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-line bg-surface-2 p-3 font-mono text-xs leading-relaxed', tone)}>{text}</pre>}
+      {open && <pre className={cn('max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-md border border-line bg-surface-2 p-3 font-mono text-xs leading-relaxed', tone)}>{text}</pre>}
     </div>
   )
 }

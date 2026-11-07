@@ -9,6 +9,7 @@ import DataPage from './pages/DataPage'
 import KnowledgePage from './pages/KnowledgePage'
 import LivePage from './pages/LivePage'
 import LlmLogPage from './pages/LlmLogPage'
+import GraphPage from "./pages/GraphPage"
 import NetworkPage from './pages/NetworkPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
@@ -18,12 +19,13 @@ function AnimatedRoutes() {
   // The conversation detail keeps its list mounted: only animate when the top-level section changes.
   const section = pathname.split('/')[1] ?? ''
   return (
-    <div key={section} className="h-full animate-page-in">
+    <div key={section} className="h-full">
       <Routes>
         <Route path="/" element={<LivePage />} />
         <Route path="/conversations" element={<ConversationsPage />} />
         <Route path="/conversations/:threadId" element={<ConversationsPage />} />
         <Route path="/network" element={<NetworkPage />} />
+        <Route path="/graph" element={<GraphPage />} />
         <Route path="/knowledge" element={<KnowledgePage />} />
         <Route path="/llm" element={<LlmLogPage />} />
         <Route path="/data" element={<DataPage />} />

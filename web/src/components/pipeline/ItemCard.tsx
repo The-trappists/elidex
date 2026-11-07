@@ -1,5 +1,6 @@
 import type { ExtractedItem } from '../../api/types'
-import { TRUST_STYLE, TYPE_STYLE } from '../../lib/semantic'
+import { TRUST_STYLE } from '../../lib/semantic'
+import { TypeBadge } from '../knowledge/bits'
 import { Badge, IdChip } from '../ui'
 
 export function ConfidenceBar({ value }: { value: number }) {
@@ -20,20 +21,20 @@ export function ItemCard({ item, active, onHover }: { item: ExtractedItem; activ
     <div
       onMouseEnter={() => onHover?.(true)}
       onMouseLeave={() => onHover?.(false)}
-      className={`rounded-xl border bg-surface p-3 text-[13px] transition ${active ? 'border-accent ring-2 ring-accent/20' : 'border-line'}`}
+      className={`rounded-md border bg-surface p-3 text-[13px] transition ${active ? 'border-accent ' : 'border-line'}`}
     >
       <div className="flex flex-wrap items-center gap-1.5">
-        <Badge className={TYPE_STYLE[item.type].cls}>{TYPE_STYLE[item.type].label}</Badge>
+        <TypeBadge type={item.type} />
         <span className="font-semibold">{item.topic}</span>
         <Badge className={`${TRUST_STYLE[item.trust_level].cls} ml-auto`}>{TRUST_STYLE[item.trust_level].label}</Badge>
       </div>
       <p className="mt-1.5 text-muted">{item.summary}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
-        <span className="text-xs uppercase tracking-wide text-muted">Scope</span>
+        <span className="text-xs text-muted">Scope</span>
         {sc.instance_ids.map((i) => <IdChip key={i}>{i}</IdChip>)}
         {sc.site_ids.map((i) => <IdChip key={i}>{i}</IdChip>)}
-        {sc.element_class && <Badge className="bg-[color-mix(in_srgb,var(--g-class)_18%,transparent)] text-[var(--g-class)]">class: {[sc.element_class.type, sc.element_class.model, sc.element_class.install_year_min != null || sc.element_class.install_year_max != null ? `${sc.element_class.install_year_min ?? ''}–${sc.element_class.install_year_max ?? ''}` : null].filter(Boolean).join(' · ') || 'any'}</Badge>}
-        {sc.trigger && <Badge className="bg-warn/15 text-warn">trigger: {sc.trigger}</Badge>}
+        {sc.element_class && <Badge className="bg-surface-2 text-muted">class: {[sc.element_class.type, sc.element_class.model, sc.element_class.install_year_min != null || sc.element_class.install_year_max != null ? `${sc.element_class.install_year_min ?? ''}–${sc.element_class.install_year_max ?? ''}` : null].filter(Boolean).join(' · ') || 'any'}</Badge>}
+        {sc.trigger && <Badge className="bg-surface-2 text-muted">trigger: {sc.trigger}</Badge>}
       </div>
       {item.conditions.length > 0 && (
         <div className="mt-2 text-xs">

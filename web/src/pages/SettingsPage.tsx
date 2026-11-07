@@ -17,7 +17,7 @@ function Section({ title, intro, icon: Icon, children }: { title: string; intro?
   return (
     <Card className="p-5">
       <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent">
           <Icon size={17} />
         </span>
         <div>
@@ -31,7 +31,7 @@ function Section({ title, intro, icon: Icon, children }: { title: string; intro?
 }
 
 const Row = ({ label, text, children }: { label: string; text: string; children: ReactNode }) => (
-  <div className="flex items-start justify-between gap-6 rounded-xl px-3 py-2 transition-colors hover:bg-surface-2/70">
+  <div className="flex items-start justify-between gap-6 rounded-md px-3 py-2 transition-colors hover:bg-surface-2/70">
     <div>
       <div className="text-sm font-medium">{label}</div>
       <div className="text-xs text-muted">{text}</div>
@@ -65,7 +65,7 @@ export default function SettingsPage() {
 
   return (
     <div className="h-full overflow-auto p-6">
-      <div className="stagger mx-auto max-w-3xl space-y-5">
+      <div className=" mx-auto max-w-3xl space-y-5">
         <p className="flex items-center gap-2 text-sm text-muted">
           <span className="size-1.5 rounded-full bg-ok" /> Changes are saved as soon as you make them.
         </p>
@@ -73,7 +73,7 @@ export default function SettingsPage() {
         <Section icon={Sparkles} title="Reading conversations" intro="How a conversation is turned into knowledge.">
           <div className="grid gap-2">
             {MODES.map((m) => (
-              <label key={m.id} className={cn('flex cursor-pointer gap-3 rounded-xl border p-3.5 transition-all duration-200', st.extractor_mode === m.id ? 'border-accent bg-accent-soft shadow-[var(--glow)]' : 'border-line hover:border-accent/40 hover:bg-surface-2')}>
+              <label key={m.id} className={cn('flex cursor-pointer gap-3 rounded-md border p-3.5 transition-all duration-200', st.extractor_mode === m.id ? 'border-accent bg-accent-soft' : 'border-line hover:border-accent/40 hover:bg-surface-2')}>
                 <input type="radio" name="mode" className="mt-1 accent-[var(--accent)]" checked={st.extractor_mode === m.id} onChange={() => save({ extractor_mode: m.id })} />
                 <span>
                   <span className="text-sm font-medium">{m.title}</span>
@@ -83,7 +83,7 @@ export default function SettingsPage() {
             ))}
           </div>
           {st.extractor_mode === 'llm' && !st.llm_configured && (
-            <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs">The AI is selected but no key is configured, so every conversation will fail to be read. Add a key on the server (<code>.env</code>) or switch to Auto.</div>
+            <div className="rounded-md border border-warn/40 bg-warn/10 p-3 text-xs">The AI is selected but no key is configured, so every conversation will fail to be read. Add a key on the server (<code>.env</code>) or switch to Auto.</div>
           )}
           <Row label="Lifecycle" text="Lets a later message close an earlier piece of knowledge (for example 'the old workaround no longer applies').">
             <Toggle checked={st.lifecycle} onChange={(v) => save({ lifecycle: v })} />

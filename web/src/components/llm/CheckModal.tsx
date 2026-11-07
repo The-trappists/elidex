@@ -43,7 +43,7 @@ export function CheckModal({ open, onClose }: { open: boolean; onClose: () => vo
       ) : (
         <div className="space-y-5">
           {results?.map((r) => (
-            <div key={r.provider + r.model} className="rounded-xl border border-line p-3">
+            <div key={r.provider + r.model} className="rounded-md border border-line p-3">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">{r.provider}</span>
                 <span className="font-mono text-xs text-muted">{r.model}</span>

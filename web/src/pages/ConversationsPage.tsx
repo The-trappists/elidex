@@ -7,7 +7,7 @@ import { buildCitations } from '../components/chat/citations'
 import { MessageList } from '../components/chat/MessageList'
 import { ParserOutput } from '../components/chat/ParserOutput'
 import { SourceIcon, ThreadList, threadTitle } from '../components/chat/ThreadList'
-import { Avatar, Badge, Button, EmptyState, Modal, withToast } from '../components/ui'
+import { Button, EmptyState, Modal, withToast } from '../components/ui'
 import { ORIGIN_STYLE, THREAD_STATUS_STYLE } from '../lib/semantic'
 import { useLive } from '../store/live'
 
@@ -59,26 +59,22 @@ export default function ConversationsPage() {
             <header className="flex items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
               <SourceIcon source={thread.source} />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="truncate text-sm font-semibold">{threadTitle(thread)}</h1>
-                  <Badge className={THREAD_STATUS_STYLE[thread.status].cls}>{THREAD_STATUS_STYLE[thread.status].label}</Badge>
-                  <Badge className={ORIGIN_STYLE[thread.origin].cls}>{ORIGIN_STYLE[thread.origin].label}</Badge>
-                </div>
-                <div className="mt-1 flex -space-x-1.5">
-                  {thread.participants.map((n) => (
-                    <Avatar key={n} name={n} color={personas.find((p) => p.name === n)?.avatar_color} size={22} className="ring-2 ring-surface" />
-                  ))}
+                <h1 className="truncate text-sm font-semibold">{threadTitle(thread)}</h1>
+                <div className="flex items-center gap-2 text-xs text-muted">
+                  <span>{THREAD_STATUS_STYLE[thread.status].label}</span>
+                  <span>·</span>
+                  <span>{ORIGIN_STYLE[thread.origin].label}</span>
+                  <span>·</span>
+                  <span>{thread.participants.join(', ')}</span>
                 </div>
               </div>
-              <Button size="sm" icon={<Play size={13} />} disabled={thread.status === 'processing' || !thread.messages.length} onClick={() => withToast(() => api.processThread(thread.id), 'Processing started')}>
+              <Button size="sm" variant="primary" icon={<Play size={13} />} disabled={thread.status === 'processing' || !thread.messages.length} onClick={() => withToast(() => api.processThread(thread.id), 'Processing started')}>
                 Process now
               </Button>
-              <a href={api.exportTranscriptUrl(thread.id)} download>
-                <Button size="sm" icon={<Download size={13} />}>Export transcript</Button>
+              <a href={api.exportTranscriptUrl(thread.id)} download title="Export transcript">
+                <Button size="sm" variant="ghost" aria-label="Export transcript" icon={<Download size={14} />} />
               </a>
-              <Button size="sm" variant="danger" icon={<Trash2 size={13} />} onClick={() => setConfirmDelete(true)}>
-                Delete
-              </Button>
+              <Button size="sm" variant="ghost" aria-label="Delete thread" icon={<Trash2 size={14} />} onClick={() => setConfirmDelete(true)} />
             </header>
             <div className="min-h-0 flex-1">
               <MessageList thread={thread} personas={personas} citations={citations} hoverItem={hoverItem} onHoverItem={setHoverItem} />
@@ -88,8 +84,8 @@ export default function ConversationsPage() {
             </div>
           </section>
 
-          <aside className="w-[26rem] shrink-0 border-l border-line bg-surface">
-            <div className="flex h-11 items-center border-b border-line px-3.5 text-sm font-semibold">Parser output</div>
+          <aside className="w-[28rem] shrink-0 border-l border-line bg-surface">
+            <div className="flex h-11 items-center border-b border-line px-4 text-sm font-semibold">Pipeline, step by step</div>
             <div className="h-[calc(100%-2.75rem)]">
               <ParserOutput thread={thread} jobs={jobs} assertions={assertions} hoverItem={hoverItem} onHoverItem={setHoverItem} idleSeconds={idle} />
             </div>

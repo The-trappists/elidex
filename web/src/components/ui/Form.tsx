@@ -5,10 +5,10 @@ import { cn } from '../../lib/cn'
 const width = (className?: string) => (/(^|\s)!?w-/.test(className ?? '') ? '' : 'w-full')
 
 const BASE =
-  'rounded-xl border border-line bg-surface-2/60 px-2.5 text-sm text-text transition placeholder:text-muted/70 hover:border-accent/40 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/25'
+  'rounded-md border border-line bg-surface px-2.5 text-sm text-text transition placeholder:text-muted/70 hover:border-muted/40 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(BASE, width(className), 'h-9', className)} {...rest} />
+  return <input className={cn(BASE, width(className), 'h-8', className)} {...rest} />
 }
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -17,7 +17,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(BASE, width(className), 'h-9 pr-8', className)} {...rest}>
+    <select className={cn(BASE, width(className), 'h-8 pr-8', className)} {...rest}>
       {children}
     </select>
   )
@@ -41,7 +41,7 @@ export function Toggle({ checked, onChange, label, disabled }: { checked: boolea
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={cn('relative h-5 w-9 rounded-full transition', checked ? 'bg-brand' : 'bg-surface-3')}
+        className={cn('relative h-5 w-9 rounded-full transition', checked ? 'bg-accent' : 'bg-surface-3')}
       >
         <span className={cn('absolute top-0.5 size-4 rounded-full bg-white shadow transition-all', checked ? 'left-[18px]' : 'left-0.5')} />
       </button>

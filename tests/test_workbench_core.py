@@ -217,6 +217,10 @@ def test_graph_routes_over_live_state(client):
     assert client.get(f"/api/graph/timeline/{entity}").json()
     assert client.get("/api/graph/experts", params={"entity_id": entity}).json()
     assert client.get("/api/graph/stats").json()["nodes"]["Assertion"] >= 1
+    els = client.get("/api/graph").json()["elements"]
+    nodes = {e["data"]["id"]: e["data"] for e in els if e["group"] == "nodes"}
+    assert nodes[a["id"]]["kind"] == "Assertion" and "valid" in nodes[a["id"]]
+    assert all(e["data"]["source"] in nodes and e["data"]["target"] in nodes for e in els if e["group"] == "edges")
     # a thread without messages must not break the graph
     client.post("/api/threads", json={"source": "teams", "subject": "Empty"})
     assert client.get("/api/graph/stats").status_code == 200

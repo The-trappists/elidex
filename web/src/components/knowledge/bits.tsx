@@ -6,7 +6,12 @@ import { fmtDate } from '../../lib/format'
 import { TRUST_STYLE, TYPE_STYLE } from '../../lib/semantic'
 import { Badge, IdChip } from '../ui'
 
-export const TypeBadge = ({ type }: { type: AssertionType }) => <Badge className={TYPE_STYLE[type].cls}>{TYPE_STYLE[type].label}</Badge>
+export const TypeBadge = ({ type }: { type: AssertionType }) => (
+  <Badge className={TYPE_STYLE[type].cls}>
+    <span className="size-1.5 rounded-full" style={{ background: TYPE_STYLE[type].hex }} />
+    {TYPE_STYLE[type].label}
+  </Badge>
+)
 export const TrustBadge = ({ level }: { level: TrustLevel }) => <Badge className={TRUST_STYLE[level].cls}>{TRUST_STYLE[level].label}</Badge>
 
 export const ASSERTION_TYPES: AssertionType[] = ['workaround', 'access', 'fact', 'invalidation']

@@ -352,6 +352,30 @@ def _kg(request: Request):
     return wb, KnowledgeGraph.build(wb.store, threads)
 
 
+@router.get("/graph")
+async def graph_elements(request: Request, at: datetime | None = None) -> dict:
+    """The whole knowledge graph as Cytoscape elements, for the Graph page.
+
+    Every node is returned; assertions carry `valid` (in force at `at`, default sim now) so the UI
+    can fade or hide them. Message text is cut to keep the payload small.
+    """
+    from ..graph.export import to_cytoscape
+
+    wb, kg = _kg(request)
+    when = at or wb.now()
+    els = to_cytoscape(kg.g)
+    for el in els:
+        d = el["data"]
+        if el["group"] != "nodes":
+            continue
+        if d.get("kind") == "Assertion":
+            d["valid"] = kg._valid(d["id"], when)
+        elif d.get("kind") == "Message":
+            text = kg.g.nodes[d["id"]].get("text") or ""
+            d["text"] = text if len(text) <= 400 else text[:400] + "…"
+    return {"at": when.isoformat(), "elements": els}
+
+
 @router.get("/graph/stats")
 async def graph_stats(request: Request) -> dict:
     return _kg(request)[1].stats()

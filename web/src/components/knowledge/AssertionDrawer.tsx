@@ -9,7 +9,7 @@ import { assertionHref, BindingChips, TrustBadge, TypeBadge, threadHref } from '
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mt-5">
-    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">{title}</h4>
+    <h4 className="mb-1.5 text-xs font-medium text-muted">{title}</h4>
     {children}
   </section>
 )
@@ -64,7 +64,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             <Section title="Conditions">
               <ul className="space-y-1">
                 {a.conditions.map((c, i) => (
-                  <li key={i} className="rounded-xl border border-line px-2.5 py-1.5 text-xs">
+                  <li key={i} className="rounded-md border border-line px-2.5 py-1.5 text-xs">
                     {c.text}
                     <div className="mt-0.5 font-mono text-xs text-muted">{c.check ? `check: ${c.check.field} ${c.check.op} ${JSON.stringify(c.check.value)}` : 'no machine check (read by humans only)'}</div>
                   </li>

@@ -6,7 +6,7 @@ export function Badge({ className, children, title }: { className?: string; chil
   return (
     <span
       title={title}
-      className={cn('inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-xs font-medium leading-none whitespace-nowrap', className ?? 'bg-surface-2 text-muted')}
+      className={cn('inline-flex items-center gap-1.5 rounded px-1.5 py-[3px] text-xs font-medium leading-none whitespace-nowrap', className ?? 'bg-surface-2 text-muted')}
     >
       {children}
     </span>

@@ -14,7 +14,7 @@ import { classMembers, classesOf, type NodeKind } from './graphModel'
 const Section = ({ title, count, children, action }: { title: string; count?: number; children: ReactNode; action?: ReactNode }) => (
   <section className="border-b border-line px-4 py-3 last:border-0">
     <div className="mb-2 flex items-center gap-1.5">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">{title}</h4>
+      <h4 className="text-xs font-medium text-muted">{title}</h4>
       {count !== undefined && <span className="rounded bg-surface-2 px-1 text-xs text-muted">{count}</span>}
       <div className="ml-auto">{action}</div>
     </div>
@@ -48,7 +48,7 @@ type P = { id: string; at: Date; onSelect: (id: string, kind: NodeKind) => void 
 function Title({ kind, title, sub }: { kind: string; title: string; sub?: ReactNode }) {
   return (
     <div className="border-b border-line px-4 py-3">
-      <div className="text-xs font-semibold uppercase tracking-wide text-muted">{kind}</div>
+      <div className="text-xs font-medium text-muted">{kind}</div>
       <div className="break-words text-base font-semibold">{title}</div>
       {sub && <div className="mt-1 flex flex-wrap items-center gap-1.5">{sub}</div>}
     </div>
@@ -91,7 +91,7 @@ function ElementInfo({ id, at, onSelect }: P) {
       </Section>
       <Section title="Context at t" count={hits?.length} action={<Toggle checked={expired} onChange={setExpired} label={<span className="text-xs text-muted">Include expired</span>} />}>
         {hits === null || (loading && !hits.length) ? (
-          <div className="h-16 animate-pulse rounded-xl bg-surface-2" />
+          <div className="h-16 animate-pulse rounded-md bg-surface-2" />
         ) : hits.length ? (
           <div className="space-y-2">{hits.map((h) => <ContextCard key={h.id} a={h} at={at} />)}</div>
         ) : (

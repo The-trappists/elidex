@@ -73,6 +73,7 @@ Core contract change: `models.SourceKind` now includes `"slack"`.
 | `POST /incidents/{id}/resolve` | | `Incident` |
 | `DELETE /incidents/{id}` | | 204 |
 | `GET /context/{entity}?at=&include_expired=` | | `[{matched_via, ...ContextAssertion}]`; `at` defaults to sim now |
+| `GET /graph?at=` | | `{at, elements}`: the whole knowledge graph as Cytoscape elements; assertions carry `valid` at `at` (default sim now). Used by the Graph page |
 | `GET /graph/provenance/{assertion_id}` | | Source messages of an assertion, verbatim (see [knowledge-graph.md](knowledge-graph.md)) |
 | `GET /graph/reach/{assertion_id}` | | `{elements: {id: via}, sites}`: what a rule reaches (over-linking check) |
 | `GET /graph/experts?entity_id=&at=` | | People who stated knowledge about the entity, most verified first |
@@ -150,8 +151,10 @@ Everything except Elisa's chat and email is synthetic and documented in `data/wo
 
 ## UI conventions (web/)
 
-- Colors come only from the tokens in `src/index.css` (`bg-surface`, `text-muted`, `border-line`, `bg-accent`...) and from `src/lib/semantic.ts` (assertion type, trust, channel, origin, severity, stage).
-- Components come from `src/components/ui` (Button, Badge, IdChip, Card/Panel, Modal/Drawer, Input/Select/Textarea/Field/Toggle, Tabs, Table, Avatar, EmptyState, JsonView, `toast` and `withToast`).
+- **Calm by default.** Neutral surfaces, one accent (`accent`) for what is interactive, and color only for status (`ok`, `warn`, `bad`). Types, trust, channels and origins are plain grey chips (a small dot at most). Graphs are the one place with a color per kind, and their legend is also their filter. No gradients, glows or decorative motion.
+- **One job per screen.** Overview = incidents and recent processing. Conversations = read a thread and follow it through the five pipeline steps (`components/pipeline/JobSteps.tsx`, one step open at a time, each with what it received and produced). Network = topology over time. Graph = the knowledge graph (`pages/GraphPage.tsx`, fed by `GET /graph`). Knowledge = the list.
+- Colors come only from the tokens in `src/index.css` and from `src/lib/semantic.ts`.
+- Components come from `src/components/ui` (Button, Badge, IdChip, Card/Panel, Modal/Drawer, Input/Select/Textarea/Field/Toggle, Tabs, Table, Avatar, EmptyState, JsonView, `toast` and `withToast`). Containers use `rounded-lg`, controls `rounded-md`; section labels are sentence case, not uppercase.
 - Live data is read with `useLive(selector)` from `src/store/live.ts`. Pages never keep their own copy of the state, and they call `api.*` for actions. The SSE event brings the change back.
 - Sim time comes from `useSimNow()`, and dates are formatted with `src/lib/format.ts`.
 - English only in the UI. Every list has an empty state, and every destructive action asks for confirmation (use a Modal, never `window.confirm`).

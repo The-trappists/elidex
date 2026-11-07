@@ -1,4 +1,4 @@
-import { Bot, ChevronDown, Moon, Pause, Play, PlayCircle, Hash, Sun, WifiOff } from 'lucide-react'
+import { ChevronDown, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -7,7 +7,7 @@ import { fmtDateTime, toNaiveIso } from '../../lib/format'
 import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
 import { useLive } from '../../store/live'
-import { Badge, Button, withToast } from '../ui'
+import { Button, withToast } from '../ui'
 import { ALL_NAV } from './Sidebar'
 
 const SPEEDS = [1, 10, 60, 600]
@@ -23,17 +23,17 @@ function ScenarioLauncher() {
   }, [])
   return (
     <div className="relative" ref={ref}>
-      <Button variant="primary" icon={<PlayCircle size={16} />} onClick={() => setOpen((o) => !o)}>
+      <Button icon={<PlayCircle size={15} />} onClick={() => setOpen((o) => !o)}>
         Run scenario <ChevronDown size={14} />
       </Button>
       {open && (
-        <div role="menu" className="absolute right-0 top-11 z-30 max-h-[70vh] w-96 overflow-auto rounded-2xl border border-line glass p-1.5 shadow-[var(--shadow-lg)] animate-slide-in">
+        <div role="menu" className="absolute right-0 top-10 z-30 max-h-[70vh] w-96 overflow-auto rounded-lg border border-line bg-surface p-1 shadow-[var(--shadow-lg)]">
           {scenarios.length === 0 && <div className="p-3 text-sm text-muted">No scenario yet. Add one in Data.</div>}
           {scenarios.map((s) => (
             <button
               key={s.id}
               role="menuitem"
-              className="flex w-full flex-col items-start gap-1 rounded-xl px-3 py-2 text-left transition hover:bg-accent-soft"
+              className="flex w-full flex-col items-start gap-1 rounded-md px-3 py-2 text-left transition hover:bg-surface-2"
               onClick={() => {
                 setOpen(false)
                 void withToast(() => api.runScenario(s.id), `Started: ${s.title}`)
@@ -41,7 +41,7 @@ function ScenarioLauncher() {
             >
               <div className="flex w-full items-center gap-2">
                 <span className="text-sm font-medium">{s.title}</span>
-                <Badge className={cn('ml-auto', SOURCE_STYLE[s.channel].cls)}>{SOURCE_STYLE[s.channel].label}</Badge>
+                <span className="ml-auto text-xs text-muted">{SOURCE_STYLE[s.channel].label}</span>
               </div>
               {s.description && <span className="text-xs leading-snug text-muted">{s.description}</span>}
             </button>
@@ -73,6 +73,10 @@ function useTheme() {
   return [dark, setDark] as const
 }
 
+function Dot({ on, bad }: { on: boolean; bad?: boolean }) {
+  return <span className={cn('size-1.5 rounded-full', on ? 'bg-ok' : bad ? 'bg-bad' : 'bg-muted/50')} />
+}
+
 export function TopBar() {
   const clock = useLive((s) => s.clock)
   const settings = useLive((s) => s.settings)
@@ -87,49 +91,52 @@ export function TopBar() {
   const llmOn = !!settings?.llm_configured && mode !== 'scripted'
 
   return (
-    <header className="glass sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-line px-5">
-      <div className="hidden min-w-0 xl:block">
-        <h1 className="truncate text-base font-semibold leading-tight tracking-tight">{page.title}</h1>
-        <p className="truncate text-xs text-muted">{page.subtitle}</p>
-      </div>
-      <div className="hidden h-8 w-px bg-line xl:block" />
-      {/* sim clock */}
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 py-1 pl-1 pr-3">
-        <button
-          className={cn('flex size-7 items-center justify-center rounded-xl text-white transition hover:scale-105 active:scale-95', clock?.running ? 'bg-warn' : 'bg-ok')}
-          title={clock?.running ? 'Pause the simulation' : 'Start the simulation'}
-          onClick={() => void withToast(() => (clock?.running ? api.simPause() : api.simStart()))}
-        >
-          {clock?.running ? <Pause size={14} /> : <Play size={14} />}
-        </button>
-        <div className="leading-tight">
-          <div className="font-mono text-sm font-medium tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) + ':' + String(now.getSeconds()).padStart(2, '0') : '—'}</div>
-          <div className="text-xs uppercase tracking-wide text-muted">{clock?.running ? 'Simulated time · running' : 'Simulated time · paused'}</div>
-        </div>
-      </div>
-      <div className="flex rounded-xl border border-line bg-surface-2 p-0.5">
-        {SPEEDS.map((s) => (
-          <button
-            key={s}
-            onClick={() => void withToast(() => api.simSpeed(s))}
-            className={cn('rounded-xl px-2 py-1 font-mono text-xs transition', clock?.speed === s ? 'bg-brand text-white shadow-sm' : 'text-muted hover:text-text')}
-          >
-            ×{s}
-          </button>
-        ))}
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-5 border-b border-line bg-surface px-5">
+      <div className="min-w-0">
+        <h1 className="truncate text-base font-semibold leading-tight">{page.title}</h1>
+        <p className="hidden truncate text-xs text-muted lg:block">{page.subtitle}</p>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <Badge className={llmOn ? 'bg-ok/15 text-ok' : 'bg-surface-2 text-muted'} title={settings?.llm_model ?? 'No LLM key: scripted extraction'}>
-          <Bot size={12} /> {llmOn ? `AI · ${settings?.llm_model}` : mode === 'llm' ? 'AI needs a key' : 'Scripted answers'}
-        </Badge>
-        <Badge className={slack.connected ? 'bg-slack/15 text-slack' : 'bg-surface-2 text-muted'} title={slack.error ?? slack.channel ?? 'Slack bridge off'}>
-          <Hash size={12} /> {slack.connected ? 'Slack on' : 'Slack off'}
-        </Badge>
-        <Badge className={connection === 'live' ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'}>
-          {connection === 'live' ? <span className="live-dot size-1.5 rounded-full bg-current" /> : <WifiOff size={12} />} {connection === 'live' ? 'Live' : 'Reconnecting…'}
-        </Badge>
-        <button className="rounded-xl p-2 text-muted transition hover:rotate-12 hover:bg-surface-2 hover:text-text" onClick={() => setDark(!dark)} title="Toggle theme">
+      <div className="ml-auto flex items-center gap-4">
+        {/* simulated clock */}
+        <div className="flex items-center gap-2">
+          <button
+            className="flex size-7 items-center justify-center rounded-md border border-line text-text transition-colors hover:bg-surface-2"
+            title={clock?.running ? 'Pause the simulated clock' : 'Start the simulated clock'}
+            onClick={() => void withToast(() => (clock?.running ? api.simPause() : api.simStart()))}
+          >
+            {clock?.running ? <Pause size={13} /> : <Play size={13} />}
+          </button>
+          <div className="leading-tight">
+            <div className="font-mono text-sm tabular-nums">{now ? fmtDateTime(toNaiveIso(now)) : '—'}</div>
+            <div className="text-xs text-muted">Simulated time{clock?.running ? '' : ' · paused'}</div>
+          </div>
+          <div className="flex rounded-md border border-line p-0.5">
+            {SPEEDS.map((s) => (
+              <button
+                key={s}
+                onClick={() => void withToast(() => api.simSpeed(s))}
+                className={cn('rounded px-1.5 py-0.5 font-mono text-xs transition-colors', clock?.speed === s ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
+              >
+                ×{s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden items-center gap-3 text-xs text-muted xl:flex">
+          <span className="flex items-center gap-1.5" title={settings?.llm_model ?? 'No LLM key: scripted extraction'}>
+            <Dot on={llmOn} bad={mode === 'llm' && !llmOn} /> {llmOn ? settings?.llm_model : mode === 'llm' ? 'AI needs a key' : 'Scripted'}
+          </span>
+          <span className="flex items-center gap-1.5" title={slack.error ?? slack.channel ?? 'Slack bridge off'}>
+            <Dot on={slack.connected} /> Slack
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Dot on={connection === 'live'} bad /> {connection === 'live' ? 'Live' : 'Reconnecting…'}
+          </span>
+        </div>
+
+        <button className="rounded-md p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-text" onClick={() => setDark(!dark)} title="Toggle theme">
           {dark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <ScenarioLauncher />

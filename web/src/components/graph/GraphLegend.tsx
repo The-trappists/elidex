@@ -34,7 +34,7 @@ export function GraphLegend({ knowledge }: { knowledge: boolean }) {
     </div>
   )
   return (
-    <div className="absolute bottom-2 left-2 rounded-xl border border-line bg-surface/90 text-xs text-muted shadow-sm backdrop-blur">
+    <div className="absolute bottom-2 left-2 rounded-md border border-line bg-surface/90 text-xs text-muted shadow-sm backdrop-blur">
       <button className="flex w-full items-center gap-1 px-2.5 py-1.5 font-medium text-text" onClick={() => setOpen(!open)}>
         Legend {open ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
       </button>

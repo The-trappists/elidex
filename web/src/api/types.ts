@@ -501,3 +501,18 @@ export const OBSERVABLE_FIELDS: Record<string, string> = {
   traffic_counters: 'number, packets per second on the interface',
   alarms: '"active" or "cleared"',
 }
+
+// ---------------------------------------------------------------- knowledge graph view (GET /graph)
+
+export type KgKind = 'Element' | 'Site' | 'Class' | 'Event' | 'Assertion' | 'Person' | 'Message' | 'Thread'
+
+/** One Cytoscape element from the knowledge graph; node data holds the node's properties. */
+export interface KgElement {
+  group: 'nodes' | 'edges'
+  data: { id: string; kind?: KgKind; label?: string; source?: string; target?: string; valid?: boolean; [prop: string]: unknown }
+}
+
+export interface KgGraph {
+  at: string
+  elements: KgElement[]
+}

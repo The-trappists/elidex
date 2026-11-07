@@ -31,8 +31,8 @@ export function IncidentCard({
   return (
     <div
       className={cn(
-        'animate-slide-in rounded-xl border bg-surface shadow-sm',
-        open ? 'border-bad/40 border-l-4 border-l-bad' : 'border-line opacity-60 hover:opacity-100',
+        'rounded-md border bg-surface',
+        open ? 'border-bad/40' : 'border-line opacity-60 hover:opacity-100',
       )}
     >
       <div className="p-3">
@@ -40,7 +40,7 @@ export function IncidentCard({
           <Badge className={sev.cls}>{sev.label}</Badge>
           <IdChip onClick={() => nav(`/network?select=${encodeURIComponent(incident.entity_id)}`)}>{incident.entity_id}</IdChip>
           <span className="text-xs font-medium text-muted">{incident.kind}</span>
-          {!open && <Badge className="ml-auto bg-ok/15 text-ok">Resolved</Badge>}
+          {!open && <span className="ml-auto text-xs text-ok">Resolved</span>}
         </div>
         <p className="mt-1.5 text-[13px] font-medium leading-snug">{incident.summary}</p>
 
@@ -66,10 +66,10 @@ export function IncidentCard({
       </div>
 
       {open && (
-        <div className="border-t border-line bg-accent-soft/60 p-3">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-accent">
+        <div className="border-t border-line bg-surface-2 p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-text">
             <BrainCircuit size={14} /> What the context layer knows
-            {hits && <span className="rounded bg-accent/15 px-1.5 text-xs">{hits.length}</span>}
+            {hits && <span className="text-muted">{hits.length}</span>}
           </div>
           {hits === null || (loading && !hits.length) ? (
             <div className="h-10 animate-pulse rounded-md bg-surface/70" />
@@ -87,7 +87,7 @@ export function IncidentCard({
       )}
 
       <div className="flex items-center gap-1.5 border-t border-line px-3 py-2">
-        <Button size="sm" variant="primary" icon={<Bot size={13} />} onClick={onAsk}>
+        <Button size="sm" icon={<Bot size={13} />} onClick={onAsk}>
           Ask agent
         </Button>
         {open && (
