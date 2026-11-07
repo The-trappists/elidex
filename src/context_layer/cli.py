@@ -164,6 +164,18 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         else:
             print("Tiger Data: TIGER_DATABASE_URL not set")
         return
+    if args.dataset_cmd == "mongo-indexes":  # after an interrupted load: data is there, only the indexes are missing
+        import time as _t
+
+        from .dataset import mongo
+
+        db = mongo.connect()
+        t0 = _t.time()
+        mongo.create_indexes(db)
+        for name in ("threads", "elements", "facts"):
+            print(f"{name}: {sorted(i['name'] for i in db[name].list_indexes())}")
+        print(f"indexes ready in {_t.time() - t0:.0f} s")
+        return
     if args.dataset_cmd == "tiger-verify":
         from .dataset import tiger
 
@@ -319,6 +331,7 @@ def main(argv: list[str] | None = None) -> None:
     lt.add_argument("path", nargs="?")
     lt.add_argument("--drop", action="store_true", help="truncate the messages table first (re-running without it fails on duplicates)")
     lt.add_argument("--analytics", action="store_true", help="then build the analytics layer (compression, daily_mentions); time-series service only")
+    dsub.add_parser("mongo-indexes", help="(re)build the MongoDB indexes only, e.g. after an interrupted load-mongo")
     tv = dsub.add_parser("tiger-verify", help="checklist of what the project needs from Tiger Data (hypertable, row count, compression, aggregate)")
     tv.add_argument("path", nargs="?", help="dataset folder whose message count to compare with (default: DATASET_DIR)")
     dsub.add_parser("tiger-analytics", help="(re)build the Tiger Data analytics layer from the loaded messages")
