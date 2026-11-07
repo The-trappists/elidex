@@ -618,3 +618,68 @@ class CompanyStartBody(BaseModel):
     reset: Literal["empty", "keep"] = "empty"  # "empty": drop threads/knowledge first so the graph grows from scratch
     clear_archive: bool = True  # with reset "empty": also empty the cold archive (files, Atlas wb_* collections, Tiger wb_company_metrics)
     use_llm: bool = False
+
+
+# ---------------------------------------------------------------- knowledge polish: justification, export, dedupe, LLM log compaction
+# Contract shared by the backend and the web UI (mirror: web/src/api/types.ts, section "knowledge polish").
+
+FactorEffect = Literal["supports", "limits", "neutral"]
+
+
+class JustificationFactor(BaseModel):
+    label: str  # short, plain language, e.g. "Stated by a network expert"
+    effect: FactorEffect = "neutral"  # raises (supports), lowers (limits) or does not move the level
+    detail: str = ""  # one sentence with the evidence (names, counts, quote); never invented
+
+
+class VerdictNote(BaseModel):
+    verdict: str  # critic: keep|downgrade|reject; judge: supports|contradicts|supersedes|unrelated
+    reason: str
+    other_assertion_id: str | None = None  # judge only
+
+
+class Justification(BaseModel):
+    """Why the loop gave an assertion its trust level and its confidence. Built from what was recorded
+    (who said it, sources, critic and judge verdicts, outcomes, link notes), never invented."""
+
+    assertion_id: str
+    trust_level: str
+    trust_summary: str  # one or two sentences
+    trust_factors: list[JustificationFactor] = Field(default_factory=list)
+    confidence: float
+    confidence_summary: str
+    confidence_factors: list[JustificationFactor] = Field(default_factory=list)
+    critic: VerdictNote | None = None
+    judge: list[VerdictNote] = Field(default_factory=list)
+    n_sources: int = 0
+    source_thread_ids: list[str] = Field(default_factory=list)
+    track_record: dict[str, Any] | None = None  # same shape as the agent's track_record, when outcomes exist
+
+
+class DedupeMerge(BaseModel):
+    kept_id: str
+    merged_id: str  # the near-duplicate that was folded into kept_id (its sources moved to kept_id)
+    similarity: float  # 0..1
+    method: Literal["exact", "words", "embedding"]
+    reason: str
+    at: datetime  # wall
+
+
+class DedupeReport(BaseModel):
+    enabled: bool
+    merged_total: int = 0
+    recent: list[DedupeMerge] = Field(default_factory=list)  # newest first, last 50
+    threshold: float = 0.85
+
+
+class LlmSummary(BaseModel):
+    """State of the AI activity log after compaction."""
+
+    total_kept: int
+    by_purpose: dict[str, int] = Field(default_factory=dict)
+    errors_kept: int = 0
+    oldest: datetime | None = None  # wall
+    newest: datetime | None = None  # wall
+    archived_total: int = 0  # moved out of the live log, still in out/workbench/archive/llm_calls.jsonl
+    last_compacted_at: datetime | None = None  # wall
+    last_removed: int = 0  # moved out by the last compaction

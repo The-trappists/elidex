@@ -856,3 +856,60 @@ export interface CompanyStartBody {
   clear_archive?: boolean
   use_llm?: boolean
 }
+
+// ---- knowledge polish (mirror of workbench/contracts.py, "knowledge polish" section)
+export type FactorEffect = 'supports' | 'limits' | 'neutral'
+
+export interface JustificationFactor {
+  label: string
+  effect: FactorEffect
+  detail: string
+}
+
+export interface VerdictNote {
+  verdict: string
+  reason: string
+  other_assertion_id: string | null
+}
+
+export interface Justification {
+  assertion_id: string
+  trust_level: string
+  trust_summary: string
+  trust_factors: JustificationFactor[]
+  confidence: number
+  confidence_summary: string
+  confidence_factors: JustificationFactor[]
+  critic: VerdictNote | null
+  judge: VerdictNote[]
+  n_sources: number
+  source_thread_ids: string[]
+  track_record: Record<string, unknown> | null
+}
+
+export interface DedupeMerge {
+  kept_id: string
+  merged_id: string
+  similarity: number
+  method: 'exact' | 'words' | 'embedding'
+  reason: string
+  at: string
+}
+
+export interface DedupeReport {
+  enabled: boolean
+  merged_total: number
+  recent: DedupeMerge[]
+  threshold: number
+}
+
+export interface LlmSummary {
+  total_kept: number
+  by_purpose: Record<string, number>
+  errors_kept: number
+  oldest: string | null
+  newest: string | null
+  archived_total: number
+  last_compacted_at: string | null
+  last_removed: number
+}
