@@ -1,5 +1,6 @@
 // Small shared pieces for assertions: badges, validity text, binding chips.
-import { AlertTriangle, UserPen } from 'lucide-react'
+import { AlertTriangle, Copy, UserPen } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { AssertionType, Binding, ContextAssertion, TrustLevel } from '../../api/types'
 import { fmtDate } from '../../lib/format'
@@ -79,3 +80,20 @@ export const ConflictIcon = ({ a }: { a: ContextAssertion }) =>
 
 export const assertionHref = (id: string) => `/knowledge?assertion=${encodeURIComponent(id)}`
 export const threadHref = (id: string) => `/conversations/${encodeURIComponent(id)}`
+
+/** Id chip that copies the id on click. */
+export function CopyId({ id }: { id: string }) {
+  const [done, setDone] = useState(false)
+  return (
+    <button
+      type="button"
+      title="Copy id"
+      aria-label={`Copy id ${id}`}
+      onClick={() => { void navigator.clipboard?.writeText(id).then(() => { setDone(true); window.setTimeout(() => setDone(false), 1200) }, () => undefined) }}
+      className="inline-flex max-w-full items-center gap-1 rounded-md border border-line bg-surface-2 px-1.5 py-1 font-mono text-xs hover:border-accent hover:text-accent"
+    >
+      <span className="truncate">{done ? 'Copied' : id}</span>
+      {!done && <Copy size={11} className="shrink-0" />}
+    </button>
+  )
+}

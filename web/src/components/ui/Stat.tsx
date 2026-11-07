@@ -42,6 +42,8 @@ export function Stat({
   tone = 'neutral',
   onClick,
   suffix,
+  text,
+  compact,
 }: {
   icon: ReactNode
   label: string
@@ -50,8 +52,23 @@ export function Stat({
   tone?: Tone
   onClick?: () => void
   suffix?: string
+  /** shown instead of the number (e.g. a dash when there is no data) */
+  text?: string
+  /** One small pill (icon, number, label) instead of a tile, for short or narrow screens. */
+  compact?: boolean
 }) {
   const t = TONES[tone]
+  if (compact)
+    return (
+      <button type="button" disabled={!onClick} onClick={onClick} title={hint ? `${label}: ${hint}` : label} className="flex shrink-0 cursor-default items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-1.5 text-left disabled:cursor-default">
+        <span className={cn('flex size-6 shrink-0 items-center justify-center rounded', t.chip)}>{icon}</span>
+        <span className="text-base font-semibold leading-none tabular-nums">
+          {text ?? <AnimatedNumber value={value} />}
+          {!text && suffix && <span className="ml-0.5 text-xs font-medium text-muted">{suffix}</span>}
+        </span>
+        <span className="whitespace-nowrap text-xs text-muted">{label}</span>
+      </button>
+    )
   return (
     <button
       type="button"
@@ -67,8 +84,8 @@ export function Stat({
       <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-md transition-transform', t.chip)}>{icon}</span>
       <span className="min-w-0">
         <span className="block text-2xl font-semibold leading-none tracking-tight tabular-nums">
-          <AnimatedNumber value={value} />
-          {suffix && <span className="ml-0.5 text-sm font-medium text-muted">{suffix}</span>}
+          {text ?? <AnimatedNumber value={value} />}
+          {!text && suffix && <span className="ml-0.5 text-sm font-medium text-muted">{suffix}</span>}
         </span>
         <span className="mt-1.5 block truncate text-xs font-medium">{label}</span>
         {hint && <span className="block truncate text-xs text-muted">{hint}</span>}

@@ -87,6 +87,16 @@ export const reviewApi = {
       },
     ),
 
+  undismiss: (id: string) =>
+    call<ReviewFlag | void>(
+      () => req('POST', `/review/flags/${encodeURIComponent(id)}/undismiss`),
+      async () => {
+        await wait()
+        const f = db.flags.find((x) => x.id === id)
+        if (f) f.dismissed = false
+      },
+    ),
+
   rerun: (jobId: string, body: RerunBody) =>
     call<PipelineJob>(
       () => req('POST', `/jobs/${encodeURIComponent(jobId)}/rerun`, body),

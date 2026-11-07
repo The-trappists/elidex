@@ -13,6 +13,8 @@ export const DISMISS_DELAY_MS = 6000
 interface ReviewState {
   flags: ReviewFlag[]
   loaded: boolean
+  /** Set when the first load failed; the page offers Retry. */
+  error: string | null
   sample: boolean
   /** Flags that arrived live in this session (highlighted until the next load). */
   fresh: Record<string, true>
@@ -24,6 +26,10 @@ interface ReviewState {
   upsert: (f: ReviewFlag, live?: boolean) => void
   dismiss: (id: string) => void
   undoDismiss: (id: string) => void
+  /** Bring back dismissed flags (the Dismissed view, or the Undo of a bulk dismissal). */
+  restore: (ids: string[]) => Promise<void>
+  /** Dismiss many flags at once (after a confirmation); the toast Undo restores them. */
+  dismissMany: (ids: string[]) => Promise<void>
   loadHistory: (assertionId: string) => Promise<void>
   edit: (assertionId: string, body: OperatorEdit) => Promise<ContextAssertion>
   undo: (assertionId: string, editId?: string) => Promise<void>
@@ -34,6 +40,7 @@ const byNewest = (a: ReviewFlag, b: ReviewFlag) => b.created_at.localeCompare(a.
 export const useReview = create<ReviewState>((set, get) => ({
   flags: [],
   loaded: false,
+  error: null,
   sample: isSample(),
   fresh: {},
   pending: {},
@@ -41,7 +48,7 @@ export const useReview = create<ReviewState>((set, get) => ({
 
   load: async () => {
     const [open, done] = await Promise.all([reviewApi.flags({ dismissed: false }), reviewApi.flags({ dismissed: true })])
-    set({ flags: [...open, ...done].sort(byNewest), loaded: true, sample: isSample() })
+    set({ flags: [...open, ...done].sort(byNewest), loaded: true, error: null, sample: isSample() })
   },
 
   upsert: (f, live = false) =>
@@ -85,6 +92,32 @@ export const useReview = create<ReviewState>((set, get) => ({
     })
   },
 
+  restore: async (ids) => {
+    try {
+      for (const id of ids) await reviewApi.undismiss(id)
+      const set_ = new Set(ids)
+      set((s) => ({ flags: s.flags.map((f) => (set_.has(f.id) ? { ...f, dismissed: false } : f)) }))
+    } catch (e) {
+      toast.error(e)
+    }
+  },
+
+  dismissMany: async (ids) => {
+    const done: string[] = []
+    try {
+      for (const id of ids) {
+        await reviewApi.dismiss(id)
+        done.push(id)
+      }
+    } catch (e) {
+      toast.error(e)
+    }
+    if (!done.length) return
+    const set_ = new Set(done)
+    set((s) => ({ flags: s.flags.map((f) => (set_.has(f.id) ? { ...f, dismissed: true } : f)) }))
+    toast.info(`Dismissed ${done.length} ${done.length === 1 ? 'flag' : 'flags'}.`, { duration: DISMISS_DELAY_MS, action: { label: 'Undo', onClick: () => void get().restore(done) } })
+  },
+
   loadHistory: async (assertionId) => {
     const h = await reviewApi.history(assertionId)
     set((s) => ({ history: { ...s.history, [assertionId]: h.sort((a, b) => b.ts.localeCompare(a.ts)) } }))
@@ -118,7 +151,8 @@ export function connectReview(): () => void {
     return () => fixtureFlagBus.clear()
   })()
 
-  const load = () => useReview.getState().load().catch(() => useReview.setState({ loaded: true }))
+  const load = () =>
+    useReview.getState().load().catch((e: unknown) => useReview.setState({ loaded: true, error: e instanceof Error ? e.message : 'Request failed' }))
   void load()
 
   if (FIXTURES_ENV) {

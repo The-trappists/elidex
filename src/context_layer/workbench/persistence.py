@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from ..models import ContextAssertion, ElementClass
 from .contracts import (
     AssertionEdit,
+    DedupeMerge,
     Incident,
     LiveThread,
     LlmCall,
@@ -56,6 +57,7 @@ def state_to_dict(wb: Workbench) -> dict[str, Any]:
         "flags": dump(wb.flags.values()),
         "edits": dump(wb.edits.values()),
         "applications": dump(wb.applications.values()),
+        "dedupe": {"total": getattr(wb, "dedupe_total", 0), "merges": dump(getattr(wb, "dedupe_merges", []))},
     }
 
 
@@ -100,6 +102,9 @@ def apply_state(wb: Workbench, data: dict[str, Any]) -> None:
     wb.flags = {x.id: x for x in flags}
     wb.edits = {x.id: x for x in edits}
     wb.applications = {x.id: x for x in applications}
+    ded = data.get("dedupe") or {}
+    wb.dedupe_merges = [DedupeMerge.model_validate(x) for x in ded.get("merges", [])][:200]
+    wb.dedupe_total = int(ded.get("total", len(wb.dedupe_merges)))
     wb.settings = settings
     wb.refresh_readonly_settings()
     wb.rebuild_store(classes=classes, assertions=assertions)

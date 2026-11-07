@@ -28,9 +28,9 @@ export function LlmErrorBanner() {
   const failed = recent.filter((c) => c.error).length
 
   return (
-    <div role="alert" className="flex shrink-0 items-center gap-3 border-b border-bad/40 bg-bad/10 px-4 py-2 text-sm">
+    <div role="alert" className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-bad/40 bg-bad/10 px-4 py-2 text-sm">
       <AlertTriangle size={16} className="shrink-0 text-bad" />
-      <div className="min-w-0 flex-1 truncate" title={last.error}>
+      <div className="min-w-[12rem] flex-1 truncate max-md:basis-full max-md:whitespace-normal" title={last.error}>
         <span className="font-semibold text-bad">{explain(last.error)}</span>{' '}
         <span className="text-muted">
           {failed} of the last {recent.length} calls failed{last.fallback_used ? ', scripted fallback used' : ''}.

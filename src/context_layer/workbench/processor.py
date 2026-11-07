@@ -20,6 +20,7 @@ from ..link import Linker
 from ..mvp.lifecycle import reconcile
 from ..models import ContextAssertion, ExtractedItem, Thread
 from ..understand import CachedExtractor, LLMExtractor
+from . import dedupe
 from .review import collect_flags
 from .contracts import EvalResult, LiveThread, LlmCall, PipelineJob, Settings
 
@@ -312,19 +313,29 @@ class Processor:
         t0 = time.perf_counter()
         self._stage(job, "store", "running")
         job.removed_assertion_ids = self.retract(thread.id)
-        new, merged = [], 0
+        new, merged, deduped = [], 0, 0
+        use_dedupe = wb.settings.use_dedupe
+        if use_dedupe and config.EMBEDDING_MODEL and linked:  # fill the vector cache off the loop; fails silently
+            await asyncio.to_thread(dedupe.warm_for, wb.store, [r.assertion for r in linked])
         for result in linked:
             for cls in result.classes:
                 wb.store.add_class(cls)
             stored, is_new = wb.store.add_assertion(result.assertion)
+            folded = None
+            if is_new and use_dedupe:
+                # A near-duplicate of an older valid assertion (not from this same job) folds into it.
+                folded = dedupe.dedupe_new(wb, stored, skip_ids=set(job.assertion_ids))
+                if folded:
+                    stored, is_new, deduped = wb.store.assertions[folded.kept_id], False, deduped + 1
+                    job.events.append(f"dedupe: folded into {folded.kept_id} ({folded.method} {round(folded.similarity * 100)}%)")
             if stored.id not in job.assertion_ids:
                 job.assertion_ids.append(stored.id)
             if is_new:
                 new.append(stored)
-            else:
+            elif not folded:
                 merged += 1
                 job.events.append(f"merged into {stored.id} (same knowledge, another source)")
-        self._stage(job, "store", "done", f"{len(new)} new, {merged} merged, {len(job.removed_assertion_ids)} removed", t0)
+        self._stage(job, "store", "done", f"{len(new)} new, {merged} merged, {deduped} deduped, {len(job.removed_assertion_ids)} removed", t0)
         hook_ctx.new_assertions = new
         await run_hooks("after_store", hook_ctx)
         if gen != self._generation or thread.id not in wb.threads:

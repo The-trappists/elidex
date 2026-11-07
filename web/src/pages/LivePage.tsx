@@ -15,7 +15,7 @@ function Metric({ label, value, tone, onClick }: { label: string; value: number;
   return (
     <button
       onClick={onClick}
-      className="group flex min-w-0 flex-col gap-2 rounded-lg border border-line bg-surface px-5 py-4 text-left enabled:hover:border-accent/50"
+      className="overview-metric group flex min-w-0 flex-col gap-2 rounded-lg border border-line bg-surface px-5 py-4 text-left enabled:hover:border-accent/50"
       disabled={!onClick}
     >
       <span
@@ -53,7 +53,7 @@ export default function LivePage() {
 
   return (
     <div className="overview-page flex h-full min-h-0 flex-col gap-6 overflow-auto p-5 xl:p-8">
-      <div className="flex shrink-0 flex-wrap items-end justify-between gap-4">
+      <div className="overview-intro flex shrink-0 flex-wrap items-end justify-between gap-4">
         <div>
           <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">The as-experienced layer</p>
           <h2 className="font-display text-3xl font-medium tracking-tight">From conversation to context.</h2>
@@ -61,7 +61,7 @@ export default function LivePage() {
             Follow what specialists share, what the network remembers, and what agents can reuse.
           </p>
         </div>
-        <Link to="/graph" className="flex items-center gap-2 text-sm font-medium text-accent">
+        <Link to="/graph" className="flex h-8 items-center gap-2 text-sm font-medium text-accent">
           Explore the knowledge graph <ArrowRight size={16} />
         </Link>
       </div>
@@ -90,7 +90,7 @@ export default function LivePage() {
         {k.llmErr > 0 && <Metric label="AI problems in the last hour" value={k.llmErr} tone="warn" onClick={() => nav('/llm')} />}
       </div>
 
-      <div className="overview-feeds grid min-h-0 flex-1 gap-5 lg:grid-cols-2">
+      <div className="overview-feeds grid min-h-[300px] flex-1 gap-5 lg:grid-cols-2">
         <Panel title="Agent reuse" actions={<span className="text-xs text-muted">Scripted incidents</span>}>
           <IncidentFeed />
         </Panel>

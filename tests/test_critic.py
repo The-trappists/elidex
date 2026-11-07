@@ -66,6 +66,7 @@ def test_keep_reject_downgrade(monkeypatch):
     assert kept[1].confidence == 0.5 and items[2].confidence == 0.8  # input untouched
     assert [v.verdict for v in verdicts] == ["keep", "reject", "downgrade"]
     assert verdicts[2].confidence_after == 0.5 and verdicts[0].evidence_found
+    assert verdicts[2].confidence_before == 0.8 and verdicts[0].confidence_before is None  # original value kept
     assert {f.kind for f in flags} == {"critic_rejected", "over_reach"}
     rej = next(f for f in flags if f.kind == "critic_rejected")
     assert "text never says that" in rej.message and "manual clear" in rej.message and rej.job_id == "job_1"

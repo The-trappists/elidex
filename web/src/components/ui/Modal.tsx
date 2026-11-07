@@ -47,11 +47,12 @@ export function Modal({
   const { mounted, closing } = usePresence(open)
   if (!mounted) return null
   return (
-    <div className={cn('fixed inset-0 z-50 flex items-center justify-center bg-[#05060e]/55 p-4 backdrop-blur-sm', closing ? 'animate-fade-out' : 'animate-fade-in')} onMouseDown={onClose}>
+    <div className={cn('fixed inset-0 z-50 flex items-center justify-center bg-[#05060e]/55 p-0 backdrop-blur-sm md:p-4', closing ? 'animate-fade-out' : 'animate-fade-in')} onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"
-        className={cn('flex max-h-[90vh] w-full flex-col rounded-lg border border-line bg-surface shadow-[var(--shadow-lg)]', closing ? 'animate-slide-out' : 'animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
+        aria-label={typeof title === 'string' ? title : undefined}
+        className={cn('flex max-h-[100dvh] w-full flex-col border border-line bg-surface md:max-h-[90vh] md:rounded-lg shadow-[var(--shadow-lg)]', closing ? 'animate-slide-out' : 'animate-slide-in', wide ? 'max-w-3xl' : 'max-w-lg')}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center border-b border-line px-5 py-3.5">
@@ -74,22 +75,28 @@ export function Drawer({
   title,
   children,
   width = 'max-w-2xl',
+  side = 'right',
+  flush,
 }: {
   open: boolean
   onClose: () => void
   title: ReactNode
   children: ReactNode
   width?: string
+  /** Which edge the panel slides from. */
+  side?: 'left' | 'right'
+  /** No padding around the content (for a nav list). */
+  flush?: boolean
 }) {
   useEscape(open, onClose)
   const { mounted, closing } = usePresence(open)
   if (!mounted) return null
   return (
-    <div className={cn('fixed inset-0 z-40 flex justify-end bg-[#05060e]/45 backdrop-blur-[3px]', closing ? 'animate-fade-out' : 'animate-fade-in')} onMouseDown={onClose}>
+    <div className={cn('fixed inset-0 z-40 flex bg-[#05060e]/45 backdrop-blur-[3px]', closing ? 'animate-fade-out' : 'animate-fade-in', side === 'left' ? 'justify-start' : 'justify-end')} onMouseDown={onClose}>
       <aside
         role="dialog"
         aria-modal="true"
-        className={cn('flex h-full w-full flex-col border-l border-line bg-surface shadow-[var(--shadow-lg)]', closing ? 'animate-drawer-out' : 'animate-drawer-in', width)}
+        className={cn('flex h-full w-full min-w-0 max-w-full flex-col border-line bg-surface shadow-[var(--shadow-lg)]', side === 'left' ? 'border-r' : 'border-l', closing ? 'animate-drawer-out' : 'animate-drawer-in', side === 'left' ? 'drawer-left' : 'drawer-panel', width)}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-line px-5 py-3.5">
@@ -98,7 +105,7 @@ export function Drawer({
             <X size={18} />
           </IconButton>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto p-5">{children}</div>
+        <div className={cn('min-h-0 flex-1 overflow-auto', flush ? 'p-0' : 'p-4 md:p-5')}>{children}</div>
       </aside>
     </div>
   )

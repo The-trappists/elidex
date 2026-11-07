@@ -58,7 +58,7 @@ export function IncidentCard({
           <span>{fmtDateTime(incident.opened_at)}</span>
           <span>· {fmtAgo(incident.opened_at, now)}</span>
           {incident.thread_id && (
-            <button className="ml-auto inline-flex items-center gap-1 text-accent hover:underline" onClick={() => nav(`/conversations/${encodeURIComponent(incident.thread_id!)}`)}>
+            <button className="ml-auto inline-flex h-6 items-center gap-1 px-1 text-accent hover:underline" onClick={() => nav(`/conversations/${encodeURIComponent(incident.thread_id!)}`)}>
               <MessageSquare size={12} /> Thread
             </button>
           )}

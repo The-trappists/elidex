@@ -6,10 +6,10 @@ All datetimes are naive and in *simulated* time unless the field says "wall".
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from ..models import (
     Condition,
@@ -43,6 +43,16 @@ FlagKind = Literal[
 ]
 CriticVerdictKind = Literal["keep", "downgrade", "reject"]
 JudgeVerdictKind = Literal["supports", "contradicts", "supersedes", "unrelated"]
+
+
+def to_local_naive(t: datetime) -> datetime:
+    """Wall time as naive local time. A naive value is already local (old log lines); an aware one is converted."""
+    return t.astimezone().replace(tzinfo=None) if t.tzinfo else t
+
+
+def to_utc_iso(t: datetime | None) -> str | None:
+    """Wall time for the API: an aware UTC ISO string ("...+00:00"). A naive value is read as local time."""
+    return t.astimezone(timezone.utc).isoformat() if t is not None else None
 
 STAGES: list[str] = ["listen", "understand", "link", "store", "reconcile"]
 
@@ -236,6 +246,7 @@ class CriticVerdict(BaseModel):
     reason: str
     evidence_found: bool  # the evidence quote was found in a cited message
     confidence_after: float | None = None
+    confidence_before: float | None = None  # the extractor value before a downgrade; None on old jobs
 
 
 class JudgeVerdict(BaseModel):
@@ -299,6 +310,10 @@ class LlmCall(BaseModel):
     fallback_used: bool = False
     error: str | None = None
 
+    @field_serializer("ts")
+    def _ts_utc(self, t: datetime) -> str | None:
+        return to_utc_iso(t)
+
 
 # ---------------------------------------------------------------- settings, clock, snapshot, events
 
@@ -315,6 +330,7 @@ class Settings(BaseModel):
     use_critic: bool = True  # critic pass inside understand
     use_judge: bool = True  # judge pass inside reconcile
     use_outcome_loop: bool = True  # outcome feedback on assertions
+    use_dedupe: bool = True  # fold a near-duplicate new assertion into the older one (workbench/dedupe.py)
     # read-only, filled by the backend
     llm_configured: bool = False
     llm_model: str | None = None
@@ -364,6 +380,10 @@ EventType = Literal[
     "llm.call",  # data: LlmCall
     "review.flag",  # data: ReviewFlag (created, refreshed, dismissed or undismissed)
     "application.upserted",  # data: RuleApplication (created or outcome decided)
+    "company.state",  # data: CompanyState without cycles/calls/health (status, clock, timeline)
+    "company.cycle",  # data: CompanyCycle (one autonomous-system sync, every cycle_minutes of sim time)
+    "agent.call",  # data: AgentCall (the autonomous system asked the context layer about one element)
+    "network.status",  # data: ElementHealth (one element changed status)
     "state.reset",  # data: {} -> clients refetch GET /api/state
     "log",  # data: {"level": "info" | "warning" | "error", "text": str}
 ]
@@ -452,10 +472,13 @@ class ResetBody(BaseModel):
     mode: Literal["seed", "empty"] = "seed"
 
 
+MAX_PERSONAS, MAX_ELEMENTS, MAX_SITES = 100, 600, 80  # a small company: keeps memory and the graph light
+
+
 class LoadDatasetBody(BaseModel):
     """POST /data/load-dataset: replace the state with a connected sample of the company dataset."""
 
-    sites: int = Field(40, ge=9, le=150)  # the Elisa seed alone has 9 sites
+    sites: int = Field(40, ge=9, le=MAX_SITES)  # the Elisa seed alone has 9 sites
     threads: int = Field(300, ge=0, le=1000)
     seed: int = 42
 
@@ -472,6 +495,7 @@ class SettingsPatch(BaseModel):
     use_critic: bool | None = None
     use_judge: bool | None = None
     use_outcome_loop: bool | None = None
+    use_dedupe: bool | None = None
 
 
 class LlmCheckResult(BaseModel):
@@ -503,3 +527,180 @@ class OperatorEdit(BaseModel):
     valid_to: datetime | None = None
     trust_level: TrustLevel | None = None
     note: str | None = None
+
+
+# ---------------------------------------------------------------- company day (the "big boss" scenario)
+# A simulated working day of the whole company: many chats in parallel, incidents opening and closing, and every
+# `cycle_minutes` of sim time Elisa's autonomous network system takes the knowledge package, asks the context layer
+# about each affected element and updates the network status. Incidents stay scripted ground truth (no detection).
+
+HealthStatus = Literal["healthy", "degraded", "down", "recovering"]
+CompanyStatus = Literal["idle", "running", "paused", "finished"]
+
+
+class ElementHealth(BaseModel):
+    element_id: str
+    status: HealthStatus = "healthy"
+    since: datetime  # sim
+    incident_id: str | None = None
+    reason: str = ""  # plain language: why this status
+    applied_assertion_ids: list[str] = Field(default_factory=list)  # knowledge the autonomous system used
+    recommendation: str | None = None
+
+
+class AgentCall(BaseModel):
+    """One question of the autonomous system to the context layer, about one element, in one cycle."""
+
+    id: str  # "call_0001"
+    cycle: int
+    at: datetime  # sim
+    entity_id: str
+    incident_id: str | None = None
+    thread_id: str | None = None
+    observations: dict[str, Any] = Field(default_factory=dict)
+    hit_ids: list[str] = Field(default_factory=list)  # assertions retrieved
+    skipped: int = 0  # retrieved but dropped (conditions not met)
+    cited_assertion_ids: list[str] = Field(default_factory=list)
+    recommendation: str = ""
+    verdict: str | None = None  # guard decision, when a planned action was checked
+    status_before: HealthStatus = "healthy"
+    status_after: HealthStatus = "healthy"
+    used_llm: bool = False
+
+
+class KnowledgePackage(BaseModel):
+    """What the context layer hands over at each sync. Light summary; the full content is
+    GET /api/company/package?cycle=N."""
+
+    cycle: int
+    at: datetime  # sim
+    total: int  # assertions in the store
+    valid: int  # valid at `at`
+    new_ids: list[str] = Field(default_factory=list)  # created since the previous cycle
+    closed_ids: list[str] = Field(default_factory=list)  # closed or superseded since the previous cycle
+    classes: int = 0
+    trust: dict[str, int] = Field(default_factory=dict)  # trust level -> count (valid ones)
+
+
+class StatusChange(BaseModel):
+    element_id: str
+    from_status: HealthStatus
+    to_status: HealthStatus
+    reason: str = ""
+
+
+class CompanyCycle(BaseModel):
+    n: int  # 1-based
+    at: datetime  # sim
+    package: KnowledgePackage
+    agent_call_ids: list[str] = Field(default_factory=list)
+    status_changes: list[StatusChange] = Field(default_factory=list)
+    open_incidents: int = 0
+    health_counts: dict[str, int] = Field(default_factory=dict)  # status -> number of elements (healthy included)
+
+
+class CompanyTimelineEntry(BaseModel):
+    """One planned event of the day. `at_min` is sim minutes since the start of the day."""
+
+    id: str
+    at_min: float
+    kind: Literal["chat", "incident_chat", "noise", "generated"]
+    scenario_id: str
+    label: str
+    started: bool = False
+    run_id: str | None = None
+
+
+class CompanyState(BaseModel):
+    status: CompanyStatus = "idle"
+    started_at: datetime | None = None  # sim
+    ends_at: datetime | None = None  # sim
+    day_minutes: int = 480  # 0 when endless
+    endless: bool = False  # no end: chats are generated in real time after the scripted timeline
+    generated_count: int = 0  # chats produced by the generator so far
+    cycle_minutes: int = 10
+    speed: float = 120  # sim seconds per wall second while the day runs
+    use_llm: bool = False  # agent calls with the LLM recommendation
+    next_cycle_at: datetime | None = None  # sim
+    cycles: list[CompanyCycle] = Field(default_factory=list)  # last 60
+    calls: list[AgentCall] = Field(default_factory=list)  # last 200
+    health: list[ElementHealth] = Field(default_factory=list)  # every element that ever left "healthy"
+    timeline: list[CompanyTimelineEntry] = Field(default_factory=list)
+
+
+class CompanyStartBody(BaseModel):
+    speed: float = Field(120, ge=1, le=3600)
+    day_minutes: int = Field(480, ge=0, le=1440)  # 0 = endless (run until stopped)
+    cycle_minutes: int = Field(10, ge=1, le=60)
+    reset: Literal["empty", "keep"] = "empty"  # "empty": drop threads/knowledge first so the graph grows from scratch
+    clear_archive: bool = True  # with reset "empty": also empty the cold archive (files, Atlas wb_* collections, Tiger wb_company_metrics)
+    use_llm: bool = False
+
+
+# ---------------------------------------------------------------- knowledge polish: justification, export, dedupe, LLM log compaction
+# Contract shared by the backend and the web UI (mirror: web/src/api/types.ts, section "knowledge polish").
+
+FactorEffect = Literal["supports", "limits", "neutral"]
+
+
+class JustificationFactor(BaseModel):
+    label: str  # short, plain language, e.g. "Stated by a network expert"
+    effect: FactorEffect = "neutral"  # raises (supports), lowers (limits) or does not move the level
+    detail: str = ""  # one sentence with the evidence (names, counts, quote); never invented
+
+
+class VerdictNote(BaseModel):
+    verdict: str  # critic: keep|downgrade|reject; judge: supports|contradicts|supersedes|unrelated
+    reason: str
+    other_assertion_id: str | None = None  # judge only
+
+
+class Justification(BaseModel):
+    """Why the loop gave an assertion its trust level and its confidence. Built from what was recorded
+    (who said it, sources, critic and judge verdicts, outcomes, link notes), never invented."""
+
+    assertion_id: str
+    trust_level: str
+    trust_summary: str  # one or two sentences
+    trust_factors: list[JustificationFactor] = Field(default_factory=list)
+    confidence: float
+    confidence_summary: str
+    confidence_factors: list[JustificationFactor] = Field(default_factory=list)
+    critic: VerdictNote | None = None
+    judge: list[VerdictNote] = Field(default_factory=list)
+    n_sources: int = 0
+    source_thread_ids: list[str] = Field(default_factory=list)
+    track_record: dict[str, Any] | None = None  # same shape as the agent's track_record, when outcomes exist
+
+
+class DedupeMerge(BaseModel):
+    kept_id: str
+    merged_id: str  # the near-duplicate that was folded into kept_id (its sources moved to kept_id)
+    similarity: float  # 0..1
+    method: Literal["exact", "words", "embedding"]
+    reason: str
+    at: datetime  # wall
+
+
+class DedupeReport(BaseModel):
+    enabled: bool
+    merged_total: int = 0
+    recent: list[DedupeMerge] = Field(default_factory=list)  # newest first, last 50
+    threshold: float = 0.90
+
+
+class LlmSummary(BaseModel):
+    """State of the AI activity log after compaction."""
+
+    total_kept: int
+    by_purpose: dict[str, int] = Field(default_factory=dict)
+    errors_kept: int = 0
+    oldest: datetime | None = None  # wall
+    newest: datetime | None = None  # wall
+    archived_total: int = 0  # moved out of the live log, still in out/workbench/archive/llm_calls.jsonl
+    last_compacted_at: datetime | None = None  # wall
+    last_removed: int = 0  # moved out by the last compaction
+
+    @field_serializer("oldest", "newest", "last_compacted_at")
+    def _wall_utc(self, t: datetime | None) -> str | None:
+        return to_utc_iso(t)
