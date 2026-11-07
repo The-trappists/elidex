@@ -151,7 +151,7 @@ def test_dedupe_store_one_shot_and_routes(client):
     make(wb, "d2", who="Maria", thread="t2")
     make(wb, "d3", who="Pekka", thread="t3", applies="TRN-043")
     r = client.post("/api/knowledge/dedupe/run").json()
-    assert r["merged_total"] == 1 and r["recent"][0]["kept_id"] == "d1" and r["threshold"] == 0.85 and r["enabled"] is True
+    assert r["merged_total"] == 1 and r["recent"][0]["kept_id"] == "d1" and r["threshold"] == 0.90 and r["enabled"] is True
     assert set(wb.store.assertions) >= {"d1", "d3"} and "d2" not in wb.store.assertions
     assert client.post("/api/knowledge/dedupe/run").json()["merged_total"] == 1  # idempotent
     assert client.get("/api/knowledge/dedupe").json()["merged_total"] == 1

@@ -56,7 +56,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
       role="dialog"
       aria-label="Opening the workbench"
       onClick={onDone}
-      className="animate-fade-in fixed inset-0 z-[100] flex cursor-pointer flex-col items-center justify-center gap-8 bg-bg px-6 text-text"
+      className="animate-fade-in fixed inset-0 z-[100] flex cursor-pointer flex-col items-center justify-center gap-8 overflow-y-auto bg-bg px-6 py-6 text-text"
     >
       <div className="flex items-center gap-3">
         <img src="/elidex-logo.png" alt="" className="size-10 object-contain" />

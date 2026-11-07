@@ -83,10 +83,10 @@ export default function HomePage() {
           </span>
         </a>
         <nav aria-label="Main navigation" className="flex items-center gap-5 text-sm">
-          <a href="#how-it-works" className="hidden text-muted hover:text-text sm:block">
+          <a href="#how-it-works" className="hidden items-center py-2 text-muted hover:text-text sm:flex">
             How it works
           </a>
-          <a href="#team" className="text-muted hover:text-text">
+          <a href="#team" className="flex items-center py-2 text-muted hover:text-text">
             The team
           </a>
           <Link
@@ -123,7 +123,7 @@ export default function HomePage() {
               >
                 Explore the workbench <ArrowRight size={17} />
               </Link>
-              <a href="#how-it-works" className="text-sm font-medium text-muted hover:text-text">
+              <a href="#how-it-works" className="inline-flex items-center py-2 text-sm font-medium text-muted hover:text-text">
                 Follow a piece of knowledge ↓
               </a>
             </div>

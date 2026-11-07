@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { Sidebar } from './components/layout/Sidebar'
+import { MobileBar, Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
 import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
@@ -32,7 +32,8 @@ function DashboardLayout() {
     <div className="app-shell flex h-full animate-fade-in [animation-duration:300ms]">
       <a href="#workbench-content" className="skip-link">Skip to workspace</a>
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <MobileBar />
         {headerVisible && <TopBar />}
         <LlmErrorBanner />
         <main id="workbench-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">

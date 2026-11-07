@@ -15,7 +15,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal
 
@@ -147,7 +147,7 @@ def call_provider(
     mode = (json_mode or p.json_mode) if json else None
     trace: dict[str, Any] = {
         "id": "llm_" + uuid.uuid4().hex[:12],
-        "ts": datetime.now().isoformat(timespec="milliseconds"),
+        "ts": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),  # aware UTC
         "sim_time": sim_time.isoformat() if sim_time else None,
         "purpose": purpose,
         "thread_id": thread_id,

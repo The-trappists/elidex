@@ -15,7 +15,7 @@ export function MergesBadge() {
   if (!report?.enabled || report.merged_total === 0) return null
   return (
     <>
-      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs text-muted hover:bg-surface-2 hover:text-text" title="Near-duplicate knowledge that was merged">
+      <button onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs text-muted max-md:py-2 hover:bg-surface-2 hover:text-text" title="Near-duplicate knowledge that was merged">
         <GitMerge size={13} /> Merged {report.merged_total} similar
       </button>
       <Drawer open={open} onClose={() => setOpen(false)} width="max-w-lg" title="Merged similar knowledge">

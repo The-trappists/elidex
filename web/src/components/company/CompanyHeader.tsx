@@ -6,7 +6,7 @@ import type { CompanyState } from '../../api/types'
 import { useSimNow } from '../../lib/useNow'
 import { useLive } from '../../store/live'
 import { cn } from '../../lib/cn'
-import { Badge, Button, Modal, Select, Toggle, withToast } from '../ui'
+import { Badge, Button, FilterMenu, Modal, Select, Toggle, withToast } from '../ui'
 import { fmtHM } from './status'
 
 const SPEEDS = [60, 120, 300, 600]
@@ -52,7 +52,7 @@ function SyncRing({ remainingS, totalS }: { remainingS: number | null; totalS: n
 const fmtSpan = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} h ${String(Math.floor(min % 60)).padStart(2, '0')} min` : `${Math.floor(min)} min`)
 
 /** Endless mode: no end, so a rolling window of the last 8 sim hours. Generated chats are aggregated per 10 minutes. */
-function EndlessTimeline({ c, nowMs }: { c: CompanyState; nowMs: number | null }) {
+function EndlessTimeline({ c, nowMs, compact }: { c: CompanyState; nowMs: number | null; compact?: boolean }) {
   const start = c.started_at ? new Date(c.started_at).getTime() : null
   const elapsed = start && nowMs ? Math.max(0, (nowMs - start) / 60_000) : 0
   const from = Math.max(0, elapsed - WINDOW_MIN)
@@ -84,7 +84,7 @@ function EndlessTimeline({ c, nowMs }: { c: CompanyState; nowMs: number | null }
         ))}
         <span className="absolute right-0 top-0.5 h-5 w-0.5 rounded-sm bg-ok" title="Now" />
       </div>
-      <div className="flex justify-between gap-3 text-[11px] tabular-nums text-muted">
+      <div className={cn('flex justify-between gap-3 text-[11px] tabular-nums text-muted', compact && 'sr-only')}>
         <span>{from > 0 ? `-${Math.round(span / 60)} h` : 'Start'}</span>
         <span>
           Day {day}, {nowMs ? format(new Date(nowMs), 'HH:mm') : '--:--'} · running for {fmtSpan(elapsed)} · {c.generated_count} chats generated
@@ -96,7 +96,7 @@ function EndlessTimeline({ c, nowMs }: { c: CompanyState; nowMs: number | null }
 }
 
 /** The day as a bar: progress so far, and one tick per planned chat (filled once it started). */
-function DayTimeline({ c, nowMs }: { c: CompanyState; nowMs: number | null }) {
+function DayTimeline({ c, nowMs, compact }: { c: CompanyState; nowMs: number | null; compact?: boolean }) {
   const start = c.started_at ? new Date(c.started_at).getTime() : null
   const end = c.ends_at ? new Date(c.ends_at).getTime() : null
   const pct = start && end && nowMs ? Math.max(0, Math.min(100, ((nowMs - start) / (end - start)) * 100)) : c.status === 'finished' ? 100 : 0
@@ -119,7 +119,7 @@ function DayTimeline({ c, nowMs }: { c: CompanyState; nowMs: number | null }) {
           />
         ))}
       </div>
-      <div className="flex justify-between text-[11px] tabular-nums text-muted">
+      <div className={cn('flex justify-between text-[11px] tabular-nums text-muted', compact && 'sr-only')}>
         <span>{fmtHM(c.started_at)}</span>
         <span>{c.timeline.length ? `${c.timeline.filter((e) => e.started).length} of ${c.timeline.length} chats started` : 'Planned chats appear here'}</span>
         <span>{fmtHM(c.ends_at)}</span>
@@ -128,7 +128,7 @@ function DayTimeline({ c, nowMs }: { c: CompanyState; nowMs: number | null }) {
   )
 }
 
-export function CompanyHeader({ c }: { c: CompanyState }) {
+export function CompanyHeader({ c, compact }: { c: CompanyState; compact?: boolean }) {
   const now = useSimNow(500)
   const [speed, setSpeed] = useState(120)
   const [dayMinutes, setDayMinutes] = useState(0)
@@ -153,24 +153,8 @@ export function CompanyHeader({ c }: { c: CompanyState }) {
   const remaining = c.next_cycle_at && now && c.status === 'running' ? Math.max(0, (new Date(c.next_cycle_at).getTime() - now.getTime()) / 1000) : null
   const clock = now ? now.toLocaleTimeString('en-GB') : '--:--:--'
 
-  return (
-    <div className="rounded-lg border border-line bg-surface px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-muted">
-            Simulated clock
-            <Badge className={st.cls}>{st.label}</Badge>
-          </div>
-          <div role="timer" aria-label="Simulated clock" className="font-mono text-3xl font-semibold leading-none tracking-tight tabular-nums">{clock}</div>
-        </div>
-        <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} />
-        <div className="flex items-center gap-2">
-          {editable && <Button variant="primary" icon={<Play size={15} />} onClick={start} loading={busy}>{c.status === 'finished' ? 'Run another day' : 'Start the day'}</Button>}
-          {c.status === 'running' && <Button icon={<Pause size={15} />} onClick={() => run(companyActions.pause)} loading={busy}>Pause</Button>}
-          {c.status === 'paused' && <Button variant="primary" icon={<Play size={15} />} onClick={() => run(companyActions.resume)} loading={busy}>Resume</Button>}
-          {(c.status === 'running' || c.status === 'paused') && <Button variant="danger" icon={<Square size={14} />} onClick={() => setConfirmStop(true)} aria-haspopup="dialog">Stop</Button>}
-        </div>
-        <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+  const options = (
+    <>
           <label className="flex items-center gap-2 text-sm text-muted">
             Speed
             <Select value={editable ? speed : c.speed} disabled={!editable} onChange={(e) => setSpeed(Number(e.target.value))} aria-label="Simulation speed" className="w-24">
@@ -181,7 +165,7 @@ export function CompanyHeader({ c }: { c: CompanyState }) {
           </label>
           <label className="flex items-center gap-2 text-sm text-muted">
             Duration
-            <Select value={editable ? dayMinutes : c.endless ? 0 : c.day_minutes} disabled={!editable} onChange={(e) => setDayMinutes(Number(e.target.value))} aria-label="Day duration" className="w-64">
+            <Select value={editable ? dayMinutes : c.endless ? 0 : c.day_minutes} disabled={!editable} onChange={(e) => setDayMinutes(Number(e.target.value))} aria-label="Day duration" className="w-52 max-w-full">
               {DURATIONS.map((d) => (
                 <option key={d.minutes} value={d.minutes}>{d.label}</option>
               ))}
@@ -189,11 +173,34 @@ export function CompanyHeader({ c }: { c: CompanyState }) {
           </label>
           <Toggle checked={editable ? fresh : false} onChange={setFresh} disabled={!editable} label="Fresh start (graph + archive)" />
           <Toggle checked={editable ? llm : c.use_llm} onChange={setLlm} disabled={!editable} label="Use LLM for agent calls" />
+    </>
+  )
+  const timeline = c.endless ? <EndlessTimeline c={c} nowMs={now?.getTime() ?? null} compact={compact} /> : <DayTimeline c={c} nowMs={now?.getTime() ?? null} compact={compact} />
+  return (
+    <div className={cn('shrink-0 rounded-lg border border-line bg-surface', compact ? 'px-3 py-2' : 'px-4 py-3')}>
+      <div className={cn('flex flex-wrap items-center gap-x-5', compact ? 'gap-y-2' : 'gap-y-3')}>
+        <div>
+          <div className="flex items-center gap-2 text-xs text-muted">
+            Simulated clock
+            <Badge className={st.cls}>{st.label}</Badge>
+          </div>
+          <div role="timer" aria-label="Simulated clock" className="font-mono text-2xl font-semibold sm:text-3xl leading-none tracking-tight tabular-nums">{clock}</div>
         </div>
+        <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} />
+        <div className="flex items-center gap-2">
+          {editable && <Button variant="primary" icon={<Play size={15} />} onClick={start} loading={busy}>{c.status === 'finished' ? 'Run another day' : 'Start the day'}</Button>}
+          {c.status === 'running' && <Button icon={<Pause size={15} />} onClick={() => run(companyActions.pause)} loading={busy}>Pause</Button>}
+          {c.status === 'paused' && <Button variant="primary" icon={<Play size={15} />} onClick={() => run(companyActions.resume)} loading={busy}>Resume</Button>}
+          {(c.status === 'running' || c.status === 'paused') && <Button variant="danger" icon={<Square size={14} />} onClick={() => setConfirmStop(true)} aria-haspopup="dialog">Stop</Button>}
+        </div>
+        {compact && <div className="min-w-[140px] flex-1" title={`${c.timeline.length} planned chats`}>{timeline}</div>}
+        {compact ? (
+          <FilterMenu className="ml-auto" label="Options">{options}</FilterMenu>
+        ) : (
+          <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2">{options}</div>
+        )}
       </div>
-      <div className="mt-2">
-        {c.endless ? <EndlessTimeline c={c} nowMs={now?.getTime() ?? null} /> : <DayTimeline c={c} nowMs={now?.getTime() ?? null} />}
-      </div>
+      {!compact && <div className="mt-2">{timeline}</div>}
       <Modal
         open={confirmStop}
         onClose={() => setConfirmStop(false)}

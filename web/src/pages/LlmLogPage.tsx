@@ -9,7 +9,7 @@ import { threadHref } from '../components/knowledge/bits'
 import { CheckModal } from '../components/llm/CheckModal'
 import { LlmDrawer } from '../components/llm/LlmDrawer'
 import { callStatus, isProblem, recentProblems, RECENT_MS, STATUS_LABEL, type CallStatus } from '../components/llm/status'
-import { Button, EmptyState, ErrorNote, Input, Modal, Select, Skeleton, Table, toast, type Column } from '../components/ui'
+import { Button, EmptyState, ErrorNote, FilterMenu, Input, Modal, Select, Skeleton, Table, toast, type Column } from '../components/ui'
 import { cn } from '../lib/cn'
 import { describeCall, explainError, fmtTokens, purposeLabel } from '../lib/explain'
 import { fmtDateTime, fmtMs, fmtTime } from '../lib/format'
@@ -76,10 +76,11 @@ function useColumns(view: View): Column<Row>[] {
       },
     },
     { key: 'lat', header: 'Answer time', cell: (c) => <Speed ms={c.latency_ms} /> },
-    { key: 'tok', header: 'Text volume', className: 'whitespace-nowrap text-xs text-muted', cell: (c) => fmtTokens(c) },
+    { key: 'tok', header: 'Text volume', className: 'whitespace-nowrap text-xs text-muted max-[1279px]:hidden', cell: (c) => fmtTokens(c) },
     {
       key: 'model',
       header: 'Model',
+      className: 'max-[1279px]:hidden',
       cell: (c) => (
         <span className="flex flex-col gap-1">
           <span className="font-mono text-xs">{c.model}</span>
@@ -90,7 +91,7 @@ function useColumns(view: View): Column<Row>[] {
     {
       key: 'thread',
       header: 'Conversation',
-      className: 'max-w-48 truncate text-xs',
+      className: 'max-w-48 truncate text-xs max-[1279px]:hidden',
       cell: (c) =>
         c.thread_id ? (
           <Link className="text-accent hover:underline" to={threadHref(c.thread_id)} onClick={(e) => e.stopPropagation()}>
@@ -128,7 +129,7 @@ const dl = (href: string, label: string) => (
 function Figure({ value, label }: { value: number | string; label: string }) {
   return (
     <span className="flex items-baseline gap-2">
-      <span className="text-2xl font-semibold tabular-nums">{value}</span>
+      <span className="text-xl font-semibold tabular-nums">{value}</span>
       <span className="text-sm text-muted">{label}</span>
     </span>
   )
@@ -239,7 +240,7 @@ export default function LlmLogPage() {
       key={k || 'all'}
       onClick={() => setStatus(k)}
       className={cn(
-        'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors',
+        'flex items-center gap-1.5 whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors max-md:py-2',
         status === k ? 'bg-surface-3 text-text' : 'text-muted hover:text-text',
       )}
     >
@@ -251,45 +252,72 @@ export default function LlmLogPage() {
     <button
       key={v}
       onClick={() => setView(v)}
-      className={cn('rounded px-2.5 py-1 text-xs font-medium transition-colors', view === v ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
+      className={cn('whitespace-nowrap rounded px-2.5 py-1 text-xs font-medium transition-colors max-md:py-2', view === v ? 'bg-surface-3 text-text' : 'text-muted hover:text-text')}
     >
       {label}
     </button>
   )
 
+  const filterControls = (
+    <>
+      <Select className="w-full min-[1366px]:w-48" value={purpose} onChange={(e) => setPurpose(e.target.value)} aria-label="Kind of request">
+        <option value="">Every kind of request</option>
+        {purposes.map((p) => <option key={p} value={p}>{purposeLabel(p)}</option>)}
+      </Select>
+      <Select className="w-full min-[1366px]:w-40" value={model} onChange={(e) => setModel(e.target.value)} aria-label="Model">
+        <option value="">All models</option>
+        {models.map((p) => <option key={p}>{p}</option>)}
+      </Select>
+      <Select className="w-full min-[1366px]:w-32" value={range} onChange={(e) => setRange(e.target.value as Range)} aria-label="Time range">
+        <option value="">Any time</option>
+        <option value="hour">Last hour</option>
+        <option value="today">Today</option>
+      </Select>
+      <Input className="w-full min-[1366px]:w-44" placeholder="Search a conversation" aria-label="Search a conversation" value={q} onChange={(e) => setQ(e.target.value)} />
+    </>
+  )
+  const exportLinks = (
+    <>
+      {dl(api.exportLlmCallsUrl, 'Log')}
+      {dl(api.exportSessionUrl, 'Session')}
+      {dl(api.exportTranscriptUrl(), 'Transcripts')}
+    </>
+  )
+
   return (
-    <div className="flex h-full flex-col gap-4 p-5">
+    <div className="flex h-full flex-col gap-2 p-3 md:p-5 [@media(min-height:760px)]:gap-4">
       <PageIntro title="Understand what the AI did" description="Follow how conversations were read, what succeeded, and what needs attention." />
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-8 gap-y-1 px-1">
+      <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-0 px-1">
         <Figure value={summary?.total_kept ?? stats.total} label="requests kept" />
         <Figure value={stats.total ? `${stats.okPct}%` : "—"} label="went through" />
         <Figure value={stats.avg ? `${stats.avg} s` : "—"} label="average answer time" />
         <button className="group flex items-baseline gap-2" onClick={() => setStatus('problem')} disabled={!stats.failed}>
-          <span className={cn('text-2xl font-semibold tabular-nums', stats.recent > 0 && 'text-bad')}>{summary?.errors_kept ?? stats.failed}</span>
+          <span className={cn('text-xl font-semibold tabular-nums', stats.recent > 0 && 'text-bad')}>{summary?.errors_kept ?? stats.failed}</span>
           <span className="text-sm text-muted group-enabled:group-hover:text-text">problems · {stats.recent} in the last hour</span>
         </button>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 px-1 text-xs text-muted">
-        <span className="flex flex-wrap items-center gap-1">
-          By kind:
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 px-1 text-xs text-muted md:flex-nowrap">
+        <span className="order-last flex min-w-0 basis-full items-center gap-1 overflow-x-auto whitespace-nowrap md:order-none md:flex-1 md:basis-auto">
+          <span className="shrink-0">By kind:</span>
           {Object.entries(byPurpose).map(([p, n]) => (
             <button
               key={p}
               onClick={() => setPurpose(purpose === p ? '' : p)}
-              className={cn('rounded border px-2 py-0.5 tabular-nums transition-colors', purpose === p ? 'border-accent text-text' : 'border-line hover:text-text')}
+              className={cn('shrink-0 rounded border px-2 py-1 tabular-nums transition-colors', purpose === p ? 'border-accent text-text' : 'border-line hover:text-text')}
             >
               {purposeLabel(p)} {n}
             </button>
           ))}
         </span>
-        <span className="flex items-center gap-1.5">
-          <Archive size={13} />
+        <span className="hidden items-center gap-1.5 truncate min-[1366px]:flex">
+          <Archive size={13} className="shrink-0" />
           {summary?.last_compacted_at
             ? `Cleaned ${summary.last_removed} older ${summary.last_removed === 1 ? 'request' : 'requests'}, last at ${fmtTime(summary.last_compacted_at).slice(0, 5)}`
             : 'Not cleaned up yet'}
           {summary ? ` · ${summary.archived_total} archived in total` : ''}
         </span>
-        <Button size="sm" icon={<Archive size={13} />} onClick={() => setConfirmClean(true)} disabled={!summary}>Clean up now</Button>
+        <Button size="sm" className="shrink-0 max-md:!h-9" icon={<Archive size={13} />} onClick={() => setConfirmClean(true)} disabled={!summary}>Clean up now</Button>
+        <Button size="sm" className="shrink-0 max-md:!h-9" icon={<FlaskConical size={13} />} onClick={() => setCheck(true)}>Test the AI connection</Button>
       </div>
 
       {stats.lastFailure && stats.recent > 0 && status === '' && (
@@ -302,41 +330,26 @@ export default function LlmLogPage() {
       )}
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-line bg-surface">
-        <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
-          <div className="flex gap-0.5 rounded-md border border-line p-0.5">
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-line px-3 py-2">
+          <div className="flex shrink-0 gap-0.5 rounded-md border border-line p-0.5">
             {seg('latest', 'Latest only')}
             {seg('all', 'Show everything kept')}
           </div>
-          <div className="flex gap-0.5 rounded-md border border-line p-0.5">
+          <div className="flex shrink-0 gap-0.5 rounded-md border border-line p-0.5">
             {chip('', 'All', calls.length)}
             {chip('ok', 'Succeeded', calls.filter((c) => callStatus(c) === 'ok').length)}
             {chip('problem', 'Problems', stats.failed)}
           </div>
-          <Select className="w-52" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
-            <option value="">Every kind of request</option>
-            {purposes.map((p) => <option key={p} value={p}>{purposeLabel(p)}</option>)}
-          </Select>
-          <Select className="w-44" value={model} onChange={(e) => setModel(e.target.value)}>
-            <option value="">All models</option>
-            {models.map((p) => <option key={p}>{p}</option>)}
-          </Select>
-          <Select className="w-36" value={range} onChange={(e) => setRange(e.target.value as Range)} aria-label="Time range">
-            <option value="">Any time</option>
-            <option value="hour">Last hour</option>
-            <option value="today">Today</option>
-          </Select>
-          <Input className="w-48" placeholder="Search a conversation" value={q} onChange={(e) => setQ(e.target.value)} />
-          <span className="text-xs text-muted">{rows.length} {rows.length === 1 ? "row" : "rows"} shown</span>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="hidden shrink-0 items-center gap-2 min-[1366px]:flex">{filterControls}</div>
+          <FilterMenu className="max-md:-order-2 min-[1366px]:hidden" count={[purpose, model, range, q].filter(Boolean).length}>{filterControls}</FilterMenu>
+          <span className="hidden shrink-0 text-xs text-muted xl:inline">{rows.length} {rows.length === 1 ? "row" : "rows"} shown</span>
+          <div className="ml-auto hidden shrink-0 items-center gap-1 min-[1366px]:flex">
             <span className="text-xs text-muted">Export</span>
-            <div className="flex gap-1">
-              {dl(api.exportLlmCallsUrl, 'Log')}
-              {dl(api.exportSessionUrl, 'Session')}
-              {dl(api.exportTranscriptUrl(), 'Transcripts')}
-            </div>
-            <span className="mx-1 h-5 w-px bg-line" />
-            <Button size="sm" icon={<FlaskConical size={13} />} onClick={() => setCheck(true)}>Test the AI connection</Button>
+            {exportLinks}
           </div>
+          <FilterMenu className="ml-auto max-md:-order-1 max-md:ml-0 min-[1366px]:hidden" label="Export" icon={<Download size={14} />}>
+            <div className="flex flex-col items-start gap-1">{exportLinks}</div>
+          </FilterMenu>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
           <Table

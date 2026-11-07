@@ -95,7 +95,7 @@ export function TopBar() {
   const llmOn = !!settings?.llm_configured && mode !== 'scripted'
 
   return (
-    <header className="app-topbar sticky top-0 z-20 flex min-h-20 shrink-0 flex-wrap items-center gap-3 border-b border-line bg-surface px-6 py-3">
+    <header className="app-topbar sticky top-0 z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-4 py-1.5 md:px-6">
       <div className="min-w-0">
         <h1 className="truncate text-base font-semibold leading-tight">{page.title}</h1>
         <p className="hidden truncate text-xs text-muted lg:block">{page.subtitle}</p>

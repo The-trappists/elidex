@@ -320,6 +320,7 @@ export interface CriticVerdict {
   reason: string
   evidence_found: boolean
   confidence_after: number | null
+  confidence_before?: number | null // extractor value before a downgrade
 }
 
 export type JudgeVerdictKind = 'supports' | 'contradicts' | 'supersedes' | 'unrelated'

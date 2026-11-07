@@ -667,10 +667,28 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
       ctx.textAlign = 'center'
       ctx.textBaseline = 'top'
       ctx.lineJoin = 'round'
+      // Priority: selected, then hovered, then the rest; a label that would overlap one already placed is skipped.
+      const placed: { x0: number; y0: number; x1: number; y1: number }[] = []
+      const hits = (r: { x0: number; y0: number; x1: number; y1: number }) => placed.some((p) => r.x0 < p.x1 && r.x1 > p.x0 && r.y0 < p.y1 && r.y1 > p.y0)
+      const rank = (n: SimNode) => (n.id === sel ? 0 : n.id === s.hover ? 1 : 2)
+      labelQueue.sort((a, b) => rank(a.n) - rank(b.n))
       for (const { n, strong } of labelQueue) {
-        const t = short(n.label, strong ? 60 : 30)
+        const t = short(n.label, strong ? 40 : 30)
         const y = n.y + n.radius * (n.shape === 'triangle' ? 1.35 : 1.15) + 4
+        const w = ctx.measureText(t).width
+        const box = { x0: n.x - w / 2 - 4, y0: y - 2, x1: n.x + w / 2 + 4, y1: y + fs + 3 }
+        if (!strong && hits(box)) continue
+        placed.push(box)
         ctx.globalAlpha = n.faded && !strong ? 0.6 : 1
+        if (strong) {
+          // A soft pill keeps the focused label readable over lines and neighbours.
+          ctx.globalAlpha = 0.92
+          ctx.fillStyle = surface
+          ctx.beginPath()
+          ctx.roundRect(box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0, 5)
+          ctx.fill()
+          ctx.globalAlpha = 1
+        }
         ctx.strokeStyle = bg
         ctx.lineWidth = 3.5 * Math.max(1, px * 0.75)
         ctx.strokeText(t, n.x, y)
@@ -702,6 +720,8 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
       ctx.textBaseline = 'middle'
       for (const lb of labels) {
         const w = ctx.measureText(lb.t).width + 8 * px
+        const eh = 14 * Math.max(1, px * 0.75)
+        if (hits({ x0: lb.x - w / 2, y0: lb.y - eh / 2, x1: lb.x + w / 2, y1: lb.y + eh / 2 })) continue
         ctx.globalAlpha = 0.92
         ctx.fillStyle = surface
         ctx.beginPath()

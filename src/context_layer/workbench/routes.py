@@ -18,6 +18,7 @@ from ..mvp import feedback, guard
 from ..models import Message
 from . import generator, persistence
 from .contracts import (
+    to_local_naive,
     MAX_PERSONAS,
     AssertionEdit,
     AgentRunBody,
@@ -744,7 +745,7 @@ def all_llm_calls(wb: Workbench) -> list[LlmCall]:
     """In-memory calls merged with the JSONL file, deduplicated by id, newest first."""
     by_id = {c.id: c for c in persistence.read_llm_calls(config.WORKBENCH_LLM_CALLS_FILE)}
     by_id.update({c.id: c for c in wb.llm_calls})
-    return sorted(by_id.values(), key=lambda c: c.ts, reverse=True)
+    return sorted(by_id.values(), key=lambda c: to_local_naive(c.ts), reverse=True)
 
 
 @router.get("/llm/calls")

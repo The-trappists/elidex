@@ -47,13 +47,18 @@ def _trust_factors(wb: Workbench, a: ContextAssertion) -> list[JustificationFact
     level_text = {
         "hunch": "marked as a hunch: the author guessed, nothing was checked",
         "stated": "stated as a fact or a rule by the author, without a field check",
-        "verified": "verified: someone confirmed it on the equipment or from a field report",
+        "verified": "verified: it was confirmed on the equipment or by a field report",
     }[t.level]
     effect = {"hunch": "limits", "stated": "neutral", "verified": "supports"}[t.level]
     quote = f' Evidence: "{t.evidence}".' if t.evidence else ""
     out.append(_f(f"Level is {t.level}", effect, f"{t.stated_by}{role} {level_text}.{quote}"))
     if t.confirmed_by:
         out.append(_f("Backed by others", "supports", f"Also backed by {', '.join(t.confirmed_by)}."))
+    elif t.level == "verified":
+        out.append(_f(
+            "Confirmed by a field report, not by a second person", "limits",
+            f"The check came from the equipment or a field report; {t.stated_by} is still the only person who backed it.",
+        ))
     else:
         out.append(_f("Single voice", "limits", f"Only {t.stated_by} said it so far; nobody else backed it."))
     # operator edits
@@ -105,7 +110,13 @@ def _confidence_factors(
 ) -> list[JustificationFactor]:
     out: list[JustificationFactor] = []
     item = next((i for j in reversed(jobs) for i in j.items if i.topic == a.topic), None)
-    if item is not None:
+    cv = next((v for j in reversed(jobs) for v in j.critic if v.item_topic == a.topic), None)
+    if cv is not None and cv.confidence_before is not None and cv.confidence_after is not None:
+        out.append(_f(
+            "Extractor confidence", "neutral",
+            f"The extraction step gave {_pct(cv.confidence_before)}; the second check lowered it to {_pct(cv.confidence_after)}: {cv.reason}",
+        ))
+    elif item is not None:
         out.append(_f("Extractor confidence", "neutral", f"The extraction step gave {_pct(item.confidence)} to this item."))
     else:
         out.append(_f("Extractor confidence", "neutral", "Not recorded: the job that created it is no longer in memory."))

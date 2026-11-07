@@ -41,9 +41,9 @@ export function Toggle({ checked, onChange, label, disabled }: { checked: boolea
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={cn('relative h-5 w-9 rounded-full transition', checked ? 'bg-accent' : 'bg-surface-3')}
+        className={cn('relative h-6 w-10 shrink-0 rounded-full transition', checked ? 'bg-accent' : 'bg-surface-3')}
       >
-        <span className={cn('absolute top-0.5 size-4 rounded-full bg-white shadow transition-all', checked ? 'left-[18px]' : 'left-0.5')} />
+        <span className={cn('absolute top-1 size-4 rounded-full bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-1')} />
       </button>
       {label}
     </label>

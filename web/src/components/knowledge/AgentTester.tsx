@@ -123,9 +123,9 @@ export function AgentTester() {
       <div className="shrink-0 space-y-2 border-b border-line bg-surface px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="mr-2 flex items-center gap-2 font-display text-lg font-medium tracking-tight"><FlaskConical size={18} className="text-accent" /> Agent tester</h1>
-          <Select className="!w-56" value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Network entity">
+          <Select className="!w-72" value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Network entity">
             <option value="">Choose entity…</option>
-            <optgroup label="Elements">{elements.map((e) => <option key={e.id} value={e.id}>{e.id} · {e.type}</option>)}</optgroup>
+            <optgroup label="Elements">{elements.map((e) => <option key={e.id} value={e.id}>{e.id} · {e.type.replace(/_/g, ' ')}</option>)}</optgroup>
             <optgroup label="Sites">{sites.map((s) => <option key={s.id} value={s.id}>{s.id} · {s.name}</option>)}</optgroup>
           </Select>
           <Select className="!w-52" value="" onChange={(e) => { const p = PRESETS[Number(e.target.value)]; if (p) applyPreset(p) }} aria-label="Preset cases">
@@ -151,7 +151,7 @@ export function AgentTester() {
             <Input className="!w-64" value={planned} onChange={(e) => setPlanned(e.target.value)} placeholder="Planned action, e.g. Replace the SFP module" aria-label="Planned action" title="Optional. The guard checks whether it fits the available knowledge." />
             {setObsKeys.map((f) => (
               <span key={f} className="inline-flex h-8 items-center gap-1 rounded-full border border-line bg-bg pl-3 pr-1 text-[13px]" title={OBSERVABLE_FIELDS[f]}>
-                <code>{f}</code>={obs[f]}
+                <code>{f}</code> = {obs[f]}
                 <button type="button" className="rounded-full p-1 text-muted hover:bg-surface-2 hover:text-text" aria-label={`Remove observation ${f}`} onClick={() => setObs((o) => Object.fromEntries(Object.entries(o).filter(([k]) => k !== f)))}><X size={12} /></button>
               </span>
             ))}

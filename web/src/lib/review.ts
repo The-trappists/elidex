@@ -79,7 +79,10 @@ export interface FlagContext {
  * flag.item_topic (sent by the backend) is used first; the old matching is the fallback.
  */
 export function flagContext(flag: ReviewFlag, jobs: PipelineJob[], threads: Record<string, LiveThread>, assertions: Record<string, ContextAssertion>): FlagContext {
-  const assertion = flag.assertion_id ? assertions[flag.assertion_id] : undefined
+  const assertion =
+    (flag.assertion_id ? assertions[flag.assertion_id] : undefined) ??
+    // Flags from the second check carry only a topic: find the knowledge saved from that conversation.
+    (flag.item_topic ? Object.values(assertions).find((a) => a.topic === flag.item_topic && a.sources.some((s) => s.file === flag.thread_id)) : undefined)
   const job = jobs.find((j) => j.id === flag.job_id) ?? [...jobs].reverse().find((j) => j.thread_id === flag.thread_id)
   const thread = threads[flag.thread_id]
   const msg = norm(flag.message)
@@ -109,3 +112,60 @@ export function messagesOf(thread: LiveThread | undefined, seqs: number[]): Mess
 }
 
 export const verdictItem = (job: PipelineJob, topic: string) => job.items.find((i) => i.topic === topic)
+
+/** Which loop agent raised a flag, in plain words. */
+export type FlagSource = 'critic' | 'judge' | 'outcome' | 'reader' | 'linker' | 'operator'
+
+export const SOURCE_LABEL: Record<FlagSource, string> = {
+  critic: 'Second check',
+  judge: 'Judge',
+  outcome: 'Outcome loop',
+  reader: 'Reading step',
+  linker: 'Linking step',
+  operator: 'Operator',
+}
+
+export const SOURCE_HELP: Record<FlagSource, string> = {
+  critic: 'The second model checked the finding against the cited messages.',
+  judge: 'The judge compared new knowledge with what was already stored.',
+  outcome: 'The outcome loop read how the technician answered after the agent acted.',
+  reader: 'The first reading of the conversation was not sure enough.',
+  linker: 'The linking step could not tell which equipment this was about.',
+  operator: 'A person changed this knowledge by hand.',
+}
+
+export function flagSource(f: ReviewFlag): FlagSource {
+  if (/\boutcome\b/i.test(`${f.message} ${f.detail ?? ''}`)) return 'outcome'
+  switch (f.kind) {
+    case 'over_reach':
+    case 'critic_rejected':
+      return 'critic'
+    case 'judge_decision':
+    case 'conflict':
+      return 'judge'
+    case 'abstained':
+      return 'linker'
+    case 'operator_edit':
+      return 'operator'
+    default:
+      return 'reader'
+  }
+}
+
+/** Equipment, sites and classes a flag is about. */
+export interface FlagScope {
+  els: string[]
+  siteIds: string[]
+  cls: string[]
+}
+
+/** Newer than this counts as new. */
+export const NEW_MS = 5 * 60_000
+export const isRecent = (iso: string, now: Date) => now.getTime() - new Date(iso).getTime() < NEW_MS
+
+/** All text of a flag the search box looks in. */
+export const flagText = (f: ReviewFlag, thread: LiveThread | undefined, scope: FlagScope) =>
+  [f.message, f.detail, f.item_topic, f.assertion_id, f.thread_id, thread?.subject, ...scope.els, SOURCE_LABEL[flagSource(f)], FLAG_META[f.kind].title]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()

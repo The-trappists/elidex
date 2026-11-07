@@ -52,7 +52,7 @@ const COLOR = { success: 'text-ok', error: 'text-bad', info: 'text-info' }
 export function Toaster() {
   const { items, close } = useToasts()
   return (
-    <div className="fixed bottom-4 right-4 z-[60] flex w-80 flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-[60] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">
       {items.map((t) => {
         const Icon = ICON[t.kind]
         return (

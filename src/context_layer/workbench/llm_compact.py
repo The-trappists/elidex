@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from .. import config, llm
-from .contracts import LlmCall, LlmSummary
+from .contracts import LlmCall, LlmSummary, to_local_naive
 from .state import Workbench
 
 RECENT_HOURS = 2
@@ -31,8 +31,7 @@ MAX_KEPT = 500
 INTERVAL_S = 600  # wall seconds between two runs
 
 
-def _naive(t: datetime) -> datetime:
-    return t.replace(tzinfo=None) if t.tzinfo else t
+_naive = to_local_naive  # aware (new lines) -> local naive; naive (old lines) is already local
 
 
 def is_failure(c: LlmCall) -> bool:

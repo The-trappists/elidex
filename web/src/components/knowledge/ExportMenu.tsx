@@ -13,9 +13,15 @@ const FORMATS = [
 ]
 
 export function ExportMenu() {
-  const [open, setOpen] = useState(false)
-  const [validOnly, setValidOnly] = useState(true)
   const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const open = pos !== null
+  const setOpen = (v: boolean) => {
+    if (!v || !ref.current) return setPos(null)
+    const r = ref.current.getBoundingClientRect()
+    setPos({ top: r.bottom + 4, left: Math.max(8, Math.min(r.right - 288, window.innerWidth - 296)) }) // fixed, so a scrolling toolbar never clips it
+  }
+  const [validOnly, setValidOnly] = useState(true)
   useEffect(() => {
     if (!open) return
     const down = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
@@ -26,9 +32,9 @@ export function ExportMenu() {
   }, [open])
   return (
     <div ref={ref} className="relative">
-      <Button icon={<Download size={15} />} aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)}>Export</Button>
+      <Button icon={<Download size={15} />} aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen(!open)} title="Export" aria-label="Export"><span className="hidden 2xl:inline">Export</span></Button>
       {open && (
-        <div role="menu" className="absolute right-0 top-full z-30 mt-1 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-line bg-surface p-1.5 shadow-[var(--shadow-lg)]">
+        <div role="menu" style={pos ?? undefined} className="fixed z-30 w-72 max-w-[calc(100vw-1rem)] rounded-lg border border-line bg-surface p-1.5 shadow-[var(--shadow-lg)]">
           <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-[13px]">
             <input type="checkbox" checked={validOnly} onChange={(e) => setValidOnly(e.target.checked)} /> Valid now only
           </label>

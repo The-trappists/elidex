@@ -6,10 +6,10 @@ All datetimes are naive and in *simulated* time unless the field says "wall".
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from ..models import (
     Condition,
@@ -43,6 +43,16 @@ FlagKind = Literal[
 ]
 CriticVerdictKind = Literal["keep", "downgrade", "reject"]
 JudgeVerdictKind = Literal["supports", "contradicts", "supersedes", "unrelated"]
+
+
+def to_local_naive(t: datetime) -> datetime:
+    """Wall time as naive local time. A naive value is already local (old log lines); an aware one is converted."""
+    return t.astimezone().replace(tzinfo=None) if t.tzinfo else t
+
+
+def to_utc_iso(t: datetime | None) -> str | None:
+    """Wall time for the API: an aware UTC ISO string ("...+00:00"). A naive value is read as local time."""
+    return t.astimezone(timezone.utc).isoformat() if t is not None else None
 
 STAGES: list[str] = ["listen", "understand", "link", "store", "reconcile"]
 
@@ -236,6 +246,7 @@ class CriticVerdict(BaseModel):
     reason: str
     evidence_found: bool  # the evidence quote was found in a cited message
     confidence_after: float | None = None
+    confidence_before: float | None = None  # the extractor value before a downgrade; None on old jobs
 
 
 class JudgeVerdict(BaseModel):
@@ -298,6 +309,10 @@ class LlmCall(BaseModel):
     usage: LlmUsage = Field(default_factory=LlmUsage)
     fallback_used: bool = False
     error: str | None = None
+
+    @field_serializer("ts")
+    def _ts_utc(self, t: datetime) -> str | None:
+        return to_utc_iso(t)
 
 
 # ---------------------------------------------------------------- settings, clock, snapshot, events
@@ -671,7 +686,7 @@ class DedupeReport(BaseModel):
     enabled: bool
     merged_total: int = 0
     recent: list[DedupeMerge] = Field(default_factory=list)  # newest first, last 50
-    threshold: float = 0.85
+    threshold: float = 0.90
 
 
 class LlmSummary(BaseModel):
@@ -685,3 +700,7 @@ class LlmSummary(BaseModel):
     archived_total: int = 0  # moved out of the live log, still in out/workbench/archive/llm_calls.jsonl
     last_compacted_at: datetime | None = None  # wall
     last_removed: int = 0  # moved out by the last compaction
+
+    @field_serializer("oldest", "newest", "last_compacted_at")
+    def _wall_utc(self, t: datetime | None) -> str | None:
+        return to_utc_iso(t)

@@ -171,7 +171,8 @@ def critique(
             reason = (reason + " " if reason else "") + "The quoted evidence was not found in the cited messages."
         if lowered:
             verdicts.append(
-                CriticVerdict(item_topic=item.topic, verdict="downgrade", reason=reason, evidence_found=found[i], confidence_after=confidence)
+                CriticVerdict(item_topic=item.topic, verdict="downgrade", reason=reason, evidence_found=found[i], confidence_after=confidence,
+                    confidence_before=item.confidence)
             )
             flags.append(
                 _flag(
