@@ -30,6 +30,7 @@ The AI supports the team; the team decides.
 | `src/context_layer/` | Core pipeline: listen, understand, link, store, agent, API, MCP |
 | `src/context_layer/mvp/` | Starters for ideas B, C, D |
 | `data/synthetic/` | Our synthetic data and how it was made |
+| `docs/dataset.md`, `src/context_layer/dataset/` | Company-sized synthetic dataset generator (network, staff, conversations, ground truth), `ctx dataset` |
 | `docs/workbench.md` | Workbench (team test bench): contract, API, processing rules |
 | `src/context_layer/workbench/`, `web/` | Workbench backend and UI |
 | `data/workbench/` | Workbench seed: topology, personas, scenarios |

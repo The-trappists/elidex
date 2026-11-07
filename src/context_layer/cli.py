@@ -134,6 +134,27 @@ def cmd_llm_check(_: argparse.Namespace) -> None:
     check()
 
 
+def cmd_dataset(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from .dataset import bench as ds_bench
+    from .dataset.build import SCALES, generate
+
+    if args.dataset_cmd == "generate":
+        out = Path(args.out) if args.out else config.OUT_DIR / "dataset" / args.scale
+        overrides = {k: v for k, v in (("sites", args.sites), ("staff", args.staff), ("facts", args.facts), ("threads", args.threads)) if v}
+        generate(out, args.scale, seed=args.seed, workers=args.workers, overrides=overrides)
+        print(f"Dataset written to {out}")
+        return
+    root = Path(args.path) if args.path else config.OUT_DIR / "dataset" / "demo"
+    if not (root / "manifest.json").exists():
+        sys.exit(f"No dataset at {root}. Run `ctx dataset generate --scale {'|'.join(SCALES)}` first.")
+    if args.dataset_cmd == "stats":
+        print(json.dumps(ds_bench.read_manifest(root), indent=2, ensure_ascii=False))
+    else:
+        print(json.dumps(ds_bench.bench(root, max_facts=args.facts, queries=args.queries), indent=2))
+
+
 def cmd_mcp(_: argparse.Namespace) -> None:
     from .mcp_server import mcp
 
@@ -187,6 +208,23 @@ def main(argv: list[str] | None = None) -> None:
     srv.add_argument("--host", default="127.0.0.1")
     srv.add_argument("--port", type=int, default=8000)
     srv.set_defaults(func=cmd_serve)
+
+    ds = sub.add_parser("dataset", help="synthetic company dataset: network graph, staff, conversations, ground truth (docs/dataset.md)")
+    dsub = ds.add_subparsers(dest="dataset_cmd", required=True)
+    gen = dsub.add_parser("generate", help="write a dataset under out/dataset/<scale> (tiny, demo ~150 MB, large ~3 GB, xl ~10 GB)")
+    gen.add_argument("--scale", choices=["tiny", "demo", "large", "xl"], default="demo")
+    gen.add_argument("--seed", type=int, default=42, help="same seed and scale = same files")
+    gen.add_argument("--out", help="folder (default: out/dataset/<scale>)")
+    gen.add_argument("--workers", type=int, help="processes for the conversations (default: min(8, cpus))")
+    for name in ("sites", "staff", "facts", "threads"):
+        gen.add_argument(f"--{name}", type=int, help=f"override the number of {name} of the scale")
+    st = dsub.add_parser("stats", help="print the manifest of a dataset")
+    st.add_argument("path", nargs="?")
+    be = dsub.add_parser("bench", help="link and store the ground-truth facts, time lookups (scale check of the core)")
+    be.add_argument("path", nargs="?")
+    be.add_argument("--facts", type=int, help="only the first N facts")
+    be.add_argument("--queries", type=int, default=500)
+    ds.set_defaults(func=cmd_dataset)
 
     sub.add_parser("mcp", help="MCP server over stdio, for agents").set_defaults(func=cmd_mcp)
 
