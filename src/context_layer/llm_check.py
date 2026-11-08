@@ -58,7 +58,7 @@ def run_check() -> list[dict[str, Any]]:
 
 def print_report(results: list[dict[str, Any]]) -> None:
     if not results:
-        print("No LLM configured. Set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env (see .env.example).")
+        print("No LLM configured. Set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env (see .env.example).")
         return
     for r in results:
         print(f"\n[{r['provider']}] {r['model']} @ {r['base_url']}")

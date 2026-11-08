@@ -367,7 +367,7 @@ class Processor:
     async def _extract_llm(self, job: PipelineJob, core) -> list[ExtractedItem]:
         wb = self.wb
         if not config.llm_configured():
-            raise RuntimeError("LLM not configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
+            raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
         extractor = LLMExtractor(cache_path=config.WORKBENCH_LLM_CACHE_FILE)
         topics = sorted({a.topic for a in wb.store.assertions.values()})
         job.extractor = f"llm:{config.LLM_MODEL}"

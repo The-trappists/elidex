@@ -19,6 +19,10 @@ STORE_FILE = OUT_DIR / "context_store.json"
 DEFAULT_THREAD_DATE = os.getenv("DEFAULT_THREAD_DATE", "2026-10-15")
 DEFAULT_EMAIL_TIME = os.getenv("DEFAULT_EMAIL_TIME", "10:30")
 
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+VERTEX_LOCATION = os.getenv("VERTEX_LOCATION", os.getenv("GOOGLE_CLOUD_LOCATION", "global"))
+VERTEX_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", os.getenv("GCP_PROJECT", ""))
+
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "")
@@ -35,7 +39,7 @@ LLM_FALLBACK_JSON_MODE = os.getenv("LLM_FALLBACK_JSON_MODE", LLM_JSON_MODE)
 
 def _default_reasoning_effort(base_url: str) -> str:
     # Gemini "thinks" by default, which makes extraction calls slow; other providers may reject the parameter.
-    return "low" if "generativelanguage.googleapis.com" in base_url else ""
+    return "low" if ("generativelanguage.googleapis.com" in base_url or "aiplatform.googleapis.com" in base_url) else ""
 
 
 def _reasoning_effort(env_name: str, base_url: str) -> str:
@@ -74,8 +78,23 @@ def _key_set(key: str) -> bool:
     return bool(key) and key != "your-key-here"
 
 
+def google_auth_configured() -> bool:
+    val = GOOGLE_APPLICATION_CREDENTIALS.strip()
+    return bool(val) and val != "your-credentials.json"
+
+
+def is_google_vertex_primary() -> bool:
+    """True if primary LLM should route through Google Cloud Vertex AI."""
+    if not google_auth_configured():
+        return False
+    if LLM_BASE_URL and not ("generativelanguage.googleapis.com" in LLM_BASE_URL or "aiplatform.googleapis.com" in LLM_BASE_URL):
+        return not _key_set(LLM_API_KEY)
+    return True
+
+
 def llm_configured() -> bool:
-    return _key_set(LLM_API_KEY) and bool(LLM_MODEL)
+    has_auth = _key_set(LLM_API_KEY) or google_auth_configured()
+    return has_auth and bool(LLM_MODEL)
 
 
 def llm_fallback_configured() -> bool:
