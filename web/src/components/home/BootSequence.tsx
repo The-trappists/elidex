@@ -54,7 +54,7 @@ export function BootSequence({ onDone }: { onDone: () => void }) {
   return (
     <div
       role="dialog"
-      aria-label="Opening the workbench"
+      aria-label="Opening the dashboard"
       onClick={onDone}
       className="animate-fade-in fixed inset-0 z-[100] flex cursor-pointer flex-col items-center justify-center gap-8 overflow-y-auto bg-bg px-6 py-6 text-text"
     >

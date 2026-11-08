@@ -7,6 +7,7 @@ export const OBS_OPTIONS: Record<string, string[] | 'number'> = {
   optical_levels: ['normal', 'low', 'high'],
   traffic_counters: 'number',
   alarms: ['active', 'cleared'],
+  firmware: ['3.8', '4.0', '4.2', '5.1'],
 }
 
 /** Raw string values ('' = not observed) -> typed observations for the API. */
