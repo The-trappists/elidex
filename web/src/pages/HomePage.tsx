@@ -245,9 +245,6 @@ export default function HomePage() {
       </main>
       <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 border-t border-line px-6 py-7 text-xs text-muted sm:px-10">
         <span>ElidEx · Human knowledge, connected.</span>
-        <a href="/demo/" className="flex items-center gap-2 hover:text-text">
-          Open the product demo <ArrowRight size={14} />
-        </a>
       </footer>
     </div>
   )

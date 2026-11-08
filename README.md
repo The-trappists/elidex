@@ -68,7 +68,6 @@ uv run ctx eval                 # evaluate extraction and retrieval
 uv run ctx graph stats          # inspect the knowledge graph
 uv run ctx serve                # standalone REST API at http://127.0.0.1:8000
 uv run ctx mcp                  # MCP tools over stdio
-uv run streamlit run demo/app.py  # earlier Streamlit demo
 ```
 
 The commands above also work in PowerShell; install [uv](https://docs.astral.sh/uv/) and, for the Workbench UI, Node.js 22 with npm. For optional Neo4j, Slack, and deployment instructions, see the [deployment guide](docs/deploy-vultr.md), [Slack setup](docs/slack-setup.md), and [Workbench guide](docs/workbench.md).

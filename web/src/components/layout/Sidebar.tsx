@@ -1,4 +1,4 @@
-import { Menu, PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, FlaskConical, LogOut, MessagesSquare, Network, Presentation, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { Menu, PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, FlaskConical, LogOut, MessagesSquare, Network, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Drawer, IconButton } from '../ui'
@@ -111,10 +111,6 @@ export function NavBody({ onNavigate }: { onNavigate?: () => void }) {
         <LogOut size={16} />
         Exit to Home
       </Link>
-      <a href="/demo/" className="sidebar-footer mx-2 mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text">
-        <Presentation size={16} />
-        Product demo
-      </a>
     </>
   )
 }
