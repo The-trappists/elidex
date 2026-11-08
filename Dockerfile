@@ -1,5 +1,5 @@
-# Context Workbench image: React UI (built) + FastAPI backend.
-# Build from the repo root: docker build -t context-workbench .
+# Context Dashboard image: React UI (built) + FastAPI backend.
+# Build from the repo root: docker build -t context-dashboard .
 
 # ---- stage 1: build the web UI
 FROM node:22-alpine AS web
@@ -8,14 +8,6 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY web/ ./
 RUN npm run build
-
-# ---- stage 1b: build the product demo (static), served at /demo/
-FROM node:22-alpine AS demo
-WORKDIR /demo
-COPY demo/package.json demo/package-lock.json ./
-RUN npm ci
-COPY demo/ ./
-RUN npx tsc -b && npx vite build --base=/demo/
 
 # ---- stage 2: Python runtime
 FROM python:3.12-slim AS runtime
@@ -37,7 +29,6 @@ COPY src/ ./src/
 RUN uv sync --frozen --no-dev
 COPY data/ ./data/
 COPY --from=web /web/dist ./web/dist
-COPY --from=demo /demo/dist ./demo/dist
 
 # Non-root user; /app/out holds the state (mounted as a volume in compose).
 RUN useradd --uid 1000 --no-create-home --home-dir /app app \
@@ -49,4 +40,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status == 200 else 1)"
 
-CMD ["ctx", "workbench", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["ctx", "dashboard", "--host", "0.0.0.0", "--port", "8000"]

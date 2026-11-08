@@ -9,8 +9,8 @@ from context_layer.models import ClassCriteria, ExtractedItem, Message, Scope, T
 from context_layer.mvp import relevance
 from context_layer.mvp.lifecycle import fix_predates, reconcile
 from context_layer.store import ContextStore
-from context_layer.workbench.seed import load_seed
-from test_workbench_core import client  # noqa: F401 - pytest fixture
+from context_layer.dashboard.seed import load_seed
+from test_dashboard_core import client  # noqa: F401 - pytest fixture
 
 SEED = load_seed()
 INV = Inventory(SEED.elements, SEED.sites)
@@ -180,8 +180,8 @@ def test_scale_eval_runs_and_relevance_beats_plain_retrieval(tiny_dataset):
 # ---------------------------------------------------------------- relevance on the agent surfaces
 
 
-def test_workbench_agent_run_tags_the_problem_and_can_be_switched_off(client):  # noqa: F811 - pytest fixture
-    from test_workbench_core import seeded
+def test_dashboard_agent_run_tags_the_problem_and_can_be_switched_off(client):  # noqa: F811 - pytest fixture
+    from test_dashboard_core import seeded
 
     seeded(client)
     body = {"entity_id": "TRN-042", "description": "Management port of TRN-042 is very slow after a power cycle."}

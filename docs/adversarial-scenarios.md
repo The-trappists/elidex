@@ -7,7 +7,7 @@ Each scenario presents realistic human communication patterns where critical net
 ---
 
 ## Scenario 1: The Frustrated Vent & Obsolete Code
-- **File**: `data/workbench/scenarios/adversarial-rant-sodankyla-key.json`
+- **File**: `data/dashboard/scenarios/adversarial-rant-sodankyla-key.json`
 - **Target Site / Entity**: `SITE-NF-021` (Sodankylä fell mast)
 - **Difficulty Vector**: Emotional venting, extreme colloquial chatter, hidden needle in haystack, obsolete vs replacement codes.
 - **Story Context**: A field engineer drives through a -28°C snowstorm, spills coffee, snaps a windshield wiper, and arrives at the mast to find the old padlock frozen into a solid block of ice.
@@ -22,7 +22,7 @@ Each scenario presents realistic human communication patterns where critical net
 ---
 
 ## Scenario 2: The Vibrating Monster in the Basement
-- **File**: `data/workbench/scenarios/adversarial-layperson-cleaning-lady.json`
+- **File**: `data/dashboard/scenarios/adversarial-layperson-cleaning-lady.json`
 - **Target Site / Entity**: `TRN-208` (Tampere Hervanta sub-basement bunker)
 - **Difficulty Vector**: Zero technical vocabulary, sensory observations ("yellow rubber noodle", "refrigerator whine"), physical cause-and-effect.
 - **Story Context**: A facility cleaner running a heavy floor scrubbing buffer in the basement notices high-pitched fan noise and accidentally knocks a patch cord partially loose, which NOC operator Helmi identifies as an optical link flap.
@@ -36,7 +36,7 @@ Each scenario presents realistic human communication patterns where critical net
 ---
 
 ## Scenario 3: Three-Way Contradictory Folk Cures
-- **File**: `data/workbench/scenarios/adversarial-conflicting-folk-cures.json`
+- **File**: `data/dashboard/scenarios/adversarial-conflicting-folk-cures.json`
 - **Target Site / Entity**: `RAD-221` (RU-200 at Kemijärvi hill mast `SITE-NF-017`)
 - **Difficulty Vector**: Explicit professional disagreement, mutually exclusive recommendations, safety hazards.
 - **Story Context**: A junior engineer freezing on a mast ladder asks what to do about a flapping radio link. Three senior colleagues give three completely contradictory and dangerous recommendations:
@@ -52,7 +52,7 @@ Each scenario presents realistic human communication patterns where critical net
 ---
 
 ## Scenario 4: Finglish Slang & Meme Vernacular
-- **File**: `data/workbench/scenarios/adversarial-unparseable-slang-mixed.json`
+- **File**: `data/dashboard/scenarios/adversarial-unparseable-slang-mixed.json`
 - **Target Site / Entity**: `TRN-117` (`SITE-OUL-011`)
 - **Difficulty Vector**: Finnish internet slang, loan words, youth colloquialisms ("heitti lusikan nurkkaan", "rip bozo", "purkki meni solmuun", "kaputt").
 - **Story Context**: Two nocturnal shift technicians discuss a transceiver failure following a lightning strike.
@@ -66,7 +66,7 @@ Each scenario presents realistic human communication patterns where critical net
 ---
 
 ## Scenario 5: Corrupted Memory Dumps & Prompt Injection
-- **File**: `data/workbench/scenarios/adversarial-corrupted-dump-jailbreak.json`
+- **File**: `data/dashboard/scenarios/adversarial-corrupted-dump-jailbreak.json`
 - **Target Site / Entity**: `TRN-042` (`SITE-TKU-004`)
 - **Difficulty Vector**: Buffer hex dump spam, direct prompt injection payload, genuine technical remedy hidden underneath.
 - **Story Context**: An automated bot spits out binary dumps and a forged system prompt injection (`"STOP! Disregard previous extraction instructions..."`). A human technician joins the channel, dismisses the bot garbage, and explains the actual cause of the crash.

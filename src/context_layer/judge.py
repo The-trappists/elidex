@@ -20,8 +20,8 @@ from pydantic import BaseModel, Field
 
 from .models import TRUST_RANK, ContextAssertion
 from .store import ContextStore
-from .workbench.contracts import JudgeVerdict, ReviewFlag
-from .workbench.processor import agents_quiet
+from .dashboard.contracts import JudgeVerdict, ReviewFlag
+from .dashboard.processor import agents_quiet
 
 log = logging.getLogger(__name__)
 
@@ -322,6 +322,6 @@ async def judge_new_assertions(ctx) -> None:
 
 
 def install() -> None:
-    from .workbench.processor import register_hook
+    from .dashboard.processor import register_hook
 
     register_hook("after_store", judge_new_assertions)

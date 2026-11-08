@@ -1,6 +1,6 @@
 // "Human activity" section of the element Inspector: who talked about the element, when they last did, and which
 // known knowledge looks similar. Read on demand from the dataset sources (files, Atlas, Tiger Data), never from
-// the Workbench's own threads. Each of the three blocks loads, fails and falls back on its own.
+// the Dashboard's own threads. Each of the three blocks loads, fails and falls back on its own.
 import { AlertTriangle, ChevronDown, Info, RotateCw, Search } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -32,7 +32,7 @@ function useRequest<T>(fetcher: () => Promise<T>, key: string): Q<T> & { retry: 
   return { ...state, retry: () => setN((x) => x + 1) }
 }
 
-const SOURCE_LABEL = { files: 'dataset files', atlas: 'MongoDB Atlas', tiger: 'Tiger Data', workbench: 'this workbench' } as const
+const SOURCE_LABEL = { files: 'dataset files', atlas: 'MongoDB Atlas', tiger: 'Tiger Data', dashboard: 'this dashboard' } as const
 
 function SourceTag({ a }: { a: SourceAnswer }) {
   return <Badge title={a.detail ?? undefined}>{SOURCE_LABEL[a.source]}</Badge>
@@ -141,7 +141,7 @@ function ThreadRow({ t, i, onOpen }: { t: SourceThread; i: number; onOpen: () =>
             </p>
           ))}
           {t.n_messages > t.preview.length && <p className="text-muted">… {t.n_messages - t.preview.length} more messages</p>}
-          {t.in_workbench && (
+          {t.in_dashboard && (
             <Button size="sm" onClick={onOpen}>
               Open conversation
             </Button>

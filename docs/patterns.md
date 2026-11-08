@@ -52,7 +52,7 @@ With `EMBEDDING_MODEL` set (the same model as the vector search in [dataset.md](
 - The text embedded is the topic, diagnosis, summary and fix, without element ids and models.
 - Two topics with cosine similarity of at least `PATTERNS_SAME_MEANING` (default 0.78, calibrated on `gemini-embedding-001`, see below) count as one problem. Both guards still apply, and no similarity can overrule them (tested with a model that calls everything identical).
 - Meaning needs a **real shared place**: the same element, or an overlapping class or site scope. Units that only share a model are never grouped by meaning. The first real run grouped RAD-176's frost margin dip with RAD-198's iced dish (two RU-200s, similarity 0.82): similar kind of problem, two causes, and RAD-176's label says "on RAD-176 only". "Same model" still counts for the stronger evidence (similar words, identical checks).
-- Vectors are cached in `out/patterns/embeddings.json`, so the workbench embeds only new knowledge.
+- Vectors are cached in `out/patterns/embeddings.json`, so the dashboard embeds only new knowledge.
 - If the model fails (no network, quota), patterns fall back to words only and say so. The report, the API and the Insights page show `meaning: on / off / failed`.
 - The hashed-words fallback of `embed.py` is not used here: it compares words, which the grouping already does.
 
@@ -95,15 +95,15 @@ uv run ctx patterns --entity TRN-117 --json # only patterns involving an element
 
 | Where | What |
 | --- | --- |
-| Workbench UI | **Patterns** page (Observe group): a short list ("Possible common cause", then "Keeps coming back"; resolved ones behind a toggle), one line per pattern. Selecting one shows it on the network map: the problems in red, the possible common cause in amber, the links between them in red, the rest dimmed. Details (hypotheses, what was done, who to ask, reports) open under the selected row. Report download |
+| Dashboard UI | **Patterns** page (Observe group): a short list ("Possible common cause", then "Keeps coming back"; resolved ones behind a toggle), one line per pattern. Selecting one shows it on the network map: the problems in red, the possible common cause in amber, the links between them in red, the rest dimmed. Details (hypotheses, what was done, who to ask, reports) open under the selected row. Report download |
 | REST | `GET /api/patterns?at=&entity_id=` (JSON), `GET /api/patterns/report.md?at=` |
 | MCP | `get_patterns(entity_id, at)`: for agents, with the "not a rule" warning in its description |
 
-In the workbench, run the `pattern-*` scenarios to see the patterns build up live. Set the sim clock forward between the two evenings, for example 2026-10-06 21:10, then 2026-10-20 21:05.
+In the dashboard, run the `pattern-*` scenarios to see the patterns build up live. Set the sim clock forward between the two evenings, for example 2026-10-06 21:10, then 2026-10-20 21:05.
 
 ## Seed data
 
-7 synthetic scenarios in `data/workbench/scenarios/pattern-*.json`, tagged `pattern`:
+7 synthetic scenarios in `data/dashboard/scenarios/pattern-*.json`, tagged `pattern`:
 
 | Scenario | Role |
 | --- | --- |
@@ -120,7 +120,7 @@ The eval history alone (26 scenarios) produces **no linked pattern**; a test che
 - **With** it, the threshold is only as good as its calibration: 12 pairs is a small set. Add pairs from real Elisa conversations when there are some.
 - Word grouping was tested on the recorded LLM run (`out/eval/extractions.json`) and on renamed topics (`test_repeats_survive_llm_topic_names`). The closest pair that is *not* grouped scores 0.67 on symptom checks, which is why checks must be identical.
 - The guards need symptom checks. Two items with no checks at all are only kept apart by place and meaning.
-- The occurrence time is the start of the source thread. In the workbench, a store loaded without its threads falls back to the assertion's date.
+- The occurrence time is the start of the source thread. In the dashboard, a store loaded without its threads falls back to the assertion's date.
 - Fixes are classified by keywords (reboot vs replace, ignoring "before replacing"). It is simple and visible; an LLM could do better, but it must not invent causes.
 - Hypotheses are template sentences built from facts in the graph, not LLM text. An optional LLM summary could rephrase them, as long as it may only use the cited facts.
 - Topology "neighbour" is not the same as "depends on". With real data, the link direction (upstream or downstream) and the timing source would sharpen the dependency factor.

@@ -21,8 +21,8 @@ from pydantic import BaseModel, Field
 
 from . import llm
 from .models import ExtractedItem, Thread
-from .workbench.contracts import CriticVerdict, ReviewFlag
-from .workbench.processor import agents_quiet
+from .dashboard.contracts import CriticVerdict, ReviewFlag
+from .dashboard.processor import agents_quiet
 
 log = logging.getLogger(__name__)
 
@@ -219,6 +219,6 @@ async def _after_understand(ctx) -> list[ExtractedItem] | None:
 
 
 def install() -> None:
-    from .workbench.processor import register_hook
+    from .dashboard.processor import register_hook
 
     register_hook("after_understand", _after_understand)

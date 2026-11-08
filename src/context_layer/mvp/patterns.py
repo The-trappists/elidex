@@ -463,7 +463,7 @@ def check_meaning(embedder: Embedder, threshold: float, pairs_file: Path | None 
     """Score the labelled pairs of data/eval/pattern_pairs.json with a model: does `threshold` keep the look-alikes
     apart and the paraphrases together? Run by a human with the key (`ctx patterns --check-meaning`)."""
     from .. import config
-    from ..workbench.seed import load_seed
+    from ..dashboard.seed import load_seed
 
     seed = load_seed()
     keys = {k for e in seed.elements for k in (e.id, e.model, *e.aliases) if k}
@@ -943,7 +943,7 @@ def replay_history(extractor: str = "scripted"):
 
     from .. import config
     from ..eval.kb import EvalSpec, TimelineEntry, build_kb, load_spec
-    from ..workbench.seed import load_seed
+    from ..dashboard.seed import load_seed
 
     spec = load_spec()
     extra = json.loads((config.DATA_DIR / "eval" / "patterns_timeline.json").read_text(encoding="utf-8"))

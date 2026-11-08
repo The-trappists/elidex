@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import operator
+import re
 from datetime import datetime
 from typing import Any, Literal
 
@@ -23,6 +24,7 @@ OBSERVABLE_FIELDS = {
     "optical_levels": '"normal", "low" or "high"',
     "traffic_counters": "number, packets per second on the interface",
     "alarms": '"active" or "cleared"',
+    "firmware": "string, element firmware version, e.g. '4.1' or '4.2'",
 }
 
 # ---------------------------------------------------------------- Listen
@@ -138,6 +140,13 @@ class ElementClass(BaseModel):
 _OPS = {"==": operator.eq, "!=": operator.ne, "<": operator.lt, "<=": operator.le, ">": operator.gt, ">=": operator.ge}
 
 
+def parse_version(v: Any) -> tuple[int, ...] | None:
+    if not isinstance(v, (str, int, float)):
+        return None
+    nums = re.findall(r"\d+", str(v))
+    return tuple(map(int, nums)) if nums else None
+
+
 class Check(BaseModel):
     field: str
     op: Op
@@ -148,6 +157,17 @@ class Check(BaseModel):
         if self.field not in observations:
             return None
         actual, expected = observations[self.field], self.value
+        if self.field == "firmware" or (isinstance(actual, str) and isinstance(expected, str) and "." in actual and "." in expected):
+            v_act = parse_version(actual)
+            v_exp = parse_version(expected)
+            if v_act is not None and v_exp is not None:
+                max_len = max(len(v_act), len(v_exp))
+                p_act = v_act + (0,) * (max_len - len(v_act))
+                p_exp = v_exp + (0,) * (max_len - len(v_exp))
+                try:
+                    return bool(_OPS[self.op](p_act, p_exp))
+                except TypeError:
+                    return None
         if isinstance(actual, str) and isinstance(expected, str):
             actual, expected = actual.lower(), expected.lower()
         try:

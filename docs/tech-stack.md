@@ -32,7 +32,7 @@ Other event resources found: Vultr $100, Tiger Data, MongoDB Atlas free tier, Sn
 
 ### Environment variables
 
-The extractor and the agent use `LLM_*` and `LLM_FALLBACK_*`. The critic role has its own chain (see `.env.example`, which only holds placeholders). The judge and the outcome decision use the critic chain too (role `critic`, purposes `judge` and `critic` in the LLM log). If no `LLM_CRITIC_*` key is set, the critic silently uses the primary chain, and the LLM log notes "critic not configured: used primary". Then the critic is no longer a different model.
+The extractor and the agent use `LLM_*` and `LLM_FALLBACK_*`. The critic role has its own chain (see `.env.example`, which holds placeholders for all primary, fallback, critic, database, and auth settings). The judge and the outcome decision use the critic chain too (role `critic`, purposes `judge` and `critic` in the LLM log). If no `LLM_CRITIC_*` key is set, the critic silently uses the primary chain, and the LLM log notes "critic not configured: used primary". Then the critic is no longer a different model.
 
 | Variable | Meaning |
 | --- | --- |

@@ -119,7 +119,7 @@ sequenceDiagram
     autonumber
     actor Tech as Network Engineer (Slack)
     participant Bridge as SlackBridge (Socket Mode)
-    participant WB as Workbench State
+    participant WB as Dashboard State
     participant Proc as Pipeline Processor
     participant LLM as LLMExtractor
     participant Critic as Critic Agent
@@ -200,7 +200,7 @@ flowchart LR
 
 ## 4. Step-by-Step Technical Breakdown
 
-### Step 1: Slack Ingestion & Normalization ([slack_bridge.py](file:///home/matteo/Projects/since-ai/src/context_layer/workbench/slack_bridge.py#L154-L188))
+### Step 1: Slack Ingestion & Normalization ([slack_bridge.py](file:///home/matteo/Projects/since-ai/src/context_layer/dashboard/slack_bridge.py#L154-L188))
 - **Socket Mode Listener**: Connected via Slack App-Level Token (`xapp-...`) and Bot User Token (`xoxb-...`).
 - **Event Filtering**: Discards bot events (`bot_id`, `IGNORED_SUBTYPES`: `bot_message`, `message_changed`, `message_deleted`, `channel_join`), self-messages, and empty payloads.
 - **Identity Resolution**: Queries Slack API `users.info(user=user_id)` to resolve the real human name and job title (`profile.title`).
@@ -210,7 +210,7 @@ flowchart LR
   - If new: Instantiates a `LiveThread` with `origin="slack"` and records the thread anchor.
 - Calls `wb.post_message(thread_id, author=name, text=text, role=title, mirror=False)`.
 
-### Step 2: Event Bus & Idle Debounce ([processor.py](file:///home/matteo/Projects/since-ai/src/context_layer/workbench/processor.py#L167-L198))
+### Step 2: Event Bus & Idle Debounce ([processor.py](file:///home/matteo/Projects/since-ai/src/context_layer/dashboard/processor.py#L167-L198))
 - Network specialists rarely send operational knowledge in a single sentence; they write multi-line explanations or follow-ups.
 - `processor.request(thread_id, immediate=False)` schedules a debounce timer (`wb.settings.idle_seconds`, default `2.0s`).
 - Successive messages in the same thread reset the timer.

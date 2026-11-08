@@ -1,6 +1,6 @@
 """Shared fixtures. Tests run offline, whatever is in a developer's .env.
 
-config.py loads .env at import. Without the `_offline` fixture, any test that starts the workbench on a machine with a
+config.py loads .env at import. Without the `_offline` fixture, any test that starts the dashboard on a machine with a
 real key calls the real LLM provider (slow, flaky timeouts, paid calls), and could reach a real database or Slack.
 A test that needs a configured provider sets it itself (monkeypatch config.llm_configured or the variables),
 which runs after this fixture and wins.

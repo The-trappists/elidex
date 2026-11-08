@@ -7,10 +7,19 @@ from mcp.server.mcpserver import MCPServer
 
 from . import config
 from .link import Inventory
-from .mvp import guard
+from .mvp import conditions, feedback, guard, relevance
 from .store import ContextStore
 
-mcp = MCPServer("context-layer")
+mcp = MCPServer(
+    "context-layer",
+    instructions=(
+        "Context layer for autonomous network operations. "
+        "Provides human operational knowledge (workarounds, site access, tribal facts) "
+        "extracted silently from operator chats and emails. Use get_context before acting on "
+        "a network element, check_action to guard sensitive operations, find_experts when no "
+        "rules exist, and get_patterns for recurring failure leads."
+    ),
+)
 
 
 def _store() -> ContextStore:
@@ -18,33 +27,59 @@ def _store() -> ContextStore:
 
 
 @mcp.tool()
-def get_context(entity_id: str, at: str | None = None, problem: str | None = None,
-                observations: dict[str, Any] | None = None) -> list[dict]:
+def get_context(
+    entity_id: str,
+    at: str | None = None,
+    observations: dict[str, Any] | None = None,
+    include_expired: bool = False,
+    problem: str | None = None,
+) -> list[dict]:
     """Human knowledge (workarounds, site access...) valid at time `at` (ISO, default now) for a network
     element or site, including what applies to its class and its site. Each item has source, trust and validity.
-
+    When `observations` is provided, each item is annotated with check_status ("fully checked", "not fully checked",
+    "failed", "text only"), to_read (fields to observe), condition_applies, and track_record.
     Pass `problem`, the symptom in words ("SFP replaced, link up, no traffic"), to get each item tagged
     `problem_match` ("matches the problem" or "other problem", with the matched words), matching items first: act on
-    those. Pass `observations` (sfp_replaced, interface_status, optical_levels, traffic_counters, alarms) to get
-    `check_status` and `to_read` per item; rules whose checks fail on them are left out. Both add `track_record`."""
+    those.
+    Set `include_expired=True` to include superseded or expired knowledge."""
     store = _store()
-    when = datetime.fromisoformat(at) if at else datetime.now()
-    if not problem and not observations:
-        hits = store.get_context(entity_id, at=when)
-        return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})} for h in hits]
-    from .agent import Case, relevance_fields, run_agent
-    from .mvp import feedback
-
-    case = Case(id="mcp", title="mcp", entity_id=entity_id, at=when, description=problem or "", observations=observations or {})
-    report = run_agent(store, case, use_conditions=True, use_relevance=bool(problem))
+    at_dt = datetime.fromisoformat(at) if at else None
+    hits = store.get_context(entity_id, at=at_dt, include_expired=include_expired)
+    obs = dict(observations) if observations is not None else None
+    if obs is not None and "firmware" not in obs:
+        el = store.inventory.resolve_element(entity_id)
+        if el and el.firmware:
+            obs["firmware"] = el.firmware
     out = []
-    for h in report.hits:
-        item = {"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"}),
-                "track_record": feedback.track_record(h.assertion, when).to_dict()}
-        if (c := report.checks.get(h.assertion.id)) is not None:
-            item |= {"check_status": c.status, "to_read": c.to_read}
-        out.append(item | relevance_fields(report, h.assertion.id))
+    for h in hits:
+        row = {"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})}
+        row["track_record"] = feedback.track_record(h.assertion, at_dt).to_dict()
+        if obs is not None:
+            cr = conditions.evaluate(h.assertion, obs)
+            row["check_status"] = cr.status
+            row["to_read"] = cr.to_read
+            row["condition_applies"] = cr.applies
+        out.append(row)
+    if problem:
+        rep = relevance.assess_for(store, entity_id, [h.assertion for h in hits], problem)
+        for row in out:
+            r = rep[row["id"]]
+            row |= {"problem_match": r.status, "problem_match_score": r.score, "problem_matched": r.matched}
+        out.sort(key=lambda row: row["problem_match"] == "other problem")  # stable: matching items first
     return out
+
+
+@mcp.tool()
+def get_assertion(assertion_id: str) -> dict | None:
+    """Look up a specific assertion by ID (e.g. ctx_0001), including its trust, sources, conditions and validity.
+    Use it to inspect referenced conflicts (conflicts_with) or invalidating rules (closed_by)."""
+    store = _store()
+    a = store.assertions.get(assertion_id)
+    if not a:
+        return None
+    res = a.model_dump(mode="json")
+    res["track_record"] = feedback.track_record(a).to_dict()
+    return res
 
 
 def _graph():
@@ -94,7 +129,7 @@ def get_patterns(entity_id: str | None = None, at: str | None = None) -> dict:
     Returns {at, meaning, patterns}."""
     from .listen import discover_threads
     from .mvp.patterns import analyze
-    from .workbench.seed import load_seed
+    from .dashboard.seed import load_seed
 
     links = [(lk.id, lk.a, lk.b, lk.kind) for lk in load_seed().links]
     times = {t.id: t.started_at for t in discover_threads()}
@@ -107,4 +142,24 @@ def check_action(action: str, entity_id: str, at: str | None = None, observation
     """Before acting on an element (reboot, replace, dispatch...), check it against human knowledge.
     Returns decision 'go' or 'adapt' with the steps to take first and the cited sources."""
     v = guard.check(_store(), action, entity_id, at=datetime.fromisoformat(at) if at else None, observations=observations)
-    return {"decision": v.decision, "steps": v.steps, "reasons": v.reasons}
+    return {"decision": v.decision, "action": v.action, "steps": v.steps, "reasons": v.reasons}
+
+
+@mcp.resource("context://summary")
+def get_summary() -> str:
+    """Summary of current context layer knowledge store."""
+    store = _store()
+    return (
+        f"Context Layer: {len(store.assertions)} assertions, "
+        f"{len(store.inventory.elements)} network elements, {len(store.inventory.sites)} sites."
+    )
+
+
+@mcp.prompt()
+def operational_guidance(entity_id: str) -> str:
+    """Prompt template for diagnosing and handling an issue on a network element using context knowledge."""
+    return (
+        f"You are an autonomous network operations agent. Investigate network element '{entity_id}'. "
+        f"First call get_context(entity_id='{entity_id}') with any known telemetry or observations. "
+        f"Check conditions and track record before recommending an operational action."
+    )

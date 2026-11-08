@@ -16,6 +16,7 @@ import GraphPage from "./pages/GraphPage"
 import NetworkPage from './pages/NetworkPage'
 import NotFoundPage from './pages/NotFoundPage'
 import InsightsPage from './pages/InsightsPage'
+import PipelinePage from './pages/PipelinePage'
 import ReviewPage from './pages/ReviewPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
@@ -30,17 +31,17 @@ function DashboardLayout() {
 
   return (
     <div className="app-shell flex h-full animate-fade-in [animation-duration:300ms]">
-      <a href="#workbench-content" className="skip-link">Skip to workspace</a>
+      <a href="#dashboard-content" className="skip-link">Skip to workspace</a>
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <MobileBar />
         {headerVisible && <TopBar />}
         <LlmErrorBanner />
-        <main id="workbench-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">
+        <main id="dashboard-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">
           {!ready ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">
               <span className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
-              Connecting to the workbench…
+              Connecting to the dashboard…
             </div>
           ) : (
             <div key={section} className="h-full">
@@ -57,6 +58,8 @@ function DashboardLayout() {
                 <Route path="/agent" element={<AgentTesterPage />} />
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/patterns" element={<Navigate to="/insights" replace />} />
+                <Route path="/pipeline" element={<PipelinePage />} />
+                <Route path="/architecture" element={<Navigate to="/pipeline" replace />} />
                 <Route path="/llm" element={<LlmLogPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
@@ -79,7 +82,7 @@ export default function App() {
         {/* Standalone Home / Landing Page */}
         <Route path="/" element={<HomePage />} />
         
-        {/* Workbench Dashboard App (with Sidebar, TopBar, and exit button) */}
+        {/* Dashboard App (with Sidebar, TopBar, and exit button) */}
         <Route path="/*" element={<DashboardLayout />} />
       </Routes>
       <Toaster />

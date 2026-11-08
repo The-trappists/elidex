@@ -1,4 +1,4 @@
-"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx patterns`, `ctx serve`, `ctx mcp`, `ctx workbench`,
+"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx patterns`, `ctx serve`, `ctx mcp`, `ctx dashboard`,
 `ctx llm-check`."""
 
 import argparse
@@ -145,7 +145,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
     from .eval.kb import EVAL_OUT
 
     if args.extractor == "llm" and not config.llm_configured():
-        sys.exit("LLM not configured: set LLM_API_KEY and LLM_MODEL in .env (see .env.example), or use the default scripted extractor.")
+        sys.exit("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env (see .env.example), or use the default scripted extractor.")
     try:
         result = run_eval(args.extractor)
     except FileNotFoundError as e:
@@ -208,7 +208,7 @@ def _check_meaning() -> None:
 def cmd_dedupe_check(args: argparse.Namespace) -> None:
     """Precision and recall of the dedupe threshold on the labelled pairs. With EMBEDDING_MODEL it also scores the
     real embeddings (one embedding call for all texts); a human runs it."""
-    from .workbench import dedupe
+    from .dashboard import dedupe
 
     embedder = None
     if config.EMBEDDING_MODEL:
@@ -230,16 +230,24 @@ def cmd_serve(args: argparse.Namespace) -> None:
     uvicorn.run("context_layer.api:app", host=args.host, port=args.port, reload=False)
 
 
-def cmd_workbench(args: argparse.Namespace) -> None:
+def cmd_dashboard(args: argparse.Namespace) -> None:
     import uvicorn
 
-    uvicorn.run("context_layer.workbench.app:app", host=args.host, port=args.port, reload=args.reload)
+    uvicorn.run("context_layer.dashboard.app:app", host=args.host, port=args.port, reload=args.reload)
 
 
 def cmd_llm_check(_: argparse.Namespace) -> None:
     from .llm_check import main as check
 
     check()
+
+
+def cmd_env_check(_: argparse.Namespace) -> None:
+    import runpy
+
+    script = config.ROOT / "scripts" / "check_env.py"
+    if script.is_file():
+        runpy.run_path(str(script), run_name="__main__")
 
 
 def cmd_dataset(args: argparse.Namespace) -> None:
@@ -348,14 +356,14 @@ def cmd_dataset(args: argparse.Namespace) -> None:
         sys.exit(f"No dataset at {root}. Run `ctx dataset generate --scale {'|'.join(SCALES)}` first.")
     if args.dataset_cmd == "stats":
         print(json.dumps(ds_bench.read_manifest(root), indent=2, ensure_ascii=False))
-    elif args.dataset_cmd == "export-workbench":
-        from .dataset.workbench_export import export_workbench
+    elif args.dataset_cmd == "export-dashboard":
+        from .dataset.dashboard_export import export_dashboard
 
         try:
-            data = export_workbench(root, n_sites=args.sites, n_threads=args.threads, seed=args.seed)
+            data = export_dashboard(root, n_sites=args.sites, n_threads=args.threads, seed=args.seed)
         except ValueError as e:
             sys.exit(f"Invalid sample: {e}")
-        out = Path(args.out) if args.out else config.OUT_DIR / "workbench-sample.json"
+        out = Path(args.out) if args.out else config.OUT_DIR / "dashboard-sample.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         print(json.dumps(data["sample"], indent=2, ensure_ascii=False))
@@ -510,11 +518,11 @@ def main(argv: list[str] | None = None) -> None:
     sev.add_argument("--haystack-every", type=int, default=10, help="naive RAG indexes one in N chats without knowledge (default 10)")
     sev.add_argument("--naive-cases", type=int, default=2000, help="cases run through naive RAG (0 skips it and the chat index)")
     sev.add_argument("--threshold", type=float, help="problem-match threshold (default: chosen on the dev wording)")
-    ew = dsub.add_parser("export-workbench", help="a connected sample of the dataset in the Workbench export format (never load `large` in the Workbench)")
+    ew = dsub.add_parser("export-dashboard", help="a connected sample of the dataset in the Dashboard export format (never load `large` in the Dashboard)")
     ew.add_argument("path", nargs="?", help="dataset folder (default: DATASET_DIR)")
     ew.add_argument("--sites", type=int, default=40, help="sites of the sub-network, grown from the Elisa seed (default 40)")
     ew.add_argument("--threads", type=int, default=300, help="threads to sample (default 300)")
-    ew.add_argument("--out", help="output file (default: out/workbench-sample.json)")
+    ew.add_argument("--out", help="output file (default: out/dashboard-sample.json)")
     ew.add_argument("--seed", type=int, default=42, help="same dataset, options and seed = same file")
     lm = dsub.add_parser("load-mongo", help="stream a dataset into MongoDB Atlas (MONGODB_URI in .env), resumable")
     lm.add_argument("path", nargs="?", help="dataset folder (default: DATASET_DIR)")
@@ -552,14 +560,17 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("mcp", help="MCP server over stdio, for agents").set_defaults(func=cmd_mcp)
 
-    wb = sub.add_parser("workbench", help="real-time test bench: API + web UI (docs/workbench.md)")
+    wb = sub.add_parser("dashboard", help="real-time test bench: API + web UI (docs/dashboard.md)")
     wb.add_argument("--host", default="127.0.0.1")
     wb.add_argument("--port", type=int, default=8010)
     wb.add_argument("--reload", action="store_true", help="restart on code changes (dev)")
-    wb.set_defaults(func=cmd_workbench)
+    wb.set_defaults(func=cmd_dashboard)
 
     sub.add_parser("llm-check", help="test each configured LLM provider and JSON mode on Elisa's chat").set_defaults(
         func=cmd_llm_check
+    )
+    sub.add_parser("env-check", help="verify .env settings and dependencies before deploying").set_defaults(
+        func=cmd_env_check
     )
 
     args = p.parse_args(argv)

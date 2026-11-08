@@ -50,9 +50,14 @@ def check(
     planned = verbs_in(action)
     steps, reasons = [], []
     hits = context_hits if context_hits is not None else store.get_context(entity_id, at=at)
+    obs = dict(observations) if observations is not None else None
+    if obs is not None and "firmware" not in obs:
+        el = store.inventory.resolve_element(entity_id)
+        if el and el.firmware:
+            obs["firmware"] = el.firmware
     for hit in hits:
         a = hit.assertion
-        if observations is not None and conditions.evaluate(a, observations).applies is False:
+        if obs is not None and conditions.evaluate(a, obs).applies is False:
             continue
         if a.type == "workaround" and planned & verbs_in(" ".join(a.avoid)):
             steps.append(a.action or a.summary)

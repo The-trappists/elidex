@@ -10,8 +10,8 @@ import pytest
 from context_layer import critic, llm
 from context_layer.link import Inventory, Linker
 from context_layer.models import ClassCriteria, ExtractedItem, Message, Scope, Thread
-from context_layer.workbench.contracts import PipelineJob, Settings
-from context_layer.workbench.processor import HookContext, clear_hooks, run_hooks
+from context_layer.dashboard.contracts import PipelineJob, Settings
+from context_layer.dashboard.processor import HookContext, clear_hooks, run_hooks
 
 T0 = datetime(2026, 10, 20, 8, 0)
 
@@ -156,8 +156,8 @@ def test_linker_notes_qualifier_class_and_scales_confidence():
 
 
 def test_install_all_installs_critic_and_skips_missing_modules():
-    from context_layer.workbench import loop_agents
-    from context_layer.workbench.processor import _HOOKS
+    from context_layer.dashboard import loop_agents
+    from context_layer.dashboard.processor import _HOOKS
 
     clear_hooks()
     loop_agents._installed.discard("critic")

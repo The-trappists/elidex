@@ -5,8 +5,8 @@ import json
 import pytest
 
 from context_layer import config, outcome
-from context_layer.workbench import persistence
-from test_workbench_core import client, rule, seeded, wait_for  # noqa: F401
+from context_layer.dashboard import persistence
+from test_dashboard_core import client, rule, seeded, wait_for  # noqa: F401
 
 OBS = {"sfp_replaced": True, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"}
 CONFIRM_WORDS = ("confirm", "please reply", "let us know", "let me know", "rate", "feedback", "?")

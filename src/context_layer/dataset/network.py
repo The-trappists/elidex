@@ -1,6 +1,6 @@
 """The operator's whole network: sites (core, regional, aggregation, access, mast), elements and links.
 
-Plain dicts, written as CSV/JSONL. The hand-written Workbench seed (TRN-042 and friends) is kept as is and
+Plain dicts, written as CSV/JSONL. The hand-written Dashboard seed (TRN-042 and friends) is kept as is and
 plugged into the generated mesh, so Elisa's example lives inside a company-sized graph.
 """
 

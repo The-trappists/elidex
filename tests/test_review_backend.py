@@ -4,9 +4,9 @@ import re
 from datetime import datetime
 
 from context_layer.models import ClassCriteria, ExtractedItem, ExtractionResult, Scope
-from context_layer.workbench import review
-from context_layer.workbench.contracts import Scenario, ScenarioMessage
-from test_workbench_core import client, seeded, wait_for  # noqa: F401
+from context_layer.dashboard import review
+from context_layer.dashboard.contracts import Scenario, ScenarioMessage
+from test_dashboard_core import client, seeded, wait_for  # noqa: F401
 
 
 def item(topic, instance="TRN-042", confidence=0.9, summary=None, action="Wait five minutes", **scope):
@@ -134,7 +134,7 @@ def test_conflict_flag_dedupes_legacy_per_assertion_flags(client):
     (flag,) = [f for f in wb.flags.values() if f.kind == "conflict" and f.thread_id == tid]
     first, second = sorted(re.findall(r"ctx_\d{4,}", flag.detail))
     # an old store held one flag per assertion: the same pair seen from the other side is not new
-    from context_layer.workbench.contracts import ReviewFlag
+    from context_layer.dashboard.contracts import ReviewFlag
     old = ReviewFlag(id="", kind="conflict", thread_id=tid, job_id=flag.job_id, assertion_id=second,
                      message="old", detail=f"conflicts with {first}", created_at=datetime.now())
     assert wb.add_flag(old) is None

@@ -21,10 +21,10 @@ from context_layer.models import (
 )
 from context_layer.mvp.lifecycle import reconcile
 from context_layer.store import ContextStore
-from context_layer.workbench import processor
-from context_layer.workbench.contracts import PipelineJob, Settings
-from context_layer.workbench.processor import HookContext, Processor
-from context_layer.workbench.state import Workbench
+from context_layer.dashboard import processor
+from context_layer.dashboard.contracts import PipelineJob, Settings
+from context_layer.dashboard.processor import HookContext, Processor
+from context_layer.dashboard.state import Dashboard
 
 CLS = "class:transmission_node:installed-upto-2019"
 T0 = datetime(2026, 10, 20, 8, 0)
@@ -320,7 +320,7 @@ def test_retract_after_merge(monkeypatch):
     run(store, [new, fw], monkeypatch, fake_llm(rules))
     assert new.id not in store.assertions and old.valid_to == fw.valid_from
     wb = SimpleNamespace(store=store)
-    wb.drop_assertions = lambda ids: Workbench.drop_assertions(wb, ids)
+    wb.drop_assertions = lambda ids: Dashboard.drop_assertions(wb, ids)
     gone = Processor(wb).retract("chat2")
     assert gone == [fw.id]
     assert old.valid_to is None and old.closed_by is None  # reopened

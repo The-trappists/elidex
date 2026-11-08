@@ -1,6 +1,6 @@
 # Company-sized synthetic dataset
 
-> Status: tool, not a decision. Nothing here is logged in [decisions.md](decisions.md). Generated on 2026-11-07 with Claude Code and reviewed by no one yet. **Everything is invented**; the only hand-written part is the Workbench seed (Elisa's TRN-042 and friends), which is kept inside the generated network.
+> Status: tool, not a decision. Nothing here is logged in [decisions.md](decisions.md). Generated on 2026-11-07 with Claude Code and reviewed by no one yet. **Everything is invented**; the only hand-written part is the Dashboard seed (Elisa's TRN-042 and friends), which is kept inside the generated network.
 
 Why: our hand-written data has 20 elements and a few dozen messages. Knowledge about "TX-3000 installed up to 2019" then reaches 4 nodes. In a real operator it reaches hundreds, the haystack has millions of messages, and two sites share a name. This dataset lets us test linking, over-linking, abstention and latency at that scale.
 
@@ -19,7 +19,7 @@ No tool of the event is a data generator, and an LLM cannot do it within our bud
 
 | Tool (see [tech-stack.md](tech-stack.md)) | Verdict |
 | --- | --- |
-| Gemini free tier, Featherless ($25 credit) | Rate-limited and credit-limited; 1 GB of text is hundreds of millions of tokens. Fine for a few hundred hand-quality threads (the Workbench `generate` button), not for volume |
+| Gemini free tier, Featherless ($25 credit) | Rate-limited and credit-limited; 1 GB of text is hundreds of millions of tokens. Fine for a few hundred hand-quality threads (the Dashboard `generate` button), not for volume |
 | MongoDB Atlas free tier | Storage cap (512 MB as far as we remember, to verify): cannot hold the large scale; fine for `demo` |
 | Vultr VM ($100 credit, 1 vCPU / 2 GB as planned in [deploy-vultr.md](deploy-vultr.md)) | Could host files, but generate locally and copy only `demo`. The 2 GB VM would also struggle to load `large` |
 | FIWARE / Orion-LD, Neo4j in Docker | Targets for loading the graph (`network/`), not sources |
@@ -38,13 +38,13 @@ No tool of the event is a data generator, and an LLM cannot do it within our bud
 
 Four layers like a real operator: 3 core data centres in a mesh; regional exchanges in rings (each linked to the nearest core); aggregation hubs dual-homed to regional exchanges; access huts (fibre, some microwave when far); radio masts (baseband units, radio units, microwave back to a hub or daisy-chained to another mast). Inside a site everything hangs on a gateway element. Check: one connected component, no orphan element (tested). 12 Finnish regions weighted by population; real city names, invented sites.
 
-`large`: 5,009 sites, 20,086 elements, 15,446 links. The 9 sites, 20 elements and 21 links of the Workbench seed are kept and linked to the nearest generated hub, so TRN-042 now belongs to a real graph. Generated ids are `TRN-10001`, `RTR-`, `AGG-`, `RAD-`, `MWT-`, `BBU-`, `PWR-` (5 digits, no clash with the seed); each element also has an alias like `HEL101-TRN2`, the way field people name things.
+`large`: 5,009 sites, 20,086 elements, 15,446 links. The 9 sites, 20 elements and 21 links of the Dashboard seed are kept and linked to the nearest generated hub, so TRN-042 now belongs to a real graph. Generated ids are `TRN-10001`, `RTR-`, `AGG-`, `RAD-`, `MWT-`, `BBU-`, `PWR-` (5 digits, no clash with the seed); each element also has an alias like `HEL101-TRN2`, the way field people name things.
 
 Models and years follow a catalogue (e.g. TX-2000 2009–2017, TX-3000 2015–2022, TX-5000 2021–2026) with firmware drawn by age, some already upgraded. A few site names are duplicated on purpose (see Findings).
 
 ### People
 
-`large`: 3,012 users in 17 teams (NOC, Transmission, Radio, Core & IP, Field team per region, Logistics, Planning, Customer service, Sales, Facilities, IT, Vendor management, Security, Management). Seniority and skills decide who answers: experts and seniors know models; customer service and sales never state technical knowledge. The 12 Workbench personas are included with their ids. Each user has a writing style (terse, chatty, formal, emoji, finglish) applied to their messages.
+`large`: 3,012 users in 17 teams (NOC, Transmission, Radio, Core & IP, Field team per region, Logistics, Planning, Customer service, Sales, Facilities, IT, Vendor management, Security, Management). Seniority and skills decide who answers: experts and seniors know models; customer service and sales never state technical knowledge. The 12 Dashboard personas are included with their ids. Each user has a writing style (terse, chatty, formal, emoji, finglish) applied to their messages.
 
 ### Conversations (Jan 2025 – 6 Nov 2026)
 
@@ -117,7 +117,7 @@ The two databases are in the cloud, so the VM needs **no copy of the dataset**: 
 4. Check from the VM: `docker compose -f deploy/docker-compose.yml exec <app-service> ctx dataset db-check` (service name in the compose file).
 5. Run the loads from your laptop, not the VM (the 2 GB VM has no `out/dataset/`): `ctx dataset load-mongo out/dataset/demo`, `load-tiger out/dataset/demo --drop --analytics`.
 
-Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. The Workbench uses these sources in two ways (see [workbench.md](workbench.md)): a connected **sample** of the dataset can be loaded into it (`ctx dataset export-workbench`, Data page button "Load company dataset"), and the element panel reads **human activity on demand** (threads, freshness, similar knowledge) from Atlas / Tiger Data when configured, else from the dataset files, without loading the dataset in memory.
+Start with `demo` to check sizes and timings, then `large`. `load-mongo` makes the indexes after the load; threads carry `started_at` and `mentions` (element ids found in the text, aliases resolved) so "all threads about this element" is an index lookup. Code: `dataset/source.py` (`FileSource` and `MongoSource` share `ThreadSource.threads(since, until, element, limit)`), `mongo.py`, `tiger.py`. The Dashboard uses these sources in two ways (see [dashboard.md](dashboard.md)): a connected **sample** of the dataset can be loaded into it (`ctx dataset export-dashboard`, Data page button "Load company dataset"), and the element panel reads **human activity on demand** (threads, freshness, similar knowledge) from Atlas / Tiger Data when configured, else from the dataset files, without loading the dataset in memory.
 
 Status: the pure parts (mentions, documents, rows, file source) are tested offline. The loaders and queries against real Atlas and Tiger Data were **not run by the assistant** (AI agents must not use `.env` credentials), so the first run is yours: start with `db-check`.
 
@@ -136,7 +136,7 @@ Status: the pure parts (mentions, documents, rows, file source) are tested offli
 
 - Core and bench: `Inventory.load(root / "network")`; `ctx dataset bench` feeds the linker with the true extractions, so it measures linking and storing, **not the LLM**. For the LLM, read threads of `conversations/` and score the output against `facts.jsonl`.
 - Accuracy at scale: `ctx dataset eval out/dataset/large` replays every knowledge thread (real text) through the linker, store and lifecycle, then runs 9,300 cases built from the ground truth through five retrieval pipelines, from naive RAG over the raw chats to graph + time + conditions + problem relevance. About 13 minutes on `large`, single process. Results and method: [evaluation.md, part 3](evaluation.md#part-3-retrieval-accuracy-at-company-scale).
-- The **Workbench loads everything in memory** and the graph canvas draws every node: never `large`. Take a sample instead: `ctx dataset export-workbench out/dataset/tiny` (or the Data page button "Load company dataset"), see [workbench.md](workbench.md#company-dataset-sample).
+- The **Dashboard loads everything in memory** and the graph canvas draws every node: never `large`. Take a sample instead: `ctx dataset export-dashboard out/dataset/tiny` (or the Data page button "Load company dataset"), see [dashboard.md](dashboard.md#company-dataset-sample).
 - Load shards lazily (one line at a time); do not `json.load` a whole shard of `large` (~80 MB each is fine, all of them is not).
 
 ## Findings from `ctx dataset bench` on `large` (2026-11-07)
@@ -150,7 +150,7 @@ Perfect extraction in, so this is the core alone: 3,000 / 3,000 facts linked wit
 
 ## Limits (be honest in the pitch)
 
-- Language is template-based: a few dozen sentence patterns plus slots. An LLM extractor can do very well here and still fail on real chat. Keep the hand-written scenarios of the Workbench as the quality check; use this dataset for scale, volume, ambiguity and lifecycle.
+- Language is template-based: a few dozen sentence patterns plus slots. An LLM extractor can do very well here and still fail on real chat. Keep the hand-written scenarios of the Dashboard as the quality check; use this dataset for scale, volume, ambiguity and lifecycle.
 - Only the 6 families above carry knowledge; real knowledge is more varied. Facts are independent: no fact depends on another beyond close / conflict.
 - Timestamps cover Jan 2025 – Nov 2026 and ignore holidays; names are random combinations of common Finnish first and last names, any resemblance to real people is by chance. Emails use the reserved domain `demo-operator.example`.
 - The data is not Elisa's and says nothing about Elisa's real network or staff.

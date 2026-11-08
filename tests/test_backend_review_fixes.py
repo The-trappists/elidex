@@ -11,8 +11,8 @@ from context_layer.models import (
 )
 from context_layer.mvp.lifecycle import reconcile
 from context_layer.store import ContextStore
-from context_layer.workbench.seed import load_seed
-from test_workbench_core import client, seeded  # noqa: F401 - pytest fixture
+from context_layer.dashboard.seed import load_seed
+from test_dashboard_core import client, seeded  # noqa: F401 - pytest fixture
 
 SEED = load_seed()
 INV = Inventory(SEED.elements, SEED.sites)

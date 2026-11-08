@@ -1,10 +1,10 @@
 # Knowledge graph
 
-> **Status: proposal** (branch `feat/knowledge-graph`, built on `feat/workbench`). Not logged in [decisions.md](decisions.md) yet.
+> **Status: proposal** (branch `feat/knowledge-graph`, built on `feat/dashboard`). Not logged in [decisions.md](decisions.md) yet.
 
 `context_layer.graph` turns the context store into **one typed, temporal knowledge graph**: the network, the context assertions, their lifecycle and their provenance (who said it, where, when). Agents query it through MCP, REST or the CLI. Neo4j is an optional mirror.
 
-The graph is a **view rebuilt from the store and the threads**. `ContextStore` stays the source of truth, so the pipeline, guard, agent and workbench work unchanged.
+The graph is a **view rebuilt from the store and the threads**. `ContextStore` stays the source of truth, so the pipeline, guard, agent and dashboard work unchanged.
 
 ## Inspired by Beever Atlas
 
@@ -93,5 +93,5 @@ Checked by hand against Neo4j 5.26 Community (Docker, Windows): `ctx graph push`
 ## Open points for the team
 
 - Keep NetworkX as the only runtime store and Neo4j as a mirror, or make Neo4j the store?
-- ~~Feed `/graph` into the workbench graph view?~~ Done: the workbench Graph page reads `GET /api/graph`.
+- ~~Feed `/graph` into the dashboard graph view?~~ Done: the dashboard Graph page reads `GET /api/graph`.
 - Are `MENTIONS` edges (plain ID and alias matching) useful for the agent, or just noise?

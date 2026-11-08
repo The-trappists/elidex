@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
+from ..models import Check, Condition
+
 if TYPE_CHECKING:
     from ..models import ContextAssertion
     from ..store import ContextStore
@@ -74,6 +76,12 @@ def reconcile(store: ContextStore, new: ContextAssertion) -> list[str]:
             if fix_predates(old, new):
                 events.append(f"{old.id} kept open: {new.id} ships a version that is not newer than the one {old.id} is about")
                 continue
+            fw_match = re.search(r"\bfirmware\s+([\d.]+)", f"{new.summary} {new.fact or ''} {new.diagnosis or ''}", re.IGNORECASE)
+            if fw_match:
+                fw_ver = fw_match.group(1)
+                fw_cond = Condition(text=f"firmware < {fw_ver}", check=Check(field="firmware", op="<", value=fw_ver))
+                if not any(c.check and c.check.field == "firmware" for c in old.conditions):
+                    old.conditions.append(fw_cond)
             old.valid_to = new.valid_from
             old.closed_by = new.id
             events.append(f"{old.id} closed at {new.valid_from:%Y-%m-%d %H:%M} by {new.id} ({new.trust.stated_by})")

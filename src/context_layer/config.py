@@ -19,6 +19,10 @@ STORE_FILE = OUT_DIR / "context_store.json"
 DEFAULT_THREAD_DATE = os.getenv("DEFAULT_THREAD_DATE", "2026-10-15")
 DEFAULT_EMAIL_TIME = os.getenv("DEFAULT_EMAIL_TIME", "10:30")
 
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+VERTEX_LOCATION = os.getenv("VERTEX_LOCATION", os.getenv("GOOGLE_CLOUD_LOCATION", "global"))
+VERTEX_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", os.getenv("GCP_PROJECT", ""))
+
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
 LLM_MODEL = os.getenv("LLM_MODEL", "")
@@ -35,7 +39,7 @@ LLM_FALLBACK_JSON_MODE = os.getenv("LLM_FALLBACK_JSON_MODE", LLM_JSON_MODE)
 
 def _default_reasoning_effort(base_url: str) -> str:
     # Gemini "thinks" by default, which makes extraction calls slow; other providers may reject the parameter.
-    return "low" if "generativelanguage.googleapis.com" in base_url else ""
+    return "low" if ("generativelanguage.googleapis.com" in base_url or "aiplatform.googleapis.com" in base_url) else ""
 
 
 def _reasoning_effort(env_name: str, base_url: str) -> str:
@@ -74,8 +78,23 @@ def _key_set(key: str) -> bool:
     return bool(key) and key != "your-key-here"
 
 
+def google_auth_configured() -> bool:
+    val = GOOGLE_APPLICATION_CREDENTIALS.strip()
+    return bool(val) and val != "your-credentials.json"
+
+
+def is_google_vertex_primary() -> bool:
+    """True if primary LLM should route through Google Cloud Vertex AI."""
+    if not google_auth_configured():
+        return False
+    if LLM_BASE_URL and not ("generativelanguage.googleapis.com" in LLM_BASE_URL or "aiplatform.googleapis.com" in LLM_BASE_URL):
+        return not _key_set(LLM_API_KEY)
+    return True
+
+
 def llm_configured() -> bool:
-    return _key_set(LLM_API_KEY) and bool(LLM_MODEL)
+    has_auth = _key_set(LLM_API_KEY) or google_auth_configured()
+    return has_auth and bool(LLM_MODEL)
 
 
 def llm_fallback_configured() -> bool:
@@ -101,7 +120,7 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
 # Only used with EMBEDDING_MODEL; calibrate with `ctx patterns --check-meaning`. 0.78 is calibrated on
 # gemini-embedding-001 (2026-11-07): same problem >= 0.80, look-alikes <= 0.76. Another model needs its own value.
 PATTERNS_SAME_MEANING = float(os.getenv("PATTERNS_SAME_MEANING", "0.78"))
-# Dedupe (docs/workbench.md): minimum similarity (words or embedding) to fold a new assertion into an older one.
+# Dedupe (docs/dashboard.md): minimum similarity (words or embedding) to fold a new assertion into an older one.
 # Calibrate with `uv run ctx dedupe-check`.
 DEDUPE_THRESHOLD = float(os.getenv("DEDUPE_THRESHOLD", "0.90"))
 DATASET_DIR = Path(os.getenv("DATASET_DIR", OUT_DIR / "dataset" / "demo"))
@@ -119,17 +138,16 @@ def tiger_configured() -> bool:
     return _set(TIGER_DATABASE_URL)
 
 
-# ---------------------------------------------------------------- workbench
+# ---------------------------------------------------------------- dashboard
 
-WORKBENCH_DIR = OUT_DIR / "workbench"
-WORKBENCH_STATE_FILE = Path(os.getenv("WORKBENCH_STATE_FILE", WORKBENCH_DIR / "state.json"))
-WORKBENCH_LLM_CALLS_FILE = WORKBENCH_STATE_FILE.parent / "llm_calls.jsonl"
-WORKBENCH_LLM_CACHE_FILE = WORKBENCH_STATE_FILE.parent / "llm_cache.json"
-WORKBENCH_SEED_DIR = DATA_DIR / "workbench"
-WORKBENCH_SIM_START = os.getenv("WORKBENCH_SIM_START", "2026-10-20T07:30")
-WORKBENCH_IDLE_SECONDS = float(os.getenv("WORKBENCH_IDLE_SECONDS", "8"))
+DASHBOARD_DIR = OUT_DIR / "dashboard"
+DASHBOARD_STATE_FILE = Path(os.getenv("DASHBOARD_STATE_FILE", DASHBOARD_DIR / "state.json"))
+DASHBOARD_LLM_CALLS_FILE = DASHBOARD_STATE_FILE.parent / "llm_calls.jsonl"
+DASHBOARD_LLM_CACHE_FILE = DASHBOARD_STATE_FILE.parent / "llm_cache.json"
+DASHBOARD_SEED_DIR = DATA_DIR / "dashboard"
+DASHBOARD_SIM_START = os.getenv("DASHBOARD_SIM_START", "2026-10-20T07:30")
+DASHBOARD_IDLE_SECONDS = float(os.getenv("DASHBOARD_IDLE_SECONDS", "8"))
 WEB_DIST_DIR = ROOT / "web" / "dist"
-DEMO_DIST_DIR = ROOT / "demo" / "dist"  # product demo (static, built with --base=/demo/), served at /demo/
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "")
 SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN", "")

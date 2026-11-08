@@ -169,6 +169,8 @@ def _case_observations(case: Case) -> dict[str, Any]:
         inferred["alarms"] = "cleared"
     elif re.search(r"\balarms?\s+(are\s+)?(active|firing)\b", text):
         inferred["alarms"] = "active"
+    if (m := re.search(r"\bfirmware\s+([\d.]+)", text)):
+        inferred["firmware"] = m.group(1)
     return {**inferred, **case.observations}
 
 
@@ -186,7 +188,11 @@ def run_agent(
     rules the agent should act on."""
     retrieved = store.get_context(case.entity_id, at=case.at)
     report = AgentReport(case=case, hits=[])
-    observations = _case_observations(case) if use_conditions else case.observations
+    observations = _case_observations(case) if use_conditions else dict(case.observations)
+    if "firmware" not in observations:
+        el = store.inventory.resolve_element(case.entity_id)
+        if el and el.firmware:
+            observations["firmware"] = el.firmware
     for hit in retrieved:
         assertion = hit.assertion
         cr = conditions.evaluate(assertion, observations, case.description)

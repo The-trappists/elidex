@@ -1,5 +1,5 @@
 {
-  "note": "Hand-labelled by the team (with Claude). Labels are (type, topic) keys from the workbench scenarios' expected items. See data/eval/README.md.",
+  "note": "Hand-labelled by the team (with Claude). Labels are (type, topic) keys from the dashboard scenarios' expected items. See data/eval/README.md.",
   "timeline": [
     {"scenario": "barrier-key-kemijarvi", "start": "2026-09-02T14:00"},
     {"scenario": "layperson-salesrep-flooded-road", "start": "2026-09-10T08:00"},

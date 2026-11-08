@@ -74,7 +74,7 @@ export default function CompanyPage() {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">
         <Building2 size={28} />
-        The company day is unavailable. Is the workbench running with the company routes?
+        The company day is unavailable. Is the dashboard running with the company routes?
         <Button onClick={() => void loadCompany()}>Try again</Button>
       </div>
     )

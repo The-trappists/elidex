@@ -1,4 +1,4 @@
-import { Menu, PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, FlaskConical, LogOut, MessagesSquare, Network, Presentation, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { Menu, PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, FlaskConical, GitBranch, LogOut, MessagesSquare, Network, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Drawer, IconButton } from '../ui'
@@ -41,6 +41,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: 'Workshop',
     items: [
+      { to: '/pipeline', label: 'Architecture', title: 'Pipeline architecture', subtitle: 'Technical breakdown and justification: from Slack to the multi-layer Knowledge Graph', icon: GitBranch },
       { to: '/llm', label: 'AI activity', title: 'AI activity', subtitle: 'Every request sent to the language model', icon: Bot },
       { to: '/data', label: 'Data', title: 'Data', subtitle: 'Equipment, people and test scenarios', icon: Database },
       { to: '/settings', label: 'Settings', title: 'Settings', subtitle: 'How conversations are turned into knowledge', icon: SettingsIcon },
@@ -111,22 +112,18 @@ export function NavBody({ onNavigate }: { onNavigate?: () => void }) {
         <LogOut size={16} />
         Exit to Home
       </Link>
-      <a href="/demo/" className="sidebar-footer mx-2 mb-2 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-text">
-        <Presentation size={16} />
-        Product demo
-      </a>
     </>
   )
 }
 
 export function Sidebar() {
   return (
-    <nav aria-label="Workbench" className="app-sidebar flex shrink-0 flex-col border-r border-line bg-surface">
+    <nav aria-label="Dashboard" className="app-sidebar flex shrink-0 flex-col border-r border-line bg-surface">
       <Link to="/" aria-label="ElidEx home" className="sidebar-brand flex h-20 items-center gap-3 px-5">
         <img src="/elidex-logo.png" alt="ElidEx" className="size-9 object-contain" />
         <div className="flex flex-col">
           <span className="font-display text-xl font-semibold tracking-tight">Elid<span className="text-accent">Ex</span></span>
-          <span className="text-[10px] text-muted -mt-0.5">Context Layer</span>
+          <span className="text-[10px] text-muted -mt-0.5">Dashboard</span>
         </div>
       </Link>
       <NavBody />
@@ -150,7 +147,7 @@ export function MobileBar() {
       <img src="/elidex-logo.png" alt="" className="size-6 object-contain" />
       <span className="min-w-0 flex-1 truncate font-display text-base font-semibold">{page.title}</span>
       <Drawer open={open} onClose={() => setOpen(false)} title="Menu" side="left" width="max-w-xs" flush>
-        <nav aria-label="Workbench menu" className="nav-drawer flex min-h-full flex-col">
+        <nav aria-label="Dashboard menu" className="nav-drawer flex min-h-full flex-col">
           <NavBody onNavigate={() => setOpen(false)} />
         </nav>
       </Drawer>

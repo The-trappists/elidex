@@ -62,7 +62,7 @@ function useTheme() {
     } catch {
       /* storage blocked */
     }
-    // The workbench is dark-first; use dark unless the user has saved a choice.
+    // The dashboard is dark-first; use dark unless the user has saved a choice.
     return true
   })
   useEffect(() => {
@@ -141,7 +141,7 @@ export function TopBar() {
         <span
           role="status"
           aria-live="polite"
-          title={connection === 'live' ? 'Connected to the workbench event stream' : 'Connection to the workbench lost. Retrying with backoff.'}
+          title={connection === 'live' ? 'Connected to the dashboard event stream' : 'Connection to the dashboard lost. Retrying with backoff.'}
           className={cn(
             'flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-200',
             connection === 'live' ? 'border-ok/30 bg-ok/10 text-ok' : connection === 'connecting' ? 'border-line bg-surface-2 text-muted' : 'border-bad/40 bg-bad/10 text-bad',

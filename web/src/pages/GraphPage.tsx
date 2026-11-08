@@ -149,7 +149,7 @@ export default function GraphPage() {
             <EmptyState
               icon={<Waypoints size={28} />}
               title="The knowledge map is unavailable"
-              hint="Check the workbench connection, then try again."
+              hint="Check the dashboard connection, then try again."
               action={<Button onClick={() => setRetry(retry + 1)}>Try again</Button>}
             />
           ) : !data ? (

@@ -26,8 +26,8 @@ from . import config
 from .models import ExtractedItem, SourceRef, Trust
 
 if TYPE_CHECKING:
-    from .workbench.processor import HookContext
-    from .workbench.state import Workbench
+    from .dashboard.processor import HookContext
+    from .dashboard.state import Dashboard
 
 log = logging.getLogger(__name__)
 
@@ -48,17 +48,17 @@ def _text_for(a, entity_id: str) -> str:
     return line
 
 
-def find_thread_id(wb: Workbench, entity_id: str) -> str | None:
+def find_thread_id(wb: Dashboard, entity_id: str) -> str | None:
     """The thread of the newest open incident on this entity (any incident as a second choice)."""
     incidents = [i for i in wb.incidents.values() if i.entity_id == entity_id and i.thread_id in wb.threads]
     incidents.sort(key=lambda i: (i.status == "open", i.opened_at), reverse=True)
     return incidents[0].thread_id if incidents else None
 
 
-def post_application(wb: Workbench, entity_id: str, assertions: list, title: str = "") -> tuple[str, list]:
+def post_application(wb: Dashboard, entity_id: str, assertions: list, title: str = "") -> tuple[str, list]:
     """Post ONE informative message from the ops agent and create a pending RuleApplication per assertion.
     Purely informative: it never asks anyone to reply, confirm or rate. Returns (thread id, applications)."""
-    from .workbench.contracts import RuleApplication
+    from .dashboard.contracts import RuleApplication
 
     thread_id = find_thread_id(wb, entity_id)
     if thread_id is None:
@@ -183,7 +183,7 @@ def _decide(app, assertion, announce: str, messages: list, sim_time) -> tuple[st
 
 
 def settle(
-    wb: Workbench, a, o, *, thread_id: str, job_id: str, author: str | None = None, role: str | None = None,
+    wb: Dashboard, a, o, *, thread_id: str, job_id: str, author: str | None = None, role: str | None = None,
     source_ref: SourceRef | None = None, reason: str = "", method: str = "",
 ) -> None:
     """The effects of ONE freshly recorded outcome (`o` is already in `a.outcomes`), applied once, never again.
@@ -191,7 +191,7 @@ def settle(
     with the human's words, the human added to confirmed_by (stated_by is kept), thread added as a source. worked with a failure in the ledger: mixed evidence, trust is
     not upgraded. worked from observation: trust unchanged. A rule is never dropped."""
     from .mvp import feedback
-    from .workbench.contracts import ReviewFlag
+    from .dashboard.contracts import ReviewFlag
 
     kind, detail = "judge_decision", f"{reason} ({method})" if reason else method
     who = f"{author}: “{o.quote}”" if author and o.quote else f"observed: {o.evidence}"
@@ -226,7 +226,7 @@ def settle(
     )
 
 
-def _apply(wb: Workbench, ctx: HookContext, app, outcome: str, quote: str, reason: str, method: str, msg) -> None:
+def _apply(wb: Dashboard, ctx: HookContext, app, outcome: str, quote: str, reason: str, method: str, msg) -> None:
     from .mvp import feedback
 
     a = wb.store.assertions.get(app.assertion_id)
@@ -247,7 +247,7 @@ def _apply(wb: Workbench, ctx: HookContext, app, outcome: str, quote: str, reaso
     )
 
 
-def record_observation(wb: Workbench, a, entity_id: str, at: datetime, after: dict, worked: bool | None):
+def record_observation(wb: Dashboard, a, entity_id: str, at: datetime, after: dict, worked: bool | None):
     """POST /agent/outcome: record through the same ledger and settle the same effects. A pending application of
     this assertion and entity is the same real event: it is resolved here (method "observation"), so a later
     reply in its thread does not count it again."""
@@ -324,7 +324,7 @@ def drop_agent_items(ctx: HookContext) -> list[ExtractedItem] | None:
 
 
 def install() -> None:
-    from .workbench.processor import register_hook
+    from .dashboard.processor import register_hook
 
     register_hook("after_understand", drop_agent_items)
     register_hook("after_store", after_store)
