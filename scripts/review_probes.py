@@ -21,7 +21,7 @@ from context_layer.models import ClassCriteria, ExtractedItem, Message, Outcome,
 from context_layer.mvp.lifecycle import reconcile
 from context_layer.store import ContextStore
 from context_layer.understand import LLMExtractor
-from context_layer.workbench.seed import load_seed
+from context_layer.dashboard.seed import load_seed
 
 seed = load_seed()
 INV = Inventory(seed.elements, seed.sites)
@@ -172,7 +172,7 @@ def _():
     return "observations" not in params, f"parameters: {params}"
 
 
-@probe("A2", "MCP tools read the CLI store file, not the live workbench")
+@probe("A2", "MCP tools read the CLI store file, not the live dashboard")
 def _():
     src = inspect.getsource(mcp_server._store)
     return "STORE_FILE" in src, "mcp_server._store loads config.STORE_FILE on every call"

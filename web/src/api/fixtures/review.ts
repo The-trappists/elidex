@@ -1,6 +1,6 @@
 // Sample data for the operator console ("Needs a look"), used while the L4 endpoints do not exist
 // (VITE_REVIEW_FIXTURES=1, or any 404/501 from /api/review, /rerun, /history...). The wording of
-// the conversations is verbatim from data/workbench/scenarios. Nothing here talks to a backend.
+// the conversations is verbatim from data/dashboard/scenarios. Nothing here talks to a backend.
 import type {
   Binding,
   ContextAssertion,

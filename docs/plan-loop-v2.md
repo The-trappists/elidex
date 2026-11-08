@@ -14,11 +14,11 @@
 
 | Lot | What | Owns | Depends on |
 | --- | --- | --- | --- |
-| **L0 Contract** | `Scope.qualifier`, `ExtractedItem.evidence_quote`, `ReviewFlag`, toggles `use_critic` / `use_judge` / `use_outcome_loop`, source kind `operator`, hook points in `processor._run`, endpoint stubs, TS mirror | `models.py`, `workbench/contracts.py`, `workbench/processor.py` (structure), `web/src/api/types.ts` | none |
+| **L0 Contract** | `Scope.qualifier`, `ExtractedItem.evidence_quote`, `ReviewFlag`, toggles `use_critic` / `use_judge` / `use_outcome_loop`, source kind `operator`, hook points in `processor._run`, endpoint stubs, TS mirror | `models.py`, `dashboard/contracts.py`, `dashboard/processor.py` (structure), `web/src/api/types.ts` | none |
 | **L1 Critic + qualifier** | A second model checks each extracted item against its cited messages (verbatim quote, no over-generalised scope, "old" qualifier). Rejects or lowers confidence. The linker turns the qualifier into a note and a lower confidence | `critic.py`, `link.py`, `tests/test_critic.py`, one scenario | L0 |
 | **L2 Reconcile judge** | For a new assertion, fetch neighbours (same `about`), verdict supports / contradicts / supersedes / unrelated. Applies closing, conflict, hunch → verified, topic canonicalisation. Old lifecycle path stays as fallback | `judge.py`, `mvp/lifecycle.py`, `tests/test_judge.py` | L0 |
 | **L3 Passive outcome loop** | The agent's applied action is posted in the thread; the technician's next message is linked to the rule and the judge upgrades trust. No click | `outcome.py`, hooks in `routes.py`, one scenario | L0, L2 |
-| **L4 Console backend** | Review flags (abstentions, low confidence, conflicts, over-reach, critic disagreement), edit an item then re-run link + store, replay a step with another model, operator override recorded as source `operator` | `workbench/routes.py`, `state.py`, tests | L0 |
+| **L4 Console backend** | Review flags (abstentions, low confidence, conflicts, over-reach, critic disagreement), edit an item then re-run link + store, replay a step with another model, operator override recorded as source `operator` | `dashboard/routes.py`, `state.py`, tests | L0 |
 | **L5 Console UI** | "Needs a look" inbox, inline item editing in the pipeline view, re-run, override history. Built against fixtures until L4 lands | `web/src/pages/ReviewPage.tsx`, `web/src/components/pipeline/**`, `web/src/api/client.ts` | L0 |
 | **L6 Eval + models** | Eval compares on (type, scope, action) instead of topic slug; script runs the scenarios with 2-3 models and reports matched / missed / unexpected / latency | `scripts/eval_models.py`, `evaluate()` | L0 |
 | **L7 Demo + docs** | Demo script, docs updates, decisions, data README | `docs/**` | all |
@@ -68,11 +68,11 @@ Drop in this order if time runs short: firmware-based expiry and stage breakpoin
 
 | Lot | Main files | Notes |
 | --- | --- | --- |
-| L0 Contract | `models.py`, `workbench/contracts.py`, `workbench/processor.py` (hooks `after_understand`, `after_store`, `after_reconcile`), `workbench/loop_agents.py`, `web/src/api/types.ts` | `Scope.qualifier`, `ExtractedItem.evidence_quote`, source kind `operator`, `ReviewFlag`, `RuleApplication`, toggles `use_critic`, `use_judge`, `use_outcome_loop` |
+| L0 Contract | `models.py`, `dashboard/contracts.py`, `dashboard/processor.py` (hooks `after_understand`, `after_store`, `after_reconcile`), `dashboard/loop_agents.py`, `web/src/api/types.ts` | `Scope.qualifier`, `ExtractedItem.evidence_quote`, source kind `operator`, `ReviewFlag`, `RuleApplication`, toggles `use_critic`, `use_judge`, `use_outcome_loop` |
 | L1 Critic + qualifier | `critic.py`, `link.py`, `llm.py`, `config.py`, `tests/test_critic.py`, scenario `qualifier-old-tx3000-site` | Evidence check then one LLM call per thread; critic role provider (`LLM_CRITIC_*`) with its own fallback; qualifier lowers class confidence x0.8 |
 | L2 Judge | `judge.py`, `tests/test_judge.py` | After store, verdicts against up to 8 neighbours, applied deterministically; the lifecycle path still runs after it |
-| L3 Outcome loop | `outcome.py`, `/agent/run` and `/applications` in `workbench/routes.py`, `tests/test_outcome_loop.py`, scenario `agent-outcome-followup` | Agent message in the thread, outcome read from the technician's reply; LLM with a keyword fallback |
-| L4 Console backend | `workbench/review.py`, `workbench/state.py`, `workbench/routes.py`, `tests/test_review_backend.py` | Flags, `PATCH /assertions/{id}` with history and undo, `POST /jobs/{id}/rerun` |
+| L3 Outcome loop | `outcome.py`, `/agent/run` and `/applications` in `dashboard/routes.py`, `tests/test_outcome_loop.py`, scenario `agent-outcome-followup` | Agent message in the thread, outcome read from the technician's reply; LLM with a keyword fallback |
+| L4 Console backend | `dashboard/review.py`, `dashboard/state.py`, `dashboard/routes.py`, `tests/test_review_backend.py` | Flags, `PATCH /assertions/{id}` with history and undo, `POST /jobs/{id}/rerun` |
 | L5 Console UI | `web/src/pages/ReviewPage.tsx`, `web/src/components/review/`, `components/pipeline/ItemEditor.tsx`, `Verdicts.tsx`, `components/knowledge/AssertionEditor.tsx`, `EditHistory.tsx`, `web/src/store/review.ts` | "Needs a look" page, inline item editing with re-run, assertion editor with undo |
 | L6 Eval + models | `evaluation.py`, `evaluate()` in `processor.py`, `scripts/eval_models.py`, `scripts/eval_candidates.example.json`, [evaluation.md](evaluation.md) | Match on (type, scope, action); model comparison script, a human runs the paid mode |
 | L7 Demo + docs | `docs/**`, [demo-loop-v2.md](demo-loop-v2.md) | This lot |

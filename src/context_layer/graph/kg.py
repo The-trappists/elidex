@@ -1,7 +1,7 @@
 """KnowledgeGraph: one typed, temporal graph over the network, the context assertions and their provenance.
 
 It is a *view* rebuilt from the ContextStore (the source of truth for assertions) and the threads
-(the raw messages). Nothing here changes the store, so the pipeline, guard, agent and workbench
+(the raw messages). Nothing here changes the store, so the pipeline, guard, agent and dashboard
 keep working unchanged.
 """
 

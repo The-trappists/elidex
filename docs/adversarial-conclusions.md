@@ -1,12 +1,12 @@
 # Adversarial & Edge Case Analysis: Conclusions
 
-This report synthesizes the adversarial evaluation of the Context Layer pipeline (`Listen` → `Understand` → `Link` → `Store` → `Reconcile` → `Guard`). It evaluates the divergence between what is displayed on the Workbench UI versus the actual underlying logic failures uncovered when processing human communication ranging from slight ambiguity to heavy colloquialisms, emotional venting, contradictory folk cures, and corrupted inputs.
+This report synthesizes the adversarial evaluation of the Context Layer pipeline (`Listen` → `Understand` → `Link` → `Store` → `Reconcile` → `Guard`). It evaluates the divergence between what is displayed on the Dashboard UI versus the actual underlying logic failures uncovered when processing human communication ranging from slight ambiguity to heavy colloquialisms, emotional venting, contradictory folk cures, and corrupted inputs.
 
 ---
 
 ## 1. Executive Summary
 
-When running the 5 adversarial stress scenarios through the Workbench UI:
+When running the 5 adversarial stress scenarios through the Dashboard UI:
 - **Frontend Perception**: The pipeline reports execution success (green indicators, resolved jobs, extracted entities, and Cytoscape graph nodes).
 - **Core Logic Reality**: Critical semantic and temporal failures occur silently under the hood. Specifically, obsolete procedures remain valid forever, conflicting diagnostic facts are silently merged and erased, and safety avoidances are inverted into commands.
 

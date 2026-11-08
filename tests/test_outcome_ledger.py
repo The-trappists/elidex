@@ -8,7 +8,7 @@ import pytest
 from context_layer import llm
 from context_layer.mvp import feedback
 from test_outcome_loop import OBS, assertion, loop, process, run_agent, say  # noqa: F401
-from test_workbench_core import client, rule, seeded, wait_for  # noqa: F401
+from test_dashboard_core import client, rule, seeded, wait_for  # noqa: F401
 
 SHAPE = {"status", "worked", "failed", "failed_on", "thread", "last_at"}
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { MobileBar, Sidebar } from './components/layout/Sidebar'
 import { LlmErrorBanner } from './components/layout/LlmErrorBanner'
@@ -22,6 +22,8 @@ import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
 import { connectReview } from './store/review'
 import { useUi } from './store/ui'
+import { bootstrapDemo, useDemo } from './store/demo'
+import PublicDemo from './pages/PublicDemo'
 
 function DashboardLayout() {
   const ready = useLive((s) => s.ready)
@@ -31,13 +33,13 @@ function DashboardLayout() {
 
   return (
     <div className="app-shell flex h-full animate-fade-in [animation-duration:300ms]">
-      <a href="#workbench-content" className="skip-link">Skip to workspace</a>
+      <a href="#dashboard-content" className="skip-link">Skip to workspace</a>
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <MobileBar />
         {headerVisible && <TopBar />}
         <LlmErrorBanner />
-        <main id="workbench-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">
+        <main id="dashboard-content" tabIndex={-1} className="min-h-0 flex-1 overflow-hidden">
           {!ready ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">
               <span className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
@@ -74,17 +76,32 @@ function DashboardLayout() {
 }
 
 export default function App() {
-  useEffect(() => connectLive(), [])
-  useEffect(() => connectReview(), [])
+  const status = useDemo((s) => s.status)
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  useEffect(() => {
+    let stopped = false
+    let disconnectLive: (() => void) | undefined
+    let disconnectReview: (() => void) | undefined
+    void bootstrapDemo().then((demo) => {
+      if (stopped) return
+      disconnectLive = connectLive()
+      if (!demo.enabled) disconnectReview = connectReview()
+    }).catch((cause: unknown) => {
+      if (!stopped) setError(cause instanceof Error ? cause.message : 'Unable to connect')
+    })
+    return () => { stopped = true; disconnectLive?.(); disconnectReview?.() }
+  }, [attempt])
+  if (!status) return <div className="flex h-full flex-col items-center justify-center gap-3 bg-bg p-6 text-center text-sm text-muted" role="status">{error ? <><p>{error}</p><button className="rounded-md border border-line px-4 py-2 text-text hover:bg-surface-2" onClick={() => { setError(''); setAttempt((n) => n + 1) }}>Try again</button></> : <><span className="size-6 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />Connecting to ElidEx…</>}</div>
   return (
     <BrowserRouter>
-      <Routes>
+      {status.enabled ? <PublicDemo /> : <Routes>
         {/* Standalone Home / Landing Page */}
         <Route path="/" element={<HomePage />} />
         
-        {/* Workbench Dashboard App (with Sidebar, TopBar, and exit button) */}
+        {/* Dashboard App (with Sidebar, TopBar, and exit button) */}
         <Route path="/*" element={<DashboardLayout />} />
-      </Routes>
+      </Routes>}
       <Toaster />
     </BrowserRouter>
   )

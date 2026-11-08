@@ -3,7 +3,7 @@
 - JSON mode per provider: "json_object", "json_schema" or "prompt" (LLM_JSON_MODE).
 - Optional fallback provider on 429, 5xx, timeout or connection error (LLM_FALLBACK_*).
 - Every attempt is traced as an LlmCall dict and handed to the registered sinks
-  (the workbench writes them to out/workbench/llm_calls.jsonl). API keys are never traced.
+  (the dashboard writes them to out/dashboard/llm_calls.jsonl). API keys are never traced.
 
 Sinks run in the caller's thread: a sink that touches an asyncio loop must use call_soon_threadsafe.
 """
@@ -23,6 +23,7 @@ import openai
 from openai import OpenAI
 
 from . import config
+from .demo_policy import current_policy
 
 TraceSink = Callable[[dict[str, Any]], None]
 _sinks: list[TraceSink] = []
@@ -37,7 +38,7 @@ def remove_trace_sink(sink: TraceSink) -> None:
         _sinks.remove(sink)
 
 
-# Held by every JSONL append and by the workbench log compaction, so a rewrite never loses a line.
+# Held by every JSONL append and by the dashboard log compaction, so a rewrite never loses a line.
 FILE_LOCK = threading.Lock()
 
 
@@ -209,6 +210,11 @@ def call_provider(
     t0 = time.perf_counter()
     text, exc = None, None
     try:
+        policy = current_policy()
+        timeout = config.LLM_TIMEOUT
+        if policy is not None:
+            timeout = min(timeout, policy.reserve(system, user))
+            kwargs["max_tokens"] = min(4096, policy.max_output_tokens)
         from . import google_auth
 
         api_key = p.api_key
@@ -222,7 +228,15 @@ def call_provider(
             )
             model = google_auth.format_vertex_model(model)
 
-        client = OpenAI(base_url=base_url or None, api_key=api_key, timeout=config.LLM_TIMEOUT, max_retries=0)
+        if policy is not None:
+            # Authentication may have taken time, or the workspace may have expired.
+            # The reserved final call remains valid even when it reaches max_calls.
+            if not policy.active or time.monotonic() >= policy.deadline:
+                from .demo_policy import DemoLimitError
+
+                raise DemoLimitError("The live demo run has ended.")
+            timeout = min(timeout, max(0.001, policy.deadline - time.monotonic()))
+        client = OpenAI(base_url=base_url or None, api_key=api_key, timeout=timeout, max_retries=0)
         resp = client.chat.completions.create(
             model=model,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
@@ -250,7 +264,9 @@ def call_provider(
         trace["error"] = f"{type(e).__name__}: {e}"[:2000]
     trace["latency_ms"] = int((time.perf_counter() - t0) * 1000)
     if emit:
-        for sink in list(_sinks):
+        policy = current_policy()
+        sinks = ([policy.trace_sink] if policy.trace_sink else []) if policy is not None else list(_sinks)
+        for sink in sinks:
             try:
                 sink(trace)
             except Exception:  # noqa: BLE001 - tracing must never break a call
@@ -278,6 +294,9 @@ def complete_traced(
     the error appended, then the next provider is tried. If no provider gives a valid answer, the last answer is
     returned as it is (the caller's parse raises, as before).
     """
+    policy = current_policy()
+    if policy is not None:
+        policy.require_active()
     chain = providers(role, model)
     if not chain:
         raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")

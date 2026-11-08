@@ -78,7 +78,7 @@ def test_link_precision_recall():
 
 def test_evaluate_keeps_contract():
     from context_layer.link import Inventory
-    from context_layer.workbench.processor import evaluate
+    from context_layer.dashboard.processor import evaluate
 
     want = [item("sfp-swap-first-step", "clear counters")]
     res = evaluate([item("other-name", "clear counters")], want, Inventory.load())

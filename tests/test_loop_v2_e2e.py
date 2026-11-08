@@ -1,7 +1,7 @@
-"""Loop v2 end to end: messages -> real Workbench/Processor job path -> stored knowledge, with the LLM layer
+"""Loop v2 end to end: messages -> real Dashboard/Processor job path -> stored knowledge, with the LLM layer
 replaced by fakes (extractor, critic, judge, outcome). Nothing here touches the network.
 
-One story, told in order (the steps share one Workbench):
+One story, told in order (the steps share one Dashboard):
   A  a rule is stated; the critic rejects an over-reaching second item
   B  a firmware message closes the rule although its topic slug differs (judge)
   C  two experts disagree: both stay open, flagged
@@ -17,10 +17,10 @@ import pytest
 
 from context_layer import config, critic, judge, llm, outcome
 from context_layer.models import ExtractedItem, Scope
-from context_layer.workbench import loop_agents, processor
-from test_workbench_core import client, seeded, wait_for  # noqa: F401
+from context_layer.dashboard import loop_agents, processor
+from test_dashboard_core import client, seeded, wait_for  # noqa: F401
 
-T0 = datetime.fromisoformat(config.WORKBENCH_SIM_START)
+T0 = datetime.fromisoformat(config.DASHBOARD_SIM_START)
 OBS = {"sfp_replaced": True, "interface_status": "UP", "optical_levels": "normal", "traffic_counters": 0, "alarms": "cleared"}
 
 

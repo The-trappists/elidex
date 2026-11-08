@@ -55,9 +55,9 @@ Extras if time allows, one per hard point:
 | Scope drift (workflows, tickets, fault detection) | Check every feature against the [scope checklist](challenge.md#scope-checklist) |
 | Demo breaks live | Recorded backup video; cached LLM results |
 
-### Over-linking: a case from the deployed workbench (2026-11-07)
+### Over-linking: a case from the deployed dashboard (2026-11-07)
 
-On the deployed workbench (Gemini), the thread "TRN-088 first step after SFP swap" gave `ctx_0001` (Erkki: bounce first). It reached 9 elements, 4 of them wrongly:
+On the deployed dashboard (Gemini), the thread "TRN-088 first step after SFP swap" gave `ctx_0001` (Erkki: bounce first). It reached 9 elements, 4 of them wrongly:
 
 - **TRN-240, a TX-5000** at the same site. The thread names the site ("Kangas"), and the linker bound every site as scope (`applies_to`), so the advice reached everything there. **Fixed:** when a class or an element already carries the scope, the site is bound as `observed_on` (where it was seen), and `get_context` counts `observed_on` only for the entity itself (`link.py`, `store.py`, tests in `tests/test_link.py`). Site-only knowledge (site access) is unchanged.
 - **TRN-154, TRN-176, TRN-208, TX-3000s from 2020–2022.** Erkki said "the old TX-3000s"; the extractor kept the model and dropped "old", so the class covers every TX-3000. **Not fixed**, options below.
@@ -77,7 +77,7 @@ Possible improvements (proposals, not decided):
 
 Checked against every remote branch on 2026-11-07: none of these is fixed yet.
 
-1. **Failing test `test_every_scenario_file_validates_and_is_sorted`.** The 5 `adversarial-*` scenarios on main (commit `eaca715`) have empty `tags`, no `expected`, and personas missing from `personas.json` (`bot-relay`, `pirjo`, `matias`, `niko`). Fix: add tags and the personas, or move the files out of `data/workbench/scenarios/`. `worktree-loop-v2` sets the count to `== 25`, and `accuracy` counts the files instead: expect a merge conflict in that test.
+1. **Failing test `test_every_scenario_file_validates_and_is_sorted`.** The 5 `adversarial-*` scenarios on main (commit `eaca715`) have empty `tags`, no `expected`, and personas missing from `personas.json` (`bot-relay`, `pirjo`, `matias`, `niko`). Fix: add tags and the personas, or move the files out of `data/dashboard/scenarios/`. `worktree-loop-v2` sets the count to `== 25`, and `accuracy` counts the files instead: expect a merge conflict in that test.
 2. **Over-wide binding, measured with the real LLM** (`ctx eval --extractor llm`, see [evaluation.md](evaluation.md)): 62% retrieval accuracy with conditions vs 100% on labels; binding exact 41%. 15 of 24 items get an element class, 14 of them on top of the single unit the chat was about, and 7 of those classes have no type (`class:any:ru-200`). Example: the RAD-176 frost tip reaches RAD-198 and RAD-221. `worktree-loop-v2` covers part of it (`scope.qualifier` for vague words like "old", confidence x0.8, a critic), but the class is still bound. Remaining options: the linker refuses a class with no type (~30 min, measurable offline with `--extractor cache`); the prompt defaults to the cited unit unless the speaker generalises explicitly (~30 min, needs an LLM rerun).
 3. **Reconcile before merging `accuracy` and `worktree-loop-v2`**, which overlap:
    - Field outcomes: `accuracy` judges from the agent's observations (`mvp/feedback.py`: track record, "contested", trust untouched). `loop-v2` judges from the technician's reply (`outcome.py`: LLM or keywords; trust becomes "verified", or confidence x0.7). The two inputs complement each other, but pick one way to store and show the result (`ContextAssertion.outcomes` vs `RuleApplication`), and decide whether a field result may change trust or confidence.
