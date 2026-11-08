@@ -1,3 +1,4 @@
+import { TechnologyStack } from '../components/home/TechnologyStack'
 import { ArrowRight, BookOpenCheck, MessagesSquare, Play, Waypoints } from 'lucide-react'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -372,6 +373,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <TechnologyStack />
         <section id="team" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">Built at Since AI 2026</p>
           <h2 className="mt-3 font-display text-3xl font-medium tracking-tight">Meet The Trappists.</h2>
