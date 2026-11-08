@@ -99,7 +99,7 @@ const STAGES: PipelineStage[] = [
   {
     id: 3,
     key: 'understand',
-    name: '3. Understand & Extraction',
+    name: '3. Understanding & Extraction',
     badge: 'Structured LLM Schema',
     badgeTone: 'info',
     module: 'src/context_layer/understand.py',
@@ -172,7 +172,7 @@ const STAGES: PipelineStage[] = [
   {
     id: 6,
     key: 'store',
-    name: '6. Store, Deduplication & Retraction',
+    name: '6. Storage, Deduplication & Retraction',
     badge: 'Idempotent Graph Index',
     badgeTone: 'ok',
     module: 'src/context_layer/store.py',
@@ -212,7 +212,7 @@ const STAGES: PipelineStage[] = [
     designJustification: {
       question: 'Why attach a firmware check condition instead of setting valid_to on the message date?',
       answer:
-        'Firmware rollout across a national carrier network takes weeks. Setting valid_to on the announcement date erroneously cuts off nodes still running firmware 3.8. Attaching firmware < 4.2 keeps the workaround active for un-upgraded nodes while safely retiring it for upgraded nodes.',
+        'Firmware rollout across a national carrier network takes weeks. Setting valid_to on the announcement date erroneously cuts off nodes still running firmware 3.8. Attaching firmware < 4.2 keeps the workaround active for nodes that have not been upgraded while safely retiring it for upgraded nodes.',
       elisaContext: 'Solves Hard Point 3: "Time: firmware fixes the bug; when does it stop being true?"',
     },
   },
@@ -230,7 +230,7 @@ const STAGES: PipelineStage[] = [
       'Multi-Layer Knowledge Graph: NetworkX graph projecting Provenance (Person, Message, Thread), Extraction (Assertion), Topology (Element, Class, Site), and Lifecycle (ClosedBy, ConflictsWith) edges.',
       'Model Context Protocol (MCP): Runs over stdio/SSE using official Anthropic/Google MCP standard.',
       'get_context(entity_id, observations, include_expired=False): Evaluates telemetry observations against assertion conditions, returning check_status ("fully checked", "not fully checked"), to_read missing fields, and track_record.',
-      'Auto-fills element firmware from inventory so agents do not need to query CMDB manually.',
+      'Auto-fills element firmware from inventory so agents do not need to query the CMDB manually.',
       'check_action(action, entity_id, observations): Ask-before-act guard verifying planned operations against known human avoid lists (e.g. "avoid reboot") before execution.',
     ],
     designJustification: {

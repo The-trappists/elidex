@@ -29,7 +29,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     badge: 'UnPtitBelge',
     avatar: '/matteo.png',
     linkedin: 'https://www.linkedin.com/in/matteo-morbee-cs/',
-    degree: 'M.Sc Computer Science, Networks&Systems specialization',
+    degree: 'M.Sc. in Computer Science, Networks & Systems specialization',
     unis: [{ name: 'UCLouvain', logo: '/uclouvain.svg' }],
     region: 'Belgium',
     flag: '/flag-be.svg',
@@ -39,7 +39,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     badge: 'mnlrc',
     avatar: '/manu.png',
     linkedin: 'https://www.linkedin.com/in/mnlrc/',
-    degree: "Joint Cybersecurity Master's degree",
+    degree: "Joint master’s degree in cybersecurity",
     unis: [
       { name: 'EPFL', logo: '/epfl.svg' },
       { name: 'ETHZ', logo: '/ethz.svg' },
@@ -73,17 +73,17 @@ const BEST_FEATURES = [
   {
     title: 'Our dynamic graphs',
     description:
-      "To build a knowledge graph is to understand it first. Even though our tool is autonomous and doesn't require human assistance, we provide a complete suite of structure widgets to accurately show the knowledge graph, the networks and the analytics.",
+      "Building a knowledge graph starts with understanding it. Even though our tool is autonomous and doesn't require human assistance, we provide a complete suite of visualization widgets to show the knowledge graph, the network, and the analytics clearly.",
   },
   {
     title: 'Correlation detection',
     description:
-      'We do more than just extracting plain knowledge from chats; we find correlations. Some issues in the network are related in time and in neighbor. We also represent those links as insights in the knowledge graph.',
+      'We do more than just extract knowledge from chats; we find correlations. Some network issues are related in time or affect neighboring equipment. We also represent those links as insights in the knowledge graph.',
   },
   {
     title: 'Simulated company day',
     description:
-      'Want to see ElidEx in action? The Company Day tab allows you to simulate a day with its chats, issues, and the live graph building using synthetic data.',
+      'Want to see ElidEx in action? The Company Day tab allows you to simulate a day of chats and issues, with the graph growing live from synthetic data.',
   },
 ] as const
 
@@ -183,7 +183,7 @@ export default function HomePage() {
           <div>
             <p className="mb-6 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
               <span className="h-px w-8 bg-accent" />
-              from specialist chats to knowledge graph
+              from specialist chats to a knowledge graph
             </p>
             <h1 className="font-display text-5xl font-medium leading-[1.06] tracking-[-0.045em] sm:text-6xl xl:text-7xl">
               Your network has
