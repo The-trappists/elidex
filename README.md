@@ -2,13 +2,13 @@
 
 **Capture the know-how that lives in network operations conversations, connect it to the right equipment and time, and make it usable by an AI agent.**
 
-Built by the **The-trappists** team for the **Since AI Hackathon 2026** in Turku, Finland.
+Built by **The-trappists** for the **Since AI Hackathon 2026** in Turku, Finland.
 
 ElidEx is the project name. “Context layer” describes the role the tool plays in network operations.
 <!-- 
 ![ElidEx Knowledge graph showing linked knowledge, people, equipment, and conversations](docs/images/elidex-knowledge-graph.png) -->
 
-*ElidEx's Knowledge graph, populated with the included sample data.*
+*ElidEx's knowledge graph, populated with the included sample data.*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)

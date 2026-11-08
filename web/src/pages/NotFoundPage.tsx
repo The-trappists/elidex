@@ -10,7 +10,7 @@ export default function NotFoundPage() {
       title="This page does not exist"
       hint={
         <>
-          Nothing lives at <code className="rounded bg-surface-2 px-1 font-mono">{pathname}</code>. It may have been renamed or the link is mistyped.
+          Nothing lives at <code className="rounded bg-surface-2 px-1 font-mono">{pathname}</code>. It may have been renamed or the link may contain a typo.
         </>
       }
       action={

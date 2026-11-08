@@ -204,7 +204,7 @@ export default function InsightsPage() {
           <p className="flex gap-2 px-4 pt-3 text-xs leading-relaxed text-muted">
             {tab === 'linked' ? <GitMerge size={14} className="mt-0.5 shrink-0 text-warn" /> : <Repeat size={14} className="mt-0.5 shrink-0 text-bad" />}
             {tab === 'linked'
-              ? 'Separate problems at the same time, on equipment that shares a link, a site or a firmware.'
+              ? 'Separate problems at the same time, on equipment that shares a link, a site or a firmware version.'
               : 'The same problem on the same equipment, reported 3 times or more.'}
           </p>
           <p className="px-4 pt-1.5 text-[11px] leading-relaxed text-muted">
@@ -225,7 +225,7 @@ export default function InsightsPage() {
               <EmptyState
                 icon={<Lightbulb size={26} />}
                 title="No insights yet"
-                hint="They appear when the same problem is reported 3 times on the same equipment, or when separate problems at the same time share a link, a site or a firmware. Run a few conversations or a Company day, then refresh."
+                hint="They appear when the same problem is reported 3 times on the same equipment, or when separate problems at the same time share a link, a site or a firmware version. Run a few conversations or a Company day, then refresh."
                 action={<Button size="sm" onClick={load}>Refresh</Button>}
               />
             ) : (
