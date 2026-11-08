@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AccuracySection } from '../components/home/AccuracySection'
 import { PipelineJourney } from '../components/home/PipelineJourney'
+import { DemoVideoSection } from '../components/home/DemoVideoSection'
 import { BootSequence } from '../components/home/BootSequence'
 import { ForceCanvas, type ForceNode, type ForceLink } from '../components/force/ForceCanvas'
 
@@ -153,6 +154,9 @@ export default function HomePage() {
           </span>
         </a>
         <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex flex-wrap items-center justify-center gap-x-6 text-sm sm:gap-x-12 lg:col-span-1 lg:row-start-auto">
+          <a href="#demo" className="flex items-center py-2 text-muted hover:text-text">
+            Demo
+          </a>
           <a href="#how-it-works" className="flex items-center py-2 text-muted hover:text-text">
             How it works
           </a>
@@ -203,6 +207,12 @@ export default function HomePage() {
               >
                 Explore the dashboard <ArrowRight size={17} />
               </Link>
+              <a
+                href="#demo"
+                className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium hover:border-accent"
+              >
+                <Play size={15} className="text-accent fill-accent" /> Watch demo (2:13)
+              </a>
               <a href="#how-it-works" className="inline-flex items-center py-2 text-sm font-medium text-muted hover:text-text">
                 Read more ↓
               </a>
@@ -253,6 +263,7 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+        <DemoVideoSection />
         <PipelineJourney />
         <AccuracySection />
         <section id="best-features" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
@@ -381,8 +392,8 @@ export default function HomePage() {
             <ul className="mt-4 space-y-3 text-sm">
               <li><a href="/overview" className="hover:text-accent">Dashboard</a></li>
               <li>
-                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-                  Demo
+                <a href="#demo" className="hover:text-accent">
+                  Demo Video
                 </a>
               </li>
               <li><a href="https://www.elisa.com/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">Elisa</a></li>
