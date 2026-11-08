@@ -28,7 +28,7 @@ from typing import Literal
 from ..models import ContextAssertion
 
 RelevanceStatus = Literal["matches the problem", "other problem", "not assessed"]
-DEFAULT_THRESHOLD = 0.5
+DEFAULT_THRESHOLD = 0.4  # chosen on the dev wording by `ctx dataset eval` (docs/evaluation.md, part 3)
 
 # Field vocabulary of transmission, radio and power operations: each line is one concept, its first word is the name.
 _THESAURUS = """
