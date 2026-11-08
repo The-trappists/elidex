@@ -49,8 +49,8 @@ ElidEx features a production-grade, highly modular architecture:
 
 ---
 
-## Reliability, Trust & Zero Human Burden
+## Advantages
 
-* Zero Specialist Overhead: Extraction is 100% passive and continuous with no form-filling.
-* Complete Explainability & Provenance: Every assertion is backed by verbatim quotes, identifiable authors, and deterministic justification.
-* Closed-Loop Feedback: Subsequent field observations automatically update rule confidence scores and trust status when an agent applies a recommendation.
+* Stable: Using ElidEx will enhance network operability
+* Smart: As requested, the tool is automated and doesn't need extra work for specialists
+* Trustworthy: Prevent misalignment with a confidence level backed by evidences, and sources
