@@ -37,16 +37,29 @@ export function MessageList({
 }) {
   const groups = useMemo(() => group(thread.messages), [thread.messages])
   const color = useMemo(() => Object.fromEntries(personas.map((p) => [p.name, p])), [personas])
-  const endRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  const previousThread = useRef<string | null>(null)
+  const following = useRef(true)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' })
-  }, [thread.id, thread.messages.length])
+    const list = listRef.current
+    if (!list) return
+    if (previousThread.current !== thread.id) {
+      previousThread.current = thread.id
+      following.current = thread.status === 'active'
+      list.scrollTop = following.current ? list.scrollHeight : 0
+    } else if (following.current) {
+      list.scrollTop = list.scrollHeight
+    }
+  }, [thread.id, thread.messages.length, thread.status])
 
   if (!thread.messages.length)
     return <EmptyState icon={<MessageSquare size={28} />} title="No messages yet" hint="Write the first message below. The pipeline reads the thread once it goes quiet." />
 
   return (
-    <div className="h-full overflow-auto px-4 py-3">
+    <div ref={listRef} onScroll={(event) => {
+      const list = event.currentTarget
+      following.current = list.scrollHeight - list.scrollTop - list.clientHeight < 100
+    }} className="h-full overflow-auto overscroll-contain px-4 py-3">
       {groups.map((g) => {
         const p = color[g[0].author]
         const role = g[0].role ?? p?.role
@@ -54,7 +67,7 @@ export function MessageList({
           <div key={g[0].seq} className="mb-3 flex gap-3">
             <Avatar name={g[0].author} color={p?.avatar_color} size={34} />
             <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <span className="text-sm font-semibold">{g[0].author}</span>
                 {role && <span className="text-[13px] text-muted">{role}</span>}
                 <span className="text-[13px] text-muted">{fmtDateTime(g[0].sent_at)}</span>
@@ -71,8 +84,8 @@ export function MessageList({
                   >
                     <div className="whitespace-pre-wrap break-words text-sm">{m.text}</div>
                     {c && (
-                      <div className="mt-1 flex items-center gap-1.5 text-[13px]">
-                        <span style={{ color: TYPE_STYLE[c.type].hex }}>→ {c.topic}</span>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px]">
+                        <span className="min-w-0 [overflow-wrap:anywhere]" style={{ color: TYPE_STYLE[c.type].hex }}>→ {c.topic}</span>
                         {c.assertionId && (
                           <Link to={assertionHref(c.assertionId)}>
                             <IdChip className="hover:border-accent max-md:py-2">{c.assertionId}</IdChip>
@@ -88,7 +101,6 @@ export function MessageList({
           </div>
         )
       })}
-      <div ref={endRef} />
     </div>
   )
 }

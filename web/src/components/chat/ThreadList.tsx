@@ -19,7 +19,7 @@ export const SourceIcon = ({ source, size = 14 }: { source: ThreadSource; size?:
   )
 }
 
-export const threadTitle = (t: LiveThread) => t.subject || t.id
+export const threadTitle = (t: LiveThread) => t.subject || (t.id === 'elisa/teams_chat.json' ? 'SFP replaced. Link up. No traffic.' : t.id)
 
 export function ThreadList({ selectedId }: { selectedId: string | null }) {
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)

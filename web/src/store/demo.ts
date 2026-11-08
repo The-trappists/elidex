@@ -10,15 +10,14 @@ export interface DemoStatus {
   mode?: 'scripted' | 'live'
 }
 
-export const useDemo = create<{ status: DemoStatus | null }>(() => ({ status: null }))
+export const useDemo = create<{ status: DemoStatus | null; sfpCaseComplete: boolean }>(() => ({ status: null, sfpCaseComplete: false }))
 
-// Share the first request across React StrictMode mounts. It establishes the cookie
-// before state, streams or any page makes a request for the visitor's workspace.
+// Deduplicate in-flight requests across StrictMode mounts, but refresh on every
+// dashboard entry: the previous workspace cookie may have expired on the homepage.
 let bootstrap: Promise<DemoStatus> | undefined
 export function bootstrapDemo(): Promise<DemoStatus> {
-  bootstrap ??= refreshDemo().catch((error: unknown) => {
+  bootstrap ??= refreshDemo().finally(() => {
     bootstrap = undefined
-    throw error
   })
   return bootstrap
 }

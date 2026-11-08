@@ -75,11 +75,23 @@ function DashboardLayout() {
   )
 }
 
-export default function App() {
+function AppContent() {
+  const { pathname } = useLocation()
+  const landing = pathname === '/'
   const status = useDemo((s) => s.status)
   const [error, setError] = useState('')
+  const [connecting, setConnecting] = useState(true)
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
+    // The marketing homepage is public even when the backend is full or offline.
+    // Allocate a private workspace only when the visitor enters the dashboard.
+    if (landing) {
+      setConnecting(true)
+      return
+    }
+    setConnecting(true)
+    setError('')
+    useLive.setState({ ready: false, company: null, companyError: false })
     let stopped = false
     let disconnectLive: (() => void) | undefined
     let disconnectReview: (() => void) | undefined
@@ -87,14 +99,19 @@ export default function App() {
       if (stopped) return
       disconnectLive = connectLive()
       if (!demo.enabled) disconnectReview = connectReview()
+      setConnecting(false)
     }).catch((cause: unknown) => {
-      if (!stopped) setError(cause instanceof Error ? cause.message : 'Unable to connect')
+      if (!stopped) {
+        setError(cause instanceof Error ? cause.message : 'Unable to connect')
+        setConnecting(false)
+      }
     })
     return () => { stopped = true; disconnectLive?.(); disconnectReview?.() }
-  }, [attempt])
-  if (!status) return <div className="flex h-full flex-col items-center justify-center gap-3 bg-bg p-6 text-center text-sm text-muted" role="status">{error ? <><p>{error}</p><button className="rounded-md border border-line px-4 py-2 text-text hover:bg-surface-2" onClick={() => { setError(''); setAttempt((n) => n + 1) }}>Try again</button></> : <><span className="size-6 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />Connecting to ElidEx…</>}</div>
+  }, [attempt, landing])
+  if (landing) return <HomePage />
+  if (connecting || error || !status) return <div className="flex h-full flex-col items-center justify-center gap-3 bg-bg p-6 text-center text-sm text-muted" role="status">{error ? <><p>{error}</p><button className="rounded-md border border-line px-4 py-2 text-text hover:bg-surface-2" onClick={() => { setError(''); setConnecting(true); setAttempt((n) => n + 1) }}>Try again</button></> : <><span className="size-6 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />Connecting to ElidEx…</>}</div>
   return (
-    <BrowserRouter>
+    <>
       {status.enabled ? <PublicDemo /> : <Routes>
         {/* Standalone Home / Landing Page */}
         <Route path="/" element={<HomePage />} />
@@ -102,7 +119,10 @@ export default function App() {
         {/* Dashboard App (with Sidebar, TopBar, and exit button) */}
         <Route path="/*" element={<DashboardLayout />} />
       </Routes>}
-      <Toaster />
-    </BrowserRouter>
+    </>
   )
+}
+
+export default function App() {
+  return <BrowserRouter><AppContent /><Toaster /></BrowserRouter>
 }

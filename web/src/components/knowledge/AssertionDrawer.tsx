@@ -1,6 +1,6 @@
-import { History, Network, Pencil, Trash2 } from 'lucide-react'
+import { ArrowRight, History, Network, Pencil, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { ContextAssertion } from '../../api/types'
 import { fmtDateTime } from '../../lib/format'
@@ -19,6 +19,8 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 
 export function AssertionDrawer({ assertion, id, onClose }: { assertion: ContextAssertion | undefined; id: string | null; onClose: () => void }) {
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const [params] = useSearchParams()
+  const guidedSfp = publicDemo && params.get('walkthrough') === 'sfp'
   const [confirm, setConfirm] = useState(false)
   const [editing, setEditing] = useState<'form' | 'history' | null>(null)
   const a = assertion
@@ -54,6 +56,7 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
         <div className="text-sm text-muted">Knowledge "{id}" not found. It may have been deleted.</div>
       ) : (
         <div className="text-sm">
+          {guidedSfp && <div className="mb-5 space-y-3 rounded-lg border border-line bg-accent-soft p-3"><p className="text-xs leading-relaxed">Step 2 of 3 · Inspect the source, equipment scope and validity below, then apply the rule to a similar node.</p><Link to="/agent?walkthrough=sfp" className="inline-flex min-h-10 items-center gap-3 rounded-md bg-accent px-3 py-2 text-xs font-semibold text-on-accent">Next: Run the TRN-117 case <ArrowRight size={14} /></Link></div>}
           <div className="mb-3 flex flex-wrap items-center gap-2">
             {!publicDemo && <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>}
             <Link to={`/graph?focus=${encodeURIComponent(a.id)}`} className="inline-flex h-7 items-center max-md:h-8 gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">

@@ -56,17 +56,25 @@ export default function KnowledgePage() {
       <Toggle checked={validNow} onChange={setValidNow} label="Valid now" />
     </>
   )
-  const open = (id: string) => setParams({ assertion: id })
-  const close = () => setParams({})
+  const open = (id: string) => setParams((current) => {
+    const next = new URLSearchParams(current)
+    next.set('assertion', id)
+    return next
+  })
+  const close = () => setParams((current) => {
+    const next = new URLSearchParams(current)
+    next.delete('assertion')
+    return next
+  })
 
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 [@media(max-height:700px)]:hidden">
         <PageIntro title="What the network remembers" description="Find advice, check its source and validity, or open the Agent tester to try it on a case." />
       </div>
-      <div className="flex items-center gap-2 overflow-x-auto border-b border-line bg-surface px-3 py-2 md:px-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-line bg-surface px-3 py-2 sm:flex md:px-4">
         <Tabs<Tab>
-          className="!overflow-visible"
+          className="min-w-0"
           value={tab}
           onChange={setTab}
           items={[
@@ -74,13 +82,13 @@ export default function KnowledgePage() {
             { id: 'timeline', label: 'Timeline' },
           ]}
         />
-        <div className="relative ml-1 min-w-32 flex-1 xl:max-w-64">
+        <div className="relative col-start-1 row-start-2 min-w-0 flex-1 sm:ml-1 sm:min-w-32 xl:max-w-64">
           <Search size={14} className="absolute left-2.5 top-2.5 text-muted" />
           <Input className="pl-8" aria-label="Search knowledge" placeholder="Search knowledge" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="hidden shrink-0 items-center gap-2 min-[1366px]:flex">{filterControls('min-[1366px]')}</div>
-        <FilterMenu className="min-[1366px]:hidden" count={[type, trust, thread].filter(Boolean).length + (validNow ? 1 : 0)}>{filterControls('')}</FilterMenu>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <FilterMenu className="col-start-2 row-start-2 min-[1366px]:hidden" count={[type, trust, thread].filter(Boolean).length + (validNow ? 1 : 0)}>{filterControls('')}</FilterMenu>
+        <div className="col-start-2 row-start-1 ml-auto flex shrink-0 items-center gap-2">
           <MergesBadge />
           <ExportMenu />
         </div>

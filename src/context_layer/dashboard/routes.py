@@ -74,7 +74,7 @@ def emit_clock(wb: Dashboard) -> ClockState:
 # ---------------------------------------------------------------- basics
 
 
-@router.get("/health")
+@router.api_route("/health", methods=["GET", "HEAD"])
 async def health() -> dict:
     return {"status": "ok"}
 

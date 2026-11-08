@@ -1,6 +1,6 @@
 import { Bot, ChevronDown, ChevronRight, FlaskConical, MessageSquare, PanelRightClose, PanelRightOpen, Play, RotateCcw, X } from 'lucide-react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client'
 import type { AgentRunResult, ContextHit, GraphProvenance, TrackRecord } from '../../api/types'
 import { OBSERVABLE_FIELDS } from '../../api/types'
@@ -10,7 +10,7 @@ import { useSimNow } from '../../lib/useNow'
 import { useLive } from '../../store/live'
 import { useDemo } from '../../store/demo'
 import { OBS_OPTIONS, toObservations } from '../data/ObservationsEditor'
-import { Badge, Button, EmptyState, IdChip, Input, Select, Toggle, withToast } from '../ui'
+import { Badge, Button, EmptyState, IdChip, Input, Select, Textarea, Toggle, withToast } from '../ui'
 import { AgentGraph } from './AgentGraph'
 import { TrustBadge, TypeBadge } from './bits'
 
@@ -73,16 +73,21 @@ function Section({ title, count, children }: { title: string; count?: number; ch
 }
 
 export function AgentTester() {
+  const [params] = useSearchParams()
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const guidedSfp = publicDemo && params.get('walkthrough') === 'sfp'
+  const initialCase: Preset = guidedSfp ? {
+    ...PRESETS[1], entity: 'TRN-117', description: SFP_TEXT.replace('TRN-042', 'TRN-117'), planned: 'Reboot TRN-117',
+  } : PRESETS[0]
   const configuredLlm = useLive((s) => s.settings?.llm_configured ?? false)
   const llm = configuredLlm && !publicDemo
   const sim = useSimNow(60_000)
-  const [entity, setEntity] = useState(PRESETS[0].entity)
-  const [description, setDescription] = useState(PRESETS[0].description)
-  const [obs, setObs] = useState<Record<string, string>>({})
-  const [planned, setPlanned] = useState('')
+  const [entity, setEntity] = useState(initialCase.entity)
+  const [description, setDescription] = useState(initialCase.description)
+  const [obs, setObs] = useState<Record<string, string>>(initialCase.obs)
+  const [planned, setPlanned] = useState(initialCase.planned)
   const [at, setAt] = useState('')
   const [useLlm, setUseLlm] = useState(false)
   const [showMore, setShowMore] = useState(false)
@@ -94,7 +99,12 @@ export function AgentTester() {
   const [graphOpen, setGraphOpen] = useState(true)
   const [addField, setAddField] = useState('')
 
+  useEffect(() => {
+    if (guidedSfp) useDemo.setState({ sfpCaseComplete: false })
+  }, [guidedSfp])
+
   const applyPreset = (p: Preset) => {
+    if (guidedSfp) useDemo.setState({ sfpCaseComplete: false })
     setEntity(p.entity)
     setDescription(p.description)
     setObs(p.obs)
@@ -114,6 +124,7 @@ export function AgentTester() {
     setBusy(false)
     if (!r) return
     setResult(r)
+    if (guidedSfp) useDemo.setState({ sfpCaseComplete: true })
     setRunEntity(entity)
     setLoadingSources(true)
     const rows = await Promise.all(r.hits.map(async (h) => [h.id, await api.provenance(h.id).catch(() => [])] as const))
@@ -133,24 +144,24 @@ export function AgentTester() {
       <div className="shrink-0 space-y-2 border-b border-line bg-surface px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="mr-2 flex items-center gap-2 font-display text-lg font-medium tracking-tight"><FlaskConical size={18} className="text-accent" /> Agent tester</h1>
-          <Select className="!w-72" value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Network entity">
+          <Select className="w-full sm:!w-72" value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Network entity">
             <option value="">Choose entity…</option>
             <optgroup label="Elements">{elements.map((e) => <option key={e.id} value={e.id}>{e.id} · {e.type.replace(/_/g, ' ')}</option>)}</optgroup>
             <optgroup label="Sites">{sites.map((s) => <option key={s.id} value={s.id}>{s.id} · {s.name}</option>)}</optgroup>
           </Select>
-          <Select className="!w-52" value="" onChange={(e) => { const p = PRESETS[Number(e.target.value)]; if (p) applyPreset(p) }} aria-label="Preset cases">
+          <Select className="w-full sm:!w-52" value="" onChange={(e) => { const p = PRESETS[Number(e.target.value)]; if (p) applyPreset(p) }} aria-label="Preset cases">
             <option value="">Preset cases…</option>
             {PRESETS.map((p, i) => <option key={p.label} value={i}>{p.label}</option>)}
           </Select>
-          <Input className="!w-[13rem]" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} aria-label="At date and time (defaults to the simulated time)" title="Defaults to the current simulated time" />
+          {!publicDemo && <Input className="w-full sm:!w-[13rem]" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} aria-label="At date and time (defaults to the simulated time)" title="Defaults to the current simulated time" />}
           <div className="ml-auto flex items-center gap-3">
             {!publicDemo && <Toggle checked={useLlm && llm} disabled={!llm} onChange={setUseLlm} label={<span className="text-[13px]" title={llm ? '' : 'No language model is configured; the rule-based agent is used'}>Use LLM</span>} />}
-            <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={() => applyPreset(PRESETS[0])} aria-label="Reset to the default case">Reset</Button>
-            <Button variant="primary" icon={<Play size={14} />} loading={busy} disabled={!entity || !description.trim()} onClick={run} aria-label="Run agent">Run</Button>
+            <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={() => applyPreset(initialCase)} aria-label="Reset to the default case">Reset</Button>
+            <Button variant="primary" icon={<Play size={14} />} loading={busy} disabled={!entity || !description.trim()} onClick={run} aria-label={guidedSfp ? 'Run SFP case' : 'Run agent'}>{guidedSfp ? 'Run SFP case' : 'Run'}</Button>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Input className="min-w-64 flex-1" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What happened on the network?" aria-label="What happened?" />
+          <Textarea rows={2} className="min-h-28 min-w-0 flex-1 basis-full resize-y sm:min-h-0 sm:basis-96" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What happened on the network?" aria-label="What happened?" />
           <button type="button" className="flex h-9 items-center gap-1 rounded-md px-2 text-[13px] text-muted hover:bg-surface-2 hover:text-text" aria-expanded={showMore} onClick={() => setShowMore((o) => !o)}>
             {showMore ? <ChevronDown size={14} /> : <ChevronRight size={14} />} Observations and planned action
             {(setObsKeys.length > 0 || planned.trim()) && <span className="rounded bg-accent/10 px-1.5 text-accent">{setObsKeys.length + (planned.trim() ? 1 : 0)}</span>}
@@ -158,6 +169,7 @@ export function AgentTester() {
         </div>
         {showMore && (
           <div className="flex flex-wrap items-center gap-2 animate-slide-in">
+            {publicDemo && <Input className="w-full sm:!w-[13rem]" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} aria-label="At date and time (defaults to the simulated time)" title="Defaults to the current simulated time" />}
             <Input className="!w-64" value={planned} onChange={(e) => setPlanned(e.target.value)} placeholder="Planned action, e.g. Replace the SFP module" aria-label="Planned action" title="Optional. The guard checks whether it fits the available knowledge." />
             {setObsKeys.map((f) => (
               <span key={f} className="inline-flex h-8 items-center gap-1 rounded-full border border-line bg-bg pl-3 pr-1 text-[13px]" title={OBSERVABLE_FIELDS[f]}>
