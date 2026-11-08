@@ -1,6 +1,6 @@
 # Backend review (2026-11-07, `main` at `9b051be`)
 
-> **Status: proposal.** Nothing here is decided until it is logged in [decisions.md](decisions.md). Written from a full read of `src/context_layer/` (core, workbench, eval, patterns, graph, dataset), the docs, a run of the tests and the offline evaluations, and offline probes on the real code. Every "confirmed" item below is reproduced by [`scripts/review_probes.py`](../scripts/review_probes.py), which prints `PRESENT` or `fixed` per item.
+> **Status: proposal.** Nothing here is decided until it is logged in [decisions.md](decisions.md). Written from a full read of `src/context_layer/` (core, dashboard, eval, patterns, graph, dataset), the docs, a run of the tests and the offline evaluations, and offline probes on the real code. Every "confirmed" item below is reproduced by [`scripts/review_probes.py`](../scripts/review_probes.py), which prints `PRESENT` or `fixed` per item.
 
 ## Applied so far (2026-11-07)
 
@@ -10,13 +10,13 @@ Steps 1–3 of the [recommended order](#recommended-order) and the parse-error r
 | --- | --- | --- |
 | 1 Linking | Ids and sites must be named in the thread (same matcher as the graph; a site also by its id without prefix or a name word only it has). A class needs a known type or a model; the type is normalised to snake_case and filled from the model; a class that leaves out a unit the thread is about is dropped and the unit kept. `stated_by` must have written in the thread (exact, case, first name), else the author of the quoted message, else the single author of the cited messages, else abstain | `link.py` |
 | 2 Time | `ContextStore.reach(a)`: the elements and sites an assertion is served for by scope. An invalidation closes a rule when `reach(rule) ⊆ reach(invalidation)`; a partial overlap stays open with an event | `store.py`, `mvp/lifecycle.py` |
-| 4 Trust | `Trust.confirmed_by` (optional, backward compatible) and `Trust.add_confirmation`: the outcome loop, the judge's `supports` and the store merges keep `stated_by` and add the confirmer. `/agent/run` creates applications only for `cited_assertion_ids` | `models.py`, `outcome.py`, `judge.py`, `store.py`, `workbench/routes.py` |
+| 4 Trust | `Trust.confirmed_by` (optional, backward compatible) and `Trust.add_confirmation`: the outcome loop, the judge's `supports` and the store merges keep `stated_by` and add the confirmer. `/agent/run` creates applications only for `cited_assertion_ids` | `models.py`, `outcome.py`, `judge.py`, `store.py`, `dashboard/routes.py` |
 | 5 Facts | With no action on either side, `same_knowledge` compares the facts; `reconcile` flags two different facts from two people | `store.py`, `mvp/lifecycle.py` |
 | 6 Outcome | Failure phrases first ("still no", "no traffic", "not fixed", "nope", "same as before"); no bare "back", no "is up"; a message that says both is unclear | `outcome.py` |
 | 7 Parse | An answer that fails validation is retried once on the same provider with the error, then the next provider | `llm.py` |
 
 Where it differs from the proposals above:
-- **Invalidations still need the same topic.** Dropping it would let one "fixed by firmware" close every rule on the same elements, whatever the problem. The judge (workbench) already matches by meaning.
+- **Invalidations still need the same topic.** Dropping it would let one "fixed by firmware" close every rule on the same elements, whatever the problem. The judge (dashboard) already matches by meaning.
 - **Only lifecycle uses the shared reach.** `KnowledgeGraph.reach`, `patterns._Net.reach` and `review._over_reach` keep their own code for now.
 - **The vague-word option (a)/(b) is not changed**: still open in [plan.md](plan.md).
 - **"Binding exact" cannot move with these fixes**: the eval scores the extracted item before linking. Retrieval accuracy is what the linker changes.
@@ -29,8 +29,8 @@ The pipeline covers every "must" line of the [scope checklist](challenge.md#scop
 
 1. **Linking still over-reaches with LLM output** (backlog item 1 is not fixed). The linker trusts the extracted class, ids and author without checking them against the thread or the inventory: a class that excludes the cited unit, a year-only class that reaches a router, ids the thread never names (probes L1–L4).
 2. **Time and trust rely on ids and slugs.** An invalidation closes a rule only when the two class ids are equal (R1, backlog item 2 not fixed). A technician's "it worked" overwrites who stated the rule, which hides later disagreements (O2), and the agent marks *every* retrieved rule as applied, so one "fixed" reply verifies noise too.
-3. **Three copies of the pipeline.** The CLI (`pipeline.py`), the eval (`eval/kb.py`) and the workbench (`workbench/processor.py`) each run extract → link → store → reconcile. The critic, judge and outcome loop exist only in the workbench, so **no number measures them**, and the store that MCP and REST serve never gets them.
-4. **The external agent interface is behind the UI.** MCP reads the CLI store file (not the live workbench), reloads it on every call, and still takes no `observations` (backlog item 4 not fixed).
+3. **Three copies of the pipeline.** The CLI (`pipeline.py`), the eval (`eval/kb.py`) and the dashboard (`dashboard/processor.py`) each run extract → link → store → reconcile. The critic, judge and outcome loop exist only in the dashboard, so **no number measures them**, and the store that MCP and REST serve never gets them.
+4. **The external agent interface is behind the UI.** MCP reads the CLI store file (not the live dashboard), reloads it on every call, and still takes no `observations` (backlog item 4 not fixed).
 5. **Atlas and Tiger hold data but no decision uses it.** Vector search and freshness are only reachable from stand-alone endpoints and CLI commands.
 
 Recommended order at the end. The first three steps are deterministic, testable offline, and need no new tool.
@@ -87,9 +87,9 @@ Option for vague words (already in [plan.md](plan.md), still open): with a quali
 
 ### 2. Time: compare what rules reach, not their ids (confirmed: R1)
 
-**Evidence.** `mvp/lifecycle.reconcile` closes an older rule only when `old.applies_to & new.applies_to` share an id, and only on the same topic slug. A rule on `class:…:tx-3000:installed-upto-2018` is not closed by an invalidation on `class:transmission_node:installed-upto-2019`, although the second covers every element of the first. Conflict detection has the same topic-slug dependency. The judge fixes part of this, but only in the workbench.
+**Evidence.** `mvp/lifecycle.reconcile` closes an older rule only when `old.applies_to & new.applies_to` share an id, and only on the same topic slug. A rule on `class:…:tx-3000:installed-upto-2018` is not closed by an invalidation on `class:transmission_node:installed-upto-2019`, although the second covers every element of the first. Conflict detection has the same topic-slug dependency. The judge fixes part of this, but only in the dashboard.
 
-The codebase computes "which elements does a rule reach" in **four** places (`store.get_context` scope walk, `graph/kg.KnowledgeGraph.reach`, `mvp/patterns._Net.reach`, `workbench/review._over_reach`), and the one place that needs it most, lifecycle, uses none.
+The codebase computes "which elements does a rule reach" in **four** places (`store.get_context` scope walk, `graph/kg.KnowledgeGraph.reach`, `mvp/patterns._Net.reach`, `dashboard/review._over_reach`), and the one place that needs it most, lifecycle, uses none.
 
 **Proposal:** one `ContextStore.reach(assertion) -> set[str]` (members of bound classes ∪ bound elements ∪ elements of bound sites), memoised and cleared on `add_class` / inventory change. Use it in lifecycle, judge candidates, patterns and review.
 
@@ -131,7 +131,7 @@ Without an LLM, `outcome.heuristic` reads "Link is UP but still no traffic" and 
 ### 7. Extraction robustness and prompt input
 
 **Evidence.**
-- `llm.complete_traced` returns the first answer without a transport error, even when `validate` failed; `LLMExtractor.extract` then raises, and the workbench falls back to "scripted" (nothing, for a live thread). No repair attempt, no fallback provider on a parse error (probe U1). The model comparison saw invalid outputs from Mistral Medium.
+- `llm.complete_traced` returns the first answer without a transport error, even when `validate` failed; `LLMExtractor.extract` then raises, and the dashboard falls back to "scripted" (nothing, for a live thread). No repair attempt, no fallback provider on a parse error (probe U1). The model comparison saw invalid outputs from Mistral Medium.
 - `max_retries=0` and no backoff: a single 429 on the free Gemini tier goes straight to the fallback, or fails the job without one. A new `OpenAI` client (new TLS connection) is created for every call.
 - The extractor gets **every** topic slug in the store, with no meaning attached. It grows with the store, and a bare slug cannot tell the model whether it is the same knowledge.
 
@@ -144,7 +144,7 @@ Without an LLM, `outcome.heuristic` reads "Link is UP but still no traffic" and 
 
 ### 8. One pipeline core
 
-**Evidence.** `pipeline.build_store`, `eval/kb.build_kb` and `workbench/processor.Processor._run` each re-implement extract → link → store → reconcile. Hooks (critic, judge, outcome) only run in the workbench. Consequences: the eval cannot measure the critic or the judge ([model-improvements.md](model-improvements.md) items 2 and 5 depend on it), and `ctx run` (the store MCP and REST serve) has no judge.
+**Evidence.** `pipeline.build_store`, `eval/kb.build_kb` and `dashboard/processor.Processor._run` each re-implement extract → link → store → reconcile. Hooks (critic, judge, outcome) only run in the dashboard. Consequences: the eval cannot measure the critic or the judge ([model-improvements.md](model-improvements.md) items 2 and 5 depend on it), and `ctx run` (the store MCP and REST serve) has no judge.
 
 **Options:**
 
@@ -155,12 +155,12 @@ Without an LLM, `outcome.heuristic` reads "Link is UP but still no traffic" and 
 
 Recommendation: the second option now (so the critic and judge get numbers before the pitch), the first one after the feature freeze if there is time.
 
-### 9. Workbench throughput and hot paths
+### 9. Dashboard throughput and hot paths
 
 **Evidence.**
 - `Processor.process` holds one global `asyncio.Lock` for the whole job, **including** the LLM calls: extraction (~5 s measured by `ctx llm-check`), the critic (one call), the judge (one call per new assertion, sequential) and the outcome loop. With critic and judge on, a job takes about 15–20 s of LLM time and every other thread waits. A live Slack demo with two active threads queues visibly.
 - After every job, `review.collect_flags` rebuilds the whole knowledge graph (regex mentions over all messages) on the event loop thread. Every `/api/graph*` request rebuilds it again. Cheap on the seed (10 ms at 10× the threads), but linear in message count, so it grows with every simulated scenario.
-- Re-processing a thread re-runs extraction, critic and judge on the whole thread after each new message (8 s idle debounce). The answer is never cached by input: `WORKBENCH_LLM_CACHE_FILE` is written but never read.
+- Re-processing a thread re-runs extraction, critic and judge on the whole thread after each new message (8 s idle debounce). The answer is never cached by input: `DASHBOARD_LLM_CACHE_FILE` is written but never read.
 
 **Proposal:**
 - Run extraction and the critic **outside** the lock (they only read the thread), take the lock for link → store → judge → reconcile. Judge all new assertions of a job in **one** call (one prompt with several new assertions and their candidates), or in parallel with `asyncio.gather`.
@@ -171,10 +171,10 @@ Recommendation: the second option now (so the critic and judge get numbers befor
 
 ### 10. The agent interface (confirmed: A1, A2)
 
-**Evidence.** `mcp_server.get_context` takes `(entity_id, at)` only, so an external agent never gets `check_status`, `to_read` or the track record, the best measured features (backlog item 4). Every MCP tool calls `_store()`, which reloads the inventory and `out/context_store.json` from disk; `get_patterns` also re-reads every thread. And that file is the **CLI** store: knowledge captured live in the workbench (Slack, scenarios) is invisible to MCP. `api.py` caches its store with `lru_cache` forever, so it never sees a new `ctx run`.
+**Evidence.** `mcp_server.get_context` takes `(entity_id, at)` only, so an external agent never gets `check_status`, `to_read` or the track record, the best measured features (backlog item 4). Every MCP tool calls `_store()`, which reloads the inventory and `out/context_store.json` from disk; `get_patterns` also re-reads every thread. And that file is the **CLI** store: knowledge captured live in the dashboard (Slack, scenarios) is invisible to MCP. `api.py` caches its store with `lru_cache` forever, so it never sees a new `ctx run`.
 
 **Proposal:**
-- Serve MCP **from the workbench process** over the live store (MCP Python SDK 2.x streamable HTTP, mounted next to the FastAPI routes), keeping the stdio entry point for the CLI store.
+- Serve MCP **from the dashboard process** over the live store (MCP Python SDK 2.x streamable HTTP, mounted next to the FastAPI routes), keeping the stdio entry point for the CLI store.
 - `get_context(entity_id, at, observations=None)` returns `check_status`, `to_read`, `track_record` per item (the code exists in `routes.agent_run`). Add a `read_observation(entity_id, field)` tool backed by the incident's observations: that is technique A (the corrective read loop) and the brief's "check the counters", done by the agent itself.
 - Load the stdio store once and reload on file mtime change.
 
@@ -183,7 +183,7 @@ Recommendation: the second option now (so the critic and judge get numbers befor
 ### 11. Evaluation honesty
 
 - **Numbers:** regenerate every LLM number from one commit in one run, and report labels as the upper bound (backlog item 5, still open).
-- **Labels written by an LLM:** `workbench/generator.py` writes the `expected` items of generated scenarios with an LLM (possibly the same family as the extractor). Scoring an LLM extractor on LLM-written labels inflates it. Keep generated scenarios out of the scored set, or tag them and report them apart.
+- **Labels written by an LLM:** `dashboard/generator.py` writes the `expected` items of generated scenarios with an LLM (possibly the same family as the extractor). Scoring an LLM extractor on LLM-written labels inflates it. Keep generated scenarios out of the scored set, or tag them and report them apart.
 - **Critic and judge are unmeasured** (see finding 8). The cheapest credible number: run the eval with the critic on and off, on the same cached extractions.
 
 ## Tools: are we using the right ones?
@@ -196,11 +196,11 @@ Recommendation: the second option now (so the critic and judge get numbers befor
 | NetworkX in memory as the runtime graph | Right for this size (sub-ms at 4k elements) | Two graphs (`ContextStore.g` and `KnowledgeGraph`) and four reach functions: share one reach (finding 2), cache the view (finding 9) |
 | Neo4j as an optional mirror | Right as a mirror; Elisa names Neo4j | Keep it off the runtime path; show the temporal Cypher query in the pitch |
 | MCP Python SDK 2.x | Right: it is how agents call us | Live store, observations, read tool (finding 10) |
-| FastAPI + SSE for the workbench | Right | None |
+| FastAPI + SSE for the dashboard | Right | None |
 | Embeddings (`gemini-embedding-001`, hashed fallback) | Right; calibrated for patterns | Uses the primary provider only (no fallback); fine |
 | MongoDB Atlas (documents, vector search) | Data is there, but **no decision uses it**: `/similar` and `ctx dataset similar` only | Use vector search where it fixes a failure: candidates for the judge (technique B), the "seen on other units, scope not confirmed" fallback. Add filter fields to the vector index (`type`, `valid_to`, `bound_to.entity`) so the search can pre-filter instead of post-filtering |
 | Tiger Data (hypertable, continuous aggregate) | Same: only `/freshness` and CLI | `daily_mentions` has no refresh policy (`add_continuous_aggregate_policy`), so it goes stale after the load. `/freshness` measures age against wall-clock now, not `at`/sim time. Strongest use: a staleness signal on knowledge (hard point 3), e.g. "rule last confirmed 14 months ago, element discussed 300 times since" shown next to the rule |
-| Streamlit (`demo/app.py`) | A third UI and a heavy dependency | Drop it from the main dependencies if the workbench and the product demo are the chosen surfaces (backlog item 9) |
+| Streamlit (`demo/app.py`) | A third UI and a heavy dependency | Drop it from the main dependencies if the dashboard and the product demo are the chosen surfaces (backlog item 9) |
 | Not needed now | — | A reranker, GraphRAG community summaries, a multi-agent orchestrator: no measured failure they fix (same conclusion as the backlog) |
 
 ## Scope check

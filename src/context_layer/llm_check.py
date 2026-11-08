@@ -73,10 +73,10 @@ def print_report(results: list[dict[str, Any]]) -> None:
 
 
 def main() -> None:
-    llm.add_trace_sink(llm.jsonl_sink(config.WORKBENCH_LLM_CALLS_FILE))
+    llm.add_trace_sink(llm.jsonl_sink(config.DASHBOARD_LLM_CALLS_FILE))
     results = run_check()
     print_report(results)
-    out = config.WORKBENCH_LLM_CALLS_FILE.parent / "llm_check.json"
+    out = config.DASHBOARD_LLM_CALLS_FILE.parent / "llm_check.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
-    print(f"Saved to {out} (every call is also in {config.WORKBENCH_LLM_CALLS_FILE.name})")
+    print(f"Saved to {out} (every call is also in {config.DASHBOARD_LLM_CALLS_FILE.name})")

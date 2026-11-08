@@ -75,7 +75,7 @@ def test_invented_items_count_as_noise(monkeypatch):
 
 
 def load_seed_items():
-    from context_layer.workbench.seed import load_seed
+    from context_layer.dashboard.seed import load_seed
 
     return [i for s in load_seed().scenarios if s.expected for i in s.expected.items]
 

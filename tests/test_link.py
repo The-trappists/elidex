@@ -5,7 +5,7 @@ import pytest
 from context_layer.models import Site
 from context_layer.understand import LLMExtractor
 from context_layer.link import Inventory
-from context_layer.workbench.seed import load_seed
+from context_layer.dashboard.seed import load_seed
 
 SITES = Inventory([], load_seed().sites)
 

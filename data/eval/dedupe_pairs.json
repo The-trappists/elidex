@@ -1,5 +1,5 @@
 {
- "_note": "Labelled advice pairs for `dedupe.evaluate` / `ctx dedupe-check`. same=true: the same advice in other words (scope, avoid, numbers equal); same=false: look-alike that must never merge. 'source' names the repo file the wording comes from (or 'hand'). Mutated look-alikes of every data/workbench/scenarios expected action are added at run time.",
+ "_note": "Labelled advice pairs for `dedupe.evaluate` / `ctx dedupe-check`. same=true: the same advice in other words (scope, avoid, numbers equal); same=false: look-alike that must never merge. 'source' names the repo file the wording comes from (or 'hand'). Mutated look-alikes of every data/dashboard/scenarios expected action are added at run time.",
  "pairs": [
   {
    "same": true,

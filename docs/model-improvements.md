@@ -35,8 +35,8 @@ Effort and impact are our judgment, not measurements. "Where" points at the code
 | 2 | Add a mode that runs the critic after extraction and reports before and after | ~2 h | The critic exists to fix over-linking; today nothing measures it | `scripts/eval_models.py`, `critic.py` |
 | 3 | Repeat each candidate 3 times and report the spread | ~30 min plus credits | One run cannot tell a 1-item gap from noise (extraction already uses `temperature=0`, so remaining variation comes from the provider) | `scripts/eval_models.py` |
 | 4 | Make the script usable: a progress line per scenario, keep the error body, a `reasoning_effort` field per candidate, write results incrementally | ~1 h | A silent script that writes only at the end lost its error cause and hides long waits | `scripts/eval_models.py` |
-| 5 | Build a small labelled set for the critic and the judge (over-wide scope, unsupported action, true supersede, true conflict) | ~2-3 h | Critic and judge quality is unmeasured; thresholds are guesses | `data/workbench/scenarios/`, new eval |
-| 6 | More scenarios with `expected` items (22 of 25 today) and real-looking noise | ongoing | A small set hides failure modes | `data/workbench/scenarios/` |
+| 5 | Build a small labelled set for the critic and the judge (over-wide scope, unsupported action, true supersede, true conflict) | ~2-3 h | Critic and judge quality is unmeasured; thresholds are guesses | `data/dashboard/scenarios/`, new eval |
+| 6 | More scenarios with `expected` items (22 of 25 today) and real-looking noise | ongoing | A small set hides failure modes | `data/dashboard/scenarios/` |
 
 ### Improve the extraction
 
