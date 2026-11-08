@@ -6,6 +6,7 @@ FROM node:22-alpine AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
+COPY docs/ /docs/
 COPY web/ ./
 RUN npm run build
 
@@ -28,6 +29,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY src/ ./src/
 RUN uv sync --frozen --no-dev
 COPY data/ ./data/
+COPY docs/ ./docs/
 COPY --from=web /web/dist ./web/dist
 
 # Non-root user; /app/out holds the state (mounted as a volume in compose).

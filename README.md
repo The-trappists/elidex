@@ -25,7 +25,7 @@ Built by **The Trappists** for the **Since AI Hackathon 2026** (Turku, Finland)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
 
-[**Watch Demo Video (MP4)**](docs/images/elidex-demo.mp4) • [**Submission Report**](docs/submission.md) • [**Design & Architecture**](docs/design.md) • [**Decisions Log**](docs/decisions.md)
+[**Watch Demo Video (MP4)**](docs/video/ElidEx-demo-final.mp4) • [**Submission Report**](docs/submission.md) • [**Design & Architecture**](docs/design.md) • [**Decisions Log**](docs/decisions.md)
 
 </div>
 
