@@ -1,6 +1,7 @@
-import { ArrowRight, BookOpenCheck, MessagesSquare, Play, Waypoints } from 'lucide-react'
+import { ArrowRight, BookOpenCheck, Play } from 'lucide-react'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { PipelineJourney } from '../components/home/PipelineJourney'
 import { BootSequence } from '../components/home/BootSequence'
 import { ForceCanvas, type ForceNode, type ForceLink } from '../components/force/ForceCanvas'
 
@@ -247,52 +248,7 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-        <section id="how-it-works" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
-          <div className="mb-9 grid gap-x-8 gap-y-4 lg:grid-cols-[auto_1fr]">
-            <h2 className="font-display text-3xl font-medium tracking-tight">Experience becomes context.</h2>
-            <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted">
-              Hidden knowledge is information not readily available in a centralized database; it is information only found within the minds of the experienced network engineers. This leads us to the following question: how could we retrieve this knowledge to reuse it within automated network operations?
-            </p>
-            <p className="text-sm leading-relaxed text-muted lg:col-start-2">
-              ElidEx captures specialist knowledge from everyday conversations, links it to the right network entities and time periods, then makes it available to autonomous agents when similar situations arise.
-            </p>
-          </div>
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              {
-                icon: MessagesSquare,
-                title: 'Collect from chats',
-                text: 'Capture live specialists communications from Slack and emails, building dynamically knowledge',
-                to: '/conversations',
-                link: 'Read conversations',
-              },
-              {
-                icon: Waypoints,
-                title: 'Link to the right context',
-                text: 'Bind each piece of knowledge to the right network entity and time validity. Assume nothing, prove everything',
-                to: '/graph',
-                link: 'Explore the graph',
-              },
-              {
-                icon: BookOpenCheck,
-                title: 'Ready for automation',
-                text: 'An agentic-ready knowledge graph, savable as JSON, Markdown, ... No human required!',
-                to: '/knowledge',
-                link: 'Browse knowledge',
-              },
-            ].map(({ icon: Icon, title, text, to, link }) => (
-              <article key={to} className="flex flex-col border-t border-line pt-6">
-                <Icon size={23} className="mb-5 text-accent" />
-                <h3 className="font-display text-lg font-medium">{title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{text}</p>
-                <Link to={to} className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-medium text-accent">
-                  {link}
-                  <ArrowRight size={14} />
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
+        <PipelineJourney />
         <section id="best-features" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.6fr] lg:gap-16">
             <div className="flex flex-col">
@@ -314,7 +270,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            <div aria-live="polite" className="relative aspect-[1.65/1] min-h-64 overflow-hidden rounded-3xl border border-line bg-[#101113]">
+            <div aria-live="polite" className="relative aspect-[1.65/1] min-h-64 w-full min-w-0 overflow-hidden rounded-3xl border border-line bg-[#101113]">
               {activeFeature === 0 ? (
                 <ForceCanvas
                   mode="knowledge"
