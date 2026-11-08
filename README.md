@@ -1,26 +1,21 @@
 # ElidEx
 
-**Capture the know-how that lives in network operations conversations, connect it to the right equipment and time, and make it usable by an AI agent.**
+**Capture the Hidden Knowledge that lives in network operation conversations, connect it to the right equipment and time, and make it re-usable by an AI agent.**
 
-Built by **The-trappists** for the **Since AI Hackathon 2026** in Turku, Finland.
-
-ElidEx is the project name. “Context layer” describes the role the tool plays in network operations.
-<!-- 
-![ElidEx Knowledge graph showing linked knowledge, people, equipment, and conversations](docs/images/elidex-knowledge-graph.png) -->
-
-*ElidEx's knowledge graph, populated with the included sample data.*
+Built by the **The Trappists** team for the **Since AI Hackathon 2026** in Turku, Finland.
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
+<!-- TODO: add complete stack -->
 
 ## The challenge
 
-Elisa's challenge is **“Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations.”** Network specialists already share practical knowledge in chats and emails, but that knowledge is hard for an autonomous agent to find later. ElidEx captures the reusable rule or fact, binds it to network entities and a validity period, records its source and trust, and makes it available when a similar case comes up.
+Elisa's challenge is **“Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations.”** Network specialists already share practical knowledge in chats and emails, but that knowledge is hard for an autonomous agent to find later as it is not made persistent through documentation. ElidEx captures the reusable rule or fact, binds it to network entities and a validity period, records its source and trust, and makes it available when a similar case comes up.
 
 The demo follows the challenge's SFP example: after a module swap, a link can look healthy while traffic counters stay at zero. The conversation contains a practical next step from an expert. The agent can retrieve that human advice on a similar case and cite the assertion it used.
 
-The project focuses on **human knowledge and its reuse**. Fault detection and root-cause analysis are outside the challenge scope. See [the challenge brief and scope checklist](docs/challenge.md) for details.
+The project focuses on **human knowledge and its reuse** to reduce professional's workload. Fault detection and root-cause analysis are outside the challenge scope. See [the challenge brief and scope checklist](docs/challenge.md) for details.
 
 ## Get started
 
@@ -104,14 +99,14 @@ The main shared data contract is in [`src/context_layer/models.py`](src/context_
 
 ## Project contents
 
-| Path | What's inside |
-| --- | --- |
-| [`data/elisa/`](data/elisa/) | Elisa's example conversation and challenge material |
-| [`data/synthetic/`](data/synthetic/) | Synthetic conversations, network inventory, and cases |
-| [`src/context_layer/`](src/context_layer/) | Extraction, entity linking, storage, agent, REST and MCP services |
-| [`src/context_layer/workbench/`](src/context_layer/workbench/) | Live state, pipeline processor, simulator, Slack bridge, and API |
-| [`web/`](web/) | React, TypeScript, and Vite Workbench interface |
-| [`docs/`](docs/) | Challenge, design, decisions, evaluation, deployment, and data documentation |
+| Path                                                           | What's inside                                                                |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`data/elisa/`](data/elisa/)                                   | Elisa's example conversation and challenge material                          |
+| [`data/synthetic/`](data/synthetic/)                           | Synthetic conversations, network inventory, and cases                        |
+| [`src/context_layer/`](src/context_layer/)                     | Extraction, entity linking, storage, agent, REST and MCP services            |
+| [`src/context_layer/workbench/`](src/context_layer/workbench/) | Live state, pipeline processor, simulator, Slack bridge, and API             |
+| [`web/`](web/)                                                 | React, TypeScript, and Vite Workbench interface                              |
+| [`docs/`](docs/)                                               | Challenge, design, decisions, evaluation, deployment, and data documentation |
 
 ## Contributors
 
