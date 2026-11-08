@@ -53,7 +53,7 @@ flowchart LR
 | Judge (`judge.py`) | `after_store`, then `lifecycle.reconcile` still runs | One LLM call per new assertion (role `critic`, purpose `judge`) against up to 8 neighbours found by bindings, never by topic slug. Applies the verdicts deterministically: close an older rule (supersedes, only when safe), keep both and flag (contradicts), merge into the older one or add a source and upgrade trust (supports) | Implemented, never tested against a real model |
 | Outcome loop (`outcome.py`) | `after_understand` (drops items citing the agent's own message), `after_store` | The agent's applied action is posted in a thread as one informative message; one `RuleApplication` per applied assertion. The technician's next messages decide worked, failed or unclear (LLM, else a keyword heuristic). Worked: trust becomes `verified` and the thread is added as a source. Failed: confidence x0.7. Both go through the one outcome ledger (`Assertion.outcomes`), shared with `/agent/outcome`, see [outcome-unification.md](outcome-unification.md) | Implemented |
 
-Review flags (`workbench/review.py`) are produced after a job: abstained, low confidence (below 0.7), conflict, over-reach (a rule reaching at least 6 elements the thread never names), critic and judge decisions. They are informational: the knowledge is already live.
+Review flags (`dashboard/review.py`) are produced after a job: abstained, low confidence (below 0.7), conflict, over-reach (a rule reaching at least 6 elements the thread never names), critic and judge decisions. They are informational: the knowledge is already live.
 
 ## Entities
 
@@ -116,16 +116,16 @@ Elisa gives no email or key location for the barrier: this one is synthetic data
 
 ### Fields added by loop v2 (implemented, as they exist in code)
 
-Shared contract: `src/context_layer/models.py`; workbench-only types in `src/context_layer/workbench/contracts.py`.
+Shared contract: `src/context_layer/models.py`; dashboard-only types in `src/context_layer/dashboard/contracts.py`.
 
 | Field | Where | Meaning |
 | --- | --- | --- |
 | `scope.qualifier` | `Scope` (extracted item) | The vague word the speakers used ("old", "legacy") copied as written, never turned into a year range. Not stored on the assertion; the linker turns it into the note "class wider than stated" and a x0.8 confidence |
 | `evidence_quote` | `ExtractedItem` | One short verbatim quote from a cited message that supports the item. The critic checks it appears in the cited messages |
 | source kind `operator` | `SourceKind` (`teams`, `email`, `slack`, `operator`) | Added to an assertion's `sources` when an operator edits it in the console; `stated_by` becomes `operator` only when the trust level is edited. An edit survives re-processing and can be undone |
-| `RuleApplication` | workbench contract | `id`, `assertion_id`, `entity_id`, `thread_id`, `applied_at`, `message_seq`, `outcome` (pending, worked, failed, unclear), `outcome_quote`, `outcome_reason`, `outcome_at`, `method` (llm, heuristic or observation). Its result is also an `Outcome` in `Assertion.outcomes` (`source` thread, `application_id`, `quote`). One per assertion the agent applied |
+| `RuleApplication` | dashboard contract | `id`, `assertion_id`, `entity_id`, `thread_id`, `applied_at`, `message_seq`, `outcome` (pending, worked, failed, unclear), `outcome_quote`, `outcome_reason`, `outcome_at`, `method` (llm, heuristic or observation). Its result is also an `Outcome` in `Assertion.outcomes` (`source` thread, `application_id`, `quote`). One per assertion the agent applied |
 
-Also in the workbench contract: `ReviewFlag`, `CriticVerdict` and `JudgeVerdict` (stored on the pipeline job), and `AssertionEdit` (before and after of each operator change).
+Also in the dashboard contract: `ReviewFlag`, `CriticVerdict` and `JudgeVerdict` (stored on the pipeline job), and `AssertionEdit` (before and after of each operator change).
 
 ### Fields and Elisa's hard points
 

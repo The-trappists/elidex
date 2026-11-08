@@ -31,10 +31,11 @@ def test_scripted_extraction_is_perfect_by_construction(result):
 
 
 def test_conditions_remove_noise_without_losing_solutions(result):
-    plain, cond = (r["summary"] for r in result["retrieval"])
+    plain, cond, rel = (r["summary"] for r in result["retrieval"])
     assert plain["noise_items"] > 0 and plain["accuracy"] < 1.0
     assert cond["noise_items"] == 0
     assert cond["solution_found"] == plain["solution_found"] == 1.0
+    assert rel["noise_items"] == 0 and rel["solution_found"] == 1.0  # relevance never costs an answer here
 
 
 def test_a_worse_extractor_scores_worse(monkeypatch):
@@ -75,7 +76,7 @@ def test_invented_items_count_as_noise(monkeypatch):
 
 
 def load_seed_items():
-    from context_layer.workbench.seed import load_seed
+    from context_layer.dashboard.seed import load_seed
 
     return [i for s in load_seed().scenarios if s.expected for i in s.expected.items]
 

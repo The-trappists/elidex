@@ -1,0 +1,129 @@
+{
+  "note": "Incident descriptions for the scale retrieval evaluation (ctx dataset eval, docs/evaluation.md part 3). One entry per problem (= ground-truth topic of the company dataset, src/context_layer/dataset/knowledge.py). Written by hand on 2026-11-08, before any matcher, in the words an incident or a field engineer would use, deliberately NOT the generator's wording. `dev` is used to tune thresholds, `test` only to report. {el} is the element id, {site} the site name. `observations` are what an agent typically knows on such a case (fields of models.OBSERVABLE_FIELDS). `family` groups problems that are the same problem for the agent: knowledge of the same family counts as acceptable, not as noise.",
+  "problems": {
+    "sfp-swap-port-reinit": {
+      "family": "module-swap",
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": true, "interface_status": "DOWN", "alarms": "active"},
+      "dev": "Field engineer replaced the SFP on {el}; the interface has not come back up since.",
+      "test": "New transceiver fitted on {el} this morning but the port is still down."
+    },
+    "stuck-link-after-swap": {
+      "family": "module-swap",
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": true, "interface_status": "DOWN", "alarms": "active"},
+      "dev": "After changing the optic on {el} the link will not recover.",
+      "test": "{el}: link not working after we replaced the optical transceiver."
+    },
+    "autoneg-mismatch-after-reboot": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "interface_status": "UP", "alarms": "active"},
+      "dev": "{el} restarted overnight and the uplink now runs at 1 Gbit/s instead of 10 Gbit/s.",
+      "test": "Port speed on {el} fell to 1G after the node was rebooted."
+    },
+    "fan-alarm-dust": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "alarms": "active"},
+      "dev": "Fan failure alarm on {el} keeps re-raising a few minutes after we clear it.",
+      "test": "{el}: cooling fan alarm returns every time it is acknowledged."
+    },
+    "ptp-resync-after-power-cycle": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "alarms": "active"},
+      "dev": "{el} was powered off and on, and now shows a PTP timing alarm.",
+      "test": "Clock synchronisation lost on {el} after the power was cycled."
+    },
+    "cold-module-flaps": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "interface_status": "UP", "alarms": "active"},
+      "dev": "Link on {el} goes up and down during the night, outside temperature -25 C.",
+      "test": "{el}: interface bouncing repeatedly in the freezing weather."
+    },
+    "licence-lost-after-upgrade": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "alarms": "active"},
+      "dev": "After the software upgrade on {el} several ports show as unlicensed.",
+      "test": "{el} lost its port licenses when the new firmware was installed."
+    },
+    "slow-commit-do-not-abort": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false},
+      "dev": "Configuration commit on {el} has been running for six minutes and looks stuck.",
+      "test": "{el}: the config change is not finishing, the CLI seems frozen on commit."
+    },
+    "second-uplink-drops-traffic": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "interface_status": "UP", "alarms": "active"},
+      "dev": "Packet loss on {el} as soon as traffic is moved to uplink port 2.",
+      "test": "{el} drops traffic when we use the second uplink."
+    },
+    "microwave-fade-fix": {
+      "types": ["transmission_node"],
+      "observations": {"sfp_replaced": false, "interface_status": "UP", "alarms": "active"},
+      "dev": "Microwave link on {el} degrades every evening around 19:00.",
+      "test": "{el}: microwave signal fading in the evenings."
+    },
+    "battery-alarm-handling": {
+      "family": "battery",
+      "types": ["transmission_node", "power_system"],
+      "observations": {"alarms": "active"},
+      "dev": "Battery alarm is active on {el}.",
+      "test": "{el} reports a battery alarm."
+    },
+    "memory-leak-reboot": {
+      "types": ["transmission_node", "router"],
+      "observations": {"sfp_replaced": false},
+      "dev": "{el} has become very sluggish, uptime is over two months.",
+      "test": "{el}: management very slow, memory nearly full."
+    },
+    "admin-lockout-persists": {
+      "types": ["transmission_node", "router"],
+      "observations": {"sfp_replaced": false},
+      "dev": "Local admin account on {el} is locked after failed logins and still locked after a reboot.",
+      "test": "Cannot log in to {el} as admin, the lockout survived the restart."
+    },
+    "counter-wrap-32bit": {
+      "types": ["transmission_node", "router"],
+      "observations": {"sfp_replaced": false, "alarms": "cleared"},
+      "dev": "Traffic graphs for {el} show sudden drops to zero, but customers report no problem.",
+      "test": "{el}: interface statistics look wrong in the graphs while traffic is fine."
+    },
+    "antenna-tilt-drift": {
+      "types": ["radio_unit"],
+      "observations": {"alarms": "active"},
+      "dev": "Throughput on {el} went down after last night's strong winds.",
+      "test": "{el}: sector capacity reduced since the gale passed."
+    },
+    "wet-snow-throughput-loss": {
+      "types": ["radio_unit"],
+      "observations": {"alarms": "active"},
+      "dev": "Heavy wet snowfall today and {el} delivers only half its normal throughput.",
+      "test": "{el}: snow building up on the antenna, capacity is halved."
+    },
+    "lightning-vswr-false-alarm": {
+      "types": ["radio_unit"],
+      "observations": {"alarms": "active"},
+      "dev": "High VSWR alarm on {el} since the thunderstorm.",
+      "test": "{el}: VSWR alarm raised after lightning hit nearby."
+    },
+    "heater-breaker-trips-in-cold": {
+      "types": ["power_system"],
+      "observations": {"alarms": "active"},
+      "dev": "Cabinet heater of {el} not working, it is -32 C outside.",
+      "test": "{el}: no heating in the cabinet during the extreme cold."
+    },
+    "battery-alarm-clears-itself": {
+      "family": "battery",
+      "types": ["power_system"],
+      "observations": {"alarms": "active"},
+      "dev": "Battery alarm on {el} since the mains power cut this morning.",
+      "test": "{el}: battery alarm raised after the grid outage."
+    },
+    "access": {
+      "types": ["*"],
+      "observations": {},
+      "dev": "Engineer dispatched to {site} for {el}: how do we get on site?",
+      "test": "Truck roll to {el} at {site} tomorrow, any access instructions?"
+    }
+  }
+}

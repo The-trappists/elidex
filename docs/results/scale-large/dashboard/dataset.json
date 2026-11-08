@@ -1,0 +1,20 @@
+{
+ "rows": [
+  {
+   "threads": 3000000,
+   "knowledge_threads": 3347,
+   "knowledge_share": 0.00112,
+   "elements": 20086,
+   "sites": 5009,
+   "facts": 3000,
+   "cases": 9300,
+   "tx3000_median_valid_facts": 316,
+   "assertions": 1879,
+   "link_reach_exact": 1.0,
+   "link_over_reach": 0,
+   "threshold": 0.4,
+   "haystack_threads": 303020,
+   "run_s": 367.9
+  }
+ ]
+}

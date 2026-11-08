@@ -53,8 +53,10 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 
 ### 3. Firmware validity per element, not per date
 
+> **Partly done** (branch `feat/scale-retrieval-eval`, see [evaluation.md part 3](evaluation.md#part-3-retrieval-accuracy-at-company-scale)): a release now closes a rule only when it ships a version newer than the one the rule names (`lifecycle.fix_predates`), which removed 41 wrong closures on the `large` dataset. Validity per element (a `firmware` check filled from the inventory) is still open.
+
 - **Why the judges care:** Elisa's reference figure cross-references the layers at any time t. "Firmware 4.2 fixes it" is true for a node only once that node runs 4.2.
-- **Evidence:** `data/workbench/topology.json` already has `firmware` per element. Today the invalidation sets one global `valid_to` on the message date. That is wrong in both directions: units upgraded before the message, and units still not upgraded after it.
+- **Evidence:** `data/dashboard/topology.json` already has `firmware` per element. Today the invalidation sets one global `valid_to` on the message date. That is wrong in both directions: units upgraded before the message, and units still not upgraded after it.
 - **Fix:** a firmware invalidation becomes a check on the rule (`firmware < 4.2`) instead of closing it for everyone. Steps:
   - add `firmware` to `OBSERVABLE_FIELDS` in [models.py](../src/context_layer/models.py);
   - compare versions numerically ("4.10" > "4.2");
@@ -107,7 +109,7 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 
 - **Evidence:**
   - `accuracy` and `worktree-loop-v2` overlap: two outcome models, two evals, and an expected conflict in a test (follow-up 3 in [plan.md](plan.md)).
-  - There are three UIs: the workbench, the Context Atlas static demo and Streamlit.
+  - There are three UIs: the dashboard, the Context Atlas static demo and Streamlit.
   - The [README](../README.md) still says "Status: choosing an idea", with an empty team and license section.
   - There is no pitch deck or backup video in the repo.
 - **Fix:**
@@ -133,7 +135,7 @@ More advanced retrieval only helps where it fixes a measured failure and is show
   - group assertions and their outcomes by topic and by the elements they reach (element, class, site; reuse the reach from item 2);
   - count over a time window: threads that raised it, times the workaround was applied, on which elements;
   - flag a group as "recurring: candidate for a permanent fix" above a threshold (for example 3 times in 30 days). Show the count, the elements, the cited messages, and the cause or permanent fix someone stated ("replace the brass lock", "upgrade to 4.2"), if anyone did;
-  - add a workbench endpoint and a "Recurring" view in the UI. An MCP tool `recurring_problems` is optional;
+  - add a dashboard endpoint and a "Recurring" view in the UI. An MCP tool `recurring_problems` is optional;
   - when a permanent fix is recorded (firmware 4.2, a new lock), lifecycle closes the workaround (items 2–3) and the entry shows "resolved".
 - **Data:** add or extend seed scenarios where the same problem repeats over weeks (for example TRN-117 SFP three times, the Sodankylä lock freezing again).
 - **Effort:** ~2–3h (grouping and endpoint ~1h, UI view ~1h, seed data ~30 min).
@@ -173,12 +175,14 @@ Constraints to keep in mind:
   The corrective action becomes a tool call instead of a web search: the agent reads the `to_read` fields with a `read_observation(entity, field)` tool, re-checks, then acts. That is literally the brief's "check the traffic counters".
 - **Build:**
   - in the eval, the tool reads the case's full observations (simulated telemetry);
-  - in the workbench, it reads the incident's observations;
+  - in the dashboard, it reads the incident's observations;
   - add it to [agent.py](../src/context_layer/agent.py) `run_agent` behind a flag.
 - **Stat:** rerun the missing-observation sweep in [evaluation.md](evaluation.md) §3 before and after. Today, with labels, accuracy is 100 / 91 / 80 / 67 / 43% with 0 / 1 / 2 / 3 / 5 observations missing. Report the same table after the loop, plus the average number of tool calls per case, for both `--extractor cache` and labels.
 - **Effort:** 2–3h.
 
 #### B. Hybrid neighbour retrieval for reconciliation
+
+> **Partly done** (branch `feat/scale-retrieval-eval`): same knowledge is now compared on scope, not on where it was seen, so Veikko applying Erkki's tip on TRN-117 is a confirmation of Erkki's rule, and 285 of 285 confirmed hunches on `large` stay one rule (was 72). BM25 / dense neighbours for the judge are still open.
 
 - **Technique:** candidate neighbours of a new assertion = element-level reach overlap (item 2) ∪ BM25 ∪ multilingual dense search, fused with Reciprocal Rank Fusion (Cormack et al. 2009). The loop-v2 judge then decides supports / contradicts / supersedes / unrelated.
 - **Why it fits:** it fixes the live failures that IDs and topic slugs miss:
@@ -195,6 +199,8 @@ Constraints to keep in mind:
 - **Effort:** 3–4h.
 
 #### C. A naive-RAG baseline plus an ablation table (the demo slide)
+
+> **Done at company scale** with the oracle extractor: `ctx dataset eval out/dataset/large`, 9,300 cases, five pipelines, stale and wrong-scope answers counted; it also led to a new problem-relevance step. Table and limits in [evaluation.md part 3](evaluation.md#part-3-retrieval-accuracy-at-company-scale). The real-LLM rows of the slide below still need a human run with the key.
 
 - **Why:** this is what most teams will build. Showing why it fails on Elisa's problem (no time, no scope, no trust) makes our numbers meaningful.
 - **Build:**

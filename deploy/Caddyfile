@@ -1,4 +1,4 @@
-# Caddy: automatic HTTPS + one shared team password in front of the Workbench.
+# Caddy: automatic HTTPS + one shared team password in front of the Dashboard.
 # DOMAIN, BASIC_AUTH_USER and BASIC_AUTH_HASH come from .env (see docs/deploy-vultr.md).
 # DOMAIN=localhost uses Caddy's own internal CA (browser warning, use curl -k).
 

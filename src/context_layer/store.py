@@ -22,7 +22,10 @@ class ContextHit:
 
 
 def _binding_key(a: ContextAssertion) -> tuple:
-    return (a.type, a.topic, frozenset((b.entity, b.role) for b in a.bound_to))
+    """Type, topic and scope (what it applies to, its trigger). Where it was seen (`observed_on`) is evidence, not
+    identity: an expert who confirms a hunch in a thread that does not name the site again states the same knowledge,
+    and must not leave a hunch and a verified copy side by side (docs/evaluation.md, part 3)."""
+    return (a.type, a.topic, frozenset((b.entity, b.role) for b in a.bound_to if b.role != "observed_on"))
 
 
 def _norm(text: str | None) -> str:
@@ -81,6 +84,7 @@ class ContextStore:
                 old.valid_from = min(old.valid_from, a.valid_from)
                 old.confidence = max(old.confidence, a.confidence)
                 old.trust.add_confirmation(a.trust)
+                self._add_bindings(old, a.bound_to)  # new places it was seen
                 return old, False
         a.id = f"ctx_{len(self.assertions) + 1:04d}"
         self._index(a)
@@ -100,13 +104,7 @@ class ContextStore:
         target.valid_from = min(target.valid_from, dup.valid_from)
         target.confidence = max(target.confidence, dup.confidence)
         target.trust.add_confirmation(dup.trust)
-        have = {(b.entity, b.role) for b in target.bound_to}
-        for b in dup.bound_to:
-            if (b.entity, b.role) not in have:
-                target.bound_to.append(b)
-                if b.entity not in self.g:
-                    self.g.add_node(b.entity, kind="event" if b.entity.startswith("event:") else "unknown")
-                self.g.add_edge(target.id, b.entity, key=b.role, role=b.role)
+        self._add_bindings(target, dup.bound_to)
         for other in self.assertions.values():
             if dup.id in other.conflicts_with:
                 other.conflicts_with = [c for c in other.conflicts_with if c != dup.id]
@@ -118,6 +116,17 @@ class ContextStore:
         if dup.id and dup.id in self.assertions:
             self.remove_assertion(dup.id)
         return target
+
+    def _add_bindings(self, target: ContextAssertion, bindings: list) -> None:
+        """Add the bindings `target` does not have yet, with their graph edges."""
+        have = {(b.entity, b.role) for b in target.bound_to}
+        for b in bindings:
+            if (b.entity, b.role) not in have:
+                have.add((b.entity, b.role))
+                target.bound_to.append(b)
+                if b.entity not in self.g:
+                    self.g.add_node(b.entity, kind="event" if b.entity.startswith("event:") else "unknown")
+                self.g.add_edge(target.id, b.entity, key=b.role, role=b.role)
 
     def remove_assertion(self, assertion_id: str) -> None:
         """Drop an assertion and its graph node (its edges go with the node)."""

@@ -1,13 +1,13 @@
-# Deploying the Workbench on a Vultr VM
+# Deploying the Dashboard on a Vultr VM
 
-Goal: the Context Workbench runs on one small VM, behind HTTPS and one shared team password. Everything runs in Docker, so the VM only needs Docker and git.
+Goal: the Context Dashboard runs on one small VM, behind HTTPS and one shared team password. Everything runs in Docker, so the VM only needs Docker and git.
 
 ```
 browser --HTTPS--> Caddy (ports 80/443, password) --> app (FastAPI + web UI, port 8000, private)
 ```
 
 Files: `Dockerfile`, `deploy/docker-compose.yml`, `deploy/Caddyfile`, `deploy/update.sh`, `.env`.
-The state (`state.json`, `llm_calls.jsonl`) lives in the Docker volume `workbench-data`. The Slack bridge (Socket Mode) only makes outbound connections, so it needs no open port.
+The state (`state.json`, `llm_calls.jsonl`) lives in the Docker volume `dashboard-data`. The Slack bridge (Socket Mode) only makes outbound connections, so it needs no open port.
 
 All `docker compose` commands below run **from the repo root** on the VM.
 
@@ -68,7 +68,7 @@ Back on the VM:
 printf 'Host github.com\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' >> ~/.ssh/config
 git clone git@github.com:The-trappists/since-ai-hackathon.git
 cd since-ai-hackathon
-git checkout feat/workbench   # or main, once merged
+git checkout feat/dashboard   # or main, once merged
 ```
 
 `deploy/update.sh` pulls whichever branch is checked out.
@@ -82,10 +82,10 @@ nano .env
 
 Set:
 
-- **LLM primary & fallback**: `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_JSON_MODE`, `LLM_TIMEOUT` (without an LLM key, the workbench runs in scripted mode). Optional fallback on rate limits: `LLM_FALLBACK_BASE_URL`, `LLM_FALLBACK_API_KEY`, `LLM_FALLBACK_MODEL`, `LLM_FALLBACK_JSON_MODE`.
+- **LLM primary & fallback**: `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_JSON_MODE`, `LLM_TIMEOUT` (without an LLM key, the dashboard runs in scripted mode). Optional fallback on rate limits: `LLM_FALLBACK_BASE_URL`, `LLM_FALLBACK_API_KEY`, `LLM_FALLBACK_MODEL`, `LLM_FALLBACK_JSON_MODE`.
 - **Critic role (loop v2)**: `LLM_CRITIC_BASE_URL`, `LLM_CRITIC_API_KEY`, `LLM_CRITIC_MODEL`, `LLM_CRITIC_JSON_MODE`, `LLM_CRITIC_REASONING_EFFORT`.
 - **Core pipeline**: `DEFAULT_THREAD_DATE`, `DEFAULT_EMAIL_TIME`, `MIN_CONFIDENCE`.
-- **Workbench & Slack**: `WORKBENCH_SIM_START`, `WORKBENCH_IDLE_SECONDS`, `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_CHANNEL_ID` (see `docs/slack-setup.md`).
+- **Dashboard & Slack**: `DASHBOARD_SIM_START`, `DASHBOARD_IDLE_SECONDS`, `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_CHANNEL_ID` (see `docs/slack-setup.md`).
 - **Big dataset & vector search**: `MONGODB_URI`, `MONGODB_DB`, `TIGER_DATABASE_URL`, `EMBEDDING_MODEL` (see `docs/dataset.md`).
 - `DOMAIN`: without buying a domain, use `<server-ip>.sslip.io`, for example `203.0.113.7.sslip.io`. sslip.io resolves that name to the IP, and Caddy gets a real Let's Encrypt certificate for it. If you own a domain, point an A record at the IP and use it.
 - `BASIC_AUTH_USER`: for example `team`.
@@ -148,29 +148,29 @@ docker compose -f deploy/docker-compose.yml --env-file .env logs --tail=100 app
 docker compose -f deploy/docker-compose.yml --env-file .env logs --tail=100 caddy
 ```
 
-Backup of the state volume to a tar file in the current folder (the volume is called `context-workbench_workbench-data`, check with `docker volume ls`):
+Backup of the state volume to a tar file in the current folder (the volume is called `context-dashboard_dashboard-data`, check with `docker volume ls`):
 
 ```bash
-docker run --rm -v context-workbench_workbench-data:/data -v "$PWD":/backup alpine \
-  tar czf /backup/workbench-backup-$(date +%F).tgz -C /data .
+docker run --rm -v context-dashboard_dashboard-data:/data -v "$PWD":/backup alpine \
+  tar czf /backup/dashboard-backup-$(date +%F).tgz -C /data .
 ```
 
-Download it with `scp root@IP:since-ai-hackathon/workbench-backup-*.tgz .`.
+Download it with `scp root@IP:since-ai-hackathon/dashboard-backup-*.tgz .`.
 
 Restore: stop the app, extract into the volume, start again.
 
 ```bash
 docker compose -f deploy/docker-compose.yml --env-file .env stop app
-docker run --rm -v context-workbench_workbench-data:/data -v "$PWD":/backup alpine \
-  sh -c "cd /data && tar xzf /backup/workbench-backup-YYYY-MM-DD.tgz && chown -R 1000:999 /data"
+docker run --rm -v context-dashboard_dashboard-data:/data -v "$PWD":/backup alpine \
+  sh -c "cd /data && tar xzf /backup/dashboard-backup-YYYY-MM-DD.tgz && chown -R 1000:999 /data"
 docker compose -f deploy/docker-compose.yml --env-file .env start app
 ```
 
-Reset the data (deletes all workbench state, keeps the certificates):
+Reset the data (deletes all dashboard state, keeps the certificates):
 
 ```bash
 docker compose -f deploy/docker-compose.yml --env-file .env stop app
-docker volume rm context-workbench_workbench-data
+docker volume rm context-dashboard_dashboard-data
 docker compose -f deploy/docker-compose.yml --env-file .env up -d
 ```
 

@@ -1,0 +1,2110 @@
+{
+  "run_at": "2026-11-08T00:59:50",
+  "dataset": "out\\dataset\\large",
+  "split": "test",
+  "threshold": 0.4,
+  "threshold_sweep_dev": [
+    {
+      "threshold": 0.3,
+      "accuracy": 0.772,
+      "solution_found": 0.993,
+      "precision": 0.462
+    },
+    {
+      "threshold": 0.4,
+      "accuracy": 0.8447,
+      "solution_found": 0.993,
+      "precision": 0.7317
+    },
+    {
+      "threshold": 0.5,
+      "accuracy": 0.8353,
+      "solution_found": 0.9606,
+      "precision": 0.7443
+    },
+    {
+      "threshold": 0.6,
+      "accuracy": 0.8377,
+      "solution_found": 0.9149,
+      "precision": 0.7851
+    },
+    {
+      "threshold": 0.7,
+      "accuracy": 0.82,
+      "solution_found": 0.8349,
+      "precision": 0.8319
+    }
+  ],
+  "scan": {
+    "threads": 3000000,
+    "haystack_sampled": 299673,
+    "knowledge_threads": 3347
+  },
+  "haystack_every": 10,
+  "haystack_threads": 303020,
+  "knowledge_base": {
+    "knowledge_threads": 3347,
+    "assertions": 2950,
+    "classes": 26,
+    "build_s": 24.2
+  },
+  "linking": {
+    "facts": 3000,
+    "linked": 3000,
+    "abstained": 0,
+    "abstain_reasons": {},
+    "reach_exact": 1.0,
+    "over_reach_facts": 0,
+    "under_reach_facts": 0,
+    "element_precision": 1.0,
+    "element_recall": 1.0,
+    "by_kind": {
+      "class": {
+        "facts": 1295,
+        "exact": 1.0
+      },
+      "instance": {
+        "facts": 1116,
+        "exact": 1.0
+      },
+      "site": {
+        "facts": 589,
+        "exact": 1.0
+      }
+    },
+    "notes": {
+      "site": 2696,
+      "element": 189,
+      "element RTR-033 is not named in the thread: not bound": 14,
+      "element RTR-10200 is not named in the thread: not bound": 3,
+      "element RTR-10053 is not named in the thread: not bound": 2,
+      "element RTR-10218 is not named in the thread: not bound": 2,
+      "element RTR-10132 is not named in the thread: not bound": 2,
+      "element RTR-10351 is not named in the thread: not bound": 1,
+      "element RTR-10187 is not named in the thread: not bound": 1,
+      "element RTR-10017 is not named in the thread: not bound": 1
+    }
+  },
+  "lifecycle": {
+    "closures_expected": 302,
+    "closures_found": 72,
+    "closure_recall": 0.2384,
+    "false_closures": 47,
+    "conflict_pairs_expected": 188,
+    "conflict_pairs_found": 188,
+    "conflict_recall": 1.0,
+    "false_conflict_pairs": 4,
+    "hunch_to_verified": 285,
+    "hv_one_assertion": 72,
+    "hv_all_verified": 76,
+    "events": {
+      "conflict": 191,
+      "merged": 335,
+      "closed": 238,
+      "kept open": 146
+    }
+  },
+  "cases": 9300,
+  "case_kinds": {
+    "dispatch to the site": 543,
+    "before it was said": 2698,
+    "same unit": 1116,
+    "other unit, same site": 1116,
+    "similar case, same class": 1039,
+    "near miss, same model": 986,
+    "after closure": 302,
+    "random element": 1500
+  },
+  "retrieval": [
+    {
+      "pipeline": "naive RAG over raw chats (BM25, top 5)",
+      "cases": 2000,
+      "accuracy": 0.003,
+      "solution_found": 0.6619,
+      "full_recall": 0.2538,
+      "correct_silence": 0.001,
+      "precision": 0.1077,
+      "items_per_case": 4.9965,
+      "noise_other_problem": 72,
+      "noise_stale": 90,
+      "noise_wrong_scope": 6593,
+      "noise_haystack": 2162,
+      "items_p50": 5,
+      "items_p95": 5,
+      "distinct_advices_p50": 0.0,
+      "p50_ms": 3.13,
+      "p95_ms": 4.81,
+      "by_kind": {
+        "after closure": {
+          "cases": 52,
+          "accuracy": 0.0,
+          "solution_found": 0.6154,
+          "full_recall": 0.0769,
+          "correct_silence": null,
+          "precision": 0.1731,
+          "items_per_case": 5.0,
+          "noise_other_problem": 1,
+          "noise_stale": 27,
+          "noise_wrong_scope": 150,
+          "noise_haystack": 37
+        },
+        "before it was said": {
+          "cases": 617,
+          "accuracy": 0.0049,
+          "solution_found": 0.7413,
+          "full_recall": 0.0697,
+          "correct_silence": 0.0024,
+          "precision": 0.0971,
+          "items_per_case": 4.9887,
+          "noise_other_problem": 31,
+          "noise_stale": 11,
+          "noise_wrong_scope": 1814,
+          "noise_haystack": 923
+        },
+        "dispatch to the site": {
+          "cases": 104,
+          "accuracy": 0.0,
+          "solution_found": 0.4519,
+          "full_recall": 0.4519,
+          "correct_silence": null,
+          "precision": 0.0904,
+          "items_per_case": 5.0,
+          "noise_other_problem": 5,
+          "noise_stale": 2,
+          "noise_wrong_scope": 11,
+          "noise_haystack": 455
+        },
+        "near miss, same model": {
+          "cases": 208,
+          "accuracy": 0.0,
+          "solution_found": 0.4967,
+          "full_recall": 0.0066,
+          "correct_silence": 0.0,
+          "precision": 0.1019,
+          "items_per_case": 5.0,
+          "noise_other_problem": 2,
+          "noise_stale": 16,
+          "noise_wrong_scope": 835,
+          "noise_haystack": 81
+        },
+        "other unit, same site": {
+          "cases": 224,
+          "accuracy": 0.0,
+          "solution_found": null,
+          "full_recall": null,
+          "correct_silence": 0.0,
+          "precision": 0.0009,
+          "items_per_case": 5.0,
+          "noise_other_problem": 2,
+          "noise_stale": 0,
+          "noise_wrong_scope": 1101,
+          "noise_haystack": 16
+        },
+        "random element": {
+          "cases": 305,
+          "accuracy": 0.0,
+          "solution_found": 0.6304,
+          "full_recall": 0.1304,
+          "correct_silence": 0.0,
+          "precision": 0.0315,
+          "items_per_case": 5.0,
+          "noise_other_problem": 9,
+          "noise_stale": 4,
+          "noise_wrong_scope": 938,
+          "noise_haystack": 526
+        },
+        "same unit": {
+          "cases": 243,
+          "accuracy": 0.0,
+          "solution_found": 0.7901,
+          "full_recall": 0.7819,
+          "correct_silence": null,
+          "precision": 0.1778,
+          "items_per_case": 5.0,
+          "noise_other_problem": 18,
+          "noise_stale": 0,
+          "noise_wrong_scope": 941,
+          "noise_haystack": 40
+        },
+        "similar case, same class": {
+          "cases": 247,
+          "accuracy": 0.0121,
+          "solution_found": 0.6761,
+          "full_recall": 0.0121,
+          "correct_silence": null,
+          "precision": 0.2543,
+          "items_per_case": 5.0,
+          "noise_other_problem": 4,
+          "noise_stale": 30,
+          "noise_wrong_scope": 803,
+          "noise_haystack": 84
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c03714",
+          "kind": "dispatch to the site",
+          "element": "RAD-11340",
+          "at": "2025-09-25T16:57",
+          "problem": "access",
+          "expected": [
+            "F001431"
+          ],
+          "classes": {
+            "haystack": 5
+          }
+        },
+        {
+          "case": "c06068",
+          "kind": "same unit",
+          "element": "PWR-12834",
+          "at": "2026-09-19T04:18",
+          "problem": "heater-breaker-trips-in-cold",
+          "expected": [
+            "F002331"
+          ],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c06150",
+          "kind": "other unit, same site",
+          "element": "RAD-12551",
+          "at": "2026-01-14T13:12",
+          "problem": "wet-snow-throughput-loss",
+          "expected": [],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c02069",
+          "kind": "before it was said",
+          "element": "TRN-10518",
+          "at": "2025-12-07T12:46",
+          "problem": "stuck-link-after-swap",
+          "expected": [],
+          "classes": {
+            "other problem": 2,
+            "wrong scope": 3
+          }
+        },
+        {
+          "case": "c03164",
+          "kind": "before it was said",
+          "element": "TRN-13698",
+          "at": "2026-09-13T15:23",
+          "problem": "licence-lost-after-upgrade",
+          "expected": [
+            "F000277",
+            "F000622",
+            "F000815",
+            "F001384",
+            "F001389"
+          ],
+          "classes": {
+            "wrong scope": 4,
+            "relevant": 1
+          }
+        },
+        {
+          "case": "c00717",
+          "kind": "before it was said",
+          "element": "TRN-14136",
+          "at": "2025-12-25T04:41",
+          "problem": "second-uplink-drops-traffic",
+          "expected": [
+            "F000328",
+            "F000402",
+            "F000467",
+            "F000750",
+            "F001856"
+          ],
+          "classes": {
+            "wrong scope": 4,
+            "relevant": 1
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "RAG over extracted knowledge, no graph (top 5)",
+      "cases": 9300,
+      "accuracy": 0.0286,
+      "solution_found": 0.4316,
+      "full_recall": 0.0227,
+      "correct_silence": 0.0351,
+      "precision": 0.0951,
+      "items_per_case": 4.8956,
+      "noise_other_problem": 304,
+      "noise_stale": 115,
+      "noise_wrong_scope": 40782,
+      "noise_haystack": 0,
+      "items_p50": 5,
+      "items_p95": 5,
+      "distinct_advices_p50": 0.0,
+      "p50_ms": 5.6,
+      "p95_ms": 9.6,
+      "by_kind": {
+        "after closure": {
+          "cases": 302,
+          "accuracy": 0.0265,
+          "solution_found": 0.6424,
+          "full_recall": 0.0,
+          "correct_silence": null,
+          "precision": 0.2159,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 55,
+          "noise_wrong_scope": 1129,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 2698,
+          "accuracy": 0.0608,
+          "solution_found": 0.6713,
+          "full_recall": 0.053,
+          "correct_silence": 0.0718,
+          "precision": 0.1086,
+          "items_per_case": 4.7027,
+          "noise_other_problem": 152,
+          "noise_stale": 0,
+          "noise_wrong_scope": 11158,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 543,
+          "accuracy": 0.0,
+          "solution_found": 0.0092,
+          "full_recall": 0.0092,
+          "correct_silence": null,
+          "precision": 0.0018,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 0,
+          "noise_wrong_scope": 2710,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 986,
+          "accuracy": 0.0162,
+          "solution_found": 0.5452,
+          "full_recall": 0.0073,
+          "correct_silence": 0.0,
+          "precision": 0.1503,
+          "items_per_case": 4.999,
+          "noise_other_problem": 0,
+          "noise_stale": 18,
+          "noise_wrong_scope": 4170,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 1116,
+          "accuracy": 0.0,
+          "solution_found": 0.0,
+          "full_recall": 0.0,
+          "correct_silence": 0.0,
+          "precision": 0.0,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 0,
+          "noise_wrong_scope": 5580,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 1500,
+          "accuracy": 0.0233,
+          "solution_found": 0.5447,
+          "full_recall": 0.0661,
+          "correct_silence": 0.0233,
+          "precision": 0.0393,
+          "items_per_case": 4.888,
+          "noise_other_problem": 18,
+          "noise_stale": 6,
+          "noise_wrong_scope": 7020,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 1116,
+          "accuracy": 0.0,
+          "solution_found": 0.0287,
+          "full_recall": 0.0269,
+          "correct_silence": null,
+          "precision": 0.0072,
+          "items_per_case": 5.0,
+          "noise_other_problem": 134,
+          "noise_stale": 0,
+          "noise_wrong_scope": 5406,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 1039,
+          "accuracy": 0.0414,
+          "solution_found": 0.7045,
+          "full_recall": 0.0038,
+          "correct_silence": null,
+          "precision": 0.2984,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 36,
+          "noise_wrong_scope": 3609,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c00000",
+          "kind": "dispatch to the site",
+          "element": "PWR-12296",
+          "at": "2025-09-29T03:30",
+          "problem": "access",
+          "expected": [
+            "F000001"
+          ],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c00001",
+          "kind": "before it was said",
+          "element": "PWR-12296",
+          "at": "2025-04-13T06:28",
+          "problem": "access",
+          "expected": [],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c00002",
+          "kind": "same unit",
+          "element": "TRN-13958",
+          "at": "2025-11-20T13:44",
+          "problem": "microwave-fade-fix",
+          "expected": [
+            "F000002",
+            "F000003"
+          ],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c00003",
+          "kind": "other unit, same site",
+          "element": "RAD-11101",
+          "at": "2025-11-28T23:56",
+          "problem": "microwave-fade-fix",
+          "expected": [],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c00004",
+          "kind": "before it was said",
+          "element": "TRN-13958",
+          "at": "2025-08-29T21:42",
+          "problem": "microwave-fade-fix",
+          "expected": [],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c00005",
+          "kind": "same unit",
+          "element": "TRN-13958",
+          "at": "2026-10-11T17:45",
+          "problem": "microwave-fade-fix",
+          "expected": [
+            "F000002",
+            "F000003"
+          ],
+          "classes": {
+            "wrong scope": 5
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "graph scope + time (today, plain)",
+      "cases": 9300,
+      "accuracy": 0.4833,
+      "solution_found": 1.0,
+      "full_recall": 0.7916,
+      "correct_silence": 0.742,
+      "precision": 0.0807,
+      "items_per_case": 64.7177,
+      "noise_other_problem": 521322,
+      "noise_stale": 31995,
+      "noise_wrong_scope": 0,
+      "noise_haystack": 0,
+      "items_p50": 4,
+      "items_p95": 293,
+      "distinct_advices_p50": 1.0,
+      "p50_ms": 0.39,
+      "p95_ms": 12.46,
+      "by_kind": {
+        "after closure": {
+          "cases": 302,
+          "accuracy": 0.1192,
+          "solution_found": 1.0,
+          "full_recall": 0.1623,
+          "correct_silence": null,
+          "precision": 0.0651,
+          "items_per_case": 131.1192,
+          "noise_other_problem": 33851,
+          "noise_stale": 3168,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 2698,
+          "accuracy": 0.457,
+          "solution_found": 1.0,
+          "full_recall": 0.7964,
+          "correct_silence": 0.6855,
+          "precision": 0.0815,
+          "items_per_case": 55.5904,
+          "noise_other_problem": 134108,
+          "noise_stale": 3647,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 543,
+          "accuracy": 0.6961,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.0242,
+          "items_per_case": 44.4088,
+          "noise_other_problem": 22065,
+          "noise_stale": 1465,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 986,
+          "accuracy": 0.0761,
+          "solution_found": 1.0,
+          "full_recall": 0.6764,
+          "correct_silence": 0.25,
+          "precision": 0.0819,
+          "items_per_case": 85.1349,
+          "noise_other_problem": 70274,
+          "noise_stale": 6798,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 1116,
+          "accuracy": 0.7984,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": 0.7978,
+          "precision": 0.0054,
+          "items_per_case": 25.4848,
+          "noise_other_problem": 26387,
+          "noise_stale": 1901,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 1500,
+          "accuracy": 0.7653,
+          "solution_found": 1.0,
+          "full_recall": 0.8132,
+          "correct_silence": 0.8906,
+          "precision": 0.0759,
+          "items_per_case": 22.726,
+          "noise_other_problem": 30016,
+          "noise_stale": 1486,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 1116,
+          "accuracy": 0.6577,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.0732,
+          "items_per_case": 49.5618,
+          "noise_other_problem": 47288,
+          "noise_stale": 3975,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 1039,
+          "accuracy": 0.0,
+          "solution_found": 1.0,
+          "full_recall": 0.7074,
+          "correct_silence": null,
+          "precision": 0.1047,
+          "items_per_case": 179.3994,
+          "noise_other_problem": 157333,
+          "noise_stale": 9555,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c00002",
+          "kind": "same unit",
+          "element": "TRN-13958",
+          "at": "2025-11-20T13:44",
+          "problem": "microwave-fade-fix",
+          "expected": [
+            "F000002",
+            "F000003"
+          ],
+          "classes": {
+            "relevant": 2,
+            "other problem": 102,
+            "stale": 1
+          }
+        },
+        {
+          "case": "c00004",
+          "kind": "before it was said",
+          "element": "TRN-13958",
+          "at": "2025-08-29T21:42",
+          "problem": "microwave-fade-fix",
+          "expected": [],
+          "classes": {
+            "other problem": 87
+          }
+        },
+        {
+          "case": "c00005",
+          "kind": "same unit",
+          "element": "TRN-13958",
+          "at": "2026-10-11T17:45",
+          "problem": "microwave-fade-fix",
+          "expected": [
+            "F000002",
+            "F000003"
+          ],
+          "classes": {
+            "relevant": 2,
+            "other problem": 166,
+            "stale": 18
+          }
+        },
+        {
+          "case": "c00007",
+          "kind": "before it was said",
+          "element": "TRN-13958",
+          "at": "2025-07-29T01:04",
+          "problem": "microwave-fade-fix",
+          "expected": [],
+          "classes": {
+            "other problem": 74
+          }
+        },
+        {
+          "case": "c00008",
+          "kind": "similar case, same class",
+          "element": "TRN-10365",
+          "at": "2026-10-15T02:10",
+          "problem": "ptp-resync-after-power-cycle",
+          "expected": [
+            "F000004",
+            "F000009",
+            "F000085",
+            "F000105",
+            "F000127"
+          ],
+          "classes": {
+            "relevant": 53,
+            "other problem": 367,
+            "stale": 22
+          }
+        },
+        {
+          "case": "c00009",
+          "kind": "near miss, same model",
+          "element": "TRN-13715",
+          "at": "2026-08-05T10:47",
+          "problem": "ptp-resync-after-power-cycle",
+          "expected": [
+            "F000085",
+            "F000105",
+            "F000127",
+            "F000403",
+            "F000500"
+          ],
+          "classes": {
+            "other problem": 135,
+            "stale": 15,
+            "relevant": 15
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "+ condition checks (today, with conditions)",
+      "cases": 9300,
+      "accuracy": 0.4834,
+      "solution_found": 1.0,
+      "full_recall": 0.7916,
+      "correct_silence": 0.7422,
+      "precision": 0.0882,
+      "items_per_case": 59.17,
+      "noise_other_problem": 469728,
+      "noise_stale": 31995,
+      "noise_wrong_scope": 0,
+      "noise_haystack": 0,
+      "items_p50": 3,
+      "items_p95": 266,
+      "distinct_advices_p50": 1.0,
+      "p50_ms": 0.46,
+      "p95_ms": 12.31,
+      "by_kind": {
+        "after closure": {
+          "cases": 302,
+          "accuracy": 0.1192,
+          "solution_found": 1.0,
+          "full_recall": 0.1623,
+          "correct_silence": null,
+          "precision": 0.075,
+          "items_per_case": 113.9238,
+          "noise_other_problem": 28658,
+          "noise_stale": 3168,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 2698,
+          "accuracy": 0.457,
+          "solution_found": 1.0,
+          "full_recall": 0.7964,
+          "correct_silence": 0.6855,
+          "precision": 0.0888,
+          "items_per_case": 51.0326,
+          "noise_other_problem": 121811,
+          "noise_stale": 3647,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 543,
+          "accuracy": 0.6961,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.0242,
+          "items_per_case": 44.4088,
+          "noise_other_problem": 22065,
+          "noise_stale": 1465,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 986,
+          "accuracy": 0.0761,
+          "solution_found": 1.0,
+          "full_recall": 0.6764,
+          "correct_silence": 0.25,
+          "precision": 0.0914,
+          "items_per_case": 76.2738,
+          "noise_other_problem": 61537,
+          "noise_stale": 6798,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 1116,
+          "accuracy": 0.7984,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": 0.7978,
+          "precision": 0.0054,
+          "items_per_case": 25.4668,
+          "noise_other_problem": 26367,
+          "noise_stale": 1901,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 1500,
+          "accuracy": 0.766,
+          "solution_found": 1.0,
+          "full_recall": 0.8132,
+          "correct_silence": 0.8914,
+          "precision": 0.0828,
+          "items_per_case": 20.8227,
+          "noise_other_problem": 27161,
+          "noise_stale": 1486,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 1116,
+          "accuracy": 0.6577,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.0756,
+          "items_per_case": 47.9785,
+          "noise_other_problem": 45521,
+          "noise_stale": 3975,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 1039,
+          "accuracy": 0.0,
+          "solution_found": 1.0,
+          "full_recall": 0.7074,
+          "correct_silence": null,
+          "precision": 0.1178,
+          "items_per_case": 159.4524,
+          "noise_other_problem": 136608,
+          "noise_stale": 9555,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c00002",
+          "kind": "same unit",
+          "element": "TRN-13958",
+          "at": "2025-11-20T13:44",
+          "problem": "microwave-fade-fix",
+          "expected": [
+            "F000002",
+            "F000003"
+          ],
+          "classes": {
+            "relevant": 2,
+            "other problem": 87,
+            "stale": 1
+          }
+        },
+        {
+          "case": "c00004",
+          "kind": "before it was said",
+          "element": "TRN-13958",
+          "at": "2025-08-29T21:42",
+          "problem": "microwave-fade-fix",
+          "expected": [],
+          "classes": {
+            "other problem": 74
+          }
+        },
+        {
+          "case": "c00005",
+          "kind": "same unit",
+          "element": "TRN-13958",
+          "at": "2026-10-11T17:45",
+          "problem": "microwave-fade-fix",
+          "expected": [
+            "F000002",
+            "F000003"
+          ],
+          "classes": {
+            "relevant": 2,
+            "other problem": 140,
+            "stale": 18
+          }
+        },
+        {
+          "case": "c00007",
+          "kind": "before it was said",
+          "element": "TRN-13958",
+          "at": "2025-07-29T01:04",
+          "problem": "microwave-fade-fix",
+          "expected": [],
+          "classes": {
+            "other problem": 65
+          }
+        },
+        {
+          "case": "c00008",
+          "kind": "similar case, same class",
+          "element": "TRN-10365",
+          "at": "2026-10-15T02:10",
+          "problem": "ptp-resync-after-power-cycle",
+          "expected": [
+            "F000004",
+            "F000009",
+            "F000085",
+            "F000105",
+            "F000127"
+          ],
+          "classes": {
+            "relevant": 53,
+            "other problem": 305,
+            "stale": 22
+          }
+        },
+        {
+          "case": "c00009",
+          "kind": "near miss, same model",
+          "element": "TRN-13715",
+          "at": "2026-08-05T10:47",
+          "problem": "ptp-resync-after-power-cycle",
+          "expected": [
+            "F000085",
+            "F000105",
+            "F000127",
+            "F000403",
+            "F000500"
+          ],
+          "classes": {
+            "other problem": 113,
+            "stale": 15,
+            "relevant": 15
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "+ problem relevance (new)",
+      "cases": 9300,
+      "accuracy": 0.8449,
+      "solution_found": 0.9955,
+      "full_recall": 0.7871,
+      "correct_silence": 0.9528,
+      "precision": 0.7142,
+      "items_per_case": 7.218,
+      "noise_other_problem": 17115,
+      "noise_stale": 2073,
+      "noise_wrong_scope": 0,
+      "noise_haystack": 0,
+      "items_p50": 1,
+      "items_p95": 36,
+      "distinct_advices_p50": 1.0,
+      "p50_ms": 0.57,
+      "p95_ms": 14.37,
+      "by_kind": {
+        "after closure": {
+          "cases": 302,
+          "accuracy": 0.3543,
+          "solution_found": 0.9934,
+          "full_recall": 0.1556,
+          "correct_silence": null,
+          "precision": 0.5658,
+          "items_per_case": 14.9636,
+          "noise_other_problem": 1004,
+          "noise_stale": 958,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 2698,
+          "accuracy": 0.8706,
+          "solution_found": 0.9989,
+          "full_recall": 0.7953,
+          "correct_silence": 0.939,
+          "precision": 0.7415,
+          "items_per_case": 6.053,
+          "noise_other_problem": 4163,
+          "noise_stale": 58,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 543,
+          "accuracy": 0.9687,
+          "solution_found": 0.9687,
+          "full_recall": 0.9687,
+          "correct_silence": null,
+          "precision": 1.0,
+          "items_per_case": 1.0405,
+          "noise_other_problem": 0,
+          "noise_stale": 0,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 986,
+          "accuracy": 0.7688,
+          "solution_found": 1.0,
+          "full_recall": 0.6764,
+          "correct_silence": 0.97,
+          "precision": 0.7384,
+          "items_per_case": 9.3377,
+          "noise_other_problem": 2087,
+          "noise_stale": 322,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 1116,
+          "accuracy": 0.9355,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": 0.9353,
+          "precision": 0.0186,
+          "items_per_case": 1.0143,
+          "noise_other_problem": 1111,
+          "noise_stale": 0,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 1500,
+          "accuracy": 0.932,
+          "solution_found": 0.9922,
+          "full_recall": 0.8054,
+          "correct_silence": 0.9839,
+          "precision": 0.6598,
+          "items_per_case": 2.5633,
+          "noise_other_problem": 1197,
+          "noise_stale": 111,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 1116,
+          "accuracy": 0.8871,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.6946,
+          "items_per_case": 5.0502,
+          "noise_other_problem": 1721,
+          "noise_stale": 0,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 1039,
+          "accuracy": 0.6603,
+          "solution_found": 1.0,
+          "full_recall": 0.7074,
+          "correct_silence": null,
+          "precision": 0.7507,
+          "items_per_case": 24.9201,
+          "noise_other_problem": 5832,
+          "noise_stale": 624,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c00025",
+          "kind": "similar case, same class",
+          "element": "TRN-13109",
+          "at": "2026-03-12T16:16",
+          "problem": "counter-wrap-32bit",
+          "expected": [
+            "F000010",
+            "F000212",
+            "F000391",
+            "F000507",
+            "F000549"
+          ],
+          "classes": {
+            "relevant": 13,
+            "stale": 1
+          }
+        },
+        {
+          "case": "c00027",
+          "kind": "after closure",
+          "element": "TRN-13109",
+          "at": "2026-07-14T02:05",
+          "problem": "counter-wrap-32bit",
+          "expected": [
+            "F000011",
+            "F000212",
+            "F000391",
+            "F000507",
+            "F000549"
+          ],
+          "classes": {
+            "relevant": 10,
+            "stale": 5
+          }
+        },
+        {
+          "case": "c00058",
+          "kind": "similar case, same class",
+          "element": "RTR-10316",
+          "at": "2026-07-02T16:16",
+          "problem": "memory-leak-reboot",
+          "expected": [
+            "F000022",
+            "F000040",
+            "F000177",
+            "F000178",
+            "F000182"
+          ],
+          "classes": {
+            "relevant": 10,
+            "stale": 3
+          }
+        },
+        {
+          "case": "c00061",
+          "kind": "same unit",
+          "element": "TRN-12966",
+          "at": "2026-06-11T08:17",
+          "problem": "stuck-link-after-swap",
+          "expected": [
+            "F000023",
+            "F000024"
+          ],
+          "classes": {
+            "relevant": 2,
+            "other problem": 15,
+            "acceptable": 14
+          }
+        },
+        {
+          "case": "c00063",
+          "kind": "before it was said",
+          "element": "TRN-12966",
+          "at": "2025-12-04T08:38",
+          "problem": "stuck-link-after-swap",
+          "expected": [],
+          "classes": {
+            "other problem": 8,
+            "acceptable": 12
+          }
+        },
+        {
+          "case": "c00064",
+          "kind": "same unit",
+          "element": "TRN-12966",
+          "at": "2026-11-04T22:06",
+          "problem": "stuck-link-after-swap",
+          "expected": [
+            "F000023",
+            "F000024"
+          ],
+          "classes": {
+            "relevant": 2,
+            "other problem": 20,
+            "acceptable": 14
+          }
+        }
+      ]
+    }
+  ],
+  "naive_sample_paired": [
+    {
+      "pipeline": "RAG over extracted knowledge, no graph (top 5)",
+      "cases": 2000,
+      "accuracy": 0.035,
+      "solution_found": 0.4617,
+      "full_recall": 0.0287,
+      "correct_silence": 0.0439,
+      "precision": 0.1029,
+      "items_per_case": 4.8635,
+      "noise_other_problem": 67,
+      "noise_stale": 27,
+      "noise_wrong_scope": 8632,
+      "noise_haystack": 0,
+      "items_p50": 5,
+      "items_p95": 5,
+      "distinct_advices_p50": 0.0,
+      "p50_ms": 5.39,
+      "p95_ms": 9.01,
+      "by_kind": {
+        "after closure": {
+          "cases": 52,
+          "accuracy": 0.0385,
+          "solution_found": 0.6154,
+          "full_recall": 0.0,
+          "correct_silence": null,
+          "precision": 0.2231,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 9,
+          "noise_wrong_scope": 193,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 617,
+          "accuracy": 0.0648,
+          "solution_found": 0.6667,
+          "full_recall": 0.0597,
+          "correct_silence": 0.0841,
+          "precision": 0.0999,
+          "items_per_case": 4.624,
+          "noise_other_problem": 34,
+          "noise_stale": 0,
+          "noise_wrong_scope": 2534,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 104,
+          "accuracy": 0.0,
+          "solution_found": 0.0192,
+          "full_recall": 0.0192,
+          "correct_silence": null,
+          "precision": 0.0038,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 0,
+          "noise_wrong_scope": 518,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 208,
+          "accuracy": 0.024,
+          "solution_found": 0.649,
+          "full_recall": 0.0199,
+          "correct_silence": 0.0,
+          "precision": 0.1915,
+          "items_per_case": 4.9952,
+          "noise_other_problem": 0,
+          "noise_stale": 7,
+          "noise_wrong_scope": 833,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 224,
+          "accuracy": 0.0,
+          "solution_found": null,
+          "full_recall": null,
+          "correct_silence": 0.0,
+          "precision": 0.0,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 0,
+          "noise_wrong_scope": 1120,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 305,
+          "accuracy": 0.0328,
+          "solution_found": 0.5435,
+          "full_recall": 0.0435,
+          "correct_silence": 0.027,
+          "precision": 0.035,
+          "items_per_case": 4.8689,
+          "noise_other_problem": 8,
+          "noise_stale": 1,
+          "noise_wrong_scope": 1424,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 243,
+          "accuracy": 0.0,
+          "solution_found": 0.037,
+          "full_recall": 0.0329,
+          "correct_silence": null,
+          "precision": 0.0107,
+          "items_per_case": 5.0,
+          "noise_other_problem": 25,
+          "noise_stale": 0,
+          "noise_wrong_scope": 1177,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 247,
+          "accuracy": 0.0526,
+          "solution_found": 0.7368,
+          "full_recall": 0.0121,
+          "correct_silence": null,
+          "precision": 0.3174,
+          "items_per_case": 5.0,
+          "noise_other_problem": 0,
+          "noise_stale": 10,
+          "noise_wrong_scope": 833,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c03714",
+          "kind": "dispatch to the site",
+          "element": "RAD-11340",
+          "at": "2025-09-25T16:57",
+          "problem": "access",
+          "expected": [
+            "F001431"
+          ],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c06068",
+          "kind": "same unit",
+          "element": "PWR-12834",
+          "at": "2026-09-19T04:18",
+          "problem": "heater-breaker-trips-in-cold",
+          "expected": [
+            "F002331"
+          ],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c06150",
+          "kind": "other unit, same site",
+          "element": "RAD-12551",
+          "at": "2026-01-14T13:12",
+          "problem": "wet-snow-throughput-loss",
+          "expected": [],
+          "classes": {
+            "wrong scope": 5
+          }
+        },
+        {
+          "case": "c02069",
+          "kind": "before it was said",
+          "element": "TRN-10518",
+          "at": "2025-12-07T12:46",
+          "problem": "stuck-link-after-swap",
+          "expected": [],
+          "classes": {
+            "other problem": 3,
+            "wrong scope": 2
+          }
+        },
+        {
+          "case": "c03164",
+          "kind": "before it was said",
+          "element": "TRN-13698",
+          "at": "2026-09-13T15:23",
+          "problem": "licence-lost-after-upgrade",
+          "expected": [
+            "F000277",
+            "F000622",
+            "F000815",
+            "F001384",
+            "F001389"
+          ],
+          "classes": {
+            "wrong scope": 2,
+            "relevant": 3
+          }
+        },
+        {
+          "case": "c00717",
+          "kind": "before it was said",
+          "element": "TRN-14136",
+          "at": "2025-12-25T04:41",
+          "problem": "second-uplink-drops-traffic",
+          "expected": [
+            "F000328",
+            "F000402",
+            "F000467",
+            "F000750",
+            "F001856"
+          ],
+          "classes": {
+            "wrong scope": 4,
+            "relevant": 1
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "graph scope + time (today, plain)",
+      "cases": 2000,
+      "accuracy": 0.4825,
+      "solution_found": 1.0,
+      "full_recall": 0.7807,
+      "correct_silence": 0.7427,
+      "precision": 0.08,
+      "items_per_case": 68.0285,
+      "noise_other_problem": 118189,
+      "noise_stale": 6986,
+      "noise_wrong_scope": 0,
+      "noise_haystack": 0,
+      "items_p50": 5,
+      "items_p95": 304,
+      "distinct_advices_p50": 1.0,
+      "p50_ms": 0.54,
+      "p95_ms": 10.37,
+      "by_kind": {
+        "after closure": {
+          "cases": 52,
+          "accuracy": 0.1154,
+          "solution_found": 1.0,
+          "full_recall": 0.1538,
+          "correct_silence": null,
+          "precision": 0.0624,
+          "items_per_case": 148.0,
+          "noise_other_problem": 6691,
+          "noise_stale": 525,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 617,
+          "accuracy": 0.4895,
+          "solution_found": 1.0,
+          "full_recall": 0.7761,
+          "correct_silence": 0.7067,
+          "precision": 0.0814,
+          "items_per_case": 53.8314,
+          "noise_other_problem": 29778,
+          "noise_stale": 733,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 104,
+          "accuracy": 0.7308,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.028,
+          "items_per_case": 37.0769,
+          "noise_other_problem": 3472,
+          "noise_stale": 276,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 208,
+          "accuracy": 0.0433,
+          "solution_found": 1.0,
+          "full_recall": 0.6755,
+          "correct_silence": 0.1579,
+          "precision": 0.0807,
+          "items_per_case": 98.625,
+          "noise_other_problem": 17209,
+          "noise_stale": 1649,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 224,
+          "accuracy": 0.8036,
+          "solution_found": null,
+          "full_recall": null,
+          "correct_silence": 0.8036,
+          "precision": 0.0056,
+          "items_per_case": 27.8482,
+          "noise_other_problem": 5786,
+          "noise_stale": 417,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 305,
+          "accuracy": 0.7672,
+          "solution_found": 1.0,
+          "full_recall": 0.8261,
+          "correct_silence": 0.8764,
+          "precision": 0.0735,
+          "items_per_case": 24.2656,
+          "noise_other_problem": 6515,
+          "noise_stale": 342,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 243,
+          "accuracy": 0.6502,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.0666,
+          "items_per_case": 51.5885,
+          "noise_other_problem": 10806,
+          "noise_stale": 895,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 247,
+          "accuracy": 0.0,
+          "solution_found": 1.0,
+          "full_recall": 0.664,
+          "correct_silence": null,
+          "precision": 0.1014,
+          "items_per_case": 180.5749,
+          "noise_other_problem": 37932,
+          "noise_stale": 2149,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c02069",
+          "kind": "before it was said",
+          "element": "TRN-10518",
+          "at": "2025-12-07T12:46",
+          "problem": "stuck-link-after-swap",
+          "expected": [],
+          "classes": {
+            "other problem": 139,
+            "stale": 2,
+            "acceptable": 19
+          }
+        },
+        {
+          "case": "c03164",
+          "kind": "before it was said",
+          "element": "TRN-13698",
+          "at": "2026-09-13T15:23",
+          "problem": "licence-lost-after-upgrade",
+          "expected": [
+            "F000277",
+            "F000622",
+            "F000815",
+            "F001384",
+            "F001389"
+          ],
+          "classes": {
+            "other problem": 150,
+            "stale": 15,
+            "relevant": 10
+          }
+        },
+        {
+          "case": "c00717",
+          "kind": "before it was said",
+          "element": "TRN-14136",
+          "at": "2025-12-25T04:41",
+          "problem": "second-uplink-drops-traffic",
+          "expected": [
+            "F000328",
+            "F000402",
+            "F000467",
+            "F000750",
+            "F001856"
+          ],
+          "classes": {
+            "other problem": 89,
+            "stale": 1,
+            "relevant": 12
+          }
+        },
+        {
+          "case": "c01395",
+          "kind": "similar case, same class",
+          "element": "TRN-14439",
+          "at": "2026-03-25T16:26",
+          "problem": "admin-lockout-persists",
+          "expected": [
+            "F000122",
+            "F000189",
+            "F000208",
+            "F000280",
+            "F000400"
+          ],
+          "classes": {
+            "other problem": 199,
+            "relevant": 19,
+            "stale": 10
+          }
+        },
+        {
+          "case": "c02242",
+          "kind": "similar case, same class",
+          "element": "TRN-10580",
+          "at": "2025-12-18T22:37",
+          "problem": "slow-commit-do-not-abort",
+          "expected": [
+            "F000138",
+            "F000166",
+            "F000433",
+            "F000595",
+            "F000865"
+          ],
+          "classes": {
+            "other problem": 176,
+            "stale": 2,
+            "relevant": 19
+          }
+        },
+        {
+          "case": "c06565",
+          "kind": "before it was said",
+          "element": "TRN-12005",
+          "at": "2026-03-12T03:45",
+          "problem": "ptp-resync-after-power-cycle",
+          "expected": [
+            "F000056",
+            "F000238",
+            "F000527",
+            "F000701",
+            "F000910"
+          ],
+          "classes": {
+            "other problem": 64,
+            "acceptable": 1,
+            "relevant": 10
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "+ condition checks (today, with conditions)",
+      "cases": 2000,
+      "accuracy": 0.483,
+      "solution_found": 1.0,
+      "full_recall": 0.7807,
+      "correct_silence": 0.7437,
+      "precision": 0.0876,
+      "items_per_case": 62.093,
+      "noise_other_problem": 106318,
+      "noise_stale": 6986,
+      "noise_wrong_scope": 0,
+      "noise_haystack": 0,
+      "items_p50": 4,
+      "items_p95": 274,
+      "distinct_advices_p50": 1.0,
+      "p50_ms": 0.72,
+      "p95_ms": 13.89,
+      "by_kind": {
+        "after closure": {
+          "cases": 52,
+          "accuracy": 0.1154,
+          "solution_found": 1.0,
+          "full_recall": 0.1538,
+          "correct_silence": null,
+          "precision": 0.0723,
+          "items_per_case": 127.6538,
+          "noise_other_problem": 5633,
+          "noise_stale": 525,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 617,
+          "accuracy": 0.4895,
+          "solution_found": 1.0,
+          "full_recall": 0.7761,
+          "correct_silence": 0.7067,
+          "precision": 0.0887,
+          "items_per_case": 49.4117,
+          "noise_other_problem": 27051,
+          "noise_stale": 733,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 104,
+          "accuracy": 0.7308,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.028,
+          "items_per_case": 37.0769,
+          "noise_other_problem": 3472,
+          "noise_stale": 276,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 208,
+          "accuracy": 0.0433,
+          "solution_found": 1.0,
+          "full_recall": 0.6755,
+          "correct_silence": 0.1579,
+          "precision": 0.0901,
+          "items_per_case": 88.3654,
+          "noise_other_problem": 15075,
+          "noise_stale": 1649,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 224,
+          "accuracy": 0.8036,
+          "solution_found": null,
+          "full_recall": null,
+          "correct_silence": 0.8036,
+          "precision": 0.0056,
+          "items_per_case": 27.8482,
+          "noise_other_problem": 5786,
+          "noise_stale": 417,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 305,
+          "accuracy": 0.7705,
+          "solution_found": 1.0,
+          "full_recall": 0.8261,
+          "correct_silence": 0.8803,
+          "precision": 0.0793,
+          "items_per_case": 22.4918,
+          "noise_other_problem": 5974,
+          "noise_stale": 342,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 243,
+          "accuracy": 0.6502,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.0686,
+          "items_per_case": 50.107,
+          "noise_other_problem": 10446,
+          "noise_stale": 895,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 247,
+          "accuracy": 0.0,
+          "solution_found": 1.0,
+          "full_recall": 0.664,
+          "correct_silence": null,
+          "precision": 0.1143,
+          "items_per_case": 160.1255,
+          "noise_other_problem": 32881,
+          "noise_stale": 2149,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c02069",
+          "kind": "before it was said",
+          "element": "TRN-10518",
+          "at": "2025-12-07T12:46",
+          "problem": "stuck-link-after-swap",
+          "expected": [],
+          "classes": {
+            "other problem": 139,
+            "stale": 2,
+            "acceptable": 19
+          }
+        },
+        {
+          "case": "c03164",
+          "kind": "before it was said",
+          "element": "TRN-13698",
+          "at": "2026-09-13T15:23",
+          "problem": "licence-lost-after-upgrade",
+          "expected": [
+            "F000277",
+            "F000622",
+            "F000815",
+            "F001384",
+            "F001389"
+          ],
+          "classes": {
+            "other problem": 125,
+            "stale": 15,
+            "relevant": 10
+          }
+        },
+        {
+          "case": "c00717",
+          "kind": "before it was said",
+          "element": "TRN-14136",
+          "at": "2025-12-25T04:41",
+          "problem": "second-uplink-drops-traffic",
+          "expected": [
+            "F000328",
+            "F000402",
+            "F000467",
+            "F000750",
+            "F001856"
+          ],
+          "classes": {
+            "other problem": 81,
+            "stale": 1,
+            "relevant": 12
+          }
+        },
+        {
+          "case": "c01395",
+          "kind": "similar case, same class",
+          "element": "TRN-14439",
+          "at": "2026-03-25T16:26",
+          "problem": "admin-lockout-persists",
+          "expected": [
+            "F000122",
+            "F000189",
+            "F000208",
+            "F000280",
+            "F000400"
+          ],
+          "classes": {
+            "other problem": 177,
+            "relevant": 19,
+            "stale": 10
+          }
+        },
+        {
+          "case": "c02242",
+          "kind": "similar case, same class",
+          "element": "TRN-10580",
+          "at": "2025-12-18T22:37",
+          "problem": "slow-commit-do-not-abort",
+          "expected": [
+            "F000138",
+            "F000166",
+            "F000433",
+            "F000595",
+            "F000865"
+          ],
+          "classes": {
+            "other problem": 155,
+            "stale": 2,
+            "relevant": 19
+          }
+        },
+        {
+          "case": "c06565",
+          "kind": "before it was said",
+          "element": "TRN-12005",
+          "at": "2026-03-12T03:45",
+          "problem": "ptp-resync-after-power-cycle",
+          "expected": [
+            "F000056",
+            "F000238",
+            "F000527",
+            "F000701",
+            "F000910"
+          ],
+          "classes": {
+            "other problem": 55,
+            "acceptable": 1,
+            "relevant": 10
+          }
+        }
+      ]
+    },
+    {
+      "pipeline": "+ problem relevance (new)",
+      "cases": 2000,
+      "accuracy": 0.849,
+      "solution_found": 0.9981,
+      "full_recall": 0.7787,
+      "correct_silence": 0.9467,
+      "precision": 0.719,
+      "items_per_case": 7.4605,
+      "noise_other_problem": 3733,
+      "noise_stale": 460,
+      "noise_wrong_scope": 0,
+      "noise_haystack": 0,
+      "items_p50": 1,
+      "items_p95": 37,
+      "distinct_advices_p50": 1.0,
+      "p50_ms": 0.75,
+      "p95_ms": 13.4,
+      "by_kind": {
+        "after closure": {
+          "cases": 52,
+          "accuracy": 0.3846,
+          "solution_found": 0.9808,
+          "full_recall": 0.1346,
+          "correct_silence": null,
+          "precision": 0.5406,
+          "items_per_case": 16.8269,
+          "noise_other_problem": 235,
+          "noise_stale": 167,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "before it was said": {
+          "cases": 617,
+          "accuracy": 0.8768,
+          "solution_found": 1.0,
+          "full_recall": 0.7761,
+          "correct_silence": 0.9423,
+          "precision": 0.7381,
+          "items_per_case": 5.8671,
+          "noise_other_problem": 940,
+          "noise_stale": 8,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "dispatch to the site": {
+          "cases": 104,
+          "accuracy": 0.9904,
+          "solution_found": 0.9904,
+          "full_recall": 0.9904,
+          "correct_silence": null,
+          "precision": 1.0,
+          "items_per_case": 1.0288,
+          "noise_other_problem": 0,
+          "noise_stale": 0,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "near miss, same model": {
+          "cases": 208,
+          "accuracy": 0.7981,
+          "solution_found": 1.0,
+          "full_recall": 0.6755,
+          "correct_silence": 0.9825,
+          "precision": 0.747,
+          "items_per_case": 10.5673,
+          "noise_other_problem": 468,
+          "noise_stale": 88,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "other unit, same site": {
+          "cases": 224,
+          "accuracy": 0.9152,
+          "solution_found": null,
+          "full_recall": null,
+          "correct_silence": 0.9152,
+          "precision": 0.0027,
+          "items_per_case": 1.6518,
+          "noise_other_problem": 369,
+          "noise_stale": 0,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "random element": {
+          "cases": 305,
+          "accuracy": 0.9246,
+          "solution_found": 1.0,
+          "full_recall": 0.8261,
+          "correct_silence": 0.973,
+          "precision": 0.6213,
+          "items_per_case": 2.7967,
+          "noise_other_problem": 293,
+          "noise_stale": 30,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "same unit": {
+          "cases": 243,
+          "accuracy": 0.893,
+          "solution_found": 1.0,
+          "full_recall": 1.0,
+          "correct_silence": null,
+          "precision": 0.7101,
+          "items_per_case": 4.642,
+          "noise_other_problem": 327,
+          "noise_stale": 0,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        },
+        "similar case, same class": {
+          "cases": 247,
+          "accuracy": 0.664,
+          "solution_found": 1.0,
+          "full_recall": 0.664,
+          "correct_silence": null,
+          "precision": 0.7802,
+          "items_per_case": 23.3603,
+          "noise_other_problem": 1101,
+          "noise_stale": 167,
+          "noise_wrong_scope": 0,
+          "noise_haystack": 0
+        }
+      },
+      "wrong_examples": [
+        {
+          "case": "c02069",
+          "kind": "before it was said",
+          "element": "TRN-10518",
+          "at": "2025-12-07T12:46",
+          "problem": "stuck-link-after-swap",
+          "expected": [],
+          "classes": {
+            "other problem": 15,
+            "acceptable": 19
+          }
+        },
+        {
+          "case": "c01395",
+          "kind": "similar case, same class",
+          "element": "TRN-14439",
+          "at": "2026-03-25T16:26",
+          "problem": "admin-lockout-persists",
+          "expected": [
+            "F000122",
+            "F000189",
+            "F000208",
+            "F000280",
+            "F000400"
+          ],
+          "classes": {
+            "relevant": 19,
+            "stale": 2
+          }
+        },
+        {
+          "case": "c08109",
+          "kind": "random element",
+          "element": "TRN-10502",
+          "at": "2025-09-12T22:04",
+          "problem": "memory-leak-reboot",
+          "expected": [
+            "F000159",
+            "F000236",
+            "F000790",
+            "F000877",
+            "F000980"
+          ],
+          "classes": {
+            "relevant": 8,
+            "other problem": 5
+          }
+        },
+        {
+          "case": "c03836",
+          "kind": "near miss, same model",
+          "element": "TRN-13800",
+          "at": "2026-10-03T01:32",
+          "problem": "fan-alarm-dust",
+          "expected": [
+            "F000455",
+            "F000879",
+            "F001591",
+            "F001654",
+            "F002179"
+          ],
+          "classes": {
+            "relevant": 5,
+            "other problem": 4
+          }
+        },
+        {
+          "case": "c04370",
+          "kind": "near miss, same model",
+          "element": "RTR-10205",
+          "at": "2026-01-29T04:14",
+          "problem": "counter-wrap-32bit",
+          "expected": [
+            "F000140",
+            "F000275",
+            "F000429",
+            "F000530",
+            "F001021"
+          ],
+          "classes": {
+            "relevant": 3,
+            "stale": 2
+          }
+        },
+        {
+          "case": "c06679",
+          "kind": "before it was said",
+          "element": "TRN-12204",
+          "at": "2025-05-07T15:36",
+          "problem": "cold-module-flaps",
+          "expected": [
+            "F000739",
+            "F001124",
+            "F001212",
+            "F001397",
+            "F001700"
+          ],
+          "classes": {
+            "relevant": 5,
+            "other problem": 11
+          }
+        }
+      ]
+    }
+  ],
+  "total_s": 353.1
+}

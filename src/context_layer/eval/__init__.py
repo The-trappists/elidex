@@ -16,13 +16,14 @@ def run_eval(mode: ExtractorMode = "scripted") -> dict:
     extraction = score_extraction(kb)
     plain = score_retrieval(kb, spec, extraction.label_of, use_conditions=False)
     cond = score_retrieval(kb, spec, extraction.label_of, use_conditions=True)
+    rel = score_retrieval(kb, spec, extraction.label_of, use_conditions=True, use_relevance=True)
     return {
         "run_at": datetime.now().isoformat(timespec="seconds"),
         "extractor": mode,
         "knowledge_base": {"threads": len(kb.runs), "assertions": len(kb.store.assertions)},
         "extraction": {"summary": extraction.summary(), "threads": [vars(t) for t in extraction.threads]},
         "retrieval": [
-            {"summary": r.summary(), "cases": [vars(c) | {"correct": c.correct} for c in r.cases]} for r in (plain, cond)
+            {"summary": r.summary(), "cases": [vars(c) | {"correct": c.correct} for c in r.cases]} for r in (plain, cond, rel)
         ],
         "missing_observations": score_missing_observations(kb, spec, extraction.label_of),
         "field_feedback": score_outcomes(kb, spec, extraction.label_of),  # last: it records outcomes on the store

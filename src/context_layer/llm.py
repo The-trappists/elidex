@@ -3,7 +3,7 @@
 - JSON mode per provider: "json_object", "json_schema" or "prompt" (LLM_JSON_MODE).
 - Optional fallback provider on 429, 5xx, timeout or connection error (LLM_FALLBACK_*).
 - Every attempt is traced as an LlmCall dict and handed to the registered sinks
-  (the workbench writes them to out/workbench/llm_calls.jsonl). API keys are never traced.
+  (the dashboard writes them to out/dashboard/llm_calls.jsonl). API keys are never traced.
 
 Sinks run in the caller's thread: a sink that touches an asyncio loop must use call_soon_threadsafe.
 """
@@ -37,7 +37,7 @@ def remove_trace_sink(sink: TraceSink) -> None:
         _sinks.remove(sink)
 
 
-# Held by every JSONL append and by the workbench log compaction, so a rewrite never loses a line.
+# Held by every JSONL append and by the dashboard log compaction, so a rewrite never loses a line.
 FILE_LOCK = threading.Lock()
 
 

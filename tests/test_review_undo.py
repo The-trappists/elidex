@@ -3,12 +3,12 @@ seed bootstrap without critic and judge. Offline."""
 
 from fastapi.testclient import TestClient
 
-import test_workbench_core as core
+import test_dashboard_core as core
 from context_layer import critic, judge
-from context_layer.workbench import loop_agents, processor
-from context_layer.workbench.app import create_app
+from context_layer.dashboard import loop_agents, processor
+from context_layer.dashboard.app import create_app
 from test_review_backend import edit, flags, item, run_thread
-from test_workbench_core import client, seeded, wait_for  # noqa: F401
+from test_dashboard_core import client, seeded, wait_for  # noqa: F401
 
 
 def undo(client, aid, edit_id=None):
@@ -81,8 +81,8 @@ def test_flags_carry_the_item_topic(client):
 def test_seed_is_processed_without_critic_and_judge(tmp_path, monkeypatch):
     """First start: the seed never costs a critic or judge call, even with a key and the toggles on."""
     monkeypatch.setattr(core.seed, "load_seed", core.small_seed)
-    monkeypatch.setattr(core.config, "WORKBENCH_LLM_CALLS_FILE", tmp_path / "calls.jsonl")
-    monkeypatch.setattr(core.config, "WORKBENCH_LLM_CACHE_FILE", tmp_path / "cache.json")
+    monkeypatch.setattr(core.config, "DASHBOARD_LLM_CALLS_FILE", tmp_path / "calls.jsonl")
+    monkeypatch.setattr(core.config, "DASHBOARD_LLM_CACHE_FILE", tmp_path / "cache.json")
     monkeypatch.setattr(core.config, "llm_configured", lambda: True)
     seen = []
     monkeypatch.setattr(critic, "critique", lambda *a, **k: seen.append("critic") or ([], [], []))

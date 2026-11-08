@@ -62,7 +62,7 @@ function useTheme() {
     } catch {
       /* storage blocked */
     }
-    // The workbench is dark-first; use dark unless the user has saved a choice.
+    // The dashboard is dark-first; use dark unless the user has saved a choice.
     return true
   })
   useEffect(() => {

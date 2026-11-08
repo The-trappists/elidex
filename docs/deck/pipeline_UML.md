@@ -119,7 +119,7 @@ sequenceDiagram
     autonumber
     actor Tech as Network Engineer (Slack)
     participant Bridge as SlackBridge (Socket Mode)
-    participant WB as Workbench State
+    participant WB as Dashboard State
     participant Proc as Pipeline Processor
     participant LLM as LLMExtractor
     participant Critic as Critic Agent
@@ -200,7 +200,7 @@ flowchart LR
 
 ## 4. Step-by-Step Technical Breakdown
 
-### Step 1: Slack Ingestion & Normalization ([slack_bridge.py](file:///home/matteo/Projects/since-ai/src/context_layer/workbench/slack_bridge.py#L154-L188))
+### Step 1: Slack Ingestion & Normalization ([slack_bridge.py](file:///home/matteo/Projects/since-ai/src/context_layer/dashboard/slack_bridge.py#L154-L188))
 - **Socket Mode Listener**: Connected via Slack App-Level Token (`xapp-...`) and Bot User Token (`xoxb-...`).
 - **Event Filtering**: Discards bot events (`bot_id`, `IGNORED_SUBTYPES`: `bot_message`, `message_changed`, `message_deleted`, `channel_join`), self-messages, and empty payloads.
 - **Identity Resolution**: Queries Slack API `users.info(user=user_id)` to resolve the real human name and job title (`profile.title`).
@@ -210,7 +210,7 @@ flowchart LR
   - If new: Instantiates a `LiveThread` with `origin="slack"` and records the thread anchor.
 - Calls `wb.post_message(thread_id, author=name, text=text, role=title, mirror=False)`.
 
-### Step 2: Event Bus & Idle Debounce ([processor.py](file:///home/matteo/Projects/since-ai/src/context_layer/workbench/processor.py#L167-L198))
+### Step 2: Event Bus & Idle Debounce ([processor.py](file:///home/matteo/Projects/since-ai/src/context_layer/dashboard/processor.py#L167-L198))
 - Network specialists rarely send operational knowledge in a single sentence; they write multi-line explanations or follow-ups.
 - `processor.request(thread_id, immediate=False)` schedules a debounce timer (`wb.settings.idle_seconds`, default `2.0s`).
 - Successive messages in the same thread reset the timer.
@@ -313,3 +313,67 @@ flowchart LR
     A2 -- "CLOSED_BY" --> A
     A2 -. "CONFLICTS_WITH" .- A
 ```
+
+---
+
+## 6. Retrieval: From Knowledge Node Back to the Agent
+
+Capturing knowledge is half the job; the other half is handing an agent **the right knowledge, valid now, about its problem, and nothing else**. At company scale this is the hard part: in our synthetic operator (3,000,000 threads, 13.8 M messages, 20,086 elements, 3,000 ground-truth facts) a TX-3000 node is covered by a median of **316 valid facts**, 21 of them about the same problem. Returning "everything known about the element" is correct but useless.
+
+> Code: `src/context_layer/mvp/relevance.py` (problem relevance), `src/context_layer/eval/scale.py` (`ctx dataset eval`). Full method and raw report: [evaluation.md, Part 3](../evaluation.md#part-3-retrieval-accuracy-at-company-scale) and [results/scale-large](../results/scale-large/README.md).
+
+```mermaid
+flowchart LR
+    CASE["Agent case<br/>element, time,<br/>problem in words,<br/>observations"] --> SCOPE["1. Graph scope<br/>element + its class + its site<br/>(inventory, not text)"]
+    SCOPE --> TIME["2. Time validity<br/>valid_from <= t < valid_to"]
+    TIME --> COND["3. Condition checks<br/>check_status, to_read"]
+    COND --> REL["4. Problem relevance<br/>problem_match, score"]
+    REL --> OUT["AgentReport<br/>matching rules first,<br/>nothing dropped silently"]
+```
+
+### The approaches, and what each one fixes
+
+| # | Approach | How | Where | Measured effect |
+| --- | --- | --- | --- | --- |
+| 1 | **Graph first, text second** | Retrieve through the element, its `ElementClass` and its site, resolved from the inventory, not by text similarity | `store.get_context` | 0 wrong-element answers (RAG over the same knowledge without the graph: 41,345) |
+| 2 | **Time is a filter** | Each assertion has `valid_from` / `valid_to`; invalidations (firmware fix, key moved) close it | `store.py`, `mvp/lifecycle.py` | 0 stale answers; 46 / 46 site-access changes closed at the right time |
+| 3 | **Condition checks with a check status** | Rules are tested on the agent's observations. Each kept rule says `fully checked`, `not fully checked` (with `to_read` fields) or `text only`; failed rules are listed as "not applied" | `agent.run_agent(use_conditions=True)` | 26 hand-written cases: 73% → 100%; the right answer is never lost when observations are missing |
+| 4 | **Problem relevance** (second stage) | IDF-weighted share of the problem's concepts that a rule mentions; small field thesaurus (SFP = transceiver = optic, reboot = restart, flap…); scope words (ids, site names, years) removed because the graph handles them; an invalidation inherits the problem of the rules it closed. Threshold 0.4, chosen on a separate tuning wording | `mvp/relevance.py`, `run_agent(use_relevance=True)`, MCP/REST `?problem=` | Precision 10.8% → 73.0%; rules handed to the agent p95 42 → 6 |
+| 5 | **One rule per piece of knowledge** | Same knowledge is compared on scope (`applies_to`, trigger), not on where it was seen; a release closes only bug reports about *older* firmware | `store.py` `_binding_key`, `lifecycle.py` `fix_predates` | Hunch later confirmed kept as one verified rule: 72 → 285 of 285; wrong closures 41 → 0 |
+
+### Results against simpler approaches (9,300 agent cases, test wording)
+
+| Pipeline | Accuracy | Solution found | Precision | Rules per case p50 / p95 | Stale | Wrong element |
+| --- | --- | --- | --- | --- | --- | --- |
+| Naive RAG over raw chats (BM25, top 5)* | 0.3% | 66.6% | 11.1% | 5 / 5 | 119 | 6,548 |
+| RAG over extracted knowledge, no graph (top 5) | 1.7% | 49.6% | 8.1% | 5 / 5 | 0 | 41,345 |
+| Graph scope + time + condition checks | 48.3% | 100% | 10.8% | 2 / 42 | 0 | 0 |
+| + problem relevance, default (all rules when none matches) | **80.3%** | 100% | 44.8% | 1 / 10 | 0 | 0 |
+| + problem relevance, strict | **89.0%** | 100% | 73.0% | 1 / 6 | 0 | 0 |
+
+\* 2,000-case sample over all knowledge threads plus 300,000 other threads; on that sample the other rows move by less than one point. **Accuracy** = the right knowledge came back (or nothing, when nothing applies) and no noise. Latency: p50 under 0.5 ms, p95 about 12 ms for the graph pipelines.
+
+By kind of case, the ones that matter most for the challenge:
+
+| Kind of case | Graph + time + conditions | + relevance, default | + relevance, strict |
+| --- | --- | --- | --- |
+| Similar case, same class (the brief's demo step 3) | 0.0% | 84.8% | 84.8% |
+| Near miss: same model, outside the class | 7.6% | 68.6% | 90.6% |
+| After the knowledge was closed | 11.9% | 80.1% | 80.1% |
+| Dispatch to the site (access knowledge) | 69.6% | 100% | 100% |
+
+**Linking**: 3,000 of 3,000 facts linked, reach exact 100%, 0 over-linked (1,295 class, 1,116 instance, 589 site facts), from the real thread text.
+
+**With the real LLM extractor** (26 hand-written chats, recorded run): problem relevance lifts accuracy from 65.4% to 80.8% and cuts noise items from 13 to 5.
+
+### What we tried and rejected
+
+- **Ranking by weights** (trust, specificity, LLM confidence): fixed priorities are biased (on TRN-305 after a power dip, "verified" and "unit-specific" both put the wrong rule first), and LLM confidence is not calibrated: it ranked worst.
+- **Dropping every rule that could not be fully checked**: lost the right answer in 31–48% of runs. Showing noise with a check status is better than losing the answer.
+
+### How to read these numbers
+
+- Synthetic data with templated chat language, and the ground truth as extractor (an oracle), so absolute values are an upper bound; the **gaps between pipelines** are the finding. Nothing here is Elisa data.
+- Incident wordings were written by hand before the matcher, in two wordings: `dev` to tune the thesaurus and threshold, `test` to report.
+- The dashboard, MCP and REST use the default variant; strict is measured, not wired.
+- Re-run: `uv run ctx dataset generate --scale large`, then `uv run ctx dataset eval out/dataset/large --split test`.

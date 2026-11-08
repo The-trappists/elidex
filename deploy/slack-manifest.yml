@@ -1,9 +1,9 @@
 display_information:
-  name: Context Workbench
-  description: Mirrors Workbench persona chats into Slack and reads human replies back.
+  name: Context Dashboard
+  description: Mirrors Dashboard persona chats into Slack and reads human replies back.
 features:
   bot_user:
-    display_name: Context Workbench
+    display_name: Context Dashboard
     always_online: true
 oauth_config:
   scopes:

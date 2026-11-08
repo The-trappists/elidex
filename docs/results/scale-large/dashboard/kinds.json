@@ -1,0 +1,68 @@
+{
+ "rows": [
+  {
+   "kind": "after closure",
+   "cases": 302,
+   "accuracy_today": 0.1192,
+   "accuracy_default": 0.8013,
+   "accuracy_strict": 0.8013,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "before it was said",
+   "cases": 2698,
+   "accuracy_today": 0.457,
+   "accuracy_default": 0.7465,
+   "accuracy_strict": 0.8755,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "dispatch to the site",
+   "cases": 543,
+   "accuracy_today": 0.6961,
+   "accuracy_default": 1.0,
+   "accuracy_strict": 1.0,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "near miss, same model",
+   "cases": 986,
+   "accuracy_today": 0.0761,
+   "accuracy_default": 0.6856,
+   "accuracy_strict": 0.9057,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "other unit, same site",
+   "cases": 1116,
+   "accuracy_today": 0.7984,
+   "accuracy_default": 0.7993,
+   "accuracy_strict": 0.931,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "random element",
+   "cases": 1500,
+   "accuracy_today": 0.766,
+   "accuracy_default": 0.882,
+   "accuracy_strict": 0.948,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "same unit",
+   "cases": 1116,
+   "accuracy_today": 0.6577,
+   "accuracy_default": 0.8029,
+   "accuracy_strict": 0.8029,
+   "solution_found_strict": 1.0
+  },
+  {
+   "kind": "similar case, same class",
+   "cases": 1039,
+   "accuracy_today": 0.0,
+   "accuracy_default": 0.8479,
+   "accuracy_strict": 0.8479,
+   "solution_found_strict": 1.0
+  }
+ ]
+}

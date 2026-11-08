@@ -260,7 +260,7 @@ def test_seed_story_over_time(history):
 def test_the_eval_history_alone_has_no_linked_pattern():
     """The 26 labelled scenarios, replayed without the pattern scenarios, must not invent links."""
     from context_layer.eval.kb import build_kb, load_spec
-    from context_layer.workbench.seed import load_seed
+    from context_layer.dashboard.seed import load_seed
 
     kb = build_kb(load_spec(), "scripted")
     links = [(lk.id, lk.a, lk.b, lk.kind) for lk in load_seed().links]

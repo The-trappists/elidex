@@ -1,0 +1,40 @@
+{
+ "rows": [
+  {
+   "measure": "Hunch confirmed later by an expert, kept as one rule",
+   "before": 72,
+   "after": 285,
+   "of": 285
+  },
+  {
+   "measure": "Hunch confirmed later, ends with trust verified",
+   "before": 76,
+   "after": 285,
+   "of": 285
+  },
+  {
+   "measure": "Expert disagreements flagged as conflicts",
+   "before": 188,
+   "after": 188,
+   "of": 188
+  },
+  {
+   "measure": "Rules closed by a release not newer than their firmware",
+   "before": 3,
+   "after": 0,
+   "of": null
+  },
+  {
+   "measure": "Rules that should stay open but were closed",
+   "before": 41,
+   "after": 0,
+   "of": null
+  },
+  {
+   "measure": "Distinct rules stored from the 3,000 facts",
+   "before": 2950,
+   "after": 1879,
+   "of": null
+  }
+ ]
+}

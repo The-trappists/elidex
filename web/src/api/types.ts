@@ -1,4 +1,4 @@
-// Mirror of src/context_layer/models.py and src/context_layer/workbench/contracts.py.
+// Mirror of src/context_layer/models.py and src/context_layer/dashboard/contracts.py.
 // Change both sides together. Datetimes are ISO strings without timezone, in *simulated* time
 // unless the comment says "wall".
 
@@ -129,7 +129,7 @@ export interface ContextAssertion {
   link_notes: string[]
 }
 
-// ---------------------------------------------------------------- workbench (contracts.py)
+// ---------------------------------------------------------------- dashboard (contracts.py)
 
 export type Origin = 'elisa' | 'synthetic' | 'generated' | 'manual' | 'slack'
 export const REMOVABLE_ORIGINS: Origin[] = ['generated', 'manual', 'slack']
@@ -648,8 +648,8 @@ export interface DatasetSample {
   connected_components: number
 }
 
-/** GET /sources/...: human activity around an element (docs/workbench.md). Every answer names its source and status. */
-export type SourceName = 'files' | 'atlas' | 'tiger' | 'workbench'
+/** GET /sources/...: human activity around an element (docs/dashboard.md). Every answer names its source and status. */
+export type SourceName = 'files' | 'atlas' | 'tiger' | 'dashboard'
 export type SourceStatus = 'ok' | 'not_configured' | 'error' | 'timeout'
 export interface SourceAnswer {
   source: SourceName
@@ -666,7 +666,7 @@ export interface SourceThread {
   n_messages: number
   authors: string[]
   preview: { seq: number | null; author: string; role: string | null; sent_at: string; text: string }[]
-  in_workbench: boolean
+  in_dashboard: boolean
 }
 export interface SourceThreads extends SourceAnswer {
   element: string
@@ -765,7 +765,7 @@ export interface PatternReport {
   patterns: Pattern[]
 }
 
-// ---- company day (mirror of workbench/contracts.py, "company day" section)
+// ---- company day (mirror of dashboard/contracts.py, "company day" section)
 export type HealthStatus = 'healthy' | 'degraded' | 'down' | 'recovering'
 export type CompanyStatus = 'idle' | 'running' | 'paused' | 'finished'
 
@@ -861,7 +861,7 @@ export interface CompanyStartBody {
   use_llm?: boolean
 }
 
-// ---- knowledge polish (mirror of workbench/contracts.py, "knowledge polish" section)
+// ---- knowledge polish (mirror of dashboard/contracts.py, "knowledge polish" section)
 export type FactorEffect = 'supports' | 'limits' | 'neutral'
 
 export interface JustificationFactor {

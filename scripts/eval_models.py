@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Compare extractor models on the workbench scenarios that have `expected` items.
+"""Compare extractor models on the dashboard scenarios that have `expected` items.
 
 Modes (default is --scripted, which is offline and free):
   --scripted  score the scenarios' own expected items and any cached extraction against expected
@@ -25,7 +25,7 @@ from context_layer import config
 from context_layer.evaluation import binding_set, link_precision, link_recall, match_items
 from context_layer.link import Inventory, Linker
 from context_layer.models import ExtractedItem, ExtractionResult, Message, Thread
-from context_layer.workbench.contracts import Scenario
+from context_layer.dashboard.contracts import Scenario
 
 DEFAULT_CANDIDATES = Path(__file__).with_name("eval_candidates.example.json")
 
@@ -84,7 +84,7 @@ class Totals:
 
 def load_context():
     """(scenarios with expected items, personas by id, inventory)."""
-    from context_layer.workbench import seed
+    from context_layer.dashboard import seed
 
     data = seed.load_seed()
     inv = Inventory(list(data.elements), list(data.sites))
@@ -122,7 +122,7 @@ def score(name: str, scenarios: list[Scenario], personas: dict, inv: Inventory, 
     """Run `extract` on every scenario and accumulate the metrics.
 
     An extractor that raises counts as all expected items missed for that scenario."""
-    from context_layer.workbench.processor import _scope_key
+    from context_layer.dashboard.processor import _scope_key
 
     tot = Totals(name)
     for s in scenarios:

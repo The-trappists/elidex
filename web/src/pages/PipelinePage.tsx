@@ -56,7 +56,7 @@ const STAGES: PipelineStage[] = [
     name: '1. Ingestion & Event Stream',
     badge: 'Socket Mode & Async IO',
     badgeTone: 'info',
-    module: 'src/context_layer/workbench/slack_bridge.py',
+    module: 'src/context_layer/dashboard/slack_bridge.py',
     contract: 'LiveThread · Message · ThreadSource',
     purpose:
       'Captures silent operational knowledge directly from live communication channels without requiring technicians to open a ticketing system or fill in documentation forms.',
@@ -79,7 +79,7 @@ const STAGES: PipelineStage[] = [
     name: '2. Burst Debounce & Scheduling',
     badge: 'State Machine Lock',
     badgeTone: 'accent',
-    module: 'src/context_layer/workbench/processor.py',
+    module: 'src/context_layer/dashboard/processor.py',
     contract: 'PipelineJob · asyncio.Lock · idle_seconds',
     purpose:
       'Aggregates fragmented multi-line human chat bursts into coherent conversational contexts before invoking inference.',

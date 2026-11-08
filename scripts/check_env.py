@@ -46,7 +46,7 @@ def _check(status: bool, label: str, detail: str = "", warn: bool = False) -> bo
 
 def main() -> int:
     print("\n" + "=" * 60)
-    print(" Context Workbench Pre-Deployment .env Verification")
+    print(" Context Dashboard Pre-Deployment .env Verification")
     print("=" * 60 + "\n")
 
     if not ENV_FILE.is_file():

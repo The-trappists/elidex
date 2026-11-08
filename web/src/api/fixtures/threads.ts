@@ -1,4 +1,4 @@
-// Generated once from data/workbench/scenarios (verbatim message text). Sample data for the review fixtures.
+// Generated once from data/dashboard/scenarios (verbatim message text). Sample data for the review fixtures.
 import type { LiveThread } from '../types'
 
 export const FIXTURE_THREADS: LiveThread[] = [

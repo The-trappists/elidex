@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Update the deployed Workbench: pull, rebuild, restart. Run on the VM: ./deploy/update.sh
+# Update the deployed Dashboard: pull, rebuild, restart. Run on the VM: ./deploy/update.sh
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
