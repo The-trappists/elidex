@@ -390,14 +390,31 @@ export default function HomePage() {
           <div>
             <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">Explore</h2>
             <ul className="mt-4 space-y-3 text-sm">
-              <li><a href="/overview" className="hover:text-accent">Dashboard</a></li>
               <li>
-                <a href="#demo" className="hover:text-accent">
+                <Link to="/overview" onClick={enter} className="hover:text-accent">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://youtu.be/XQCUgTxHnx0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-accent"
+                >
                   Demo Video
                 </a>
               </li>
-              <li><a href="https://www.elisa.com/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">Elisa</a></li>
-              <li><a href="https://sinceai.ai/hackathon" target="_blank" rel="noopener noreferrer" className="hover:text-accent">Since AI Hackathon</a></li>
+              <li>
+                <a href="https://elisa.com/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                  Elisa
+                </a>
+              </li>
+              <li>
+                <a href="https://sinceai.app/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                  Since AI Hackathon
+                </a>
+              </li>
             </ul>
           </div>
           <div>
@@ -409,7 +426,7 @@ export default function HomePage() {
                 </a>
               </li>
               <li>
-                <a href="https://github.com/The-trappists/since-ai-hackathon#hackathon-and-license-context" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                <a href="https://github.com/The-trappists/since-ai-hackathon/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
                   License
                 </a>
               </li>
