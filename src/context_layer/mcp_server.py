@@ -119,7 +119,7 @@ def get_patterns(entity_id: str | None = None, at: str | None = None) -> dict:
     Returns {at, meaning, patterns}."""
     from .listen import discover_threads
     from .mvp.patterns import analyze
-    from .workbench.seed import load_seed
+    from .dashboard.seed import load_seed
 
     links = [(lk.id, lk.a, lk.b, lk.kind) for lk in load_seed().links]
     times = {t.id: t.started_at for t in discover_threads()}

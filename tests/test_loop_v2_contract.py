@@ -6,8 +6,8 @@ from datetime import datetime
 import pytest
 
 from context_layer.models import ExtractedItem
-from context_layer.workbench import processor
-from context_layer.workbench.contracts import (
+from context_layer.dashboard import processor
+from context_layer.dashboard.contracts import (
     STAGES,
     CriticVerdict,
     JudgeVerdict,

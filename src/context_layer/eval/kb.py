@@ -1,4 +1,4 @@
-"""Build the knowledge base the evaluation runs on: replay the labelled workbench scenarios, in time order,
+"""Build the knowledge base the evaluation runs on: replay the labelled dashboard scenarios, in time order,
 through the real pipeline (extract -> link -> store -> lifecycle).
 
 Extractors:
@@ -22,8 +22,8 @@ from ..link import Inventory, Linker
 from ..models import ExtractedItem, Message, Thread
 from ..mvp.lifecycle import reconcile
 from ..store import ContextStore
-from ..workbench.contracts import Scenario
-from ..workbench.seed import load_seed
+from ..dashboard.contracts import Scenario
+from ..dashboard.seed import load_seed
 
 ExtractorMode = Literal["scripted", "llm", "cache"]
 

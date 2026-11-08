@@ -1,10 +1,10 @@
-> This file holds two evaluations that do different jobs. **Part 1** (below) compares extractor models on the workbench scenarios (`src/context_layer/evaluation.py`, `scripts/eval_models.py`). **Part 2** (further down, from the `accuracy` work) measures retrieval, exchange and field feedback (`src/context_layer/eval/`, `ctx eval`). The two have separate code and separate metrics; do not mix their numbers.
+> This file holds two evaluations that do different jobs. **Part 1** (below) compares extractor models on the dashboard scenarios (`src/context_layer/evaluation.py`, `scripts/eval_models.py`). **Part 2** (further down, from the `accuracy` work) measures retrieval, exchange and field feedback (`src/context_layer/eval/`, `ctx eval`). The two have separate code and separate metrics; do not mix their numbers.
 
 # Part 1: Evaluation and model comparison
 
-How we measure the extractor and the linker against the `expected` items of the workbench scenarios.
-Code: `src/context_layer/evaluation.py` (pure helpers), `evaluate()` in `src/context_layer/workbench/processor.py`
-(used by the workbench UI), `scripts/eval_models.py` (model comparison).
+How we measure the extractor and the linker against the `expected` items of the dashboard scenarios.
+Code: `src/context_layer/evaluation.py` (pure helpers), `evaluate()` in `src/context_layer/dashboard/processor.py`
+(used by the dashboard UI), `scripts/eval_models.py` (model comparison).
 
 ## The metric
 
@@ -93,7 +93,7 @@ uv run ctx eval --extractor llm      # the real LLM extractor (needs LLM_* in .e
 uv run ctx eval --extractor cache    # re-score the last LLM run offline
 ```
 
-The knowledge base is rebuilt from the 26 labelled workbench scenarios in time order, through the real pipeline (extract → link → store → lifecycle). Retrieval uses the demo agent's own code (`agent.run_agent`).
+The knowledge base is rebuilt from the 26 labelled dashboard scenarios in time order, through the real pipeline (extract → link → store → lifecycle). Retrieval uses the demo agent's own code (`agent.run_agent`).
 
 ## 1. Retrieval: when a problem happens, do we get the right solution?
 
@@ -181,7 +181,7 @@ Each kept rule gets a **check status**, a fact about the case, not a weight. Not
 | `text only` | no machine check (none, or in words only) | barrier key at Kemijärvi; "after a storm" | use it, judging the words | 100% (81 items) |
 | `failed` | a check is false | counters 1250 → SFP rule removed | (not shown, listed as "not applied") | |
 
-All the noise lands in `not fully checked`, and the agent can clear it itself by reading the missing field. No human step. Shown in `ctx agent --conditions`, sent to the LLM agent, and returned by the workbench agent API (`check_status`, `to_read`).
+All the noise lands in `not fully checked`, and the agent can clear it itself by reading the missing field. No human step. Shown in `ctx agent --conditions`, sent to the LLM agent, and returned by the dashboard agent API (`check_status`, `to_read`).
 
 Caveat: "fully checked = 100%" is partly true by design (a rule whose checks all pass applies). The real risk is the LLM extractor writing a wrong check, so rerun with `--extractor llm`.
 
@@ -221,7 +221,7 @@ Limit: "a symptom changed" is not always "fixed" (optics could go from normal to
 
 ## Confidence: what the percentage is
 
-The `confidence` shown in the workbench (e.g. "conf 85%") is **the LLM's own estimate** (0 to 1), written in each extracted item. Nothing computes it, and the prompt does not define it. In scripted and cached runs it is a number written by hand in the labels or the cache.
+The `confidence` shown in the dashboard (e.g. "conf 85%") is **the LLM's own estimate** (0 to 1), written in each extracted item. Nothing computes it, and the prompt does not define it. In scripted and cached runs it is a number written by hand in the labels or the cache.
 
 What the code does with it:
 - the linker drops items below `MIN_CONFIDENCE` (0.5, `.env`);

@@ -32,10 +32,10 @@ The AI supports the team; the team decides.
 | `src/context_layer/mvp/` | Starters for ideas B, C, D |
 | `data/synthetic/` | Our synthetic data and how it was made |
 | `docs/dataset.md`, `src/context_layer/dataset/` | Company-sized synthetic dataset generator (network, staff, conversations, ground truth), `ctx dataset` |
-| `docs/workbench.md` | Workbench (team test bench): contract, API, processing rules |
+| `docs/dashboard.md` | Dashboard (team test bench): contract, API, processing rules |
 | `docs/patterns.md` | Recurring and linked problems, with hypotheses (`ctx patterns`, Insights page) |
-| `src/context_layer/workbench/`, `web/` | Workbench backend and UI |
-| `data/workbench/` | Workbench seed: topology, personas, scenarios |
+| `src/context_layer/dashboard/`, `web/` | Dashboard backend and UI |
+| `data/dashboard/` | Dashboard seed: topology, personas, scenarios |
 | `deploy/`, `docs/deploy-vultr.md`, `docs/slack-setup.md` | Deployment and Slack bridge |
 | `CONTRIBUTING.md` | Git workflow and conventions |
 

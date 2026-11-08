@@ -1,5 +1,5 @@
-# Context Workbench image: React UI (built) + FastAPI backend.
-# Build from the repo root: docker build -t context-workbench .
+# Context Dashboard image: React UI (built) + FastAPI backend.
+# Build from the repo root: docker build -t context-dashboard .
 
 # ---- stage 1: build the web UI
 FROM node:22-alpine AS web
@@ -40,4 +40,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status == 200 else 1)"
 
-CMD ["ctx", "workbench", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["ctx", "dashboard", "--host", "0.0.0.0", "--port", "8000"]

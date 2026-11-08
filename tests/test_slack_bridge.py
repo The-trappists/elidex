@@ -3,8 +3,8 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
-from context_layer.workbench.contracts import LiveThread, Message
-from context_layer.workbench.slack_bridge import SlackBridge
+from context_layer.dashboard.contracts import LiveThread, Message
+from context_layer.dashboard.slack_bridge import SlackBridge
 
 CH = "C1"
 
@@ -143,7 +143,7 @@ def test_start_builds_real_bolt_app(monkeypatch):
         wb, b, _ = make()
         b.client = AsyncWebClient(token="xoxb-test")  # Bolt requires the real client type
         b.client.auth_test = AsyncMock(return_value={"user_id": "UBOT", "bot_id": "BBOT"})
-        b.client.conversations_info = AsyncMock(return_value={"channel": {"name": "workbench"}})
+        b.client.conversations_info = AsyncMock(return_value={"channel": {"name": "dashboard"}})
         await b.start()
         assert b.connected and b.error is None
         await b.stop()

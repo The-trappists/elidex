@@ -1,4 +1,4 @@
-// Typed client for every /api route (see docs/workbench.md). Errors throw ApiError with the
+// Typed client for every /api route (see docs/dashboard.md). Errors throw ApiError with the
 // backend's `detail` message, ready for a toast.
 import { fixtureAgentRun } from './fixtures/agentRun'
 import type {
