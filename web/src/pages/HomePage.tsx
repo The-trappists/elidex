@@ -329,7 +329,6 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        <TechnologyStack />
         <section id="team" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">Built at Since AI 2026</p>
           <h2 className="mt-3 font-display text-3xl font-medium tracking-tight">Meet The Trappists.</h2>
@@ -359,6 +358,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        <TechnologyStack />
       </main>
       <footer className="border-t border-line">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-10 sm:grid-cols-2 sm:px-10 lg:grid-cols-[1.5fr_1fr_1fr]">

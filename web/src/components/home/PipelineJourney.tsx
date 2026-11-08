@@ -71,9 +71,6 @@ export function PipelineJourney() {
     const scroller = element?.closest<HTMLElement>('.landing')
     if (!element || !scroller) return
     let frame = 0
-    let travelled: number | null = null
-    let lastTime = 0
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     const rows = Array.from(element.querySelectorAll<HTMLElement>('.journey-stop'))
     const measure = () => {
       const width = element.clientWidth
@@ -92,10 +89,9 @@ export function PipelineJourney() {
         }
       }
       d += ` L ${points[points.length - 1].x} ${element.clientHeight}`
-      travelled = null
       setGeometry({ d, width, height: element.clientHeight })
     }
-    const update = (time: number) => {
+    const update = () => {
       frame = 0
       const rect = element.getBoundingClientRect()
       const viewport = scroller.getBoundingClientRect()
@@ -127,22 +123,13 @@ export function PipelineJourney() {
       const right = anchors[Math.max(1, end)]
       const left = anchors[Math.max(1, end) - 1]
       const progress = Math.max(0, Math.min(1, (y - left.y) / Math.max(1, right.y - left.y)))
-      const target = left.length + (right.length - left.length) * progress
-      const elapsed = Math.min(64, Math.max(0, time - lastTime))
-      lastTime = time
-      if (travelled === null || reducedMotion.matches) travelled = target
-      else {
-        const distance = target - travelled
-        const step = Math.min(Math.abs(distance) * (1 - Math.exp(-elapsed / 140)), elapsed * .9)
-        travelled += Math.sign(distance) * step
-        if (Math.abs(target - travelled) < .5) travelled = target
-      }
+      // Follow the current scroll position immediately, including large scroll jumps.
+      const travelled = left.length + (right.length - left.length) * progress
       const point = path.current.getPointAtLength(travelled)
       trace.current.style.strokeDasharray = `${length}`
       trace.current.style.strokeDashoffset = `${length - travelled}`
       cursor.current.setAttribute('cx', `${point.x}`)
       cursor.current.setAttribute('cy', `${point.y}`)
-      if (travelled !== target) frame = requestAnimationFrame(update)
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
     const observer = new ResizeObserver(() => { measure(); schedule() })

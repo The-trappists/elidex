@@ -1,5 +1,5 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { ArrowLeft, ArrowRight, Pause, Play } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import './TechnologyStack.css'
 
 const GROUPS = [
@@ -29,13 +29,70 @@ const GROUPS = [
   ] },
 ]
 
+const TOOLS = GROUPS.flatMap(group => group.tools.map(tool => ({ ...tool, group: group.title })))
+
 export function TechnologyStack() {
   const rail = useRef<HTMLDivElement>(null)
-  const [active, setActive] = useState(0)
-  const goTo = (index: number) => {
+  const cycle = useRef<HTMLDivElement>(null)
+  const manualUntil = useRef(0)
+  const [paused, setPaused] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const [visible, setVisible] = useState(false)
+  const stopped = paused || hovered || focused || reduced || !visible
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const change = () => setReduced(media.matches)
+    media.addEventListener('change', change)
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting))
+    if (rail.current) observer.observe(rail.current)
+    return () => { media.removeEventListener('change', change); observer.disconnect() }
+  }, [])
+
+  useEffect(() => {
     const element = rail.current
-    if (!element) return
-    element.scrollTo({ left: index * element.clientWidth, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+    const group = cycle.current
+    if (!element || !group) return
+    let width = 0
+    const resize = new ResizeObserver(() => {
+      const next = group.getBoundingClientRect().width
+      const progress = width ? (element.scrollLeft % width) / width : 0
+      width = next
+      element.scrollLeft = width * (1 + progress)
+    })
+    resize.observe(group)
+    return () => resize.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (stopped) return
+    let frame = 0
+    let previous = 0
+    let offset = rail.current?.scrollLeft ?? 0
+    const tick = (time: number) => {
+      const element = rail.current
+      const width = cycle.current?.getBoundingClientRect().width ?? 0
+      if (element && width && !document.hidden && time > manualUntil.current) {
+        // Keep fractional progress: assigning subpixels to scrollLeft rounds in some browsers.
+        if (Math.abs(element.scrollLeft - offset) > 2) offset = element.scrollLeft
+        offset += Math.min(time - (previous || time), 50) * .028
+        if (offset >= width * 2) offset -= width
+        element.scrollLeft = offset
+      }
+      previous = time
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [stopped])
+
+  const move = (direction: number) => {
+    manualUntil.current = performance.now() + 5000
+    const element = rail.current
+    const card = cycle.current?.querySelector('article')
+    if (element && card) element.scrollBy({ left: direction * (card.getBoundingClientRect().width + 16), behavior: reduced ? 'instant' : 'smooth' })
   }
 
   return (
@@ -44,35 +101,39 @@ export function TechnologyStack() {
         <div className="max-w-xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">Under the hood</p>
           <h2 id="technology-title" className="mt-3 font-display text-3xl font-medium tracking-tight">The stack behind the context.</h2>
-          <p className="mt-4 text-sm leading-relaxed text-muted">From a specialist’s message to context an agent can use: the technologies powering ElidEx, and what each one does.</p>
+          <p className="mt-4 text-sm leading-relaxed text-muted">The tools that turn specialist experience into context an agent can use.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-muted" aria-live="polite" aria-atomic="true">{active + 1} / {GROUPS.length}</span>
-          <button type="button" aria-label="Previous technology group" aria-controls="technology-rail" disabled={active === 0} onClick={() => goTo(active - 1)} className="technology-arrow"><ArrowLeft size={18} /></button>
-          <button type="button" aria-label="Next technology group" aria-controls="technology-rail" disabled={active === GROUPS.length - 1} onClick={() => goTo(active + 1)} className="technology-arrow"><ArrowRight size={18} /></button>
+        <div className="flex items-center gap-2">
+          <button type="button" aria-label={paused ? 'Resume technology rotation' : 'Pause technology rotation'} aria-pressed={paused} disabled={reduced} onClick={() => setPaused(!paused)} className="technology-arrow">{paused || reduced ? <Play size={17} /> : <Pause size={17} />}</button>
+          <button type="button" aria-label="Previous technology" aria-controls="technology-rail" onClick={() => move(-1)} className="technology-arrow"><ArrowLeft size={18} /></button>
+          <button type="button" aria-label="Next technology" aria-controls="technology-rail" onClick={() => move(1)} className="technology-arrow"><ArrowRight size={18} /></button>
         </div>
       </div>
-      <div className="mt-8 flex flex-wrap gap-2" aria-label="Technology groups">
-        {GROUPS.map((group, index) => <button type="button" key={group.title} aria-pressed={active === index} aria-controls="technology-rail" onClick={() => goTo(index)} className="technology-group">{group.title}</button>)}
-      </div>
-      <div id="technology-rail" ref={rail} role="region" aria-roledescription="carousel" aria-label="Project technologies" tabIndex={0} className="technology-rail mt-5" onScroll={(event) => {
-        const element = event.currentTarget
-        setActive(Math.round(element.scrollLeft / element.clientWidth))
-      }}>
-        {GROUPS.map((group, index) => (
-          <div key={group.title} role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${GROUPS.length}: ${group.title}`} className="technology-slide rounded-xl border border-line bg-surface p-5 sm:p-8">
-            <h3 className="font-display text-xl font-medium">{group.title}</h3>
-            <p className="mt-2 text-sm text-muted">{group.summary}</p>
-            <div className="mt-7 grid gap-6 sm:grid-cols-2">
-              {group.tools.map((tool) => <article key={tool.name} className="flex items-start gap-4">
-                <span className="technology-logo"><img src={`/technologies/${tool.icon}.svg`} alt="" loading="lazy" width="28" height="28" /></span>
-                <div><h4 className="text-sm font-semibold">{tool.name}</h4><p className="mt-2 text-sm leading-relaxed text-muted">{tool.role}</p></div>
-              </article>)}
-            </div>
+      <div id="technology-rail" ref={rail} role="region" aria-roledescription="carousel" aria-label="Project technologies" tabIndex={0} className="technology-rail mt-8"
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false) }}
+        onPointerDown={() => { manualUntil.current = performance.now() + 5000 }}
+        onScroll={event => {
+          const element = event.currentTarget
+          const width = cycle.current?.getBoundingClientRect().width ?? 0
+          if (!width) return
+          if (element.scrollLeft < width / 2) element.scrollLeft += width
+          else if (element.scrollLeft >= width * 2) element.scrollLeft -= width
+        }}>
+        {[0, 1, 2].map(copy => (
+          <div key={copy} ref={copy === 1 ? cycle : undefined} className="technology-cycle" aria-hidden={copy !== 1 || undefined} inert={copy !== 1}>
+            {TOOLS.map((tool, index) => <article key={tool.name} role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${TOOLS.length}: ${tool.name}`} className="technology-card">
+              <div className="flex items-center gap-3">
+                <span className="technology-logo"><img src={`/technologies/${tool.icon}.svg`} alt="" width="28" height="28" /></span>
+                <h3 className="font-display text-lg font-medium">{tool.name}</h3>
+              </div>
+              <p className="technology-category">{tool.group}</p>
+              <p className="text-sm leading-relaxed text-muted">{tool.role}</p>
+            </article>)}
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted">Swipe or use the arrows to explore. Cloud storage and external providers are configuration-dependent; the demo also runs locally in scripted mode.</p>
+      <p className="mt-4 text-xs text-muted">Scroll or use the arrows to explore. Rotation pauses while you read. Cloud services are optional; the demo also runs locally.</p>
     </section>
   )
 }
