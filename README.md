@@ -1,50 +1,131 @@
+<div align="center">
+
+<img src="docs/images/elidex-logo.png" alt="ElidEx Logo" width="160" />
+
 # ElidEx
 
-**Capture the Hidden Knowledge that lives in network operation conversations, connect it to the right equipment and time, and make it re-usable by an AI agent.**
+### *The "As-Experienced" Context Layer for Autonomous Network Operations*
 
-Built by the **The Trappists** team for the **Since AI Hackathon 2026** in Turku, Finland.
+**Capturing the unspoken operational know-how in engineering chats, binding it to network topology with time validity, and serving it to AI agents.**
+
+Built by **The Trappists** for the **Since AI Hackathon 2026** (Turku, Finland)  
+*Addressing Elisa’s Challenge: "Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations"*
+
+---
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React 18](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/Code-TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Styles-Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Gemini](https://img.shields.io/badge/LLM-Gemini%202.5%20%2F%203.8%20Flash-4285F4?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Model Context Protocol](https://img.shields.io/badge/Protocol-MCP%202.0-8A2BE2)](https://modelcontextprotocol.io/)
+[![MongoDB Atlas](https://img.shields.io/badge/DB-MongoDB%20Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![Docker](https://img.shields.io/badge/Deploy-Docker%20%2B%20Caddy-2496ED?logo=docker&logoColor=white)](deploy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
-<!-- TODO: add complete stack -->
 
-## The challenge
+[**Watch Demo (YouTube)**](https://youtu.be/XQCUgTxHnx0) • [**Watch Demo Video (MP4)**](docs/video/ElidEx-demo-final.mp4) • [**Submission Report**](docs/submission.md) • [**Design & Architecture**](docs/design.md) • [**Decisions Log**](docs/decisions.md)
 
-Elisa's challenge is **“Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations.”** Network specialists already share practical knowledge in chats and emails, but that knowledge is hard for an autonomous agent to find later as it is not made persistent through documentation. ElidEx captures the reusable rule or fact, binds it to network entities and a validity period, records its source and trust, and makes it available when a similar case comes up.
+</div>
 
-The demo follows the challenge's SFP example: after a module swap, a link can look healthy while traffic counters stay at zero. The conversation contains a practical next step from an expert. The agent can retrieve that human advice on a similar case and cite the assertion it used.
+---
 
-The project focuses on **human knowledge and its reuse** to reduce professional's workload. Fault detection and root-cause analysis are outside the challenge scope. See [the challenge brief and scope checklist](docs/challenge.md) for details.
+## 🎬 Project Showcase & Demos
 
-## Get started
+### 1. Zero-Friction Capture & Live Extraction
+Specialists talk on Teams, Slack, or email as they always do. ElidEx extracts actionable operational rules without asking engineers to fill in a form.
 
-### Requirements
+![Pipeline Extraction](docs/images/pipeline-extraction.gif)
 
-- [uv](https://docs.astral.sh/uv/) for Python dependency and command management.
-- Python 3.12 or newer. `uv` can install the project interpreter when needed.
-- Node.js 22 and npm only if you want the Dashboard web UI.
+### 2. The Dynamic Knowledge Graph
+Context assertions are deterministically bound to network entities, hardware classes, and sites with temporal validity (`valid_from` / `valid_to`).
 
-### Install and run the core
+![Dynamic Knowledge Graph](docs/images/knowledge-graph.gif)
+
+### 3. Ask-Before-Act Guard (Agent Testing)
+An autonomous AI agent encounters an incident at 3 a.m. Instead of initiating a disruptive reboot or replacing hardware, it consults human wisdom through **MCP**, checks traffic counters, and bounces the interface.
+
+![Agent Tester & Ask-Before-Act Guard](docs/images/agent-guard.gif)
+
+### 4. Insights & Cross-Topology Pattern Recognition
+ElidEx correlates workarounds across time and network topology to uncover **recurring problems** and **linked incidents with hidden common causes**.
+
+![Insights & Pattern Recognition](docs/images/insights-patterns.gif)
+
+---
+
+## 💡 The Problem: *"Not that I know of 😄"*
+
+Modern telecom network automation already understands:
+- **Intent (as-designed):** How the network was planned.
+- **Physical (as-built):** The hardware installed.
+- **Runtime (as-running / telemetry):** Alarms, metrics, and traffic flows.
+
+**What is missing is the Context Layer ("as-experienced"):**
+> *A field engineer replaces an SFP on a transmission node. Link UP, optics normal, alarms cleared, but no traffic flows. He asks a senior expert on Teams. The expert advises: older unit, don't trust the green link status, check counters; if zero, bounce the interface before rebooting or swapping hardware. Traffic recovers.*  
+> *"Is this documented somewhere?" — "Not that I know of 😄".*
+
+That smiley is the bottleneck for autonomous network operations. An AI agent cannot call senior engineers at 3 a.m. 
+
+### Elisa's Core Principles Respected:
+- **Zero specialist overhead:** *"If your solution needs Erkki to fill out a form, Erkki won't fill out the form."* ElidEx is 100% passive.
+- **Precision over guessing:** *"A wrong link is worse than none."* Linking uses deterministic topology resolution and abstains when ambiguous.
+- **Out of scope boundaries respected:** Fault detection is excluded (Elisa's AI already does it); our focus is capturing and reusing human operational context.
+
+---
+
+## ⚡ How It Works: The 5-Stage Context Engine
+
+![The 5-Stage Context Engine](docs/images/context-engine.svg)
+
+1. **Listen:** Ingests conversations from live chat, email archives, or our Slack Socket Mode bridge.
+2. **Understand:** Extracts machine-testable conditions, recommended actions, cited evidence quotes, and confidence scores using Gemini Flash.
+3. **Critic & Link:** An independent second model (Critic) verifies assertions against quotes to prevent hallucinations. A deterministic linker maps entities to the inventory (abstaining when uncertain).
+4. **Store & Reconcile:** Organizes knowledge into a temporal graph (`valid_from` / `valid_to`). A Reconciliation Judge detects confirmations, contradictions, and firmware invalidations.
+5. **Serve & Reuse:** Exposes context via the **Model Context Protocol (MCP)** and REST endpoints so autonomous agents can consult human knowledge before acting.
+
+---
+
+## 🖥️ The Context Dashboard: Real-Time Test Bench
+
+The ElidEx Dashboard (`web/`) is an interactive operational environment built with React, Vite, Tailwind CSS, and a **custom 60 FPS HTML5 Canvas force-directed graph engine**:
+
+| View | Purpose | Screenshot |
+| :--- | :--- | :--- |
+| **Company Day** | Simulates a full day of network operations under a Finnish working calendar with concurrent chats, incidents, and autonomous resolutions. | ![Company Day](docs/images/site-barrier-case.png) |
+| **Network & Graph** | Real-time force-directed topology map and dynamic knowledge graph showing entities, knowledge rules, and temporal validity. | ![Topology & Knowledge](docs/images/knowledge-graph-topology.png) |
+| **Context Assertions** | Transparent assertion cards with verbatim quoted evidence, author provenance, and confidence levels. | ![Assertion Card](docs/images/context-assertion-card.png) |
+| **Agent Tester** | Interactive sandbox where operators can simulate incidents, trigger agent retrieval via MCP, and observe outcome verification. | ![Agent Resolution](docs/images/agent-resolution.png) |
+| **Insights** | Discovers recurring workarounds and linked multi-element failures sharing unmentioned common dependencies. | ![Insights](docs/images/insights-patterns.png) |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/) for Python dependency management.
+- Python 3.12+
+- Node.js 22+ & npm (for the Dashboard web UI)
+
+### 1. Quick Start (Replay & Offline Mode)
+The entire test suite and demonstration pipeline run offline without requiring paid API keys:
 
 ```bash
 git clone https://github.com/The-trappists/since-ai-hackathon.git
 cd since-ai-hackathon
 uv sync
 
-# Build the context store from the included sample conversations and cached extractions.
+# Build context store from sample conversations and cached extractions
 uv run ctx run --lifecycle
 
-# Inspect captured context and run the sample agent.
+# Query context for an element and run the Ask-Before-Act guard
 uv run ctx context TRN-117 --at 2026-10-20T08:00
 uv run ctx agent --conditions --guard
 ```
 
-The core example runs without a live model key. By default, extraction replays the checked-in cache so the demo is repeatable. To call a model, copy `.env.example` to `.env`, add your provider details, then run `uv run ctx run --llm`. Keep `.env` local; never commit credentials.
-
-### Run the Dashboard
-
-The Dashboard is the team's interactive test bench. Build the frontend once, then start the API and UI together:
+### 2. Launch the Web Dashboard
+Build the frontend and launch the unified FastAPI server:
 
 ```bash
 cd web
@@ -53,78 +134,43 @@ npm run build
 cd ..
 uv run ctx dashboard
 ```
+Open **[http://127.0.0.1:8010](http://127.0.0.1:8010)** in your browser.
 
-Open [http://127.0.0.1:8010](http://127.0.0.1:8010). The Dashboard starts with seeded network data and scenarios. It can run in scripted mode without an LLM key. For frontend development with hot reload, leave the backend running and use `npm run dev` in `web/`; the dev server proxies API requests to port 8010.
+### 3. Connect Live Models & Integrations (Optional)
+To use live LLMs (Gemini, Vertex AI, Mistral) or the Slack bridge, copy `.env.example` to `.env` and fill in your keys:
+```bash
+cp .env.example .env
+uv run ctx llm-check       # Verify your LLM configuration
+uv run ctx run --llm       # Run extraction with live LLM
+```
+> ⚠️ **Security note:** Never commit `.env` or credentials. AI agents and contributors must strictly adhere to `.gitignore`.
 
-### Other useful commands
+---
+
+## 🧪 Testing & Verification
+
+ElidEx features a comprehensive test suite covering the pipeline, entity linking, critics, judges, temporal validity, and the company day simulator:
 
 ```bash
-uv run ctx eval                 # evaluate extraction and retrieval
-uv run ctx graph stats          # inspect the knowledge graph
-uv run ctx serve                # standalone REST API at http://127.0.0.1:8000
-uv run ctx mcp                  # MCP tools over stdio
+uv run pytest              # Run all 391 unit and integration tests
+uv run ctx eval            # Evaluate extraction quality and retrieval accuracy
+uv run ctx graph stats     # Inspect knowledge graph node and edge counts
+uv run ctx mcp             # Run the Model Context Protocol server over stdio
 ```
 
-The commands above also work in PowerShell; install [uv](https://docs.astral.sh/uv/) and, for the Dashboard UI, Node.js 22 with npm. For optional Neo4j, Slack, and deployment instructions, see the [deployment guide](docs/deploy-vultr.md), [Slack setup](docs/slack-setup.md), and [Dashboard guide](docs/dashboard.md).
+---
 
-## How it works
+## 👥 The Team: The Trappists
 
-```mermaid
-flowchart LR
-    A[Teams, email, Slack, or sample conversations] --> B[Listen]
-    B --> C[Understand: extract a reusable fact or rule]
-    C --> E[Link: bind to network entities and time]
-    N[Network inventory] --> E
-    E --> F[Core context store]
-    F --> G[Core demo agent]
-    G --> H[Outcome feedback]
-    F --> I[Standalone REST API and MCP]
-    J[Dashboard simulator or Slack bridge] --> K[Dashboard pipeline]
-    K --> D[Optional critic checks evidence and scope]
-    D --> P[Deterministic linker]
-    N --> P
-    P --> M[Dashboard context store]
-    M --> O[Dashboard agent]
-    O --> H
-    M --> L[Dashboard REST and SSE]
-```
+Built for the **Since AI Hackathon 2026** (Turku, Finland, 6–8 November 2026):
 
-1. **Listen:** Load conversation threads from the sample data, the Dashboard simulator, or its optional Slack bridge. The challenge's key requirement is to use the conversations people already have, without asking specialists to fill out a separate form.
-2. **Understand:** An extractor returns structured assertions: a summary, conditions, action or fact, cited messages, author, trust level, confidence, and scope. It can use cached results, scripted scenario data, or a configured LLM.
-3. **Check and link:** In the Dashboard, an optional critic checks the evidence and whether the extracted scope is too broad. A deterministic linker resolves equipment, sites, equipment classes, and triggers against the inventory; when it cannot link safely, it can abstain.
-4. **Store and reconcile:** Assertions include source provenance and `valid_from` / `valid_to`. The NetworkX-backed context store supports time-aware retrieval, conflicts, lifecycle updates, and a graph view. Optional hooks compare new assertions and update trust from agent outcomes.
-5. **Reuse:** An agent retrieves context for an entity and case, checks machine-readable conditions when observations are available, and returns a recommendation with assertion citations. REST and MCP interfaces expose context and graph tools to other clients.
+- **Matteo Morbée** ([@UnPtitBelge](https://github.com/UnPtitBelge)) — *Architecture, pipeline, full-stack dashboard & canvas force graphs*
+- **Bilal Vandenberge** ([@jaketherealone](https://github.com/jaketherealone)) — *Entity linking, evaluation metrics & dataset generator*
+- **Manuel Rocca** ([@mnlrc](https://github.com/mnlrc)) — *Frontend UX, pipeline visualization & dashboard UI*
+- **Haluk Yilmaz** ([@maybe](https://github.com/maybe)) — *Pattern recognition, agent guard & embeddings calibration*
 
-The main shared data contract is in [`src/context_layer/models.py`](src/context_layer/models.py). Core pipeline stages live under [`src/context_layer/`](src/context_layer/); the live team test bench is in [`src/context_layer/dashboard/`](src/context_layer/dashboard/). The CLI-built store (`out/context_store.json`) backs the standalone REST and MCP interfaces. The Dashboard runs its own live store and persists it separately under `out/dashboard/`; its REST and SSE endpoints serve that Dashboard state. See [the design](docs/design.md), [Dashboard API](docs/dashboard.md), and [evaluation notes](docs/evaluation.md) for more detail.
+---
 
-## Project contents
+## 📄 License & Intellectual Property
 
-| Path | What's inside |
-| --- | --- |
-| [`data/elisa/`](data/elisa/) | Elisa's example conversation and challenge material |
-| [`data/synthetic/`](data/synthetic/) | Synthetic conversations, network inventory, and cases |
-| [`src/context_layer/`](src/context_layer/) | Extraction, entity linking, storage, agent, REST and MCP services |
-| [`src/context_layer/dashboard/`](src/context_layer/dashboard/) | Live state, pipeline processor, simulator, Slack bridge, and API |
-| [`web/`](web/) | React, TypeScript, and Vite Dashboard interface |
-| [`docs/`](docs/) | Challenge, design, decisions, evaluation, deployment, and data documentation |
-
-
-## Contributors
-
-Contributors credited in the Git commit history include **Bilal Vandenberge** (`jaketherealone`), **Manuel Rocca** (`mnlrc`), **Haluk Yilmaz** (`maybe`), and **Matteo Morbée** (`UnPtitBelge`). Git author aliases may refer to the same person. Contributions and design choices are documented in [the decision log](docs/decisions.md); see [CONTRIBUTING.md](CONTRIBUTING.md) for collaboration conventions.
-
-## Hackathon and license context
-
-This project was created for the **Since AI Hackathon 2026**, held in Turku, Finland, on 6–8 November 2026. It addresses Elisa's challenge; the challenge brief states that the team owns its output and grants Elisa a perpetual, non-exclusive, royalty-free license to use it. See [the challenge summary](docs/challenge.md) and the original [challenge brief](docs/elisa/challenge-brief.pdf).
-
-**This repository does not currently include a standalone `LICENSE` file.** The challenge's license terms above describe Elisa's use rights; they do not specify a general open-source license for this repository. Contact the project team before reusing the code under other terms.
-
-## Further reading
-
-- [Challenge and scope](docs/challenge.md)
-- [Design and assertion schema](docs/design.md)
-- [Recorded decisions](docs/decisions.md)
-- [Evaluation](docs/evaluation.md)
-- [Dashboard guide](docs/dashboard.md)
-- [Synthetic dataset guide](docs/dataset.md)
-- [Contributing](CONTRIBUTING.md)
+This project was created for Elisa's challenge at the **Since AI Hackathon 2026**. Per the challenge terms, Elisa receives a perpetual, non-exclusive, royalty-free license to use the solution. The repository code is open-sourced under the permissive [MIT License](LICENSE).

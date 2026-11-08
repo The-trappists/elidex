@@ -8,6 +8,7 @@ import { ORIGIN_STYLE, SOURCE_STYLE, THREAD_STATUS_STYLE } from '../../lib/seman
 import { useLive } from '../../store/live'
 import { Badge, Button, EmptyState, FilterMenu, Input, Select } from '../ui'
 import { NewThreadModal } from './NewThreadModal'
+import { useDemo } from '../../store/demo'
 
 export const SourceIcon = ({ source, size = 14 }: { source: ThreadSource; size?: number }) => {
   const Icon = source === 'email' ? Mail : source === 'slack' ? Hash : MessageSquare
@@ -18,9 +19,10 @@ export const SourceIcon = ({ source, size = 14 }: { source: ThreadSource; size?:
   )
 }
 
-export const threadTitle = (t: LiveThread) => t.subject || t.id
+export const threadTitle = (t: LiveThread) => t.subject || (t.id === 'elisa/teams_chat.json' ? 'SFP replaced. Link up. No traffic.' : t.id)
 
 export function ThreadList({ selectedId }: { selectedId: string | null }) {
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
   const threadsMap = useLive((s) => s.threads)
   const nav = useNavigate()
   const [q, setQ] = useState('')
@@ -71,9 +73,9 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
             ))}
           </Select>
           </FilterMenu>
-          <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
+          {!publicDemo && <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
             New
-          </Button>
+          </Button>}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
@@ -81,7 +83,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
           <EmptyState
             icon={<MessageSquare size={28} />}
             title={Object.keys(threadsMap).length ? 'No thread matches the filters' : 'No conversations yet'}
-            hint="Run a scenario from Data, or start a thread by hand."
+            hint={publicDemo ? 'Play the scripted day from Try the demo.' : 'Run a scenario from Data, or start a thread by hand.'}
           />
         ) : (
           threads.map((t) => {

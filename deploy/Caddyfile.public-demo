@@ -1,0 +1,10 @@
+{$DOMAIN} {
+    @compressible not path /api/stream
+    encode @compressible {
+        zstd
+        gzip
+    }
+    reverse_proxy app:8000 {
+        flush_interval -1
+    }
+}

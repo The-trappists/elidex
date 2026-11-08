@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -46,6 +47,10 @@ async def _clock_ticks(wb: Dashboard) -> None:
 
 
 def create_app(state_file=None, seed: bool = True, background: bool = True) -> FastAPI:
+    if os.getenv("PUBLIC_DEMO", "").lower() in {"1", "true", "yes"}:
+        from .demo import create_demo_app
+
+        return create_demo_app(root=Path(state_file).parent if state_file else None, background=background)
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         loop = asyncio.get_running_loop()
@@ -90,6 +95,9 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
             wb.save_now()
 
     app = FastAPI(title="Context Dashboard", lifespan=lifespan)
+    @app.get("/api/demo")
+    async def demo_status():
+        return {"enabled": False}
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -100,6 +108,39 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
     app.include_router(export_router)
     app.include_router(sources_router)
     app.include_router(knowledge_router)
+
+    @app.get("/elidex-demo.mp4", include_in_schema=False)
+    async def demo_video():
+        for candidate in [
+            Path(config.WEB_DIST_DIR) / "elidex-demo.mp4",
+            config.ROOT / "web" / "public" / "elidex-demo.mp4",
+            config.ROOT / "docs" / "video" / "ElidEx-demo-final.mp4",
+            config.ROOT / "docs" / "images" / "elidex-demo.mp4",
+        ]:
+            if candidate.is_file():
+                return FileResponse(candidate, media_type="video/mp4")
+        raise HTTPException(404, "demo video not found")
+
+    @app.get("/demo-poster.jpg", include_in_schema=False)
+    async def demo_poster():
+        for candidate in [
+            Path(config.WEB_DIST_DIR) / "demo-poster.jpg",
+            config.ROOT / "web" / "public" / "demo-poster.jpg",
+        ]:
+            if candidate.is_file():
+                return FileResponse(candidate, media_type="image/jpeg")
+        raise HTTPException(404, "demo poster not found")
+
+    @app.get("/subtitles-en.vtt", include_in_schema=False)
+    async def demo_subtitles():
+        for candidate in [
+            Path(config.WEB_DIST_DIR) / "subtitles-en.vtt",
+            config.ROOT / "web" / "public" / "subtitles-en.vtt",
+        ]:
+            if candidate.is_file():
+                return FileResponse(candidate, media_type="text/vtt")
+        raise HTTPException(404, "demo subtitles not found")
+
     _serve_web(app)
     return app
 

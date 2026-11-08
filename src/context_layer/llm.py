@@ -23,6 +23,7 @@ import openai
 from openai import OpenAI
 
 from . import config
+from .demo_policy import current_policy
 
 TraceSink = Callable[[dict[str, Any]], None]
 _sinks: list[TraceSink] = []
@@ -208,7 +209,19 @@ def call_provider(
         kwargs["reasoning_effort"] = p.reasoning_effort
     t0 = time.perf_counter()
     text, exc = None, None
+    reservation = None
     try:
+        policy = current_policy()
+        timeout = config.LLM_TIMEOUT
+        if policy is not None:
+            timeout = min(timeout, policy.reserve(system, user))
+            kwargs["max_tokens"] = min(4096, policy.max_output_tokens)
+            reservation = policy.reserve_budget(p.base_url, p.model, {
+                "model": p.model,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "temperature": 0,
+                **kwargs,
+            })
         from . import google_auth
 
         api_key = p.api_key
@@ -222,7 +235,15 @@ def call_provider(
             )
             model = google_auth.format_vertex_model(model)
 
-        client = OpenAI(base_url=base_url or None, api_key=api_key, timeout=config.LLM_TIMEOUT, max_retries=0)
+        if policy is not None:
+            # Authentication may have taken time, or the workspace may have expired.
+            # The reserved final call remains valid even when it reaches max_calls.
+            if not policy.active or time.monotonic() >= policy.deadline:
+                from .demo_policy import DemoLimitError
+
+                raise DemoLimitError("The live demo run has ended.")
+            timeout = min(timeout, max(0.001, policy.deadline - time.monotonic()))
+        client = OpenAI(base_url=base_url or None, api_key=api_key, timeout=timeout, max_retries=0)
         resp = client.chat.completions.create(
             model=model,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
@@ -238,6 +259,8 @@ def call_provider(
                 "completion_tokens": u.get("completion_tokens"),
                 "cost": u.get("cost"),  # Featherless returns usage.cost in USD
             }
+            if policy is not None:
+                policy.settle_budget(reservation, trace["usage"])
         if validate:
             try:
                 validate(text)
@@ -250,7 +273,9 @@ def call_provider(
         trace["error"] = f"{type(e).__name__}: {e}"[:2000]
     trace["latency_ms"] = int((time.perf_counter() - t0) * 1000)
     if emit:
-        for sink in list(_sinks):
+        policy = current_policy()
+        sinks = ([policy.trace_sink] if policy.trace_sink else []) if policy is not None else list(_sinks)
+        for sink in sinks:
             try:
                 sink(trace)
             except Exception:  # noqa: BLE001 - tracing must never break a call
@@ -278,6 +303,9 @@ def complete_traced(
     the error appended, then the next provider is tried. If no provider gives a valid answer, the last answer is
     returned as it is (the caller's parse raises, as before).
     """
+    policy = current_policy()
+    if policy is not None:
+        policy.require_active()
     chain = providers(role, model)
     if not chain:
         raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")

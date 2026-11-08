@@ -4,6 +4,7 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AccuracySection } from '../components/home/AccuracySection'
 import { PipelineJourney } from '../components/home/PipelineJourney'
+import { DemoVideoSection } from '../components/home/DemoVideoSection'
 import { BootSequence } from '../components/home/BootSequence'
 import { ForceCanvas, type ForceNode, type ForceLink } from '../components/force/ForceCanvas'
 
@@ -29,7 +30,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     badge: 'UnPtitBelge',
     avatar: '/matteo.png',
     linkedin: 'https://www.linkedin.com/in/matteo-morbee-cs/',
-    degree: 'M.Sc Computer Science, Networks&Systems specialization',
+    degree: 'M.Sc. in Computer Science, Networks & Systems specialization',
     unis: [{ name: 'UCLouvain', logo: '/uclouvain.svg' }],
     region: 'Belgium',
     flag: '/flag-be.svg',
@@ -39,7 +40,7 @@ const TEAM_MEMBERS: TeamMember[] = [
     badge: 'mnlrc',
     avatar: '/manu.png',
     linkedin: 'https://www.linkedin.com/in/mnlrc/',
-    degree: "Joint Cybersecurity Master's degree",
+    degree: "Joint master’s degree in cybersecurity",
     unis: [
       { name: 'EPFL', logo: '/epfl.svg' },
       { name: 'ETHZ', logo: '/ethz.svg' },
@@ -73,17 +74,17 @@ const BEST_FEATURES = [
   {
     title: 'Our dynamic graphs',
     description:
-      "To build a knowledge graph is to understand it first. Even though our tool is autonomous and doesn't require human assistance, we provide a complete suite of structure widgets to accurately show the knowledge graph, the networks and the analytics.",
+      "Building a knowledge graph starts with understanding it. Even though our tool is autonomous and doesn't require human assistance, we provide a complete suite of visualization widgets to show the knowledge graph, the network, and the analytics clearly.",
   },
   {
     title: 'Correlation detection',
     description:
-      'We do more than just extracting plain knowledge from chats; we find correlations. Some issues in the network are related in time and in neighbor. We also represent those links as insights in the knowledge graph.',
+      'We do more than just extract knowledge from chats; we find correlations. Some network issues are related in time or affect neighboring equipment. We also represent those links as insights in the knowledge graph.',
   },
   {
     title: 'Simulated company day',
     description:
-      'Want to see ElidEx in action? The Company Day tab allows you to simulate a day with its chats, issues, and the live graph building using synthetic data.',
+      'Want to see ElidEx in action? The Company Day tab allows you to simulate a day of chats and issues, with the graph growing live from synthetic data.',
   },
 ] as const
 
@@ -153,6 +154,9 @@ export default function HomePage() {
           </span>
         </a>
         <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex flex-wrap items-center justify-center gap-x-6 text-sm sm:gap-x-12 lg:col-span-1 lg:row-start-auto">
+          <a href="#demo" className="flex items-center py-2 text-muted hover:text-text">
+            Demo
+          </a>
           <a href="#how-it-works" className="flex items-center py-2 text-muted hover:text-text">
             How it works
           </a>
@@ -183,7 +187,7 @@ export default function HomePage() {
           <div>
             <p className="mb-6 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
               <span className="h-px w-8 bg-accent" />
-              from specialist chats to knowledge graph
+              from specialist chats to a knowledge graph
             </p>
             <h1 className="font-display text-5xl font-medium leading-[1.06] tracking-[-0.045em] sm:text-6xl xl:text-7xl">
               Your network has
@@ -203,6 +207,12 @@ export default function HomePage() {
               >
                 Explore the dashboard <ArrowRight size={17} />
               </Link>
+              <a
+                href="#demo"
+                className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium hover:border-accent"
+              >
+                <Play size={15} className="text-accent fill-accent" /> Watch demo (2:13)
+              </a>
               <a href="#how-it-works" className="inline-flex items-center py-2 text-sm font-medium text-muted hover:text-text">
                 Read more ↓
               </a>
@@ -253,6 +263,7 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
+        <DemoVideoSection />
         <PipelineJourney />
         <AccuracySection />
         <section id="best-features" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
@@ -379,14 +390,31 @@ export default function HomePage() {
           <div>
             <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">Explore</h2>
             <ul className="mt-4 space-y-3 text-sm">
-              <li><a href="/overview" className="hover:text-accent">Dashboard</a></li>
               <li>
-                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-                  Demo
+                <Link to="/overview" onClick={enter} className="hover:text-accent">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://youtu.be/XQCUgTxHnx0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-accent"
+                >
+                  Demo Video
                 </a>
               </li>
-              <li><a href="https://www.elisa.com/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">Elisa</a></li>
-              <li><a href="https://sinceai.ai/hackathon" target="_blank" rel="noopener noreferrer" className="hover:text-accent">Since AI Hackathon</a></li>
+              <li>
+                <a href="https://elisa.com/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                  Elisa
+                </a>
+              </li>
+              <li>
+                <a href="https://sinceai.app/" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                  Since AI Hackathon
+                </a>
+              </li>
             </ul>
           </div>
           <div>
@@ -398,7 +426,7 @@ export default function HomePage() {
                 </a>
               </li>
               <li>
-                <a href="https://github.com/The-trappists/since-ai-hackathon#hackathon-and-license-context" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                <a href="https://github.com/The-trappists/since-ai-hackathon/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
                   License
                 </a>
               </li>

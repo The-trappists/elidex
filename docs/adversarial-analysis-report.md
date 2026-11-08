@@ -1,6 +1,6 @@
 # Adversarial & Edge Case Analysis Report
 
-This report documents systemic stress tests across the Context Layer pipeline (`Understand` → `Link` → `Store` → `Reconcile` → `Guard`). We designed a reproducibility test suite covering scenarios ranging from slight ambiguity to totally un-understandable noise, non-textual input, and contradictory instructions.
+This report documents systemic stress tests across the Context Layer pipeline (`Understand` → `Link` → `Store` → `Reconcile` → `Guard`). We designed a reproducibility test suite covering scenarios ranging from slight ambiguity to completely unintelligible noise, non-textual input, and contradictory instructions.
 
 ---
 

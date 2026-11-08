@@ -129,7 +129,7 @@ export default function SettingsPage() {
           </Row>
           <Row
             label="Merge similar knowledge"
-            text="When the same advice is told again in another conversation, add it to the existing knowledge instead of creating a copy. Contradictions and different scopes are never merged."
+            text="When the same advice is shared again in another conversation, add it to the existing knowledge instead of creating a copy. Contradictions and different scopes are never merged."
           >
             <Toggle checked={st.use_dedupe} onChange={(v) => save({ use_dedupe: v })} />
           </Row>

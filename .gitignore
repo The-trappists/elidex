@@ -1,14 +1,51 @@
-Elisa_SinceAI2026 _1_
-.claude/
+# Environment & Secrets (NEVER commit secrets or .env files)
+.env
+.env.*
+!.env.example
+.credentials/
+*.pem
+*.key
 
 # Python
-.env
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
 .pytest_cache/
+.coverage
+coverage/
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
 
-# Pipeline output
+# Pipeline & Workbench Outputs
 out/
+*.log
 
-.credentials
+# Web & Node
+node_modules/
+web/node_modules/
+dist/
+web/dist/
+
+# OS & IDE artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# AI agent & assistant scratch directories
+.claude/
+.agents/
+.aws/
+.codex/
+.gemini/
+
+# Hackathon archives
+Elisa_SinceAI2026 _1_
+

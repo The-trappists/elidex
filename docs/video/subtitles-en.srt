@@ -1,0 +1,151 @@
+1
+00:00:00,000 --> 00:00:02,500
+Northern Finland.
+
+2
+00:00:02,500 --> 00:00:07,500
+Veikko has just replaced an optical module on node TRN-042.
+
+3
+00:00:07,500 --> 00:00:12,000
+The link is up, optics are normal, alarms have cleared,
+
+4
+00:00:12,000 --> 00:00:15,000
+but traffic isn't coming back.
+
+5
+00:00:15,000 --> 00:00:18,000
+He asks Erkki, a senior network expert.
+
+6
+00:00:18,000 --> 00:00:23,000
+Erkki has seen this before.
+
+7
+00:00:23,000 --> 00:00:25,000
+Twelve messages.
+
+8
+00:00:25,000 --> 00:00:28,000
+One sentence of real knowledge.
+
+9
+00:00:28,000 --> 00:00:30,500
+And it was never written down.
+
+10
+00:00:30,500 --> 00:00:33,000
+Hidden knowledge?
+
+11
+00:00:33,000 --> 00:00:35,500
+Not anymore.
+
+12
+00:00:35,500 --> 00:00:37,000
+This is ElidEx.
+
+13
+00:00:37,000 --> 00:00:41,500
+ElidEx listens to the chats and emails people already use.
+
+14
+00:00:41,500 --> 00:00:44,000
+No form, no tag, no extra click.
+
+15
+00:00:44,000 --> 00:00:50,000
+It finds the few sentences that matter and turns them into a rule an agent can read.
+
+16
+00:00:50,000 --> 00:00:56,500
+Then it links that rule to the right place in the network: TRN-042,
+
+17
+00:00:56,500 --> 00:00:59,500
+and the older units like it.
+
+18
+00:00:59,500 --> 00:01:02,500
+Not every node. A wrong link is worse than none.
+
+19
+00:01:02,500 --> 00:01:08,000
+And every rule keeps its source and how far to trust it.
+
+20
+00:01:08,000 --> 00:01:10,000
+4:00 AM.
+
+21
+00:01:10,000 --> 00:01:14,500
+Same symptom on TRN-088, another older unit.
+
+22
+00:01:14,500 --> 00:01:17,000
+Erkki is asleep, and nobody needs to wake him.
+
+23
+00:01:17,000 --> 00:01:21,500
+The agent asks ElidEx and gets his fix, with its source.
+
+24
+00:01:21,500 --> 00:01:25,000
+The technician reports back: traffic's back, and the rule gets stronger.
+
+25
+00:01:25,000 --> 00:01:28,000
+And the day never ends.
+
+26
+00:01:28,000 --> 00:01:31,000
+New chats every few minutes. Most of them noise.
+
+27
+00:01:31,000 --> 00:01:35,000
+It also learns directly from the network itself.
+
+28
+00:01:35,000 --> 00:01:39,500
+Three different faults, all hanging off one node that nobody mentioned.
+
+29
+00:01:39,500 --> 00:01:42,500
+That's where the team should look first.
+
+30
+00:01:42,500 --> 00:01:46,500
+And it spots the same problem coming back on different units.
+
+31
+00:01:46,500 --> 00:01:49,500
+Erkki's trick was needed on three of them,
+
+32
+00:01:49,500 --> 00:01:54,000
+and the lasting fix—firmware 4.2—hasn't reached them yet.
+
+33
+00:01:54,000 --> 00:01:57,500
+So the company can fix it once and for all.
+
+34
+00:01:57,500 --> 00:02:01,000
+The knowledge was always there, hidden in everyday conversations.
+
+35
+00:02:01,000 --> 00:02:03,000
+Knowledge is precious.
+
+36
+00:02:03,000 --> 00:02:06,000
+ElidEx makes sure it's never lost.
+
+37
+00:02:06,000 --> 00:02:09,000
+Tomorrow at 8:00, the agents will know a little more.
+
+38
+00:02:09,000 --> 00:02:13,000
+And Erkki might finally get a quiet morning.

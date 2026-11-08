@@ -6,6 +6,7 @@ import type { AssertionType, Binding, ContextAssertion, TrustLevel } from '../..
 import { fmtDate } from '../../lib/format'
 import { TRUST_HELP, TRUST_STYLE, TYPE_STYLE } from '../../lib/semantic'
 import { Badge, IdChip } from '../ui'
+import { useLive } from '../../store/live'
 
 export const TypeBadge = ({ type }: { type: AssertionType }) => (
   <Badge className={TYPE_STYLE[type].cls}>
@@ -58,13 +59,14 @@ export function Validity({ a }: { a: ContextAssertion }) {
 }
 
 export function BindingChips({ bound }: { bound: Binding[] }) {
+  const classes = useLive((state) => state.classes)
   if (!bound.length) return <span className="text-xs text-muted">—</span>
   return (
     <div className="flex flex-wrap gap-1">
       {bound.map((b, i) => (
-        <IdChip key={i}>
-          {b.entity}
-          <span className="ml-1 text-xs text-muted">{b.role.replace('_', ' ')}</span>
+        <IdChip key={i} className="max-w-full items-start gap-1.5">
+          <span title={b.entity} className="min-w-0 [overflow-wrap:anywhere]">{classes[b.entity]?.label ?? b.entity}</span>
+          <span className="shrink-0 whitespace-nowrap text-xs text-muted">{b.role.replace(/_/g, ' ')}</span>
         </IdChip>
       ))}
     </div>
