@@ -1,6 +1,8 @@
-import { ArrowRight, BookOpenCheck, MessagesSquare, Play, Waypoints } from 'lucide-react'
+import { TechnologyStack } from '../components/home/TechnologyStack'
+import { ArrowRight, BookOpenCheck, Play } from 'lucide-react'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { PipelineJourney } from '../components/home/PipelineJourney'
 import { BootSequence } from '../components/home/BootSequence'
 import { ForceCanvas, type ForceNode, type ForceLink } from '../components/force/ForceCanvas'
 
@@ -314,7 +316,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            <div aria-live="polite" className="relative aspect-[1.65/1] min-h-64 overflow-hidden rounded-3xl border border-line bg-[#101113]">
+            <div aria-live="polite" className="relative aspect-[1.65/1] min-h-64 w-full min-w-0 overflow-hidden rounded-3xl border border-line bg-[#101113]">
               {activeFeature === 0 ? (
                 <ForceCanvas
                   mode="knowledge"
@@ -401,6 +403,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        <TechnologyStack />
       </main>
       <footer className="border-t border-line">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-10 sm:grid-cols-2 sm:px-10 lg:grid-cols-[1.5fr_1fr_1fr]">
