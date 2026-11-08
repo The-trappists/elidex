@@ -8,6 +8,7 @@ import { fmtDateTime, toNaiveIso } from '../../lib/format'
 import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
 import { useLive } from '../../store/live'
+import { useDemo } from '../../store/demo'
 import { OBS_OPTIONS, toObservations } from '../data/ObservationsEditor'
 import { Badge, Button, EmptyState, IdChip, Input, Select, Toggle, withToast } from '../ui'
 import { AgentGraph } from './AgentGraph'
@@ -74,7 +75,9 @@ function Section({ title, count, children }: { title: string; count?: number; ch
 export function AgentTester() {
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
-  const llm = useLive((s) => s.settings?.llm_configured ?? false)
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const configuredLlm = useLive((s) => s.settings?.llm_configured ?? false)
+  const llm = configuredLlm && !publicDemo
   const sim = useSimNow(60_000)
   const [entity, setEntity] = useState(PRESETS[0].entity)
   const [description, setDescription] = useState(PRESETS[0].description)
@@ -141,7 +144,7 @@ export function AgentTester() {
           </Select>
           <Input className="!w-[13rem]" type="datetime-local" value={at} onChange={(e) => setAt(e.target.value)} aria-label="At date and time (defaults to the simulated time)" title="Defaults to the current simulated time" />
           <div className="ml-auto flex items-center gap-3">
-            <Toggle checked={useLlm && llm} disabled={!llm} onChange={setUseLlm} label={<span className="text-[13px]" title={llm ? '' : 'No language model is configured; the rule-based agent is used'}>Use LLM</span>} />
+            {!publicDemo && <Toggle checked={useLlm && llm} disabled={!llm} onChange={setUseLlm} label={<span className="text-[13px]" title={llm ? '' : 'No language model is configured; the rule-based agent is used'}>Use LLM</span>} />}
             <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={() => applyPreset(PRESETS[0])} aria-label="Reset to the default case">Reset</Button>
             <Button variant="primary" icon={<Play size={14} />} loading={busy} disabled={!entity || !description.trim()} onClick={run} aria-label="Run agent">Run</Button>
           </div>

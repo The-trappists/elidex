@@ -8,6 +8,7 @@ import { Button, Drawer, IdChip, JsonView, Modal, withToast } from '../ui'
 import { JustificationPanel } from './JustificationPanel'
 import { assertionHref, BindingChips, CopyId, isOperatorEdited, OperatorChip, TrustBadge, TypeBadge, threadHref } from './bits'
 import { AssertionEditor } from './AssertionEditor'
+import { useDemo } from '../../store/demo'
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="mt-5">
@@ -17,6 +18,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 )
 
 export function AssertionDrawer({ assertion, id, onClose }: { assertion: ContextAssertion | undefined; id: string | null; onClose: () => void }) {
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
   const [confirm, setConfirm] = useState(false)
   const [editing, setEditing] = useState<'form' | 'history' | null>(null)
   const a = assertion
@@ -53,12 +55,12 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
       ) : (
         <div className="text-sm">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>
+            {!publicDemo && <Button size="sm" icon={<Pencil size={13} />} onClick={() => setEditing('form')}>Edit</Button>}
             <Link to={`/graph?focus=${encodeURIComponent(a.id)}`} className="inline-flex h-7 items-center max-md:h-8 gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
               <Network size={13} /> Show in graph
             </Link>
             <CopyId id={a.id} />
-            {isOperatorEdited(a) && (
+            {!publicDemo && isOperatorEdited(a) && (
               <button
                 className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[13px] text-muted transition-colors hover:bg-surface-2 hover:text-text"
                 onClick={() => setEditing('history')}
@@ -153,11 +155,11 @@ export function AssertionDrawer({ assertion, id, onClose }: { assertion: Context
             <JsonView value={a} className="max-h-80" />
           </Section>
 
-          <div className="mt-6 border-t border-line pt-4">
+          {!publicDemo && <div className="mt-6 border-t border-line pt-4">
             <Button variant="danger" icon={<Trash2 size={14} />} onClick={() => setConfirm(true)}>
               Delete assertion
             </Button>
-          </div>
+          </div>}
           <Modal
             open={confirm}
             onClose={() => setConfirm(false)}

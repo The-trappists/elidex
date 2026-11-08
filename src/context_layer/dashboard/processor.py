@@ -49,6 +49,9 @@ class HookContext:
 def agents_quiet(ctx: HookContext) -> bool:
     """True when the LLM agents (critic, judge) must stay silent: no LLM key (scripted mode) or the job
     processes the seed at first start (no extra LLM calls)."""
+    from ..demo_policy import current_policy
+    if current_policy() is not None:
+        return True
     proc = getattr(ctx.wb, "processor", None)
     return not config.llm_configured() or (proc is not None and proc.is_bootstrap(ctx.job.thread_id))
 
@@ -354,6 +357,14 @@ class Processor:
 
     async def _extract(self, job: PipelineJob, thread: LiveThread, core) -> list[ExtractedItem]:
         wb = self.wb
+        from ..demo_policy import current_policy, DemoLimitError
+        policy = current_policy()
+        if policy is not None:
+            try:
+                policy.require_active()
+            except DemoLimitError:
+                return self._extract_scripted(job, thread, core)
+            return await self._extract_llm(job, core)
         mode = wb.settings.extractor_mode
         if mode == "auto" and config.llm_configured():
             try:
@@ -368,7 +379,7 @@ class Processor:
         wb = self.wb
         if not config.llm_configured():
             raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
-        extractor = LLMExtractor(cache_path=config.DASHBOARD_LLM_CACHE_FILE)
+        extractor = LLMExtractor(cache_path=getattr(wb, "llm_cache_file", config.DASHBOARD_LLM_CACHE_FILE))
         topics = sorted({a.topic for a in wb.store.assertions.values()})
         job.extractor = f"llm:{config.LLM_MODEL}"
         self._touch(job)

@@ -16,13 +16,14 @@ import math
 import re
 
 from . import config
+from .demo_policy import current_policy
 
 HASH_DIM = 256
 _WORD = re.compile(r"[a-z0-9]+")
 
 
 def mode() -> str:
-    return f"model:{config.EMBEDDING_MODEL}" if config.EMBEDDING_MODEL else f"hash:{HASH_DIM}"
+    return f"model:{config.EMBEDDING_MODEL}" if config.EMBEDDING_MODEL and current_policy() is None else f"hash:{HASH_DIM}"
 
 
 def hash_embed(text: str, dim: int = HASH_DIM) -> list[float]:
@@ -38,7 +39,7 @@ def hash_embed(text: str, dim: int = HASH_DIM) -> list[float]:
 
 def embed(texts: list[str], batch: int = 64) -> list[list[float]]:
     """One vector per text, in order."""
-    if not config.EMBEDDING_MODEL:
+    if not config.EMBEDDING_MODEL or current_policy() is not None:
         return [hash_embed(t) for t in texts]
     from openai import OpenAI
 

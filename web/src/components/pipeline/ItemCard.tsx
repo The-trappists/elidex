@@ -4,6 +4,7 @@ import { TRUST_HELP, TRUST_STYLE } from '../../lib/semantic'
 import { TypeBadge } from '../knowledge/bits'
 import { Badge, Button, IdChip } from '../ui'
 import { CriticBadge } from './Verdicts'
+import { useDemo } from '../../store/demo'
 
 export function ConfidenceBar({ value, title }: { value: number; title?: string }) {
   return (
@@ -18,6 +19,7 @@ export function ConfidenceBar({ value, title }: { value: number; title?: string 
 
 /** One extracted item as a card (used in the job drawer). */
 export function ItemCard({ item, active, onHover, verdict, onEdit, stored }: { item: ExtractedItem; stored?: ContextAssertion; active?: boolean; onHover?: (on: boolean) => void; verdict?: CriticVerdict; onEdit?: () => void }) {
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
   const sc = item.scope
   // One value: the confidence of what was saved (after the second check and linking), else the extracted one.
   const confidence = stored?.confidence ?? item.confidence
@@ -60,7 +62,7 @@ export function ItemCard({ item, active, onHover, verdict, onEdit, stored }: { i
         {item.cited_seq.length > 0 && <span>msgs #{item.cited_seq.join(', #')}</span>}
         <span className="ml-auto"><ConfidenceBar value={confidence} title={confidenceTitle} /></span>
       </div>
-      {onEdit && (
+      {!publicDemo && onEdit && (
         <div className="mt-2 border-t border-line pt-2">
           <Button size="sm" variant="ghost" icon={<Pencil size={12} />} onClick={onEdit}>Edit and re-run from link</Button>
         </div>
