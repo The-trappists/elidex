@@ -147,7 +147,7 @@ class LlmCompactor:
     async def summary(self) -> LlmSummary:
         from .persistence import read_llm_calls
 
-        live = config.DASHBOARD_LLM_CALLS_FILE
+        live = getattr(self.wb, "llm_calls_file", config.DASHBOARD_LLM_CALLS_FILE)
         if self.archived_total is None:
             self.archived_total = await asyncio.to_thread(_count_lines, archive_path(live))
         by_id = {c.id: c for c in await asyncio.to_thread(read_llm_calls, live)}
@@ -156,7 +156,7 @@ class LlmCompactor:
 
     async def run_once(self) -> LlmSummary:
         async with self._run_lock:
-            live = config.DASHBOARD_LLM_CALLS_FILE
+            live = getattr(self.wb, "llm_calls_file", config.DASHBOARD_LLM_CALLS_FILE)
             arch = archive_path(live)
             if self.archived_total is None:
                 self.archived_total = await asyncio.to_thread(_count_lines, arch)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -46,6 +47,10 @@ async def _clock_ticks(wb: Dashboard) -> None:
 
 
 def create_app(state_file=None, seed: bool = True, background: bool = True) -> FastAPI:
+    if os.getenv("PUBLIC_DEMO", "").lower() in {"1", "true", "yes"}:
+        from .demo import create_demo_app
+
+        return create_demo_app(root=Path(state_file).parent if state_file else None, background=background)
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         loop = asyncio.get_running_loop()
@@ -90,6 +95,9 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
             wb.save_now()
 
     app = FastAPI(title="Context Dashboard", lifespan=lifespan)
+    @app.get("/api/demo")
+    async def demo_status():
+        return {"enabled": False}
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],

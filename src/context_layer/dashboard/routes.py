@@ -74,7 +74,7 @@ def emit_clock(wb: Dashboard) -> ClockState:
 # ---------------------------------------------------------------- basics
 
 
-@router.get("/health")
+@router.api_route("/health", methods=["GET", "HEAD"])
 async def health() -> dict:
     return {"status": "ok"}
 
@@ -745,7 +745,7 @@ async def slack_status(request: Request) -> dict:
 
 def all_llm_calls(wb: Dashboard) -> list[LlmCall]:
     """In-memory calls merged with the JSONL file, deduplicated by id, newest first."""
-    by_id = {c.id: c for c in persistence.read_llm_calls(config.DASHBOARD_LLM_CALLS_FILE)}
+    by_id = {c.id: c for c in persistence.read_llm_calls(getattr(wb, "llm_calls_file", config.DASHBOARD_LLM_CALLS_FILE))}
     by_id.update({c.id: c for c in wb.llm_calls})
     return sorted(by_id.values(), key=lambda c: to_local_naive(c.ts), reverse=True)
 
@@ -778,9 +778,9 @@ async def llm_check_run() -> list[LlmCheckResult]:
 
 
 @router.get("/export/llm-calls.jsonl")
-async def export_llm_calls() -> Response:
-    path = config.DASHBOARD_LLM_CALLS_FILE
-    body = path.read_text(encoding="utf-8") if path.exists() else ""
+async def export_llm_calls(request: Request) -> Response:
+    wb = get_wb(request)
+    body = "".join(c.model_dump_json() + "\n" for c in reversed(all_llm_calls(wb)))
     headers = {"Content-Disposition": 'attachment; filename="llm_calls.jsonl"'}
     return Response(body, media_type="application/x-ndjson", headers=headers)
 

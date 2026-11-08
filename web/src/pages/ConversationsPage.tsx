@@ -11,8 +11,10 @@ import { Button, EmptyState, Modal, withToast } from '../components/ui'
 import { cn } from '../lib/cn'
 import { ORIGIN_STYLE, THREAD_STATUS_STYLE } from '../lib/semantic'
 import { useLive } from '../store/live'
+import { useDemo } from '../store/demo'
 
 export default function ConversationsPage() {
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
   const params = useParams()
   const threadId = params.threadId ? decodeURIComponent(params.threadId) : null
   const nav = useNavigate()
@@ -107,7 +109,7 @@ export default function ConversationsPage() {
                     <span className="truncate">{thread.participants.join(', ')}</span>
                   </div>
                 </div>
-                <Button
+                {!publicDemo && <Button
                   size="sm"
                   variant="primary"
                   icon={<Play size={13} />}
@@ -115,24 +117,24 @@ export default function ConversationsPage() {
                   onClick={() => withToast(() => api.processThread(thread.id), 'Processing started')}
                 >
                   Process now
-                </Button>
+                </Button>}
                 <a href={api.exportTranscriptUrl(thread.id)} download title="Export transcript">
                   <Button size="sm" variant="ghost" aria-label="Export transcript" icon={<Download size={14} />} />
                 </a>
-                <Button
+                {!publicDemo && <Button
                   size="sm"
                   variant="ghost"
                   aria-label="Delete thread"
                   icon={<Trash2 size={14} />}
                   onClick={() => setConfirmDelete(true)}
-                />
+                />}
               </header>
               <div className="min-h-0 flex-1">
                 <MessageList thread={thread} personas={personas} citations={citations} hoverItem={hoverItem} onHoverItem={setHoverItem} />
               </div>
-              <div className="bg-surface">
+              {!publicDemo && <div className="bg-surface">
                 <Composer key={thread.id} thread={thread} />
-              </div>
+              </div>}
             </section>
 
             <aside className="conversation-pipeline w-[28rem] shrink-0 border-l border-line bg-surface">
