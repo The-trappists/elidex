@@ -240,7 +240,7 @@ It is not calibrated: 85% does not mean "right 85% of the time". `ctx eval --ext
 
 # Part 3: Retrieval accuracy at company scale
 
-> **Status: proposal** (branch `feat/scale-retrieval-eval`, 2026-11-08). Code: `src/context_layer/eval/scale.py`, `src/context_layer/mvp/relevance.py`. Run: `uv run ctx dataset eval out/dataset/large` (about 13 minutes, single process). Report: `out/eval/scale-large-test.md` and `.json`.
+> **Status: proposal** (branch `feat/scale-retrieval-eval`, 2026-11-08). Code: `src/context_layer/eval/scale.py`, `src/context_layer/mvp/relevance.py`. Run: `uv run ctx dataset eval out/dataset/large` (about 13 minutes, single process). Report: `out/eval/scale-large-test.md` and `.json`; the 2026-11-08 run is saved in [docs/results/scale-large/](results/scale-large/README.md), with the results dashboard.
 
 ## What "retrieval accuracy" means here
 

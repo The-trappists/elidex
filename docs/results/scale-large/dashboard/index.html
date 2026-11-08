@@ -1,0 +1,276 @@
+<meta name="dash-one-writer">
+<style>
+  .ra { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); }
+  .ra-head { display: grid; gap: var(--cds-gap-sm); }
+  .ra-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .ra-head p { margin: 0; max-width: 72ch; line-height: 1.5; }
+  .ra .ra-head p b, .ra .ra-card p b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ra-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-md); }
+  .ra-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; }
+  .ra-lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ra-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+  .ra-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .ra-section { display: grid; gap: var(--cds-gap-md); }
+  .ra-section > h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .ra-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--cds-gap-md); }
+  .ra-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; display: grid; gap: var(--cds-gap-sm); align-content: start; }
+  .ra-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .ra-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; line-height: 1.45; }
+  .ra-chart { position: relative; min-height: 270px; }
+  .ra-chart svg { display: block; }
+  .ra-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ra-legend span { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+  .ra-legend i { width: 0.7rem; height: 0.7rem; border-radius: 2px; display: inline-block; }
+  .ra-scroll { overflow-x: auto; }
+  .ra-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-body); }
+  .ra-table th { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+  .ra-table th, .ra-table td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .ra-table th:first-child, .ra-table td:first-child { text-align: left; white-space: normal; }
+  .ra-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); max-width: 16rem; }
+  .ra-tip .t { color: var(--cds-text-secondary); }
+  .ra-notes { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); }
+  .ra-notes summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); }
+  .ra-notes dl { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: var(--cds-gap-sm) var(--cds-gap-md); margin: var(--cds-gap-md) 0 0; font-size: var(--cds-font-size-body); line-height: 1.45; }
+  .ra-notes dt { font-weight: var(--cds-font-weight-medium); }
+  .ra-notes dd { margin: 0; color: var(--color-fg-muted); }
+  @media (max-width: 34rem) { .ra-notes dl { grid-template-columns: 1fr; } .ra-notes dd { margin-bottom: var(--cds-gap-sm); } }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="ra">
+  <header class="ra-head">
+    <h1>Retrieval accuracy at company scale</h1>
+    <p>On <b data-draw="cell" data-source="dataset" data-field="cases" data-row="0" data-fmt="int">—</b> cases built from the ground truth of a synthetic operator with <b data-draw="cell" data-source="dataset" data-field="threads" data-row="0" data-fmt="compact">—</b> chat threads, today's graph retrieval finds the right human knowledge in <b data-draw="cell" data-source="pipelines" data-where="key=conditions" data-field="solution_found" data-fmt="pct">—</b> of cases, but buries it among other rules about the same element. A problem-relevance step lifts accuracy from <b data-draw="cell" data-source="pipelines" data-where="key=conditions" data-field="accuracy" data-fmt="pct">—</b> to <b data-draw="cell" data-source="pipelines" data-where="key=default" data-field="accuracy" data-fmt="pct">—</b> (<b data-draw="cell" data-source="pipelines" data-where="key=strict" data-field="accuracy" data-fmt="pct">—</b> in strict mode) and still finds <b data-draw="cell" data-source="pipelines" data-where="key=default" data-field="solution_found" data-fmt="pct">—</b> of the solutions. Naive RAG over the raw chats gets <b data-draw="cell" data-source="pipelines" data-where="key=naive" data-field="accuracy" data-fmt="pct">—</b>.</p>
+  </header>
+
+  <div class="ra-tiles">
+    <div class="ra-tile">
+      <span class="ra-lbl">Accuracy with problem relevance</span>
+      <span class="ra-big" data-draw="cell" data-source="pipelines" data-where="key=default" data-field="accuracy" data-fmt="pct">—</span>
+      <span class="ra-sub">Right knowledge, no noise. Strict: <span data-draw="cell" data-source="pipelines" data-where="key=strict" data-field="accuracy" data-fmt="pct">—</span>. Today: <span data-draw="cell" data-source="pipelines" data-where="key=conditions" data-field="accuracy" data-fmt="pct">—</span></span>
+    </div>
+    <div class="ra-tile">
+      <span class="ra-lbl">Solution found</span>
+      <span class="ra-big" data-draw="cell" data-source="pipelines" data-where="key=default" data-field="solution_found" data-fmt="pct">—</span>
+      <span class="ra-sub">Of cases where knowledge applies. Strict: <span data-draw="cell" data-source="pipelines" data-where="key=strict" data-field="solution_found" data-fmt="pct">—</span></span>
+    </div>
+    <div class="ra-tile">
+      <span class="ra-lbl">Rules handed to the agent, p95</span>
+      <span class="ra-big" data-draw="cell" data-source="pipelines" data-where="key=default" data-field="items_p95" data-fmt="int">—</span>
+      <span class="ra-sub">Per case. Strict: <span data-draw="cell" data-source="pipelines" data-where="key=strict" data-field="items_p95" data-fmt="int">—</span>. Today: <span data-draw="cell" data-source="pipelines" data-where="key=conditions" data-field="items_p95" data-fmt="int">—</span></span>
+    </div>
+    <div class="ra-tile">
+      <span class="ra-lbl">Precision</span>
+      <span class="ra-big" data-draw="cell" data-source="pipelines" data-where="key=default" data-field="precision" data-fmt="pct">—</span>
+      <span class="ra-sub">Share of returned rules that help. Strict: <span data-draw="cell" data-source="pipelines" data-where="key=strict" data-field="precision" data-fmt="pct">—</span>. Today: <span data-draw="cell" data-source="pipelines" data-where="key=conditions" data-field="precision" data-fmt="pct">—</span></span>
+    </div>
+  </div>
+
+  <section class="ra-section" id="pipelines">
+    <h2>Five ways to retrieve, same cases</h2>
+    <div class="ra-grid">
+      <div class="ra-card">
+        <h3>Accuracy and solution found</h3>
+        <p class="ra-note">Bars: right knowledge and nothing else. Ticks: the right knowledge came back at all. Naive RAG runs on a 2,000-case sample, the others on all cases.</p>
+        <div class="ra-legend"><span><i data-draw="swatch" data-swatch="accent"></i>Accuracy, new step</span><span><i data-draw="swatch" data-swatch="muted"></i>Accuracy, baselines</span><span><i data-draw="swatch" data-swatch="tick"></i>Solution found</span></div>
+        <div class="ra-chart" data-draw="acc-chart" data-source="pipelines"></div>
+      </div>
+      <div class="ra-card">
+        <h3>What the agent is handed, per case</h3>
+        <p class="ra-note">Average items returned per case, split by what they are. Other problem: valid for this element but about another symptom. Stale: closed or not yet said. Wrong scope: does not apply to this element. Haystack: a chat with no knowledge.</p>
+        <div class="ra-legend"><span><i data-draw="swatch" data-swatch="part0"></i>Useful</span><span><i data-draw="swatch" data-swatch="part1"></i>Other problem</span><span><i data-draw="swatch" data-swatch="part2"></i>Stale</span><span><i data-draw="swatch" data-swatch="part3"></i>Wrong scope</span><span><i data-draw="swatch" data-swatch="part4"></i>Haystack</span></div>
+        <div class="ra-chart" data-draw="noise-chart" data-source="pipelines"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ra-section" id="kinds">
+    <h2>Where the gain comes from</h2>
+    <div class="ra-card">
+      <h3>Accuracy by kind of case</h3>
+      <p class="ra-note">A similar case on another unit of the class is the brief's step 3. A near miss is the same model outside the class's install years: the over-linking probe. Default falls back to every rule when none matches the problem; strict acts only on matching rules.</p>
+      <div class="ra-scroll">
+        <table class="ra-table" data-source="kinds" data-row-key="kind">
+          <thead><tr><th data-field="kind">Kind of case</th><th data-field="cases">Cases</th><th data-field="accuracy_today">Today</th><th data-field="accuracy_default">Relevance, default</th><th data-field="accuracy_strict">Relevance, strict</th><th data-field="solution_found_strict">Solution found, strict</th></tr></thead>
+          <tbody data-draw="kinds-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="ra-section" id="lifecycle">
+    <h2>Right entities, right time, right trust</h2>
+    <div class="ra-grid">
+      <div class="ra-card">
+        <h3>Linking</h3>
+        <p class="ra-note">The elements each stored rule reaches, compared with the ground-truth reach, with the real thread text.</p>
+        <div class="ra-tiles">
+          <div class="ra-tile"><span class="ra-lbl">Reach exact</span><span class="ra-big" data-draw="cell" data-source="dataset" data-row="0" data-field="link_reach_exact" data-fmt="pct">—</span><span class="ra-sub">of <span data-draw="cell" data-source="dataset" data-row="0" data-field="facts" data-fmt="int">—</span> facts</span></div>
+          <div class="ra-tile"><span class="ra-lbl">Over-linked facts</span><span class="ra-big" data-draw="cell" data-source="dataset" data-row="0" data-field="link_over_reach" data-fmt="int">—</span><span class="ra-sub">a wrong link is worse than none</span></div>
+        </div>
+      </div>
+      <div class="ra-card">
+        <h3>Lifecycle, before and after the two fixes</h3>
+        <p class="ra-note">Same knowledge threads, rebuilt with the original merge rule and no version guard, then with both fixes.</p>
+        <div class="ra-scroll">
+          <table class="ra-table" data-source="lifecycle" data-row-key="measure">
+            <thead><tr><th data-field="measure">Measure</th><th data-field="before">Before</th><th data-field="after">After</th><th data-field="of">Of</th></tr></thead>
+            <tbody data-draw="life-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ra-section" id="labelled">
+    <h2>Check on the hand-written chats</h2>
+    <div class="ra-card">
+      <h3>The 26 labelled cases, with the real LLM's extractions</h3>
+      <p class="ra-note">The chats here were written by the team, and the extractions come from the real LLM. Each case's description is the labeller's note, not an incident text, so relevance has little to match; the default variant falls back to every rule when none matches. The check is that it removes noise without losing answers that conditions alone keep.</p>
+      <div class="ra-scroll">
+        <table class="ra-table" data-source="labelled" data-row-key="setting">
+          <thead><tr><th data-field="setting">Knowledge base and retrieval</th><th data-field="cases">Cases</th><th data-field="accuracy">Accuracy</th><th data-field="solution_lost">Solution lost</th><th data-field="noise_items">Noise items</th></tr></thead>
+          <tbody data-draw="lab-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <details class="ra-notes">
+    <summary>Method, terms and limits</summary>
+    <dl>
+      <dt>Dataset</dt><dd><span data-draw="cell" data-source="dataset" data-row="0" data-field="threads" data-fmt="int">—</span> threads, <span data-draw="cell" data-source="dataset" data-row="0" data-field="elements" data-fmt="int">—</span> network elements, <span data-draw="cell" data-source="dataset" data-row="0" data-field="facts" data-fmt="int">—</span> ground-truth facts in <span data-draw="cell" data-source="dataset" data-row="0" data-field="knowledge_threads" data-fmt="int">—</span> knowledge threads (<span data-draw="cell" data-source="dataset" data-row="0" data-field="knowledge_share" data-fmt="pct2">—</span> of all threads). Generated by <code>ctx dataset generate --scale large</code>, seed 42. Everything is invented.</dd>
+      <dt>Why scale matters</dt><dd>A TX-3000 node is covered by a median of <span data-draw="cell" data-source="dataset" data-row="0" data-field="tx3000_median_valid_facts" data-fmt="int">—</span> valid facts on 1 June 2026. Retrieval by element and time alone returns all of them, whatever the problem.</dd>
+      <dt>Knowledge base</dt><dd>Every knowledge thread, in time order, through the real linker, store and lifecycle, with the ground truth as the extractor. This isolates linking, time and retrieval from the LLM, which the labelled set measures.</dd>
+      <dt>Cases</dt><dd>Built per fact: a similar case on the class, a near miss on the same model, another unit at the same site, after the knowledge was closed, before it was said, a dispatch, plus random elements. Each describes its problem in words written by hand before any matcher: one wording to tune, another to report. These numbers use the report wording.</dd>
+      <dt>Accuracy</dt><dd>The right knowledge came back, or nothing when nothing applies, and no noise. Solution found counts only cases where knowledge applies.</dd>
+      <dt>Problem relevance</dt><dd>Of the problem's words that the knowledge base uses, the share of their weight a rule mentions, after a small field thesaurus (SFP = transceiver, reboot = restart). Threshold <span data-draw="cell" data-source="dataset" data-row="0" data-field="threshold" data-fmt="num">—</span>, chosen on the tuning wording as the most accurate one that keeps at least 97% of solutions. Nothing is dropped: rules about another problem stay listed after the matching ones.</dd>
+      <dt>Naive RAG</dt><dd>BM25 over whole threads with channel and subject, the same thesaurus, element ids as tokens, top 5, over all knowledge threads plus a 10% sample of the rest (<span data-draw="cell" data-source="dataset" data-row="0" data-field="haystack_threads" data-fmt="int">—</span> threads). A bigger haystack can only make it worse.</dd>
+      <dt>Left out</dt><dd>The LLM extractor at scale (no calls were made); dense embeddings (a word-based matcher was used, so paraphrases with no shared concept are missed); real Elisa data. The language of the dataset is template-based, so the absolute numbers are optimistic, while the gaps between pipelines are the finding.</dd>
+    </dl>
+  </details>
+</div>
+
+<script>
+  const fmts = {
+    pct: d3.format('.1%'), pct2: d3.format('.2%'), int: d3.format(','), num: d3.format('.2~f'),
+    compact: (v) => new Intl.NumberFormat('en', {notation: 'compact', maximumFractionDigits: 1}).format(v),
+  };
+  const fmtVal = (v, f) => (v === null || v === undefined || v === '') ? '–' : (fmts[f] || String)(v);
+  const rowOf = (el) => {
+    const d = dash.data(el.dataset.source);
+    if (d.status !== 'ok' || !Array.isArray(d.data)) return null;
+    if (el.dataset.row !== undefined) return d.data[Number(el.dataset.row)] || null;
+    const [k, v] = (el.dataset.where || '').split('=');
+    return d.data.find((r) => String(r[k]) === v) || null;
+  };
+  dash.draw('cell', (el) => {
+    const r = rowOf(el);
+    el.classList.toggle('dash-skeleton', !r && dash.data(el.dataset.source).status === 'loading');
+    el.textContent = r ? fmtVal(r[el.dataset.field], el.dataset.fmt) : '—';
+  });
+
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const NEW = new Set(['default', 'strict']);
+  const partColor = (i) => i === 0 ? dash.colors[0] : i === 1 ? 'var(--cds-chart-muted)' : dash.colors[i + 1];
+  dash.draw('swatch', (el) => {
+    const kind = el.dataset.swatch;
+    el.style.background = kind.startsWith('part') ? partColor(Number(kind.slice(4)))
+      : kind === 'accent' ? dash.colors[0] : kind === 'muted' ? 'var(--cds-chart-muted)' : 'var(--color-fg)';
+    if (kind === 'tick') { el.style.width = '3px'; el.style.borderRadius = '1px'; }
+  });
+
+  function tooltip(box) {
+    let tip = box.querySelector('.ra-tip');
+    if (!tip) { tip = document.createElement('div'); tip.className = 'ra-tip'; tip.hidden = true; box.appendChild(tip); }
+    return {
+      show(ev, lines) {
+        tip.replaceChildren(...lines.map((l, i) => { const d = document.createElement('div'); if (i === 0) d.className = 't'; d.textContent = l; return d; }));
+        tip.hidden = false;
+        const b = box.getBoundingClientRect();
+        const x = Math.min(ev.clientX - b.left + 12, b.width - tip.offsetWidth - 4);
+        tip.style.left = Math.max(4, x) + 'px'; tip.style.top = Math.max(4, ev.clientY - b.top - tip.offsetHeight - 8) + 'px';
+      },
+      hide() { tip.hidden = true; },
+    };
+  }
+
+  dash.draw('acc-chart', (el) => {
+    const d = dash.data('pipelines');
+    el.replaceChildren();
+    if (d.status !== 'ok') { if (d.status === 'loading') el.classList.add('dash-skeleton'); return; }
+    el.classList.remove('dash-skeleton');
+    const rows = d.data, W = el.clientWidth || 480, rowH = 44, top = 4, bottom = 24, barH = 14, gap = 18;
+    const H = top + bottom + rows.length * rowH;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Accuracy and solution found by pipeline');
+    const left = 14, right = 48;
+    const x = d3.scaleLinear([0, 1], [left, W - right]);
+    const y = { of: (k) => top + rows.findIndex((r) => r.key === k) * rowH + gap, bandwidth: () => barH };
+    svg.append('g').selectAll('line').data([0, 0.25, 0.5, 0.75, 1]).join('line')
+      .attr('x1', (v) => x(v)).attr('x2', (v) => x(v)).attr('y1', top + gap - 2).attr('y2', H - bottom).attr('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data([0, 0.5, 1]).join('text').attr('x', (v) => x(v)).attr('y', H - 8).attr('text-anchor', 'middle')
+      .attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text((v) => d3.format('.0%')(v));
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', left).attr('y', (r) => y.of(r.key) - 5)
+      .attr('text-anchor', 'start').attr('font-size', 12).attr('fill', (r) => NEW.has(r.key) ? 'var(--color-fg)' : 'var(--color-fg-muted)').text((r) => r.pipeline);
+    const tip = tooltip(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => y.of(r.key)).attr('height', y.bandwidth())
+      .attr('width', (r) => Math.max(1, x(r.accuracy) - x(0))).attr('rx', 3)
+      .attr('fill', (r) => NEW.has(r.key) ? dash.colors[0] : 'var(--cds-chart-muted)')
+      .on('pointermove', (ev, r) => tip.show(ev, [r.pipeline, `Accuracy ${fmts.pct(r.accuracy)}`, `Solution found ${fmts.pct(r.solution_found)}`, `${fmts.int(r.cases)} cases`]))
+      .on('pointerleave', () => tip.hide());
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.solution_found) - 1.5).attr('y', (r) => y.of(r.key) - 3)
+      .attr('width', 3).attr('height', y.bandwidth() + 6).attr('rx', 1).attr('fill', 'var(--color-fg)');
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => Math.min(x(r.accuracy) + 6, W - right + 4))
+      .attr('y', (r) => y.of(r.key) + y.bandwidth() / 2).attr('dy', '0.35em').attr('font-size', 12).attr('fill', 'var(--color-fg)')
+      .style('font-variant-numeric', 'tabular-nums').text((r) => fmts.pct(r.accuracy));
+  });
+
+  const PARTS = [['useful_per_case', 'Useful'], ['other_problem_per_case', 'Other problem'], ['stale_per_case', 'Stale'], ['wrong_scope_per_case', 'Wrong scope'], ['haystack_per_case', 'Haystack']];
+  dash.draw('noise-chart', (el) => {
+    const d = dash.data('pipelines');
+    el.replaceChildren();
+    if (d.status !== 'ok') { if (d.status === 'loading') el.classList.add('dash-skeleton'); return; }
+    el.classList.remove('dash-skeleton');
+    const rows = d.data, W = el.clientWidth || 480, rowH = 44, top = 4, bottom = 24, barH = 14, gap = 18;
+    const H = top + bottom + rows.length * rowH;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Items per case by kind');
+    const left = 14, right = 48;
+    const total = (r) => PARTS.reduce((s, [k]) => s + (r[k] || 0), 0);
+    const max = d3.max(rows, total) || 1;
+    const x = d3.scaleLinear([0, max], [left, W - right]).nice();
+    const y = { of: (k) => top + rows.findIndex((r) => r.key === k) * rowH + gap, bandwidth: () => barH };
+    const ticks = x.ticks(4);
+    svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', (v) => x(v)).attr('x2', (v) => x(v)).attr('y1', top + gap - 2).attr('y2', H - bottom).attr('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(ticks).join('text').attr('x', (v) => x(v)).attr('y', H - 8).attr('text-anchor', 'middle').attr('font-size', 12).attr('fill', 'var(--color-fg-muted)').text(d3.format(','));
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', left).attr('y', (r) => y.of(r.key) - 5)
+      .attr('text-anchor', 'start').attr('font-size', 12).attr('fill', (r) => NEW.has(r.key) ? 'var(--color-fg)' : 'var(--color-fg-muted)').text((r) => r.pipeline);
+    const tip = tooltip(el);
+    for (const r of rows) {
+      let acc = 0;
+      PARTS.forEach(([k, name], i) => {
+        const v = r[k] || 0;
+        if (v <= 0) return;
+        svg.append('rect').attr('x', x(acc)).attr('y', y.of(r.key)).attr('height', y.bandwidth()).attr('width', Math.max(0.5, x(acc + v) - x(acc))).attr('fill', partColor(i))
+          .on('pointermove', (ev) => tip.show(ev, [r.pipeline, ...PARTS.map(([kk, nn]) => `${nn}: ${d3.format(',.2f')(r[kk] || 0)}`)]))
+          .on('pointerleave', () => tip.hide());
+        acc += v;
+      });
+      svg.append('text').attr('x', Math.min(x(acc) + 6, W - right + 4)).attr('y', y.of(r.key) + y.bandwidth() / 2).attr('dy', '0.35em').attr('font-size', 12)
+        .attr('fill', 'var(--color-fg)').style('font-variant-numeric', 'tabular-nums').text(d3.format(',.1f')(acc));
+    }
+  });
+
+  function tableBody(el, id, cols) {
+    const d = dash.data(id);
+    if (d.status !== 'ok') { el.replaceChildren(); return; }
+    el.replaceChildren(...d.data.map((r) => {
+      const tr = document.createElement('tr');
+      for (const [k, f] of cols) { const td = document.createElement('td'); td.textContent = f ? fmtVal(r[k], f) : (r[k] ?? '–'); tr.appendChild(td); }
+      return tr;
+    }));
+  }
+  dash.draw('kinds-body', (el) => tableBody(el, 'kinds', [['kind'], ['cases', 'int'], ['accuracy_today', 'pct'], ['accuracy_default', 'pct'], ['accuracy_strict', 'pct'], ['solution_found_strict', 'pct']]));
+  dash.draw('life-body', (el) => tableBody(el, 'lifecycle', [['measure'], ['before', 'int'], ['after', 'int'], ['of', 'int']]));
+  dash.draw('lab-body', (el) => tableBody(el, 'labelled', [['setting'], ['cases', 'int'], ['accuracy', 'pct'], ['solution_lost', 'int'], ['noise_items', 'int']]));
+</script>

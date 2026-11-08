@@ -1,0 +1,32 @@
+{
+ "rows": [
+  {
+   "setting": "Labels as extractor, conditions (today)",
+   "cases": 26,
+   "accuracy": 1.0,
+   "solution_lost": 0,
+   "noise_items": 0
+  },
+  {
+   "setting": "Labels as extractor, + relevance, default",
+   "cases": 26,
+   "accuracy": 1.0,
+   "solution_lost": 0,
+   "noise_items": 0
+  },
+  {
+   "setting": "Recorded real-LLM run, conditions (today)",
+   "cases": 26,
+   "accuracy": 0.654,
+   "solution_lost": 1,
+   "noise_items": 13
+  },
+  {
+   "setting": "Recorded real-LLM run, + relevance, default",
+   "cases": 26,
+   "accuracy": 0.808,
+   "solution_lost": 1,
+   "noise_items": 5
+  }
+ ]
+}
