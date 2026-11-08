@@ -2,6 +2,7 @@ import { TechnologyStack } from '../components/home/TechnologyStack'
 import { ArrowRight, BookOpenCheck, Play } from 'lucide-react'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AccuracySection } from '../components/home/AccuracySection'
 import { PipelineJourney } from '../components/home/PipelineJourney'
 import { BootSequence } from '../components/home/BootSequence'
 import { ForceCanvas, type ForceNode, type ForceLink } from '../components/force/ForceCanvas'
@@ -151,9 +152,12 @@ export default function HomePage() {
             Elid<span className="text-accent">Ex</span>
           </span>
         </a>
-        <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex items-center justify-center gap-12 text-sm lg:col-span-1 lg:row-start-auto">
+        <nav aria-label="Main navigation" className="col-span-2 row-start-2 flex flex-wrap items-center justify-center gap-x-6 text-sm sm:gap-x-12 lg:col-span-1 lg:row-start-auto">
           <a href="#how-it-works" className="flex items-center py-2 text-muted hover:text-text">
             How it works
+          </a>
+          <a href="#accuracy" className="flex items-center py-2 text-muted hover:text-text">
+            Accuracy
           </a>
           <a href="#best-features" className="flex items-center py-2 text-muted hover:text-text">
             Our best features
@@ -250,6 +254,7 @@ export default function HomePage() {
           </div>
         </section>
         <PipelineJourney />
+        <AccuracySection />
         <section id="best-features" className="scroll-mt-8 border-t border-line py-14 sm:py-20">
           <div className="grid gap-10 lg:grid-cols-[0.8fr_1.6fr] lg:gap-16">
             <div className="flex flex-col">
