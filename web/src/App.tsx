@@ -40,7 +40,7 @@ function DashboardLayout() {
           {!ready ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-muted">
               <span className="size-8 animate-spin rounded-full border-2 border-accent/30 border-t-accent" />
-              Connecting to the workbench…
+              Connecting to the dashboard…
             </div>
           ) : (
             <div key={section} className="h-full">

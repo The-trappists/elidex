@@ -121,12 +121,12 @@ export function NavBody({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   return (
-    <nav aria-label="Workbench" className="app-sidebar flex shrink-0 flex-col border-r border-line bg-surface">
+    <nav aria-label="Dashboard" className="app-sidebar flex shrink-0 flex-col border-r border-line bg-surface">
       <Link to="/" aria-label="ElidEx home" className="sidebar-brand flex h-20 items-center gap-3 px-5">
         <img src="/elidex-logo.png" alt="ElidEx" className="size-9 object-contain" />
         <div className="flex flex-col">
           <span className="font-display text-xl font-semibold tracking-tight">Elid<span className="text-accent">Ex</span></span>
-          <span className="text-[10px] text-muted -mt-0.5">Context Layer</span>
+          <span className="text-[10px] text-muted -mt-0.5">Dashboard</span>
         </div>
       </Link>
       <NavBody />
@@ -150,7 +150,7 @@ export function MobileBar() {
       <img src="/elidex-logo.png" alt="" className="size-6 object-contain" />
       <span className="min-w-0 flex-1 truncate font-display text-base font-semibold">{page.title}</span>
       <Drawer open={open} onClose={() => setOpen(false)} title="Menu" side="left" width="max-w-xs" flush>
-        <nav aria-label="Workbench menu" className="nav-drawer flex min-h-full flex-col">
+        <nav aria-label="Dashboard menu" className="nav-drawer flex min-h-full flex-col">
           <NavBody onNavigate={() => setOpen(false)} />
         </nav>
       </Drawer>

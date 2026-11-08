@@ -97,7 +97,7 @@ export function DataActions() {
         </div>
       </Modal>
 
-      <Modal open={modal === 'reset'} onClose={close} title="Reset the workbench" footer={<><Button onClick={close}>Cancel</Button><Button variant="danger" loading={busy} onClick={() => run(() => api.reset(mode), 'Workbench reset')}>Reset</Button></>}>
+      <Modal open={modal === 'reset'} onClose={close} title="Reset the dashboard" footer={<><Button onClick={close}>Cancel</Button><Button variant="danger" loading={busy} onClick={() => run(() => api.reset(mode), 'Dashboard reset')}>Reset</Button></>}>
         <div className="space-y-2 text-sm">
           {([
             ['seed', 'Back to the seed', 'Restores the starting data: inventory, personas, scenarios and the historical threads, already processed. Everything you added is lost.'],
@@ -119,7 +119,7 @@ export function DataActions() {
       >
         <div className="space-y-3 text-sm">
           <p>
-            This <b>replaces</b> everything in the workbench with a connected slice of the invented operator network: sites, elements and links grown from Elisa&apos;s seed (TRN-042 stays), the people who write,
+            This <b>replaces</b> everything in the dashboard with a connected slice of the invented operator network: sites, elements and links grown from Elisa&apos;s seed (TRN-042 stays), the people who write,
             a mix of conversations (noise, traps, knowledge) and the true facts of those conversations. The hand-written scenarios stay.
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -130,12 +130,12 @@ export function DataActions() {
               <Input type="number" min={0} max={1000} value={sample.threads} disabled={busy} onChange={(e) => setSample({ ...sample, threads: Number(e.target.value) })} />
             </Field>
           </div>
-          {busy ? <InProgress>Sampling the dataset and rebuilding the knowledge base…</InProgress> : <p className="text-xs text-muted">Never the large dataset: the workbench keeps everything in memory. Your current data is lost; export it first if you want it back.</p>}
+          {busy ? <InProgress>Sampling the dataset and rebuilding the knowledge base…</InProgress> : <p className="text-xs text-muted">Never the large dataset: the dashboard keeps everything in memory. Your current data is lost; export it first if you want it back.</p>}
         </div>
       </Modal>
 
       <Modal open={modal === 'import'} onClose={close} title="Import data?" footer={<><Button onClick={close}>Cancel</Button><Button variant="danger" loading={busy} onClick={() => run(() => api.import(file?.data), 'Data imported')}>Import and replace</Button></>}>
-        <p className="text-sm">Import <b>{file?.name}</b>? It replaces the current workbench state with the content of this export file.</p>
+        <p className="text-sm">Import <b>{file?.name}</b>? It replaces the current dashboard state with the content of this export file.</p>
       </Modal>
     </div>
   )
