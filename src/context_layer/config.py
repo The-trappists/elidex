@@ -148,7 +148,6 @@ WORKBENCH_SEED_DIR = DATA_DIR / "workbench"
 WORKBENCH_SIM_START = os.getenv("WORKBENCH_SIM_START", "2026-10-20T07:30")
 WORKBENCH_IDLE_SECONDS = float(os.getenv("WORKBENCH_IDLE_SECONDS", "8"))
 WEB_DIST_DIR = ROOT / "web" / "dist"
-DEMO_DIST_DIR = ROOT / "demo" / "dist"  # product demo (static, built with --base=/demo/), served at /demo/
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "")
 SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN", "")

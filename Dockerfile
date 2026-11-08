@@ -9,14 +9,6 @@ RUN npm ci
 COPY web/ ./
 RUN npm run build
 
-# ---- stage 1b: build the product demo (static), served at /demo/
-FROM node:22-alpine AS demo
-WORKDIR /demo
-COPY demo/package.json demo/package-lock.json ./
-RUN npm ci
-COPY demo/ ./
-RUN npx tsc -b && npx vite build --base=/demo/
-
 # ---- stage 2: Python runtime
 FROM python:3.12-slim AS runtime
 COPY --from=ghcr.io/astral-sh/uv:0.11.26 /uv /uvx /bin/
@@ -37,7 +29,6 @@ COPY src/ ./src/
 RUN uv sync --frozen --no-dev
 COPY data/ ./data/
 COPY --from=web /web/dist ./web/dist
-COPY --from=demo /demo/dist ./demo/dist
 
 # Non-root user; /app/out holds the state (mounted as a volume in compose).
 RUN useradd --uid 1000 --no-create-home --home-dir /app app \
