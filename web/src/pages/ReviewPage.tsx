@@ -187,9 +187,9 @@ export default function ReviewPage() {
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-start gap-x-4 gap-y-2 px-4 pb-3 pt-4 sm:px-5">
         <div className="min-w-0 flex-1 basis-80">
-          <h2 className="font-display text-2xl font-medium tracking-tight">A closer look, when you need it</h2>
+          <h2 className="font-display text-2xl font-medium tracking-tight">Needs a look</h2>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted">
-            What the loop was unsure about, dropped, merged or changed. Knowledge is already in use: nothing here waits for approval.
+            Inspect flagged knowledge, check the source, or make a correction. All checks are optional; the loop keeps running.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -211,16 +211,25 @@ export default function ReviewPage() {
             <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
             <Input className="pl-8" type="search" aria-label="Search flags" placeholder="Search text, equipment, id…" value={q} onChange={(e) => { setQ(e.target.value); resetLimit() }} />
           </div>
+          <details className="relative shrink-0">
+            <summary className="flex min-h-8 cursor-pointer items-center rounded-md border border-line px-3 text-sm text-muted hover:text-text">View options</summary>
+            <div className="absolute right-0 top-full z-30 mt-2 grid w-56 gap-3 rounded-lg border border-line bg-surface p-3 shadow-lg">
+              <label className="grid gap-1 text-xs text-muted">Grouping
           <Select className="w-40" aria-label="Group by" value={groupBy} onChange={(e) => { setGroupBy(e.target.value as GroupBy); resetLimit() }}>
             <option value="kind">Group by reason</option>
             <option value="thread">Group by conversation</option>
             <option value="element">Group by equipment</option>
             <option value="none">No grouping</option>
           </Select>
+              </label>
+              <label className="grid gap-1 text-xs text-muted">Order
           <Select className="w-36" aria-label="Sort by" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)}>
             <option value="newest">Newest first</option>
             <option value="severity">Most serious first</option>
           </Select>
+              </label>
+            </div>
+          </details>
           {view === 'open' && (
             <button
               type="button"
@@ -259,7 +268,7 @@ export default function ReviewPage() {
       </div>
 
       <div ref={listRef} className="min-h-0 flex-1 overflow-auto bg-bg">
-        <p aria-live="polite" className="sr-only">{openTotal} items need a look</p>
+        <p aria-live="polite" className="sr-only">{openTotal} open observations</p>
         {!loaded ? (
           <div className="mx-auto max-w-4xl space-y-3 p-4" aria-busy="true">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-24 rounded-lg" />)}</div>
         ) : error && flags.length === 0 ? (
@@ -282,12 +291,7 @@ export default function ReviewPage() {
             action={filtered ? <Button onClick={() => { setQ(''); setKind(''); setOnlyNew(false); setParams({}) }}>Clear filters</Button> : undefined}
           />
         ) : (
-          <div className="mx-auto max-w-4xl px-4 pb-8">
-            <p className="pt-3 text-[13px] text-muted">
-              {view === 'open'
-                ? 'The loop merged near-duplicates and went on by itself. These are observations, not tasks.'
-                : 'Dismissed flags stay out of the Open view. Restore one to bring it back.'}
-            </p>
+          <div className="mx-auto max-w-5xl px-4 pb-8">
             {groups.map((g) => (
               <section key={g.key} aria-labelledby={`grp-${g.key}`} className="mb-2">
                 <div className="sticky top-0 z-10 -mx-4 flex items-baseline gap-2 bg-bg/95 px-4 pb-2 pt-3 backdrop-blur">
@@ -295,7 +299,7 @@ export default function ReviewPage() {
                   <span className="text-[13px] tabular-nums text-muted">{g.rows.length}</span>
                   {g.hint && <span className="hidden min-w-0 truncate text-[13px] text-muted md:inline">{g.hint}</span>}
                 </div>
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {g.rows.map((f) => {
                     const i = info.get(f.id)
                     if (!i) return null
@@ -358,7 +362,7 @@ function Chip({ label, n, active, disabled, onClick }: { label: string; n: numbe
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-[13px] disabled:opacity-40',
+        'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-[13px] disabled:opacity-40',
         active ? 'border-accent bg-accent-soft text-accent' : 'border-line text-muted hover:text-text',
       )}
     >
