@@ -175,7 +175,7 @@ async def run_scenario(scenario_id: str, request: Request) -> ScenarioRun:
 async def generate(body: GenerateBody, request: Request) -> Scenario:
     wb = get_wb(request)
     if not config.llm_configured():
-        raise HTTPException(503, "No LLM configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
+        raise HTTPException(503, "No LLM configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
     try:
         scenario = await asyncio.to_thread(generator.generate_scenario, wb, body.entity_id, body.hint)
     except ValueError as e:

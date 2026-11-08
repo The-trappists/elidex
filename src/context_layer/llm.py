@@ -64,6 +64,7 @@ class Provider:
     reasoning_effort: str = ""
     role: str = "primary"  # "primary" or "critic"
     role_note: str = ""  # e.g. "critic not configured: used primary"
+    is_vertex: bool = False
 
 
 Role = Literal["primary", "critic"]
@@ -94,7 +95,40 @@ def providers(role: Role = "primary", model: str | None = None) -> list[Provider
         return out
     out = []
     if config.llm_configured():
-        out.append(Provider("primary", config.LLM_BASE_URL, config.LLM_API_KEY, config.LLM_MODEL, config.LLM_JSON_MODE, config.LLM_REASONING_EFFORT))
+        if config.is_google_vertex_primary():
+            from . import google_auth
+
+            if config.LLM_BASE_URL and "aiplatform.googleapis.com" in config.LLM_BASE_URL:
+                vertex_base_url = config.LLM_BASE_URL
+            else:
+                vertex_base_url = google_auth.get_vertex_base_url(
+                    location=config.VERTEX_LOCATION,
+                    cred_val=config.GOOGLE_APPLICATION_CREDENTIALS,
+                    root_dir=config.ROOT,
+                )
+            effort = config._reasoning_effort("LLM_REASONING_EFFORT", vertex_base_url)
+            out.append(
+                Provider(
+                    "primary",
+                    vertex_base_url,
+                    "",
+                    config.LLM_MODEL,
+                    config.LLM_JSON_MODE,
+                    effort,
+                    is_vertex=True,
+                )
+            )
+        else:
+            out.append(
+                Provider(
+                    "primary",
+                    config.LLM_BASE_URL,
+                    config.LLM_API_KEY,
+                    config.LLM_MODEL,
+                    config.LLM_JSON_MODE,
+                    config.LLM_REASONING_EFFORT,
+                )
+            )
     if config.llm_fallback_configured():
         out.append(
             Provider(
@@ -175,9 +209,22 @@ def call_provider(
     t0 = time.perf_counter()
     text, exc = None, None
     try:
-        client = OpenAI(base_url=p.base_url or None, api_key=p.api_key, timeout=config.LLM_TIMEOUT, max_retries=0)
+        from . import google_auth
+
+        api_key = p.api_key
+        model = p.model
+        base_url = p.base_url
+
+        if p.is_vertex or google_auth.is_vertex_endpoint(base_url):
+            api_key = google_auth.get_google_access_token(
+                cred_val=config.GOOGLE_APPLICATION_CREDENTIALS,
+                root_dir=config.ROOT,
+            )
+            model = google_auth.format_vertex_model(model)
+
+        client = OpenAI(base_url=base_url or None, api_key=api_key, timeout=config.LLM_TIMEOUT, max_retries=0)
         resp = client.chat.completions.create(
-            model=p.model,
+            model=model,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
             temperature=0,
             **kwargs,
@@ -233,7 +280,7 @@ def complete_traced(
     """
     chain = providers(role, model)
     if not chain:
-        raise RuntimeError("LLM not configured: set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
+        raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
     traces: list[dict[str, Any]] = []
     last: Exception | None = None
     invalid: str | None = None  # the latest answer that failed validation
