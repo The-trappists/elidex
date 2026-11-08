@@ -32,7 +32,7 @@ function useRequest<T>(fetcher: () => Promise<T>, key: string): Q<T> & { retry: 
   return { ...state, retry: () => setN((x) => x + 1) }
 }
 
-const SOURCE_LABEL = { files: 'dataset files', atlas: 'MongoDB Atlas', tiger: 'Tiger Data', workbench: 'this workbench' } as const
+const SOURCE_LABEL = { files: 'dataset files', atlas: 'MongoDB Atlas', tiger: 'Tiger Data', workbench: 'this dashboard' } as const
 
 function SourceTag({ a }: { a: SourceAnswer }) {
   return <Badge title={a.detail ?? undefined}>{SOURCE_LABEL[a.source]}</Badge>

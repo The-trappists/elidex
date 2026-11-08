@@ -68,7 +68,7 @@ export function CompanyGraph({ since, onlyNew, onOnlyNew }: { since: Set<string>
     <div className="flex h-full min-h-0 flex-col">
       <div className="relative min-h-0 flex-1 bg-bg">
         {error && !data ? (
-          <EmptyState icon={<Waypoints size={24} />} title="The knowledge map is unavailable" hint="Check the workbench connection." />
+          <EmptyState icon={<Waypoints size={24} />} title="The knowledge map is unavailable" hint="Check the dashboard connection." />
         ) : !data && hasKnowledge ? (
           <GraphLoading label="Connecting the knowledge…" />
         ) : fNodes.length === 0 ? (

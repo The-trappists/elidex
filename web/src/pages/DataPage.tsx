@@ -21,7 +21,7 @@ export default function DataPage() {
   }
   return (
     <div className="flex h-full flex-col">
-      <PageIntro title="Build a useful demonstration" description="Manage the equipment, people and scenarios used by this workbench." />
+      <PageIntro title="Build a useful demonstration" description="Manage the equipment, people and scenarios used by this dashboard." />
       <div className="flex flex-wrap items-center gap-3 border-b border-line bg-surface px-4 py-2.5">
         <Tabs<Tab>
           value={tab}

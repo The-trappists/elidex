@@ -368,6 +368,8 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 }
 
 .landing { scroll-behavior: smooth; }
+.feature-message-flow { animation: feature-message-flow 32s linear infinite; }
+@keyframes feature-message-flow { to { transform: translateY(-50%); } }
 .story-connector { height: 58px; border-left: 1px solid var(--line); margin-left: 18px; display: flex; align-items: center; padding-left: 20px; }
 .story-connector span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .landing { scroll-behavior: auto; } }

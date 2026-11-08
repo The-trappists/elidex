@@ -78,7 +78,7 @@ export default function SettingsPage() {
     <div className="h-full overflow-auto p-6">
       <div className="mx-auto max-w-3xl space-y-5">
         <PageIntro
-          title="Make the workbench work for you"
+          title="Make the dashboard work for you"
           description="Choose how conversations become knowledge and how the demo runs. Knowledge flows automatically; no review queue is required."
         />
         <p className="flex items-center gap-2 text-sm text-muted">
@@ -158,7 +158,7 @@ export default function SettingsPage() {
             {slack.channel && <span className="break-all font-mono text-xs">#{slack.channel.replace(/^#/, '')}</span>}
             {slack.error && <span className="text-xs text-bad">{slack.error}</span>}
           </div>
-          <Row label="Mirror to Slack" text="Messages written in the workbench are also posted in the Slack channel.">
+          <Row label="Mirror to Slack" text="Messages written in the dashboard are also posted in the Slack channel.">
             <Toggle checked={st.slack_mirror} disabled={!slack.connected} onChange={(v) => save({ slack_mirror: v })} />
           </Row>
           {!slack.connected && (
