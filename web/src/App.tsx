@@ -16,6 +16,7 @@ import GraphPage from "./pages/GraphPage"
 import NetworkPage from './pages/NetworkPage'
 import NotFoundPage from './pages/NotFoundPage'
 import InsightsPage from './pages/InsightsPage'
+import PipelinePage from './pages/PipelinePage'
 import ReviewPage from './pages/ReviewPage'
 import SettingsPage from './pages/SettingsPage'
 import { connectLive, useLive } from './store/live'
@@ -57,6 +58,8 @@ function DashboardLayout() {
                 <Route path="/agent" element={<AgentTesterPage />} />
                 <Route path="/insights" element={<InsightsPage />} />
                 <Route path="/patterns" element={<Navigate to="/insights" replace />} />
+                <Route path="/pipeline" element={<PipelinePage />} />
+                <Route path="/architecture" element={<Navigate to="/pipeline" replace />} />
                 <Route path="/llm" element={<LlmLogPage />} />
                 <Route path="/data" element={<DataPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
