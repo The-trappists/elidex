@@ -8,13 +8,18 @@ branch="$(git rev-parse --abbrev-ref HEAD)"
 echo "==> Pulling $branch"
 git pull --ff-only origin "$branch"
 
+COMPOSE_FILES=("-f" "deploy/docker-compose.yml")
+if [ -f "deploy/docker-compose.public-demo.yml" ] && [ "$branch" = "feat/private-demo-workspaces" ]; then
+    COMPOSE_FILES+=("-f" "deploy/docker-compose.public-demo.yml")
+fi
+
 echo "==> Building and restarting"
-docker compose -f deploy/docker-compose.yml --env-file .env up -d --build
+docker compose "${COMPOSE_FILES[@]}" --env-file .env up -d --build
 
 echo "==> Removing old images"
 docker image prune -f
 
 echo "==> Status"
-docker compose -f deploy/docker-compose.yml --env-file .env ps
+docker compose "${COMPOSE_FILES[@]}" --env-file .env ps
 echo "==> Last logs"
-docker compose -f deploy/docker-compose.yml --env-file .env logs --tail=30
+docker compose "${COMPOSE_FILES[@]}" --env-file .env logs --tail=30

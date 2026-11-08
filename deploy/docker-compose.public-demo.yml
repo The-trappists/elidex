@@ -1,6 +1,19 @@
 # Overlay: docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env up -d --build
 services:
   app:
+    # Team dashboard (protected by team.DOMAIN)
+    # The VM's inherited IPv6 resolver may be unreachable from Docker.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  demo-app:
+    # Public demo (open to all on DOMAIN)
+    image: context-dashboard:latest
+    env_file: ../.env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     environment:
       PUBLIC_DEMO: "1"
       DEMO_MAX_WORKSPACES: "40"
@@ -10,9 +23,19 @@ services:
       DEMO_SNAPSHOT_FILE: /app/out/public-demo-snapshot.json
     volumes:
       - public-demo-data:/app/out
+    expose:
+      - "8000"
+    restart: unless-stopped
+
   caddy:
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     volumes:
-      - ./Caddyfile.public-demo:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile.public-and-team:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - app
+      - demo-app
 
 volumes:
   public-demo-data:

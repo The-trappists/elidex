@@ -2,6 +2,10 @@
 
 The public demo gives each browser a private, cookie-bound workspace. The normal team dashboard remains available when `PUBLIC_DEMO` is unset. The public deployment replaces the team dashboard on the selected hostname; use a separate deployment if both must remain accessible.
 
+The full marketing homepage stays at `/`, using the homepage from `main`. It does not allocate a workspace or depend on API availability. The visitor enters the private demo through its dashboard links; the workspace logo returns to the homepage.
+
+The demo opens on a task-focused walkthrough, separate from the marketing homepage: read the original TRN-042 SFP conversation, inspect that conversation's captured workaround, then run a prepared TRN-117 case with observations and a planned reboot. Explicit next-step links preserve the walkthrough across screens. This path is scripted and does not consume the live allowance. Company simulation and the single live trial remain available for further exploration.
+
 Each workspace starts with preloaded synthetic data. Scripted exploration does not call model APIs or connect to Slack. A visitor can spend one bounded live scenario allowance, then continue in scripted mode. This is a browser allowance, not a verified-person allowance: clearing cookies can create another workspace.
 
 ## Prepare and deploy (human operator)
@@ -19,16 +23,22 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo
 Prepare a snapshot once. This command builds a small dataset using templates, processes the historical seed in scripted mode and writes the snapshot to the separate public-demo volume. It does not spend API credits:
 
 ```bash
-docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env run --rm --no-deps -T app python - --output /app/out/public-demo-snapshot.json < scripts/build_demo_snapshot.py
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env run --rm --no-deps -T demo-app python - --output /app/out/public-demo-snapshot.json < scripts/build_demo_snapshot.py
 ```
 
-Start the public app:
+Start both the public demo and the team app:
 
 ```bash
 docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env up -d
 ```
 
-The overlay uses a separate data volume, automatic HTTPS and a public Caddy configuration without the password prompt. Always include both Compose files for subsequent public-demo commands. Stopping the deployment does not delete its volumes.
+The overlay runs both services side-by-side behind a single Caddy:
+- `{$DOMAIN}` (`https://209.250.242.163.sslip.io`): Public demo with private visitor workspaces, no authentication required.
+- `team.{$DOMAIN}` (`https://team.209.250.242.163.sslip.io`): Team dashboard, protected by `BASIC_AUTH_USER` and `BASIC_AUTH_HASH`.
+
+Validate access without a browser's remembered credentials:
+- `curl -I https://209.250.242.163.sslip.io/api/health` returns HTTP 200.
+- `curl -I https://team.209.250.242.163.sslip.io/api/health` returns HTTP 401 Unauthorized without credentials, and HTTP 200 with `-u $BASIC_AUTH_USER:$PASSWORD`.
 
 ## Test capacity before sharing the QR
 
