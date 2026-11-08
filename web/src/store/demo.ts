@@ -8,6 +8,9 @@ export interface DemoStatus {
   live_run_available?: boolean
   live_run_error?: string | null
   mode?: 'scripted' | 'live'
+  budget_limit_eur?: number
+  budget_remaining_eur?: number
+  global_budget_remaining_eur?: number
 }
 
 export const useDemo = create<{ status: DemoStatus | null; sfpCaseComplete: boolean }>(() => ({ status: null, sfpCaseComplete: false }))

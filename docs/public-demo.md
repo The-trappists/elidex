@@ -64,6 +64,18 @@ Finally, a human should perform one real live run using the configured provider 
 
 ## Limits
 
+Live AI is **disabled by default** (`DEMO_LIVE_ENABLED=0`). The backend has hard maxima of **EUR 0.50 per workspace** and **EUR 100 total**; configuration can lower these amounts. Each provider attempt reserves its maximum estimated cost in a SQLite ledger before constructing the API client. Known token usage reconciles that reservation. Failed requests and missing usage reports keep the full reservation; fallbacks and repairs reserve separately. Workspace reset does not replenish the allowance.
+
+The public overlay stores the ledger at `/app/out/public-demo/budget.sqlite3` in the persistent public-demo volume. Normal container restarts preserve spending. Do not delete that volume or ledger during the event: MongoDB does not hold this budget ledger. The global cap applies across restarts, not separately to each process or browser.
+
+Before enabling live calls, a human operator must configure `DEMO_MODEL_PRICES_EUR` with exact `<base_url>|<model>` keys and conservative, all-in EUR input/output prices per million tokens. Include conversion and tax margins where applicable. Each entry must also declare `output_cap_includes_reasoning: true` after verifying the provider's output limit covers billable reasoning. Unknown or invalid pricing fails closed. Example **fake rates**, for configuration shape only:
+
+```json
+{"https://example.invalid/v1|test-model":{"input":"1","output":"2","output_cap_includes_reasoning":true}}
+```
+
+Only then set `DEMO_LIVE_ENABLED=1` and recreate `demo-app`. Limits assume those rate cards and provider output bounds are correct; a provider-reported overrun is recorded and pauses further live calls globally. No application can undo a charge already made by a provider. Account-level provider quotas remain a useful additional boundary.
+
 The overlay initially allows 40 active workspaces, 30 minutes idle time and 2 simultaneous live runs. The server also defaults to 500 workspaces created per process lifetime (`DEMO_MAX_TOTAL_WORKSPACES`); restarting the app resets that admission counter. A live run is limited to 60 seconds and 12 provider attempts, with bounded input and output. These are resource limits, not a fixed dollar price: the configured providers determine billing. Retries consume the same allowance. A failed or interrupted live run still spends its allowance.
 
 Use an account-level quota or another server-side admission limit to bound total submission-day spending: anonymous visitors can obtain new browser sessions. The workspace cap bounds concurrent memory use, not the total number of visitors over a day.

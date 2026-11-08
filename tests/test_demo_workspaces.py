@@ -5,7 +5,7 @@ from datetime import datetime
 
 import httpx
 
-from context_layer import config
+from context_layer import config, llm
 from context_layer.dashboard.demo import COOKIE, create_demo_app
 from context_layer.dashboard.contracts import LlmCall
 from context_layer.demo_policy import current_policy
@@ -84,6 +84,9 @@ def test_live_run_is_once_reset_does_not_refill_and_requests_stay_scripted(tmp_p
             return fn(*args, **kwargs)
         monkeypatch.setattr(asyncio, "to_thread", inline)
         monkeypatch.setattr(config, "llm_configured", lambda: True)
+        monkeypatch.setenv("DEMO_LIVE_ENABLED", "1")
+        monkeypatch.setenv("DEMO_MODEL_PRICES_EUR", '{"https://example.invalid/v1|demo-model":{"input":1,"output":2,"output_cap_includes_reasoning":true}}')
+        monkeypatch.setattr(llm, "providers", lambda *args, **kwargs: [llm.Provider("primary", "https://example.invalid/v1", "fake", "demo-model", "prompt")])
         observed = []
         async def extraction(self, job, core):
             policy = current_policy()

@@ -209,12 +209,19 @@ def call_provider(
         kwargs["reasoning_effort"] = p.reasoning_effort
     t0 = time.perf_counter()
     text, exc = None, None
+    reservation = None
     try:
         policy = current_policy()
         timeout = config.LLM_TIMEOUT
         if policy is not None:
             timeout = min(timeout, policy.reserve(system, user))
             kwargs["max_tokens"] = min(4096, policy.max_output_tokens)
+            reservation = policy.reserve_budget(p.base_url, p.model, {
+                "model": p.model,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+                "temperature": 0,
+                **kwargs,
+            })
         from . import google_auth
 
         api_key = p.api_key
@@ -252,6 +259,8 @@ def call_provider(
                 "completion_tokens": u.get("completion_tokens"),
                 "cost": u.get("cost"),  # Featherless returns usage.cost in USD
             }
+            if policy is not None:
+                policy.settle_budget(reservation, trace["usage"])
         if validate:
             try:
                 validate(text)

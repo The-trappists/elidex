@@ -20,6 +20,10 @@ services:
       DEMO_MAX_TOTAL_WORKSPACES: "500"
       DEMO_IDLE_SECONDS: "1800"
       DEMO_MAX_LIVE_RUNS: "2"
+      DEMO_LIVE_ENABLED: ${DEMO_LIVE_ENABLED:-0}
+      DEMO_WORKSPACE_BUDGET_EUR: ${DEMO_WORKSPACE_BUDGET_EUR:-0.50}
+      DEMO_GLOBAL_BUDGET_EUR: ${DEMO_GLOBAL_BUDGET_EUR:-100}
+      DEMO_BUDGET_FILE: /app/out/public-demo/budget.sqlite3
       DEMO_SNAPSHOT_FILE: /app/out/public-demo-snapshot.json
     volumes:
       - public-demo-data:/app/out

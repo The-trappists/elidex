@@ -7,6 +7,7 @@ import json
 import os
 import secrets
 import shutil
+import sqlite3
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,7 +18,7 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 
 from .. import config
-from ..demo_policy import DemoPolicy, bind_policy
+from ..demo_policy import BudgetLedger, DemoLimitError, DemoPolicy, PriceCatalog, bind_policy
 from . import persistence
 from .archive import Archive
 from .company import CompanyDay
@@ -46,7 +47,8 @@ class Workspace:
         self.manager, self.id = manager, ident
         self.last_seen = time.monotonic()
         self.directory = manager.root / ident
-        self.policy = DemoPolicy(trace_sink=self.trace)
+        self.policy = DemoPolicy(trace_sink=self.trace, ledger=manager.budget, prices=manager.prices,
+                                 workspace_id=ident, budget_required=True)
         with bind_policy(self.policy):
             self.wb = PublicDashboard(state_file=self.directory / "state.json", seed=False)
         self.wb.llm_calls_file = self.directory / "llm_calls.jsonl"
@@ -86,12 +88,15 @@ class Workspace:
         self.wb.bus.loop.call_soon_threadsafe(record)
 
     def status(self):
+        budget = self.manager.budget_status(self.id)
+        reason = self.manager.live_unavailable_reason(self.id)
         return {"enabled": True, "live_run_used": self.policy.used,
                 "live_run_running": bool(self.live_task and not self.live_task.done()),
-                "live_run_available": not self.policy.used and config.llm_configured(),
+                "live_run_available": not self.policy.used and reason is None,
+                "live_unavailable_reason": reason,
                 "live_run_error": self.live_error, "mode": "live" if self.policy.snapshot()["active"] else "scripted",
                 "session_expires_in_seconds": max(0, int(self.manager.idle - (time.monotonic() - self.last_seen))),
-                "max_live_calls": self.policy.max_calls, "live_calls": self.policy.calls}
+                "max_live_calls": self.policy.max_calls, "live_calls": self.policy.calls, **budget}
 
     async def close(self):
         self.closed = True
@@ -128,9 +133,11 @@ class Workspace:
                     await self.wb.processor.process(run.thread_id)
                     job = self.wb.jobs.get(self.wb.threads[run.thread_id].last_job_id)
                     if job and job.error:
-                        self.live_error = "The live extraction could not finish. Scripted exploration is still available."
+                        self.live_error = self.policy.budget_error or "The live extraction could not finish. Scripted exploration is still available."
         except asyncio.CancelledError:
             raise
+        except DemoLimitError as exc:
+            self.live_error = str(exc)
         except Exception:
             self.live_error = "The live scenario could not finish. Scripted exploration is still available."
         finally:
@@ -152,6 +159,53 @@ class WorkspaceManager:
         self.workspaces = {}
         self.lock = asyncio.Lock()
         self.snapshot = None
+        self.live_enabled = os.getenv("DEMO_LIVE_ENABLED", "0").lower() in {"1", "true", "yes"}
+        self.prices = PriceCatalog(os.getenv("DEMO_MODEL_PRICES_EUR", ""))
+        self.budget = None
+        self.budget_error = None
+        try:
+            self.budget = BudgetLedger(Path(os.getenv("DEMO_BUDGET_FILE", str(self.root / "budget.sqlite3"))),
+                                       workspace_limit=os.getenv("DEMO_WORKSPACE_BUDGET_EUR", "0.50"),
+                                       global_limit=os.getenv("DEMO_GLOBAL_BUDGET_EUR", "100"))
+        except (OSError, ValueError, sqlite3.Error):
+            self.budget_error = "Live AI budgeting is unavailable. Scripted exploration remains available."
+
+    def budget_status(self, workspace_id):
+        if self.budget is None:
+            return {"budget_limit_eur": 0.5, "budget_spent_eur": 0, "budget_reserved_eur": 0,
+                    "budget_remaining_eur": 0, "global_budget_remaining_eur": 0, "global_budget_limit_eur": 100,
+                    "budget_available": False}
+        try:
+            return self.budget.snapshot(workspace_id)
+        except (sqlite3.Error, OSError):
+            self.budget_error = "Live AI budgeting is unavailable. Scripted exploration remains available."
+            return {"budget_limit_eur": 0.5, "budget_spent_eur": 0, "budget_reserved_eur": 0,
+                    "budget_remaining_eur": 0, "global_budget_remaining_eur": 0, "global_budget_limit_eur": 100,
+                    "budget_available": False}
+
+    def live_unavailable_reason(self, workspace_id):
+        if not self.live_enabled:
+            return "Live AI is paused by the team. Scripted exploration remains available."
+        if self.budget_error:
+            return self.budget_error
+        if self.prices.error:
+            return self.prices.error
+        if not self.budget_status(workspace_id)["budget_available"]:
+            return "The live AI budget is exhausted. Scripted exploration remains available."
+        if not config.llm_configured():
+            return "Live generation is currently unavailable. Explore the scripted scenarios."
+        from .. import llm
+        try:
+            chain = llm.providers()
+            if not chain:
+                return "Live generation is currently unavailable. Explore the scripted scenarios."
+            for provider in chain:
+                self.prices.get(provider.base_url, provider.model)
+        except DemoLimitError as exc:
+            return str(exc)
+        except Exception:
+            return "Live model configuration is unavailable. Scripted exploration remains available."
+        return None
 
     async def prepare(self):
         from . import loop_agents
@@ -324,8 +378,9 @@ def create_demo_app(root=None, background=True):
         workspace = request.state.demo_workspace
         if workspace.policy.used:
             return JSONResponse({"detail": "Your live run has already been used."}, status_code=409)
-        if not config.llm_configured():
-            return JSONResponse({"detail": "Live generation is currently unavailable. Explore the scripted scenarios."}, status_code=503)
+        reason = manager.live_unavailable_reason(workspace.id)
+        if reason is not None:
+            return JSONResponse({"detail": reason}, status_code=503)
         if manager.running_live >= manager.max_live:
             return JSONResponse({"detail": "All live slots are busy. Please try again shortly."}, status_code=429,
                                 headers={"Retry-After": "10"})

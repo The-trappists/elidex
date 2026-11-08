@@ -26,6 +26,7 @@ const NAV = [
 
 const SFP_CONVERSATION = '/conversations/elisa%2Fteams_chat.json?walkthrough=sfp'
 const SFP_AGENT = '/agent?walkthrough=sfp'
+const formatEuros = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' })
 
 function sfpKnowledgeUrl(assertions: ReturnType<typeof useLive.getState>['assertions']) {
   const assertion = Object.values(assertions).find((item) => item.type === 'workaround' && item.sources.some((source) => source.file === 'elisa/teams_chat.json'))
@@ -102,6 +103,8 @@ function DemoCompany() {
 
         <section className="demo-live-trial" aria-label="Live AI trial">
           <div className="min-w-0 flex-1 basis-64"><h2 className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={16} className="text-accent" />Try one live AI run</h2><p className="mt-1 text-sm leading-relaxed text-muted">Generate and process one new conversation with the live models. After this run, your workspace returns to scripted mode and remains yours to explore.</p>
+            {status?.budget_limit_eur != null && status.budget_remaining_eur != null && <p className="mt-2 text-sm font-medium">Your live allowance: {formatEuros.format(status.budget_remaining_eur)} of {formatEuros.format(status.budget_limit_eur)} remaining.</p>}
+            {status?.global_budget_remaining_eur === 0 && <p className="mt-2 text-sm">The shared live trial budget has been used. The scripted demo remains available.</p>}
             {status?.live_run_used && !status.live_run_running && <p className="mt-2 text-sm font-medium">Your live allowance has been used. Continue exploring the scripted demo.</p>}
             {!status?.live_run_used && !status?.live_run_available && <p className="mt-2 text-sm">Live AI is unavailable right now. The scripted demo is ready to explore.</p>}
             {status?.live_run_error && <p className="mt-2 text-sm text-bad" role="alert">{status.live_run_error}</p>}
