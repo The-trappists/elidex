@@ -2,6 +2,8 @@
 services:
   app:
     # Team dashboard (protected by team.DOMAIN)
+    environment:
+      PUBLIC_DEMO: "0"
     # The VM's inherited IPv6 resolver may be unreachable from Docker.
     dns:
       - 1.1.1.1

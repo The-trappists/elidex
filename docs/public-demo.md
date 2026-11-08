@@ -1,6 +1,6 @@
 # Public visitor demo
 
-The public demo gives each browser a private, cookie-bound workspace. The normal team dashboard remains available when `PUBLIC_DEMO` is unset. The public deployment replaces the team dashboard on the selected hostname; use a separate deployment if both must remain accessible.
+The deployment uses one checkout of `main`, one Compose project and three containers: `app` is the protected team dashboard, `demo-app` provides private visitor workspaces, and `caddy` serves both hostnames. Only Caddy publishes ports 80 and 443. MongoDB is not recreated by this deployment.
 
 The full marketing homepage stays at `/`, using the homepage from `main`. It does not allocate a workspace or depend on API availability. The visitor enters the private demo through its dashboard links; the workspace logo returns to the homepage.
 
@@ -10,9 +10,24 @@ Each workspace starts with preloaded synthetic data. Scripted exploration does n
 
 ## Prepare and deploy (human operator)
 
-Do not deploy until the implementation checks pass and the branch includes the existing dashboard rename work. This branch was created from a checkout containing other contributors' uncommitted changes; do not commit unrelated changes blindly.
+After the PR is merged, deploy from `main`. Keep the existing private `.env` and certificate volumes. `DOMAIN` must be the public hostname only (`209.250.242.163.sslip.io`), without a scheme or a second hostname. `BASIC_AUTH_USER` and `BASIC_AUTH_HASH` protect only `team.DOMAIN`. The overlay explicitly sets `PUBLIC_DEMO=0` for the team app and `PUBLIC_DEMO=1` for the public app.
 
-On the VM, fetch and check out the published branch after saving any local edits. Keep the existing model configuration in your private `.env`; agents must not read it. Set `DOMAIN=209.250.242.163.sslip.io`. The base Compose file still requires `BASIC_AUTH_USER` and `BASIC_AUTH_HASH`, but the public Caddy configuration does not use them.
+If deployment files were temporarily recovered with `git show`, they may be untracked and block the pull. Move only those untracked copies into a backup directory first; this leaves private configuration untouched:
+
+```bash
+DEPLOY_BACKUP="/root/elidex-deploy-backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$DEPLOY_BACKUP"
+for deploy_copy in deploy/docker-compose.public-demo.yml deploy/Caddyfile.public-and-team; do
+  if test -f "$deploy_copy" && ! git ls-files --error-unmatch "$deploy_copy" >/dev/null 2>&1; then
+    mv "$deploy_copy" "$DEPLOY_BACKUP/"
+  fi
+done
+git fetch origin
+git switch main
+git pull --ff-only origin main
+```
+
+If Git reports other local changes, preserve them rather than forcing a reset.
 
 All commands run from the repository root. Build the image:
 
@@ -26,10 +41,10 @@ Prepare a snapshot once. This command builds a small dataset using templates, pr
 docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env run --rm --no-deps -T demo-app python - --output /app/out/public-demo-snapshot.json < scripts/build_demo_snapshot.py
 ```
 
-Start both the public demo and the team app:
+Start both apps and recreate Caddy so the correct two-host file is mounted:
 
 ```bash
-docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env up -d
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env up -d --force-recreate
 ```
 
 The overlay runs both services side-by-side behind a single Caddy:
@@ -39,6 +54,16 @@ The overlay runs both services side-by-side behind a single Caddy:
 Validate access without a browser's remembered credentials:
 - `curl -I https://209.250.242.163.sslip.io/api/health` returns HTTP 200.
 - `curl -I https://team.209.250.242.163.sslip.io/api/health` returns HTTP 401 Unauthorized without credentials, and HTTP 200 with `-u $BASIC_AUTH_USER:$PASSWORD`.
+
+Sign into the team hostname and confirm its dashboard loads. Once both hosts work, retire the two obsolete containers from the previous project; keep all volumes and MongoDB:
+
+```bash
+docker stop context-workbench-app-1
+docker rm context-workbench-app-1 context-workbench-caddy-1
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.public-demo.yml --env-file .env ps
+```
+
+The running project should now consist of `context-dashboard-app-1`, `context-dashboard-demo-app-1` and `context-dashboard-caddy-1`. Always use both Compose files, or `deploy/update.sh`, for future updates. Using only the base file remounts the original single-host Caddy configuration and breaks the public/team split.
 
 ## Test capacity before sharing the QR
 
