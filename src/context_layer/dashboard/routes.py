@@ -458,6 +458,7 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         use_conditions=wb.settings.use_conditions,
         use_guard=wb.settings.use_guard,
         use_llm=body.use_llm,
+        use_relevance=wb.settings.use_relevance,
     )
     try:
         if body.use_llm:
@@ -487,7 +488,8 @@ async def agent_run(body: AgentRunBody, request: Request) -> AgentRunResult:
         recommendation=report.recommendation,
         hits=[{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json"),
                "track_record": feedback.track_record(h.assertion, case.at).to_dict(),
-               **({"check_status": c.status, "to_read": c.to_read} if (c := report.checks.get(h.assertion.id)) else {})}
+               **({"check_status": c.status, "to_read": c.to_read} if (c := report.checks.get(h.assertion.id)) else {}),
+               **agent_mod.relevance_fields(report, h.assertion.id)}
               for h in report.hits],
         skipped=[{"assertion_id": h.assertion.id, "reason": reason} for h, reason in report.skipped],
         verdict=_verdict(report.verdict) if report.verdict else None,

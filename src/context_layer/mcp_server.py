@@ -7,7 +7,7 @@ from mcp.server.mcpserver import MCPServer
 
 from . import config
 from .link import Inventory
-from .mvp import conditions, feedback, guard
+from .mvp import conditions, feedback, guard, relevance
 from .store import ContextStore
 
 mcp = MCPServer(
@@ -32,11 +32,15 @@ def get_context(
     at: str | None = None,
     observations: dict[str, Any] | None = None,
     include_expired: bool = False,
+    problem: str | None = None,
 ) -> list[dict]:
     """Human knowledge (workarounds, site access...) valid at time `at` (ISO, default now) for a network
     element or site, including what applies to its class and its site. Each item has source, trust and validity.
     When `observations` is provided, each item is annotated with check_status ("fully checked", "not fully checked",
     "failed", "text only"), to_read (fields to observe), condition_applies, and track_record.
+    Pass `problem`, the symptom in words ("SFP replaced, link up, no traffic"), to get each item tagged
+    `problem_match` ("matches the problem" or "other problem", with the matched words), matching items first: act on
+    those.
     Set `include_expired=True` to include superseded or expired knowledge."""
     store = _store()
     at_dt = datetime.fromisoformat(at) if at else None
@@ -56,6 +60,12 @@ def get_context(
             row["to_read"] = cr.to_read
             row["condition_applies"] = cr.applies
         out.append(row)
+    if problem:
+        rep = relevance.assess_for(store, entity_id, [h.assertion for h in hits], problem)
+        for row in out:
+            r = rep[row["id"]]
+            row |= {"problem_match": r.status, "problem_match_score": r.score, "problem_matched": r.matched}
+        out.sort(key=lambda row: row["problem_match"] == "other problem")  # stable: matching items first
     return out
 
 

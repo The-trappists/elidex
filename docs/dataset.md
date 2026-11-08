@@ -135,6 +135,7 @@ Status: the pure parts (mentions, documents, rows, file source) are tested offli
 ## Using it
 
 - Core and bench: `Inventory.load(root / "network")`; `ctx dataset bench` feeds the linker with the true extractions, so it measures linking and storing, **not the LLM**. For the LLM, read threads of `conversations/` and score the output against `facts.jsonl`.
+- Accuracy at scale: `ctx dataset eval out/dataset/large` replays every knowledge thread (real text) through the linker, store and lifecycle, then runs 9,300 cases built from the ground truth through five retrieval pipelines, from naive RAG over the raw chats to graph + time + conditions + problem relevance. About 13 minutes on `large`, single process. Results and method: [evaluation.md, part 3](evaluation.md#part-3-retrieval-accuracy-at-company-scale).
 - The **Dashboard loads everything in memory** and the graph canvas draws every node: never `large`. Take a sample instead: `ctx dataset export-dashboard out/dataset/tiny` (or the Data page button "Load company dataset"), see [dashboard.md](dashboard.md#company-dataset-sample).
 - Load shards lazily (one line at a time); do not `json.load` a whole shard of `large` (~80 MB each is fine, all of them is not).
 

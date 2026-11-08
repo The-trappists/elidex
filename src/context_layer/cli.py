@@ -63,13 +63,15 @@ def cmd_agent(args: argparse.Namespace) -> None:
     if args.case:
         cases = [c for c in cases if c.id == args.case] or sys.exit(f"Unknown case {args.case}")
     for case in cases:
-        r = run_agent(store, case, use_conditions=args.conditions, use_guard=args.guard, use_llm=args.llm)
+        r = run_agent(store, case, use_conditions=args.conditions, use_guard=args.guard, use_llm=args.llm, use_relevance=args.relevance)
         print("=" * 80)
         print(f"{case.id}: {case.title}\n  {case.entity_id} at {case.at:%Y-%m-%d %H:%M} · {case.description}")
         if case.observations:
             print(f"  observations: {case.observations}")
         print("-" * 80)
         print(r.recommendation)
+        for hit in r.hits if r.relevance else []:
+            print(f"  [{hit.assertion.id}] {hit.assertion.topic}: {r.relevance[hit.assertion.id].line()}")
         for hit, why in r.skipped:
             print(f"  (not applied: {hit.assertion.id}, {why})")
         if r.verdict:
@@ -389,6 +391,18 @@ def cmd_dataset(args: argparse.Namespace) -> None:
             print(f"{n:,} messages loaded; {tiger.check(conn)}")
             if args.analytics:
                 tiger.analytics(conn)
+    elif args.dataset_cmd == "eval":
+        from .eval.scale import render, run_scale_eval
+
+        result = run_scale_eval(root, split=args.split, haystack_every=args.haystack_every, naive_cases=args.naive_cases,
+                                threshold=args.threshold)
+        out = config.OUT_DIR / "eval"
+        out.mkdir(parents=True, exist_ok=True)
+        stem = out / f"scale-{root.name}-{args.split}"
+        stem.with_suffix(".json").write_text(json.dumps(result, indent=2, default=str) + "\n", encoding="utf-8")
+        stem.with_suffix(".md").write_text(render(result), encoding="utf-8")
+        print(render(result))
+        print(f"Written to {stem}.md and .json")
     else:
         on_store = None
         if args.save_mongo:
@@ -428,6 +442,7 @@ def main(argv: list[str] | None = None) -> None:
     ag.add_argument("--conditions", action="store_true", help="MVP C: apply a rule only when its conditions hold")
     ag.add_argument("--guard", action="store_true", help="MVP B: check the planned action before acting")
     ag.add_argument("--llm", action="store_true", help="let the LLM phrase the plan")
+    ag.add_argument("--relevance", action="store_true", help="tag each rule with whether it is about the case's problem (mvp/relevance.py)")
     ag.set_defaults(func=cmd_agent)
 
     gr = sub.add_parser("graph", help="knowledge graph: stats, export, Neo4j push, provenance, experts...")
@@ -497,6 +512,12 @@ def main(argv: list[str] | None = None) -> None:
     be.add_argument("--facts", type=int, help="only the first N facts")
     be.add_argument("--queries", type=int, default=500)
     be.add_argument("--save-mongo", action="store_true", help="save the linked assertions to Atlas (collections assertions, classes)")
+    sev = dsub.add_parser("eval", help="retrieval accuracy at scale: linking, lifecycle and 5 retrieval pipelines vs. the ground truth (docs/evaluation.md part 3)")
+    sev.add_argument("path", nargs="?")
+    sev.add_argument("--split", choices=["dev", "test"], default="test", help="wording of the incidents (data/eval/scale_problems.json)")
+    sev.add_argument("--haystack-every", type=int, default=10, help="naive RAG indexes one in N chats without knowledge (default 10)")
+    sev.add_argument("--naive-cases", type=int, default=2000, help="cases run through naive RAG (0 skips it and the chat index)")
+    sev.add_argument("--threshold", type=float, help="problem-match threshold (default: chosen on the dev wording)")
     ew = dsub.add_parser("export-dashboard", help="a connected sample of the dataset in the Dashboard export format (never load `large` in the Dashboard)")
     ew.add_argument("path", nargs="?", help="dataset folder (default: DATASET_DIR)")
     ew.add_argument("--sites", type=int, default=40, help="sites of the sub-network, grown from the Elisa seed (default 40)")

@@ -618,7 +618,7 @@ class CompanyDay:
     async def _ask(self, case: agent_mod.Case):
         """Ask the context layer. With the LLM on, a failure falls back to the template and is logged."""
         wb = self.wb
-        kwargs = dict(use_conditions=wb.settings.use_conditions, use_guard=wb.settings.use_guard)
+        kwargs = dict(use_conditions=wb.settings.use_conditions, use_guard=wb.settings.use_guard, use_relevance=wb.settings.use_relevance)
         if self.st.use_llm:
             try:
                 report = await asyncio.to_thread(agent_mod.run_agent, wb.store, case, use_llm=True, **kwargs)

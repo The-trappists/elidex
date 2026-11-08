@@ -53,6 +53,8 @@ More advanced retrieval only helps where it fixes a measured failure and is show
 
 ### 3. Firmware validity per element, not per date
 
+> **Partly done** (branch `feat/scale-retrieval-eval`, see [evaluation.md part 3](evaluation.md#part-3-retrieval-accuracy-at-company-scale)): a release now closes a rule only when it ships a version newer than the one the rule names (`lifecycle.fix_predates`), which removed 41 wrong closures on the `large` dataset. Validity per element (a `firmware` check filled from the inventory) is still open.
+
 - **Why the judges care:** Elisa's reference figure cross-references the layers at any time t. "Firmware 4.2 fixes it" is true for a node only once that node runs 4.2.
 - **Evidence:** `data/dashboard/topology.json` already has `firmware` per element. Today the invalidation sets one global `valid_to` on the message date. That is wrong in both directions: units upgraded before the message, and units still not upgraded after it.
 - **Fix:** a firmware invalidation becomes a check on the rule (`firmware < 4.2`) instead of closing it for everyone. Steps:
@@ -180,6 +182,8 @@ Constraints to keep in mind:
 
 #### B. Hybrid neighbour retrieval for reconciliation
 
+> **Partly done** (branch `feat/scale-retrieval-eval`): same knowledge is now compared on scope, not on where it was seen, so Veikko applying Erkki's tip on TRN-117 is a confirmation of Erkki's rule, and 285 of 285 confirmed hunches on `large` stay one rule (was 72). BM25 / dense neighbours for the judge are still open.
+
 - **Technique:** candidate neighbours of a new assertion = element-level reach overlap (item 2) ∪ BM25 ∪ multilingual dense search, fused with Reciprocal Rank Fusion (Cormack et al. 2009). The loop-v2 judge then decides supports / contradicts / supersedes / unrelated.
 - **Why it fits:** it fixes the live failures that IDs and topic slugs miss:
   - the firmware closure;
@@ -195,6 +199,8 @@ Constraints to keep in mind:
 - **Effort:** 3–4h.
 
 #### C. A naive-RAG baseline plus an ablation table (the demo slide)
+
+> **Done at company scale** with the oracle extractor: `ctx dataset eval out/dataset/large`, 9,300 cases, five pipelines, stale and wrong-scope answers counted; it also led to a new problem-relevance step. Table and limits in [evaluation.md part 3](evaluation.md#part-3-retrieval-accuracy-at-company-scale). The real-LLM rows of the slide below still need a human run with the key.
 
 - **Why:** this is what most teams will build. Showing why it fails on Elisa's problem (no time, no scope, no trust) makes our numbers meaningful.
 - **Build:**
