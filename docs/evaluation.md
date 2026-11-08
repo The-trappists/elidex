@@ -355,4 +355,4 @@ Site access (key moved): 46 of 46 closed at the right time. Firmware: the 346 bu
 - Web UI: a `use_relevance` toggle on the Settings page (`web/src/pages/SettingsPage.tsx`, `types.ts`, fixtures), and a problem-match badge per rule in the Agent tester (`AgentTester.tsx`). The backend already sends `problem_match`, `problem_match_score` and `problem_matched`.
 - A `docs/decisions.md` entry if the team adopts relevance as the default for the demo.
 - The dense-embedding variant of `concepts()` (see Limits).
-- Re-run: `ctx dataset generate --scale large` then `ctx dataset eval out/dataset/large --split test` (about 20 min; results go to `out/eval/`).
+- Re-run: `ctx dataset generate --scale large` then `ctx dataset eval out/dataset/large --split test`; results go to `out/eval/`.
