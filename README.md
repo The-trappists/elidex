@@ -25,7 +25,7 @@ Built by **The Trappists** for the **Since AI Hackathon 2026** (Turku, Finland)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
 
-[**Watch Demo Video (MP4)**](docs/video/ElidEx-demo-final.mp4) • [**Submission Report**](docs/submission.md) • [**Design & Architecture**](docs/design.md) • [**Decisions Log**](docs/decisions.md)
+[**Watch Demo (YouTube)**](https://youtu.be/XQCUgTxHnx0) • [**Watch Demo Video (MP4)**](docs/video/ElidEx-demo-final.mp4) • [**Submission Report**](docs/submission.md) • [**Design & Architecture**](docs/design.md) • [**Decisions Log**](docs/decisions.md)
 
 </div>
 
@@ -77,18 +77,7 @@ That smiley is the bottleneck for autonomous network operations. An AI agent can
 
 ## ⚡ How It Works: The 5-Stage Context Engine
 
-```mermaid
-flowchart LR
-    A["💬 Channels<br/>(Teams, Slack, Email)"] --> B["1. Listen<br/>(Stream / Ingest)"]
-    B --> C["2. Understand<br/>(Structured Extraction)"]
-    C --> D["3. Critic & Link<br/>(Evidence Check & Inventory Binding)"]
-    N["🗺️ Network Topology<br/>& Inventory"] --> D
-    D --> E["4. Store & Reconcile<br/>(Graph & Temporal Validity)"]
-    E --> F["5. Serve & Reuse<br/>(MCP Server & REST API)"]
-    F --> G["🤖 Autonomous AI Agents<br/>(Ask-Before-Act Guard)"]
-    G --> H["🔄 Field Outcome Loop<br/>(Automated Trust Update)"]
-    H -.-> E
-```
+![The 5-Stage Context Engine](docs/images/context-engine.svg)
 
 1. **Listen:** Ingests conversations from live chat, email archives, or our Slack Socket Mode bridge.
 2. **Understand:** Extracts machine-testable conditions, recommended actions, cited evidence quotes, and confidence scores using Gemini Flash.

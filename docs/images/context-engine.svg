@@ -1,0 +1,348 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" width="100%" height="100%" style="background:#0e0f12; border-radius:12px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7b9bff" />
+      <stop offset="100%" stop-color="#a78bfa" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#181b22" />
+      <stop offset="100%" stop-color="#13151a" />
+    </linearGradient>
+    <linearGradient id="accentCardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a2035" />
+      <stop offset="100%" stop-color="#131722" />
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4b5568" />
+      <stop offset="100%" stop-color="#7b9bff" />
+    </linearGradient>
+
+    <!-- Marker Arrow -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#7b9bff" />
+    </marker>
+    <marker id="arrowUp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#a78bfa" />
+    </marker>
+    <marker id="arrowFeedback" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#4ade80" />
+    </marker>
+
+    <!-- Drop Shadows -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1280" height="520" rx="12" fill="#0e0f12" stroke="#262a33" stroke-width="1.5" />
+
+  <!-- Top Banner / Title Bar -->
+  <g transform="translate(35, 24)">
+    <!-- Logo Pill -->
+    <rect x="0" y="0" width="34" height="34" rx="8" fill="#1b1e25" stroke="#315ce7" stroke-width="1.5" />
+    <text x="17" y="23" text-anchor="middle" font-size="16" font-weight="800" fill="#7b9bff" font-family="monospace">E</text>
+
+    <text x="46" y="22" font-size="18" font-weight="700" fill="#e8eaee" letter-spacing="-0.02em">
+      Elid<tspan fill="#7b9bff">Ex</tspan>
+      <tspan fill="#8b92a1" font-weight="400" font-size="15"> · 5-Stage Context Engine Architecture</tspan>
+    </text>
+
+    <!-- Right badges -->
+    <g transform="translate(850, 4)">
+      <rect x="0" y="0" width="130" height="24" rx="12" fill="#15171c" stroke="#262a33" stroke-width="1" />
+      <circle cx="12" cy="12" r="4" fill="#4ade80" />
+      <text x="24" y="16" font-size="11" font-weight="600" fill="#8b92a1" font-family="monospace">MCP 2.0 READY</text>
+
+      <rect x="140" y="0" width="220" height="24" rx="12" fill="#15171c" stroke="#262a33" stroke-width="1" />
+      <text x="250" y="16" text-anchor="middle" font-size="11" font-weight="600" fill="#7b9bff" font-family="monospace">TEMPORAL KNOWLEDGE GRAPH</text>
+    </g>
+  </g>
+
+  <!-- SECTION 1: CHANNELS (INPUT) -->
+  <g transform="translate(35, 80)">
+    <rect width="140" height="255" rx="10" fill="url(#cardGrad)" stroke="#262a33" stroke-width="1.2" />
+    <rect width="140" height="42" rx="10" fill="#181b24" />
+    <rect y="32" width="140" height="10" fill="#181b24" />
+    <line x1="0" y1="42" x2="140" y2="42" stroke="#262a33" stroke-width="1" />
+
+    <!-- Badge -->
+    <rect x="10" y="10" width="48" height="20" rx="4" fill="#252932" />
+    <text x="34" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#8b92a1" font-family="monospace">INPUT</text>
+    <text x="68" y="25" font-size="13" font-weight="600" fill="#e8eaee">Channels</text>
+
+    <!-- Items -->
+    <g transform="translate(12, 58)">
+      <g transform="translate(0, 0)">
+        <rect width="116" height="34" rx="6" fill="#15171c" stroke="#262a33" stroke-width="1" />
+        <text x="10" y="18" font-size="12" font-weight="600" fill="#e8eaee">Slack Bridge</text>
+        <text x="10" y="28" font-size="9" fill="#8b92a1">Socket Mode live</text>
+      </g>
+      <g transform="translate(0, 42)">
+        <rect width="116" height="34" rx="6" fill="#15171c" stroke="#262a33" stroke-width="1" />
+        <text x="10" y="18" font-size="12" font-weight="600" fill="#e8eaee">MS Teams</text>
+        <text x="10" y="28" font-size="9" fill="#8b92a1">Field ops chats</text>
+      </g>
+      <g transform="translate(0, 84)">
+        <rect width="116" height="34" rx="6" fill="#15171c" stroke="#262a33" stroke-width="1" />
+        <text x="10" y="18" font-size="12" font-weight="600" fill="#e8eaee">Email Archives</text>
+        <text x="10" y="28" font-size="9" fill="#8b92a1">Handover digests</text>
+      </g>
+      <g transform="translate(0, 126)">
+        <rect width="116" height="34" rx="6" fill="#15171c" stroke="#262a33" stroke-width="1" />
+        <text x="10" y="18" font-size="12" font-weight="600" fill="#e8eaee">Simulator</text>
+        <text x="10" y="28" font-size="9" fill="#8b92a1">Finnish calendar</text>
+      </g>
+    </g>
+    <text x="70" y="244" text-anchor="middle" font-size="10" fill="#646a78">Zero extra forms</text>
+  </g>
+
+  <!-- Arrow 0 -> 1 -->
+  <line x1="175" y1="205" x2="201" y2="205" stroke="#7b9bff" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- STAGE 1: LISTEN -->
+  <g transform="translate(205, 80)">
+    <rect width="150" height="255" rx="10" fill="url(#cardGrad)" stroke="#315ce7" stroke-width="1.2" stroke-opacity="0.6" />
+    <rect width="150" height="42" rx="10" fill="#161d2f" />
+    <rect y="32" width="150" height="10" fill="#161d2f" />
+    <line x1="0" y1="42" x2="150" y2="42" stroke="#315ce7" stroke-width="1" stroke-opacity="0.4" />
+
+    <rect x="10" y="10" width="58" height="20" rx="4" fill="#1e2942" />
+    <text x="39" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#7b9bff" font-family="monospace">STAGE 01</text>
+    <text x="76" y="25" font-size="13" font-weight="600" fill="#e8eaee">Listen</text>
+
+    <g transform="translate(12, 54)">
+      <text x="0" y="14" font-size="11" font-weight="600" fill="#7b9bff">Stream &amp; Ingest</text>
+      <text x="0" y="32" font-size="10" fill="#8b92a1" font-weight="500">2.0s human debounce</text>
+      <text x="0" y="47" font-size="10" fill="#8b92a1">Captures typing bursts</text>
+
+      <line x1="0" y1="60" x2="126" y2="60" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="76" font-size="11" font-weight="600" fill="#e8eaee">Thread Tracking</text>
+      <text x="0" y="93" font-size="10" fill="#8b92a1">Preserves author name,</text>
+      <text x="0" y="108" font-size="10" fill="#8b92a1">timestamps &amp; role</text>
+
+      <line x1="0" y1="121" x2="126" y2="121" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="137" font-size="11" font-weight="600" fill="#e8eaee">Raw Preservation</text>
+      <text x="0" y="154" font-size="10" fill="#8b92a1">Verbatim chat retained</text>
+      <text x="0" y="169" font-size="10" fill="#8b92a1">for critic validation</text>
+    </g>
+    <rect x="12" y="232" width="126" height="15" rx="3" fill="#1b1e25" />
+    <text x="75" y="243" text-anchor="middle" font-size="9" fill="#4ade80" font-weight="600">IDEMPOTENT LOCK</text>
+  </g>
+
+  <!-- Arrow 1 -> 2 -->
+  <line x1="355" y1="205" x2="379" y2="205" stroke="#7b9bff" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- STAGE 2: UNDERSTAND -->
+  <g transform="translate(383, 80)">
+    <rect width="154" height="255" rx="10" fill="url(#cardGrad)" stroke="#315ce7" stroke-width="1.2" stroke-opacity="0.6" />
+    <rect width="154" height="42" rx="10" fill="#161d2f" />
+    <rect y="32" width="154" height="10" fill="#161d2f" />
+    <line x1="0" y1="42" x2="154" y2="42" stroke="#315ce7" stroke-width="1" stroke-opacity="0.4" />
+
+    <rect x="10" y="10" width="58" height="20" rx="4" fill="#1e2942" />
+    <text x="39" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#7b9bff" font-family="monospace">STAGE 02</text>
+    <text x="76" y="25" font-size="13" font-weight="600" fill="#e8eaee">Understand</text>
+
+    <g transform="translate(12, 54)">
+      <text x="0" y="14" font-size="11" font-weight="600" fill="#7b9bff">LLM Extraction</text>
+      <text x="0" y="32" font-size="10" fill="#8b92a1" font-weight="500">Gemini Flash 2.5 / 3.8</text>
+      <text x="0" y="47" font-size="10" fill="#8b92a1">Pydantic JSON schema</text>
+
+      <line x1="0" y1="60" x2="130" y2="60" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="76" font-size="11" font-weight="600" fill="#e8eaee">Machine Rules</text>
+      <rect x="0" y="85" width="130" height="44" rx="4" fill="#0e0f12" stroke="#262a33" stroke-width="1" />
+      <text x="6" y="98" font-size="9" fill="#4ade80" font-family="monospace">WHEN:</text>
+      <text x="42" y="98" font-size="9" fill="#8b92a1">optics normal</text>
+      <text x="6" y="111" font-size="9" fill="#7b9bff" font-family="monospace">THEN:</text>
+      <text x="42" y="111" font-size="9" fill="#8b92a1">bounce port</text>
+      <text x="6" y="124" font-size="9" fill="#f87171" font-family="monospace">AVOID:</text>
+      <text x="42" y="124" font-size="9" fill="#8b92a1">rebooting</text>
+
+      <line x1="0" y1="137" x2="130" y2="137" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="152" font-size="11" font-weight="600" fill="#e8eaee">Evidence Anchoring</text>
+      <text x="0" y="168" font-size="10" fill="#8b92a1">Extracts verbatim quote</text>
+    </g>
+    <rect x="12" y="232" width="130" height="15" rx="3" fill="#1b1e25" />
+    <text x="77" y="243" text-anchor="middle" font-size="9" fill="#7b9bff" font-weight="600">CONFIDENCE 0.0-1.0</text>
+  </g>
+
+  <!-- Arrow 2 -> 3 -->
+  <line x1="537" y1="205" x2="561" y2="205" stroke="#7b9bff" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- STAGE 3: CRITIC & LINK -->
+  <g transform="translate(565, 80)">
+    <rect width="162" height="255" rx="10" fill="url(#cardGrad)" stroke="#315ce7" stroke-width="1.2" stroke-opacity="0.6" />
+    <rect width="162" height="42" rx="10" fill="#161d2f" />
+    <rect y="32" width="162" height="10" fill="#161d2f" />
+    <line x1="0" y1="42" x2="162" y2="42" stroke="#315ce7" stroke-width="1" stroke-opacity="0.4" />
+
+    <rect x="10" y="10" width="58" height="20" rx="4" fill="#1e2942" />
+    <text x="39" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#7b9bff" font-family="monospace">STAGE 03</text>
+    <text x="76" y="25" font-size="13" font-weight="600" fill="#e8eaee">Critic &amp; Link</text>
+
+    <g transform="translate(12, 54)">
+      <text x="0" y="14" font-size="11" font-weight="600" fill="#fbbf24">Dual-LLM Critic</text>
+      <text x="0" y="32" font-size="10" fill="#8b92a1">Quote verification check</text>
+      <text x="0" y="47" font-size="10" fill="#8b92a1">Filters hallucinations</text>
+
+      <line x1="0" y1="60" x2="138" y2="60" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="76" font-size="11" font-weight="600" fill="#e8eaee">Entity Linker</text>
+      <text x="0" y="93" font-size="10" fill="#8b92a1">Deterministic resolver:</text>
+      <text x="0" y="108" font-size="9" fill="#a78bfa" font-family="monospace">• applies_to (class/unit)</text>
+      <text x="0" y="121" font-size="9" fill="#8b92a1" font-family="monospace">• observed_on (node)</text>
+      <text x="0" y="134" font-size="9" fill="#8b92a1" font-family="monospace">• trigger (event/action)</text>
+
+      <line x1="0" y1="144" x2="138" y2="144" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="160" font-size="11" font-weight="600" fill="#4ade80">Safe Abstention</text>
+      <text x="0" y="174" font-size="10" fill="#8b92a1">Abstains on vague text</text>
+    </g>
+    <rect x="12" y="232" width="138" height="15" rx="3" fill="#1b1e25" />
+    <text x="81" y="243" text-anchor="middle" font-size="9" fill="#fbbf24" font-weight="600">NO OVER-LINKING</text>
+  </g>
+
+  <!-- Arrow 3 -> 4 -->
+  <line x1="727" y1="205" x2="753" y2="205" stroke="#7b9bff" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- STAGE 4: STORE & RECONCILE -->
+  <g transform="translate(757, 80)">
+    <rect width="168" height="255" rx="10" fill="url(#cardGrad)" stroke="#315ce7" stroke-width="1.2" stroke-opacity="0.6" />
+    <rect width="168" height="42" rx="10" fill="#161d2f" />
+    <rect y="32" width="168" height="10" fill="#161d2f" />
+    <line x1="0" y1="42" x2="168" y2="42" stroke="#315ce7" stroke-width="1" stroke-opacity="0.4" />
+
+    <rect x="10" y="10" width="58" height="20" rx="4" fill="#1e2942" />
+    <text x="39" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#7b9bff" font-family="monospace">STAGE 04</text>
+    <text x="76" y="25" font-size="13" font-weight="600" fill="#e8eaee">Store &amp; Judge</text>
+
+    <g transform="translate(12, 54)">
+      <text x="0" y="14" font-size="11" font-weight="600" fill="#7b9bff">Temporal Validity</text>
+      <text x="0" y="32" font-size="10" fill="#8b92a1" font-family="monospace">valid_from / valid_to</text>
+      <text x="0" y="47" font-size="10" fill="#8b92a1">Time-travel query support</text>
+
+      <line x1="0" y1="60" x2="144" y2="60" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="76" font-size="11" font-weight="600" fill="#e8eaee">Reconciliation Judge</text>
+      <text x="0" y="93" font-size="10" fill="#8b92a1">Arbitrates conflicting rules:</text>
+      <text x="0" y="108" font-size="9" fill="#4ade80" font-family="monospace">• supports (reinforces)</text>
+      <text x="0" y="121" font-size="9" fill="#fbbf24" font-family="monospace">• supersedes (replaces)</text>
+      <text x="0" y="134" font-size="9" fill="#f87171" font-family="monospace">• contradicts (flags)</text>
+
+      <line x1="0" y1="144" x2="144" y2="144" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="160" font-size="11" font-weight="600" fill="#e8eaee">Knowledge Graph</text>
+      <text x="0" y="174" font-size="10" fill="#8b92a1">NetworkX + MongoDB Atlas</text>
+    </g>
+    <rect x="12" y="232" width="144" height="15" rx="3" fill="#1b1e25" />
+    <text x="84" y="243" text-anchor="middle" font-size="9" fill="#a78bfa" font-weight="600">DYNAMIC DEDUPLICATION</text>
+  </g>
+
+  <!-- Arrow 4 -> 5 -->
+  <line x1="925" y1="205" x2="951" y2="205" stroke="#7b9bff" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- STAGE 5: SERVE & REUSE -->
+  <g transform="translate(955, 80)">
+    <rect width="152" height="255" rx="10" fill="url(#cardGrad)" stroke="#315ce7" stroke-width="1.2" stroke-opacity="0.6" />
+    <rect width="152" height="42" rx="10" fill="#161d2f" />
+    <rect y="32" width="152" height="10" fill="#161d2f" />
+    <line x1="0" y1="42" x2="152" y2="42" stroke="#315ce7" stroke-width="1" stroke-opacity="0.4" />
+
+    <rect x="10" y="10" width="58" height="20" rx="4" fill="#1e2942" />
+    <text x="39" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#7b9bff" font-family="monospace">STAGE 05</text>
+    <text x="76" y="25" font-size="13" font-weight="600" fill="#e8eaee">Serve Context</text>
+
+    <g transform="translate(12, 54)">
+      <text x="0" y="14" font-size="11" font-weight="600" fill="#7b9bff">MCP 2.0 Server</text>
+      <text x="0" y="32" font-size="10" fill="#8b92a1">Standard stdio interface</text>
+      <text x="0" y="47" font-size="10" fill="#8b92a1">get_context, list_rules</text>
+
+      <line x1="0" y1="60" x2="128" y2="60" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="76" font-size="11" font-weight="600" fill="#e8eaee">FastAPI &amp; SSE</text>
+      <text x="0" y="93" font-size="10" fill="#8b92a1">Sub-second retrieval</text>
+      <text x="0" y="108" font-size="10" fill="#8b92a1">Real-time live streams</text>
+
+      <line x1="0" y1="121" x2="128" y2="121" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="137" font-size="11" font-weight="600" fill="#4ade80">Ask-Before-Act</text>
+      <text x="0" y="154" font-size="10" fill="#8b92a1">Conditions verified</text>
+      <text x="0" y="169" font-size="10" fill="#8b92a1">before invasive actions</text>
+    </g>
+    <rect x="12" y="232" width="128" height="15" rx="3" fill="#1b1e25" />
+    <text x="76" y="243" text-anchor="middle" font-size="9" fill="#4ade80" font-weight="600">&lt; 15ms RETRIEVAL</text>
+  </g>
+
+  <!-- Arrow 5 -> Agents -->
+  <line x1="1107" y1="205" x2="1133" y2="205" stroke="#7b9bff" stroke-width="1.8" marker-end="url(#arrow)" />
+
+  <!-- CONSUMER: AUTONOMOUS AI AGENTS -->
+  <g transform="translate(1137, 80)">
+    <rect width="108" height="255" rx="10" fill="url(#accentCardGrad)" stroke="#4ade80" stroke-width="1.2" stroke-opacity="0.8" />
+    <rect width="108" height="42" rx="10" fill="#0d2319" />
+    <rect y="32" width="108" height="10" fill="#0d2319" />
+    <line x1="0" y1="42" x2="108" y2="42" stroke="#4ade80" stroke-width="1" stroke-opacity="0.4" />
+
+    <rect x="8" y="10" width="34" height="20" rx="4" fill="#052e16" />
+    <text x="25" y="24" text-anchor="middle" font-size="10" font-weight="700" fill="#4ade80" font-family="monospace">ACT</text>
+    <text x="48" y="25" font-size="12" font-weight="600" fill="#e8eaee">Agents</text>
+
+    <g transform="translate(10, 54)">
+      <text x="0" y="14" font-size="11" font-weight="600" fill="#4ade80">Autonomous</text>
+      <text x="0" y="28" font-size="11" font-weight="600" fill="#4ade80">Remediation</text>
+      <text x="0" y="47" font-size="9" fill="#8b92a1">Resolves 3 a.m.</text>
+      <text x="0" y="60" font-size="9" fill="#8b92a1">outages safely</text>
+
+      <line x1="0" y1="73" x2="88" y2="73" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="90" font-size="10" font-weight="600" fill="#e8eaee">Checks</text>
+      <text x="0" y="104" font-size="9" fill="#8b92a1">Telemetry vs</text>
+      <text x="0" y="117" font-size="9" fill="#8b92a1">human rules</text>
+
+      <line x1="0" y1="130" x2="88" y2="130" stroke="#262a33" stroke-width="1" />
+
+      <text x="0" y="147" font-size="10" font-weight="600" fill="#e8eaee">Executes</text>
+      <text x="0" y="161" font-size="9" fill="#7b9bff">bounce link</text>
+      <text x="0" y="174" font-size="9" fill="#f87171">skips reboot</text>
+    </g>
+    <rect x="8" y="232" width="92" height="15" rx="3" fill="#0d2319" />
+    <text x="54" y="243" text-anchor="middle" font-size="9" fill="#4ade80" font-weight="600">ZERO OUTAGE</text>
+  </g>
+
+  <!-- TOPOLOGY & INVENTORY (Bottom input into Stage 3) -->
+  <g transform="translate(565, 375)">
+    <rect width="162" height="95" rx="8" fill="#151821" stroke="#a78bfa" stroke-width="1.2" stroke-opacity="0.7" />
+    <rect width="162" height="28" rx="8" fill="#1d1b2e" />
+    <rect y="20" width="162" height="8" fill="#1d1b2e" />
+    <line x1="0" y1="28" x2="162" y2="28" stroke="#a78bfa" stroke-width="1" stroke-opacity="0.3" />
+
+    <text x="10" y="19" font-size="10" font-weight="700" fill="#a78bfa" font-family="monospace">INVENTORY</text>
+    <text x="80" y="19" font-size="11" font-weight="600" fill="#e8eaee">Topology Graph</text>
+
+    <text x="10" y="46" font-size="10" fill="#8b92a1">• 84 Network Elements &amp; Sites</text>
+    <text x="10" y="62" font-size="10" fill="#8b92a1">• Hardware Classes (TX-3000...)</text>
+    <text x="10" y="78" font-size="10" fill="#8b92a1">• Site barrier &amp; access rules</text>
+  </g>
+
+  <!-- Arrow Topology -> Stage 3 (pointing UP) -->
+  <line x1="646" y1="375" x2="646" y2="340" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#arrowUp)" />
+  <rect x="653" y="348" width="82" height="18" rx="4" fill="#15171c" stroke="#262a33" stroke-width="1" />
+  <text x="694" y="361" text-anchor="middle" font-size="9" fill="#a78bfa" font-weight="600">Binding Anchor</text>
+
+  <!-- FEEDBACK LOOP: Outcome feedback from Agents back to Stage 4 Store & Reconcile -->
+  <path d="M 1191 335 L 1191 435 Q 1191 445, 1181 445 L 851 445 Q 841 445, 841 435 L 841 340"
+        fill="none" stroke="#4ade80" stroke-width="1.8" stroke-dasharray="6,4" marker-end="url(#arrowFeedback)" />
+
+  <g transform="translate(865, 432)">
+    <rect x="0" y="0" width="300" height="26" rx="13" fill="#0d2319" stroke="#4ade80" stroke-width="1.2" />
+    <circle cx="14" cy="13" r="4" fill="#4ade80" />
+    <text x="26" y="17" font-size="11" font-weight="600" fill="#4ade80">Field Outcome Loop · Dynamic Trust Updates</text>
+  </g>
+</svg>
