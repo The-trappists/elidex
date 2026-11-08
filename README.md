@@ -4,23 +4,18 @@
 
 Built by the **The Trappists** team for the **Since AI Hackathon 2026** in Turku, Finland.
 
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
+<!-- TODO: add complete stack -->
+
 ## The challenge
 
 Elisa's challenge is **“Capturing and Linking Human-Generated Contextual Metadata for Autonomous Network Operations.”** Network specialists already share practical knowledge in chats and emails, but that knowledge is hard for an autonomous agent to find later as it is not made persistent through documentation. ElidEx captures the reusable rule or fact, binds it to network entities and a validity period, records its source and trust, and makes it available when a similar case comes up.
 
 The demo follows the challenge's SFP example: after a module swap, a link can look healthy while traffic counters stay at zero. The conversation contains a practical next step from an expert. The agent can retrieve that human advice on a similar case and cite the assertion it used.
 
-<!-- youtube demo video link -->
-![](https://youtu.be/?si=N57LCJnBAUnog-Dw)
-[![PEWDS](https://img.youtube.com/vi/I7IaqRJMi9w/0.jpg)](https://www.youtube.com/watch?v=I7IaqRJMi9w)
-
 The project focuses on **human knowledge and its reuse** to reduce professional's workload. Fault detection and root-cause analysis are outside the challenge scope. See [the challenge brief and scope checklist](docs/challenge.md) for details.
-
-## Stack
-
-[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Hackathon](https://img.shields.io/badge/Since%20AI-2026-7057ff)](https://sinceai.app/)
 
 ## Get started
 
