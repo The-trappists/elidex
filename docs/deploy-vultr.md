@@ -82,8 +82,11 @@ nano .env
 
 Set:
 
-- `LLM_API_KEY` (and the other LLM variables). Without a key the workbench runs in scripted mode.
-- `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_CHANNEL_ID` if you use the Slack bridge (see `docs/slack-setup.md`).
+- **LLM primary & fallback**: `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_JSON_MODE`, `LLM_TIMEOUT` (without an LLM key, the workbench runs in scripted mode). Optional fallback on rate limits: `LLM_FALLBACK_BASE_URL`, `LLM_FALLBACK_API_KEY`, `LLM_FALLBACK_MODEL`, `LLM_FALLBACK_JSON_MODE`.
+- **Critic role (loop v2)**: `LLM_CRITIC_BASE_URL`, `LLM_CRITIC_API_KEY`, `LLM_CRITIC_MODEL`, `LLM_CRITIC_JSON_MODE`, `LLM_CRITIC_REASONING_EFFORT`.
+- **Core pipeline**: `DEFAULT_THREAD_DATE`, `DEFAULT_EMAIL_TIME`, `MIN_CONFIDENCE`.
+- **Workbench & Slack**: `WORKBENCH_SIM_START`, `WORKBENCH_IDLE_SECONDS`, `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `SLACK_CHANNEL_ID` (see `docs/slack-setup.md`).
+- **Big dataset & vector search**: `MONGODB_URI`, `MONGODB_DB`, `TIGER_DATABASE_URL`, `EMBEDDING_MODEL` (see `docs/dataset.md`).
 - `DOMAIN`: without buying a domain, use `<server-ip>.sslip.io`, for example `203.0.113.7.sslip.io`. sslip.io resolves that name to the IP, and Caddy gets a real Let's Encrypt certificate for it. If you own a domain, point an A record at the IP and use it.
 - `BASIC_AUTH_USER`: for example `team`.
 - `BASIC_AUTH_HASH`: generate it, then paste it **between single quotes**:

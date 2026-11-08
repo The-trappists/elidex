@@ -99,6 +99,6 @@ class LLMExtractor:
 def make_extractor(use_llm: bool = False) -> Extractor:
     if use_llm:
         if not config.llm_configured():
-            raise RuntimeError("--llm needs LLM_BASE_URL, LLM_API_KEY and LLM_MODEL in .env")
+            raise RuntimeError("--llm needs LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
         return LLMExtractor()
     return CachedExtractor()

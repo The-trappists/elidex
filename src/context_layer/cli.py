@@ -143,7 +143,7 @@ def cmd_eval(args: argparse.Namespace) -> None:
     from .eval.kb import EVAL_OUT
 
     if args.extractor == "llm" and not config.llm_configured():
-        sys.exit("LLM not configured: set LLM_API_KEY and LLM_MODEL in .env (see .env.example), or use the default scripted extractor.")
+        sys.exit("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env (see .env.example), or use the default scripted extractor.")
     try:
         result = run_eval(args.extractor)
     except FileNotFoundError as e:
@@ -238,6 +238,14 @@ def cmd_llm_check(_: argparse.Namespace) -> None:
     from .llm_check import main as check
 
     check()
+
+
+def cmd_env_check(_: argparse.Namespace) -> None:
+    import runpy
+
+    script = config.ROOT / "scripts" / "check_env.py"
+    if script.is_file():
+        runpy.run_path(str(script), run_name="__main__")
 
 
 def cmd_dataset(args: argparse.Namespace) -> None:
@@ -539,6 +547,9 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("llm-check", help="test each configured LLM provider and JSON mode on Elisa's chat").set_defaults(
         func=cmd_llm_check
+    )
+    sub.add_parser("env-check", help="verify .env settings and dependencies before deploying").set_defaults(
+        func=cmd_env_check
     )
 
     args = p.parse_args(argv)

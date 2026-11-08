@@ -617,6 +617,7 @@ export const OBSERVABLE_FIELDS: Record<string, string> = {
   optical_levels: '"normal", "low" or "high"',
   traffic_counters: 'number, packets per second on the interface',
   alarms: '"active" or "cleared"',
+  firmware: 'string, element firmware version, e.g. "4.1" or "4.2"',
 }
 
 // ---------------------------------------------------------------- knowledge graph view (GET /graph)

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse
 
 from .. import config
 from . import loop_agents
@@ -113,18 +113,7 @@ def _static_response(dist: Path, path: str) -> FileResponse:
 
 
 def _serve_web(app: FastAPI) -> None:
-    """Serve the built UI with an SPA fallback, when web/dist exists; the product demo at /demo/."""
-    demo = Path(config.DEMO_DIST_DIR)
-    if demo.is_dir():
-
-        @app.get("/demo", include_in_schema=False)
-        async def demo_redirect():
-            return RedirectResponse("/demo/")
-
-        @app.get("/demo/{path:path}", include_in_schema=False)
-        async def demo_app(path: str):
-            return _static_response(demo, path)
-
+    """Serve the built UI with an SPA fallback, when web/dist exists."""
     dist = Path(config.WEB_DIST_DIR)
     if not dist.is_dir():
         return

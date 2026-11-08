@@ -48,11 +48,21 @@ def embed(texts: list[str], batch: int = 64) -> list[list[float]]:
     if not found:
         raise SystemExit("EMBEDDING_MODEL is set but no LLM provider is configured (LLM_* in .env).")
     p = found[0]
-    client = OpenAI(base_url=p.base_url or None, api_key=p.api_key, timeout=config.LLM_TIMEOUT)
+    api_key = p.api_key
+    model = config.EMBEDDING_MODEL
+    if p.is_vertex or ("aiplatform.googleapis.com" in (p.base_url or "")):
+        from . import google_auth
+
+        api_key = google_auth.get_google_access_token(
+            cred_val=config.GOOGLE_APPLICATION_CREDENTIALS,
+            root_dir=config.ROOT,
+        )
+        model = google_auth.format_vertex_model(model)
+    client = OpenAI(base_url=p.base_url or None, api_key=api_key, timeout=config.LLM_TIMEOUT)
     out: list[list[float]] = []
     for i in range(0, len(texts), batch):
         chunk = texts[i : i + batch]
-        resp = client.embeddings.create(model=config.EMBEDDING_MODEL, input=chunk)
+        resp = client.embeddings.create(model=model, input=chunk)
         out += ordered_vectors(resp.data, len(chunk))
     return out
 
