@@ -70,19 +70,23 @@ def label_key(a: ContextAssertion, label_of: dict[tuple[str, str, str], str]) ->
     return key(a.type, a.topic)
 
 
-def score_retrieval(kb: KnowledgeBase, spec: EvalSpec, label_of: dict, use_conditions: bool) -> RetrievalScore:
+def score_retrieval(kb: KnowledgeBase, spec: EvalSpec, label_of: dict, use_conditions: bool,
+                    use_relevance: bool = False) -> RetrievalScore:
+    """With `use_relevance`, what counts is what the agent acts on: the rules that match the case's problem (all of
+    them when none does). The case descriptions here are the labellers' notes, a hard test for relevance."""
     out = []
     for c in spec.cases:
         case = Case(id=c.id, title=c.why, entity_id=c.entity_id, at=c.at, description=c.why, observations=c.observations)
-        report = run_agent(kb.store, case, use_conditions=use_conditions)
-        got = sorted({label_key(h.assertion, label_of) for h in report.hits})
+        report = run_agent(kb.store, case, use_conditions=use_conditions, use_relevance=use_relevance)
+        got = sorted({label_key(h.assertion, label_of) for h in report.matching()})
         expected, acceptable = set(c.expect), set(c.acceptable)
         out.append(CaseScore(
             id=c.id, entity_id=c.entity_id, expected=sorted(expected), retrieved=got,
             found=sorted(expected & set(got)), missed=sorted(expected - set(got)),
             noise=sorted(set(got) - expected - acceptable),
         ))
-    return RetrievalScore("with conditions" if use_conditions else "plain", out)
+    mode = "with conditions" if use_conditions else "plain"
+    return RetrievalScore(mode + (" + relevance" if use_relevance else ""), out)
 
 
 def score_missing_observations(kb: KnowledgeBase, spec: EvalSpec, label_of: dict) -> dict:

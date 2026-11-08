@@ -63,13 +63,15 @@ def cmd_agent(args: argparse.Namespace) -> None:
     if args.case:
         cases = [c for c in cases if c.id == args.case] or sys.exit(f"Unknown case {args.case}")
     for case in cases:
-        r = run_agent(store, case, use_conditions=args.conditions, use_guard=args.guard, use_llm=args.llm)
+        r = run_agent(store, case, use_conditions=args.conditions, use_guard=args.guard, use_llm=args.llm, use_relevance=args.relevance)
         print("=" * 80)
         print(f"{case.id}: {case.title}\n  {case.entity_id} at {case.at:%Y-%m-%d %H:%M} · {case.description}")
         if case.observations:
             print(f"  observations: {case.observations}")
         print("-" * 80)
         print(r.recommendation)
+        for hit in r.hits if r.relevance else []:
+            print(f"  [{hit.assertion.id}] {hit.assertion.topic}: {r.relevance[hit.assertion.id].line()}")
         for hit, why in r.skipped:
             print(f"  (not applied: {hit.assertion.id}, {why})")
         if r.verdict:
@@ -432,6 +434,7 @@ def main(argv: list[str] | None = None) -> None:
     ag.add_argument("--conditions", action="store_true", help="MVP C: apply a rule only when its conditions hold")
     ag.add_argument("--guard", action="store_true", help="MVP B: check the planned action before acting")
     ag.add_argument("--llm", action="store_true", help="let the LLM phrase the plan")
+    ag.add_argument("--relevance", action="store_true", help="tag each rule with whether it is about the case's problem (mvp/relevance.py)")
     ag.set_defaults(func=cmd_agent)
 
     gr = sub.add_parser("graph", help="knowledge graph: stats, export, Neo4j push, provenance, experts...")

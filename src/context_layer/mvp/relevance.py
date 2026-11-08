@@ -167,6 +167,14 @@ def index_for(store) -> "RelevanceIndex":
     return index
 
 
+def assess_for(store, entity_id: str, assertions: Iterable[ContextAssertion], problem: str | None,
+               threshold: float = DEFAULT_THRESHOLD) -> dict[str, "RelevanceReport"]:
+    """Problem match of rules retrieved for an element: the element's site name is scope, so it is ignored."""
+    el = store.inventory.resolve_element(entity_id)
+    site = store.inventory.sites.get(el.site_id) if el and el.site_id else None
+    return index_for(store).assess_all(assertions, problem, threshold, ignore=[site.name] if site else [])
+
+
 class RelevanceIndex:
     """IDF of concepts over a set of rules (the knowledge base), plus each rule's concepts (cached)."""
 

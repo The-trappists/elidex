@@ -18,11 +18,33 @@ def _store() -> ContextStore:
 
 
 @mcp.tool()
-def get_context(entity_id: str, at: str | None = None) -> list[dict]:
+def get_context(entity_id: str, at: str | None = None, problem: str | None = None,
+                observations: dict[str, Any] | None = None) -> list[dict]:
     """Human knowledge (workarounds, site access...) valid at time `at` (ISO, default now) for a network
-    element or site, including what applies to its class and its site. Each item has source, trust and validity."""
-    hits = _store().get_context(entity_id, at=datetime.fromisoformat(at) if at else None)
-    return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})} for h in hits]
+    element or site, including what applies to its class and its site. Each item has source, trust and validity.
+
+    Pass `problem`, the symptom in words ("SFP replaced, link up, no traffic"), to get each item tagged
+    `problem_match` ("matches the problem" or "other problem", with the matched words), matching items first: act on
+    those. Pass `observations` (sfp_replaced, interface_status, optical_levels, traffic_counters, alarms) to get
+    `check_status` and `to_read` per item; rules whose checks fail on them are left out. Both add `track_record`."""
+    store = _store()
+    when = datetime.fromisoformat(at) if at else datetime.now()
+    if not problem and not observations:
+        hits = store.get_context(entity_id, at=when)
+        return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"})} for h in hits]
+    from .agent import Case, relevance_fields, run_agent
+    from .mvp import feedback
+
+    case = Case(id="mcp", title="mcp", entity_id=entity_id, at=when, description=problem or "", observations=observations or {})
+    report = run_agent(store, case, use_conditions=True, use_relevance=bool(problem))
+    out = []
+    for h in report.hits:
+        item = {"matched_via": h.matched_via, **h.assertion.model_dump(mode="json", exclude={"link_notes"}),
+                "track_record": feedback.track_record(h.assertion, when).to_dict()}
+        if (c := report.checks.get(h.assertion.id)) is not None:
+            item |= {"check_status": c.status, "to_read": c.to_read}
+        out.append(item | relevance_fields(report, h.assertion.id))
+    return out
 
 
 def _graph():

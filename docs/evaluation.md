@@ -280,7 +280,7 @@ Part 2 has 26 cases over 23 assertions. At that size, the knowledge about one el
 - An invalidation inherits the problem of the rules it closed ("3.9 fixes the leak" answers "node sluggish").
 - The LLM agent receives `problem_match` and `problem_match_score` next to `check_status`.
 - Threshold 0.4, chosen on the `dev` wording as the most accurate one that keeps at least 97% of the solutions.
-- Off by default: `run_agent(..., use_relevance=True)`.
+- Where it runs: `run_agent(..., use_relevance=True)` (off by default in the function). The workbench turns it on with the `use_relevance` setting (default on). MCP `get_context(entity_id, at, problem=..., observations=...)` and REST `/context/{entity_id}?problem=...` tag each rule with `problem_match` and list matching rules first. `ctx agent --relevance` prints one match line per rule.
 
 ## Fixes found by the scale run
 
@@ -348,4 +348,11 @@ Site access (key moved): 46 of 46 closed at the right time. Firmware: the 346 bu
 - **Word-based matcher.** A paraphrase that shares no concept with the rule is missed, and generic words ("alarm", "slow") still let some look-alike rules through. A dense embedding model (the team's `gemini-embedding-001`) could replace `concepts()` behind the same interface; that needs a human run with the key.
 - **Our own incident wordings.** Written before the matcher, split into tune and report wordings, but by the same people.
 - **Naive RAG on a 10% haystack sample** (300,000 threads plus all knowledge threads), which favours it.
-- **Default is off.** `use_relevance` is opt-in in `run_agent`; MCP and the workbench API do not pass it yet.
+- **Default variant only.** The workbench, MCP and REST use the default (fallback) variant. Strict is measured, not wired.
+
+## Not done yet (open for anyone)
+
+- Web UI: a `use_relevance` toggle on the Settings page (`web/src/pages/SettingsPage.tsx`, `types.ts`, fixtures), and a problem-match badge per rule in the Agent tester (`AgentTester.tsx`). The backend already sends `problem_match`, `problem_match_score` and `problem_matched`.
+- A `docs/decisions.md` entry if the team adopts relevance as the default for the demo.
+- The dense-embedding variant of `concepts()` (see Limits).
+- Re-run: `ctx dataset generate --scale large` then `ctx dataset eval out/dataset/large --split test` (about 20 min; results go to `out/eval/`).

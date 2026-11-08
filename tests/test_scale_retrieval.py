@@ -10,6 +10,7 @@ from context_layer.mvp import relevance
 from context_layer.mvp.lifecycle import fix_predates, reconcile
 from context_layer.store import ContextStore
 from context_layer.workbench.seed import load_seed
+from test_workbench_core import client  # noqa: F401 - pytest fixture
 
 SEED = load_seed()
 INV = Inventory(SEED.elements, SEED.sites)
@@ -174,3 +175,48 @@ def test_scale_eval_runs_and_relevance_beats_plain_retrieval(tiny_dataset):
     assert safe["solution_found"] >= new["solution_found"] and safe["precision"] > graph["precision"]
     assert r["lifecycle"]["closed_by_older_release"] == 0
     assert "Retrieval accuracy at company scale" in render(r)
+
+
+# ---------------------------------------------------------------- relevance on the agent surfaces
+
+
+def test_workbench_agent_run_tags_the_problem_and_can_be_switched_off(client):  # noqa: F811 - pytest fixture
+    from test_workbench_core import seeded
+
+    seeded(client)
+    body = {"entity_id": "TRN-042", "description": "Management port of TRN-042 is very slow after a power cycle."}
+    res = client.post("/api/agent/run", json=body).json()
+    assert all("problem_match" in h for h in res["hits"])
+    statuses = [h["problem_match"] for h in res["hits"]]
+    assert statuses[0] == "matches the problem"
+    assert statuses == sorted(statuses, key=lambda s: s == "other problem")  # matching rules first
+    client.put("/api/settings", json={"use_relevance": False})
+    assert client.get("/api/settings").json()["use_relevance"] is False
+    res = client.post("/api/agent/run", json=body).json()
+    assert not any("problem_match" in h for h in res["hits"])
+
+
+def test_mcp_get_context_takes_a_problem_and_observations(monkeypatch):
+    from context_layer import mcp_server
+
+    store = store_with((ERKKI, TH_ERKKI), (POWER, TH_POWER))
+    monkeypatch.setattr(mcp_server, "_store", lambda: store)
+    at = (T0 + timedelta(days=1)).isoformat()
+    plain = mcp_server.get_context("TRN-117", at=at)
+    assert len(plain) == 2 and "problem_match" not in plain[0]
+    tagged = mcp_server.get_context("TRN-117", at=at, problem="New transceiver fitted, link up, no traffic",
+                                    observations={"sfp_replaced": True})
+    assert tagged[0]["topic"] == "sfp-swap-forwarding-state" and tagged[0]["problem_match"] == "matches the problem"
+    assert tagged[1]["problem_match"] == "other problem" and "track_record" in tagged[0] and "check_status" in tagged[0]
+
+
+def test_rest_context_takes_a_problem(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from context_layer import api
+
+    store = store_with((ERKKI, TH_ERKKI), (POWER, TH_POWER))
+    monkeypatch.setattr(api, "get_store", lambda: store)
+    at = (T0 + timedelta(days=1)).isoformat()
+    rows = TestClient(api.app).get("/context/TRN-117", params={"at": at, "problem": "sync alarm after the power cycle"}).json()
+    assert rows[0]["topic"] == "tx3000-ptp-after-power-cycle" and rows[0]["problem_match"] == "matches the problem"

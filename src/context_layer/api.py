@@ -33,9 +33,20 @@ def assertions() -> list[dict]:
 
 
 @app.get("/context/{entity_id}")
-def context(entity_id: str, at: datetime | None = None, include_expired: bool = False) -> list[dict]:
-    hits = get_store().get_context(entity_id, at=at, include_expired=include_expired)
-    return [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in hits]
+def context(entity_id: str, at: datetime | None = None, include_expired: bool = False, problem: str | None = None) -> list[dict]:
+    """`problem`: the symptom in words; each item then gets `problem_match`, matching items first."""
+    store = get_store()
+    hits = store.get_context(entity_id, at=at, include_expired=include_expired)
+    rows = [{"matched_via": h.matched_via, **h.assertion.model_dump(mode="json")} for h in hits]
+    if problem:
+        from .mvp import relevance
+
+        rep = relevance.assess_for(store, entity_id, [h.assertion for h in hits], problem)
+        for row in rows:
+            r = rep[row["id"]]
+            row |= {"problem_match": r.status, "problem_match_score": r.score, "problem_matched": r.matched}
+        rows.sort(key=lambda row: row["problem_match"] == "other problem")
+    return rows
 
 
 @app.get("/freshness/{entity_id}")

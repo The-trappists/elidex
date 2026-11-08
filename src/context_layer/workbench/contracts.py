@@ -331,6 +331,7 @@ class Settings(BaseModel):
     use_judge: bool = True  # judge pass inside reconcile
     use_outcome_loop: bool = True  # outcome feedback on assertions
     use_dedupe: bool = True  # fold a near-duplicate new assertion into the older one (workbench/dedupe.py)
+    use_relevance: bool = True  # agent runs tag each rule with whether it is about the case's problem (mvp/relevance.py)
     # read-only, filled by the backend
     llm_configured: bool = False
     llm_model: str | None = None
@@ -496,6 +497,7 @@ class SettingsPatch(BaseModel):
     use_judge: bool | None = None
     use_outcome_loop: bool | None = None
     use_dedupe: bool | None = None
+    use_relevance: bool | None = None
 
 
 class LlmCheckResult(BaseModel):
