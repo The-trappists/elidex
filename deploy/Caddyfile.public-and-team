@@ -1,0 +1,31 @@
+# Two-host configuration:
+#   {$DOMAIN}      -> Public demo (open to all, workspace isolated)
+#   team.{$DOMAIN} -> Team dashboard (protected by BASIC_AUTH credentials)
+
+{$DOMAIN} {
+	@compressible not path /api/stream
+	encode @compressible {
+		zstd
+		gzip
+	}
+
+	reverse_proxy demo-app:8000 {
+		flush_interval -1
+	}
+}
+
+team.{$DOMAIN} {
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+
+	@compressible not path /api/stream
+	encode @compressible {
+		zstd
+		gzip
+	}
+
+	reverse_proxy app:8000 {
+		flush_interval -1
+	}
+}

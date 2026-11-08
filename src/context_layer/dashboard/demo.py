@@ -157,7 +157,7 @@ class WorkspaceManager:
         from . import loop_agents
         loop_agents.install_all()
         snapshot = os.getenv("DEMO_SNAPSHOT_FILE", "")
-        if snapshot:
+        if snapshot and Path(snapshot).is_file():
             self.snapshot = persistence.load_state(Path(snapshot))
             return
         # Build the small curated seed once without any live provider access.
