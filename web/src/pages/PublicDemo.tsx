@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpenCheck, FlaskConical, Menu, MessagesSquare, Network, Pause, Play, Sparkles, Waypoints, X } from 'lucide-react'
+import { ArrowRight, Menu, Network, Pause, Play, Waypoints, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
@@ -6,7 +6,7 @@ import { ConversationFeed } from '../components/company/ConversationFeed'
 import { PipelineLane } from '../components/pipeline/PipelineLane'
 import { Button, Drawer, Panel, withToast } from '../components/ui'
 import { cn } from '../lib/cn'
-import { refreshDemo, startLiveDemo, useDemo } from '../store/demo'
+import { refreshDemo, useDemo } from '../store/demo'
 import { useLive } from '../store/live'
 import AgentTesterPage from './AgentTesterPage'
 import ConversationsPage from './ConversationsPage'
@@ -15,18 +15,17 @@ import KnowledgePage from './KnowledgePage'
 import NetworkPage from './NetworkPage'
 import './PublicDemo.css'
 
+// Public demo navigation: only the guided company-day walkthrough and the two
+// visualizations. Conversations, knowledge and the agent tester stay routable
+// because the walkthrough links to them, but they are not advertised here.
 const NAV = [
   { to: '/company', label: 'Demo walkthrough', icon: Play },
-  { to: '/conversations', label: 'Conversations', icon: MessagesSquare },
-  { to: '/knowledge', label: 'Knowledge', icon: BookOpenCheck },
   { to: '/network', label: 'Network', icon: Network },
   { to: '/graph', label: 'Graph', icon: Waypoints },
-  { to: '/agent', label: 'Try a case', icon: FlaskConical },
 ]
 
 const SFP_CONVERSATION = '/conversations/elisa%2Fteams_chat.json?walkthrough=sfp'
 const SFP_AGENT = '/agent?walkthrough=sfp'
-const formatEuros = new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' })
 
 function sfpKnowledgeUrl(assertions: ReturnType<typeof useLive.getState>['assertions']) {
   const assertion = Object.values(assertions).find((item) => item.type === 'workaround' && item.sources.some((source) => source.file === 'elisa/teams_chat.json'))
@@ -49,7 +48,6 @@ function SfpWalkthrough() {
 }
 
 function DemoCompany() {
-  const status = useDemo((s) => s.status)
   const company = useLive((s) => s.company)
   const loadCompany = useLive((s) => s.loadCompany)
   const assertions = useLive((s) => s.assertions)
@@ -91,7 +89,7 @@ function DemoCompany() {
 
         <section id="company-day" className="demo-day-heading" aria-label="Simulation controls">
           <div className="min-w-0 flex-1 basis-64"><p className="demo-overline">Explore further · Company simulation</p><h2 className="mt-3 font-display text-2xl font-medium tracking-tight">Watch a scripted company day</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Play a prepared company day and watch advice become network memory. Pause whenever something catches your eye.</p></div>
-          <Button variant="primary" onClick={() => void startScripted()} loading={busy || (!company && !companyError)} disabled={status?.live_run_running || !company} icon={running ? <Pause size={15} /> : <Play size={15} />}>{running ? 'Pause day' : company?.status === 'paused' ? 'Resume day' : 'Play scripted day'}</Button>
+          <Button variant="primary" onClick={() => void startScripted()} loading={busy || (!company && !companyError)} disabled={!company} icon={running ? <Pause size={15} /> : <Play size={15} />}>{running ? 'Pause day' : company?.status === 'paused' ? 'Resume day' : 'Play scripted day'}</Button>
         </section>
         {companyError && <div role="alert" className="mb-4 flex flex-wrap items-center gap-3 text-sm text-bad">Could not load the company day.<Button onClick={() => void loadCompany()}>Try again</Button></div>}
         <p className="mb-4 text-xs text-muted"><span className="font-mono tabular-nums text-text">{Object.keys(threads).length}</span> conversations · <span className="font-mono tabular-nums text-text">{Object.keys(assertions).length}</span> knowledge items · {running ? 'Company day playing' : 'Ready to explore'}</p>
@@ -101,16 +99,6 @@ function DemoCompany() {
           <div className="h-[360px] min-w-0"><Panel className="h-full" title="Knowledge being captured"><PipelineLane limit={8} compact /></Panel></div>
         </div>
 
-        <section className="demo-live-trial" aria-label="Live AI trial">
-          <div className="min-w-0 flex-1 basis-64"><h2 className="flex items-center gap-2 text-sm font-semibold"><Sparkles size={16} className="text-accent" />Try one live AI run</h2><p className="mt-1 text-sm leading-relaxed text-muted">Generate and process one new conversation with the live models. After this run, your workspace returns to scripted mode and remains yours to explore.</p>
-            {status?.budget_limit_eur != null && status.budget_remaining_eur != null && <p className="mt-2 text-sm font-medium">Your live allowance: {formatEuros.format(status.budget_remaining_eur)} of {formatEuros.format(status.budget_limit_eur)} remaining.</p>}
-            {status?.global_budget_remaining_eur === 0 && <p className="mt-2 text-sm">The shared live trial budget has been used. The scripted demo remains available.</p>}
-            {status?.live_run_used && !status.live_run_running && <p className="mt-2 text-sm font-medium">Your live allowance has been used. Continue exploring the scripted demo.</p>}
-            {!status?.live_run_used && !status?.live_run_available && <p className="mt-2 text-sm">Live AI is unavailable right now. The scripted demo is ready to explore.</p>}
-            {status?.live_run_error && <p className="mt-2 text-sm text-bad" role="alert">{status.live_run_error}</p>}
-          </div>
-          <Button variant="primary" loading={status?.live_run_running} disabled={!status?.live_run_available || status.live_run_used} icon={<Sparkles size={15} />} onClick={() => void withToast(startLiveDemo)}>{status?.live_run_running ? 'Live run in progress…' : status?.live_run_used ? 'Live run used' : 'Start my live run'}</Button>
-        </section>
         <p className="demo-footer">Built for Elisa's challenge at Since AI 2026. All conversations and network data here are demo material. Changes stay in your workspace.</p>
       </div>
     </div>
@@ -120,22 +108,20 @@ function DemoCompany() {
 export default function PublicDemo() {
   const ready = useLive((s) => s.ready)
   const connection = useLive((s) => s.connection)
-  const status = useDemo((s) => s.status)
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname, search } = useLocation()
   useEffect(() => { setMenuOpen(false) }, [pathname])
   useEffect(() => {
     const refresh = () => { void refreshDemo().catch(() => undefined) }
     window.addEventListener('focus', refresh)
-    const timer = status?.live_run_running ? window.setInterval(refresh, 2000) : undefined
-    return () => { window.removeEventListener('focus', refresh); window.clearInterval(timer) }
-  }, [status?.live_run_running])
+    return () => { window.removeEventListener('focus', refresh) }
+  }, [])
   const navLinks = NAV.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} onClick={() => setMenuOpen(false)} className={({ isActive }) => cn('demo-nav-link', isActive && 'is-active')}><Icon size={15} />{label}</NavLink>)
   return (
     <div className="public-demo flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-bg">
       <a href="#demo-content" className="skip-link">Skip to demo</a>
       <header className="demo-header">
-        <div className="demo-brand-row"><Link to="/" aria-label="ElidEx home" title="Back to the homepage" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight"><img src="/elidex-logo.png" alt="" className="size-8 object-contain" /><span>Elid<span className="text-accent">Ex</span></span></Link><span className="demo-session" role="status"><span className={cn('size-1.5 shrink-0 rounded-full', connection === 'live' ? 'bg-ok' : 'bg-warn')} />{connection === 'live' ? 'Your private workspace' : connection === 'offline' ? 'Reconnecting…' : 'Connecting…'}<span className="hidden sm:inline"> · {status?.live_run_running ? 'Live AI run' : 'Scripted mode'}</span></span><button className="demo-menu-button" type="button" aria-expanded={menuOpen} aria-controls="demo-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <X size={18} /> : <Menu size={18} />}<span className="sr-only">{menuOpen ? 'Close navigation' : 'Open navigation'}</span></button></div>
+        <div className="demo-brand-row"><Link to="/" aria-label="ElidEx home" title="Back to the homepage" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight"><img src="/elidex-logo.png" alt="" className="size-8 object-contain" /><span>Elid<span className="text-accent">Ex</span></span></Link><span className="demo-session" role="status"><span className={cn('size-1.5 shrink-0 rounded-full', connection === 'live' ? 'bg-ok' : 'bg-warn')} />{connection === 'live' ? 'Your private workspace' : connection === 'offline' ? 'Reconnecting…' : 'Connecting…'}<span className="hidden sm:inline"> · Scripted mode</span></span><button className="demo-menu-button" type="button" aria-expanded={menuOpen} aria-controls="demo-mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <X size={18} /> : <Menu size={18} />}<span className="sr-only">{menuOpen ? 'Close navigation' : 'Open navigation'}</span></button></div>
         <nav aria-label="Demo" className="demo-navigation">{navLinks}</nav>
       </header>
       <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Explore the demo" side="left" width="max-w-xs"><nav id="demo-mobile-navigation" aria-label="Demo mobile" className="demo-drawer-navigation">{navLinks}</nav></Drawer>

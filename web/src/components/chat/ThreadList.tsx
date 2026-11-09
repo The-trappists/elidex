@@ -83,7 +83,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
           <EmptyState
             icon={<MessageSquare size={28} />}
             title={Object.keys(threadsMap).length ? 'No thread matches the filters' : 'No conversations yet'}
-            hint={publicDemo ? 'Play the scripted day from Try the demo.' : 'Run a scenario from Data, or start a thread by hand.'}
+            hint={publicDemo ? 'Play the scripted day from the Demo walkthrough.' : 'Run a scenario from Data, or start a thread by hand.'}
           />
         ) : (
           threads.map((t) => {

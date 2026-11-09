@@ -13,10 +13,12 @@ import { FilterMenu, Input, Select, Tabs, Toggle } from '../components/ui'
 import { TRUST_STYLE, TYPE_STYLE } from '../lib/semantic'
 import { useSimNow } from '../lib/useNow'
 import { useLive } from '../store/live'
+import { useDemo } from '../store/demo'
 
 type Tab = 'table' | 'timeline'
 
 export default function KnowledgePage() {
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
   const assertions = useLive((s) => s.assertions)
   const threads = useLive((s) => s.threads)
   const now = useSimNow(30_000)
@@ -70,7 +72,7 @@ export default function KnowledgePage() {
   return (
     <div className="flex h-full flex-col">
       <div className="shrink-0 [@media(max-height:700px)]:hidden">
-        <PageIntro title="What the network remembers" description="Find advice, check its source and validity, or open the Agent tester to try it on a case." />
+        <PageIntro title="What the network remembers" description="Find advice, check its source and validity, then apply it to a case." />
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-line bg-surface px-3 py-2 sm:flex md:px-4">
         <Tabs<Tab>
@@ -90,7 +92,7 @@ export default function KnowledgePage() {
         <FilterMenu className="col-start-2 row-start-2 min-[1366px]:hidden" count={[type, trust, thread].filter(Boolean).length + (validNow ? 1 : 0)}>{filterControls('')}</FilterMenu>
         <div className="col-start-2 row-start-1 ml-auto flex shrink-0 items-center gap-2">
           <MergesBadge />
-          <ExportMenu />
+          {!publicDemo && <ExportMenu />}
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto bg-bg">

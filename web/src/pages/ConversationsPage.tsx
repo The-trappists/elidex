@@ -118,9 +118,11 @@ export default function ConversationsPage() {
                 >
                   Process now
                 </Button>}
-                <a href={api.exportTranscriptUrl(thread.id)} download title="Export transcript">
-                  <Button size="sm" variant="ghost" aria-label="Export transcript" icon={<Download size={14} />} />
-                </a>
+                {!publicDemo && (
+                  <a href={api.exportTranscriptUrl(thread.id)} download title="Export transcript">
+                    <Button size="sm" variant="ghost" aria-label="Export transcript" icon={<Download size={14} />} />
+                  </a>
+                )}
                 {!publicDemo && <Button
                   size="sm"
                   variant="ghost"
