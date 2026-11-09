@@ -124,7 +124,16 @@ uv run ctx context TRN-117 --at 2026-10-20T08:00
 uv run ctx agent --conditions --guard
 ```
 
-### 2. Launch the Web Dashboard
+### 2. Try the scripted demo (no API keys)
+One command runs the whole walkthrough offline: it replays cached extractions over `data/elisa` + `data/synthetic`, shows the TRN-042 workaround captured from the Teams chat, follows the same rule to TRN-117 through the element class, and shows the Ask-Before-Act guard turning a planned reboot into the bounce-first advice.
+
+```bash
+uv run ctx demo
+```
+
+No `.env`, `LLM_API_KEY`, Google credentials or Slack tokens are needed, and no network call is made. The same steps are available one by one with `uv run ctx run --lifecycle`, `uv run ctx context TRN-117 --at 2026-10-20T07:50` and `uv run ctx agent --conditions --guard`. The dashboard and the company day also start keyless; when no LLM is configured, the endless day generates chats by recombining the hand-written scenarios offline.
+
+### 3. Launch the Web Dashboard
 Build the frontend and launch the unified FastAPI server:
 
 ```bash
@@ -134,9 +143,9 @@ npm run build
 cd ..
 uv run ctx dashboard
 ```
-Open **[http://127.0.0.1:8010](http://127.0.0.1:8010)** in your browser.
+Open **[http://127.0.0.1:8010](http://127.0.0.1:8010)** in your browser. Change the port with `uv run ctx dashboard --port 9000` or `DASHBOARD_PORT=9000` in `.env`.
 
-### 3. Connect Live Models & Integrations (Optional)
+### 4. Connect Live Models & Integrations (Optional)
 To use live LLMs (Gemini, Vertex AI, Mistral) or the Slack bridge, copy `.env.example` to `.env` and fill in your keys:
 ```bash
 cp .env.example .env

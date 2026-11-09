@@ -8,6 +8,18 @@ The demo opens on a task-focused walkthrough, separate from the marketing homepa
 
 Each workspace starts with preloaded synthetic data. Scripted exploration does not call model APIs or connect to Slack. A visitor can spend one bounded live scenario allowance, then continue in scripted mode. This is a browser allowance, not a verified-person allowance: clearing cookies can create another workspace.
 
+## Local keyless check
+
+The public demo, the team dashboard and the scripted walkthrough all run with no `.env` and no model keys:
+
+```bash
+uv run ctx demo                    # deterministic walkthrough, no server
+PUBLIC_DEMO=1 uv run ctx dashboard # public demo on http://127.0.0.1:8010
+uv run ctx dashboard               # team test bench on http://127.0.0.1:8010
+```
+
+In scripted mode every workspace forces `extractor_mode="scripted"`, Slack and the critic stay off, and the company day recombines the hand-written scenarios offline when no LLM is configured. Live AI stays disabled unless `DEMO_LIVE_ENABLED=1` and a provider is configured.
+
 ## Prepare and deploy (human operator)
 
 After the PR is merged, deploy from `main`. Keep the existing private `.env` and certificate volumes. `DOMAIN` must be the public hostname only (`209.250.242.163.sslip.io`), without a scheme or a second hostname. `BASIC_AUTH_USER` and `BASIC_AUTH_HASH` protect only `team.DOMAIN`. The overlay explicitly sets `PUBLIC_DEMO=0` for the team app and `PUBLIC_DEMO=1` for the public app.

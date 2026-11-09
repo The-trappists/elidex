@@ -1,5 +1,5 @@
-"""Command line: `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx patterns`, `ctx serve`, `ctx mcp`, `ctx dashboard`,
-`ctx llm-check`."""
+"""Command line: `ctx demo`, `ctx run`, `ctx context`, `ctx agent`, `ctx graph`, `ctx patterns`, `ctx serve`, `ctx mcp`,
+`ctx dashboard`, `ctx llm-check`."""
 
 import argparse
 import json
@@ -81,6 +81,62 @@ def cmd_agent(args: argparse.Namespace) -> None:
             for reason in r.verdict.reasons:
                 print(f"  why: {reason}")
     print("=" * 80)
+
+
+def cmd_demo(_: argparse.Namespace) -> None:
+    """Deterministic, offline walkthrough: pipeline -> context -> guarded agent. No API key, no network."""
+    from .agent import describe, load_cases, run_agent
+    from .pipeline import build_store
+
+    at = datetime(2026, 10, 20, 7, 50)  # the SFP cases in data/synthetic/cases.json
+    later = datetime(2026, 11, 9, 12, 0)  # after the firmware 4.2 rollout
+    print("ElidEx scripted demo: no API key, no network, same output every run.\n")
+
+    print("1/4  Pipeline: listen -> understand -> link -> store (scripted extractor, lifecycle on)")
+    store, report = build_store(use_llm=False, lifecycle=True)
+    print(f"     Threads read: {len(report.threads)}")
+    for thread in report.threads:
+        print(f"       - {thread}")
+    print(f"     Items extracted: {report.extracted} · assertions stored: {report.stored} · merged: {report.merged}")
+    for line in report.events:
+        print(f"       event: {line}")
+    print("     The TRN-042 chat and the follow-up email became one assertion (ctx_0002).")
+
+    print(f"\n2/4  What humans know about TRN-042 at {at:%Y-%m-%d %H:%M} (the SFP chat)")
+    hits = store.get_context("TRN-042", at=at)
+    if not hits:
+        print("     No context.")
+    for hit in hits:
+        print(describe(hit) + "\n")
+    print("     ^ captured from elisa/teams_chat.json (Erkki's workaround), confirmed by elisa/email.txt.")
+
+    print(f"\n3/4  What humans know about TRN-117 at {at:%Y-%m-%d %H:%M} (same rule, another old unit)")
+    hits = store.get_context("TRN-117", at=at)
+    if not hits:
+        print("     No context.")
+    for hit in hits:
+        print(describe(hit) + "\n")
+    print("     The rule reaches TRN-117 through the element class, not a hard-coded ID.")
+    print(f"\n     Lifecycle: firmware 4.2 closed that rule on 2026-10-30 (ctx_0003). At {later:%Y-%m-%d}:")
+    for hit in store.get_context("TRN-117", at=later):
+        print(describe(hit) + "\n")
+
+    print("4/4  Agent on the TRN-117 SFP case, with the Ask-Before-Act guard")
+    case = next((c for c in load_cases() if c.id == "similar-old-node"), None)
+    if case is None:
+        sys.exit("Demo case 'similar-old-node' is missing from data/synthetic/cases.json.")
+    result = run_agent(store, case, use_conditions=True, use_guard=True)
+    print(f"     Case {case.id}: {case.title}")
+    print(f"     {case.entity_id} at {case.at:%Y-%m-%d %H:%M} · {case.description}")
+    print(f"     Recommendation: {result.recommendation}")
+    if result.verdict:
+        print(f"     Planned action: {result.verdict.action}")
+        print(f"     Guard: {result.verdict.decision.upper()}")
+        for i, step in enumerate(result.verdict.steps, 1):
+            print(f"       {i}. {step}")
+        for reason in result.verdict.reasons:
+            print(f"       why: {reason}")
+        print("     The guard turned the destructive reboot into the bounce-first advice from human knowledge.")
 
 
 def cmd_graph(args: argparse.Namespace) -> None:
@@ -445,6 +501,9 @@ def main(argv: list[str] | None = None) -> None:
     ag.add_argument("--relevance", action="store_true", help="tag each rule with whether it is about the case's problem (mvp/relevance.py)")
     ag.set_defaults(func=cmd_agent)
 
+    dm = sub.add_parser("demo", help="offline scripted walkthrough: pipeline, context and guarded agent (no API key)")
+    dm.set_defaults(func=cmd_demo)
+
     gr = sub.add_parser("graph", help="knowledge graph: stats, export, Neo4j push, provenance, experts...")
     gsub = gr.add_subparsers(dest="graph_cmd", required=True)
     gsub.add_parser("stats", help="node and edge counts by type")
@@ -562,7 +621,7 @@ def main(argv: list[str] | None = None) -> None:
 
     wb = sub.add_parser("dashboard", help="real-time test bench: API + web UI (docs/dashboard.md)")
     wb.add_argument("--host", default="127.0.0.1")
-    wb.add_argument("--port", type=int, default=8010)
+    wb.add_argument("--port", type=int, default=config.DASHBOARD_PORT, help="default: DASHBOARD_PORT in .env, else 8010")
     wb.add_argument("--reload", action="store_true", help="restart on code changes (dev)")
     wb.set_defaults(func=cmd_dashboard)
 
