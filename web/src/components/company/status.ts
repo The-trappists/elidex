@@ -17,3 +17,17 @@ export const fmtHM = (iso: string | null | undefined) => (iso ? format(new Date(
 /** Calls summed over the cycles: the store keeps only the newest 200 calls, so calls.length plateaus. */
 export const callCount = (c: Pick<CompanyState, 'calls' | 'cycles'>) => Math.max(c.calls.length, c.cycles.reduce((n, x) => n + x.agent_call_ids.length, 0))
 
+/** One health source for the company board and the network overlay: the latest cycle counts win, otherwise the
+ * element list minus the non-healthy entries of `c.health`. */
+export function healthCounts(c: Pick<CompanyState, 'cycles' | 'health'>, elements: readonly unknown[]): Record<HealthStatus, number> {
+  const counts: Record<HealthStatus, number> = { healthy: elements.length, degraded: 0, down: 0, recovering: 0 }
+  for (const h of c.health) {
+    if (h.status === 'healthy') continue
+    counts[h.status] += 1
+    counts.healthy = Math.max(0, counts.healthy - 1)
+  }
+  const latest = c.cycles[c.cycles.length - 1]?.health_counts
+  if (latest) for (const k of Object.keys(counts) as HealthStatus[]) if (typeof latest[k] === 'number') counts[k] = latest[k]
+  return counts
+}
+

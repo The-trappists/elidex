@@ -44,6 +44,7 @@ export function Stat({
   suffix,
   text,
   compact,
+  wrapLabel,
 }: {
   icon: ReactNode
   label: string
@@ -56,6 +57,8 @@ export function Stat({
   text?: string
   /** One small pill (icon, number, label) instead of a tile, for short or narrow screens. */
   compact?: boolean
+  /** Let the label wrap instead of truncating, for narrow public-demo tiles. */
+  wrapLabel?: boolean
 }) {
   const t = TONES[tone]
   if (compact)
@@ -87,7 +90,7 @@ export function Stat({
           {text ?? <AnimatedNumber value={value} />}
           {!text && suffix && <span className="ml-0.5 text-sm font-medium text-muted">{suffix}</span>}
         </span>
-        <span className="mt-1.5 block truncate text-xs font-medium">{label}</span>
+        <span className={cn('mt-1.5 block text-xs font-medium', wrapLabel ? 'leading-snug' : 'truncate')}>{label}</span>
         {hint && <span className="block truncate text-xs text-muted">{hint}</span>}
       </span>
     </button>

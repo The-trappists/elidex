@@ -1,9 +1,10 @@
 import { format } from 'date-fns'
 import { Pause, Play, Square } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { companyActions } from './actions'
 import type { CompanyState } from '../../api/types'
 import { useSimNow } from '../../lib/useNow'
+import { useConnections, useLiveAiReady } from '../../store/connections'
 import { useLive } from '../../store/live'
 import { cn } from '../../lib/cn'
 import { Badge, Button, FilterMenu, Modal, Select, Toggle, withToast } from '../ui'
@@ -23,9 +24,11 @@ const STATUS_BADGE: Record<CompanyState['status'], { label: string; cls: string 
   paused: { label: 'Paused', cls: 'bg-warn/15 text-warn' },
   finished: { label: 'Day finished', cls: 'bg-surface-2 text-muted' },
 }
+/** Public demo: the backend clamps a 0-minute day to 1 minute, so the scripted day is sent explicitly. */
+const DEMO_START = { day_minutes: 120, speed: 120, reset: 'keep', use_llm: false, clear_archive: false } as const
 
 /** Remaining sim time as mm:ss inside a progress ring. */
-function SyncRing({ remainingS, totalS }: { remainingS: number | null; totalS: number }) {
+function SyncRing({ remainingS, totalS, small }: { remainingS: number | null; totalS: number; small?: boolean }) {
   const r = 20
   const c = 2 * Math.PI * r
   const frac = remainingS == null ? 0 : Math.max(0, Math.min(1, remainingS / totalS))
@@ -33,17 +36,15 @@ function SyncRing({ remainingS, totalS }: { remainingS: number | null; totalS: n
   const ss = remainingS == null ? '--' : String(Math.floor(remainingS % 60)).padStart(2, '0')
   return (
     <div className="flex items-center gap-2.5" title="Sim time until the autonomous system takes the next knowledge package">
-      <div className="relative size-12">
-        <svg viewBox="0 0 48 48" className="size-12 -rotate-90">
+      <div className={cn('relative', small ? 'size-8' : 'size-12')}>
+        <svg viewBox="0 0 48 48" className={cn(small ? 'size-8' : 'size-12', '-rotate-90')}>
           <circle cx="24" cy="24" r={r} fill="none" stroke="var(--surface-3)" strokeWidth="4" />
           <circle cx="24" cy="24" r={r} fill="none" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - frac)} className="transition-[stroke-dashoffset] duration-700 ease-linear" />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center font-mono text-[11px] font-medium tabular-nums">{mm}:{ss}</span>
+        <span className={cn('absolute inset-0 flex items-center justify-center font-mono tabular-nums', small ? 'hidden' : 'text-[11px] font-medium')}>{mm}:{ss}</span>
       </div>
-      <div className="hidden text-xs leading-tight text-muted sm:block">
-        Next sync
-        <br />
-        in sim time
+      <div className={cn('text-xs leading-tight text-muted', small ? 'tabular-nums' : 'hidden sm:block')}>
+        {small ? <>Next check {mm}:{ss}</> : <>Next sync<br />in sim time</>}
       </div>
     </div>
   )
@@ -128,8 +129,30 @@ function DayTimeline({ c, nowMs, compact }: { c: CompanyState; nowMs: number | n
   )
 }
 
-export function CompanyHeader({ c, compact }: { c: CompanyState; compact?: boolean }) {
+/** Public demo: a 4 px progress bar instead of the tick-by-tick timeline. */
+function DemoProgress({ c, nowMs }: { c: CompanyState; nowMs: number | null }) {
+  const start = c.started_at ? new Date(c.started_at).getTime() : null
+  const end = c.ends_at ? new Date(c.ends_at).getTime() : null
+  const pct = start && end && nowMs ? Math.max(0, Math.min(100, ((nowMs - start) / (end - start)) * 100)) : c.status === 'finished' ? 100 : 0
+  const started = c.timeline.filter((e) => e.started).length
+  return (
+    <div className="mt-1.5">
+      <div className="h-1 overflow-hidden rounded-full bg-surface-3" role="img" aria-label={`Day progress ${Math.round(pct)}%`}>
+        <div className="h-full rounded-full bg-accent transition-[width] duration-700 ease-linear" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="mt-1.5 flex justify-between gap-3 text-[11px] tabular-nums text-muted">
+        <span>{fmtHM(c.started_at)}</span>
+        <span>{c.timeline.length ? `${started} of ${c.timeline.length} conversations` : ''}</span>
+        <span>{fmtHM(c.ends_at)}</span>
+      </div>
+    </div>
+  )
+}
+
+export function CompanyHeader({ c, compact, publicDemo }: { c: CompanyState; compact?: boolean; publicDemo?: boolean }) {
   const now = useSimNow(500)
+  const liveAi = useLiveAiReady()
+  const refreshConnections = useConnections((state) => state.refresh)
   const [speed, setSpeed] = useState(120)
   const [dayMinutes, setDayMinutes] = useState(0)
   const [fresh, setFresh] = useState(true)
@@ -138,6 +161,10 @@ export function CompanyHeader({ c, compact }: { c: CompanyState; compact?: boole
   const [confirmStop, setConfirmStop] = useState(false)
   const editable = c.status === 'idle' || c.status === 'finished'
   const st = STATUS_BADGE[c.status]
+
+  useEffect(() => {
+    void refreshConnections(true)
+  }, [refreshConnections])
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true)
@@ -148,10 +175,29 @@ export function CompanyHeader({ c, compact }: { c: CompanyState; compact?: boole
       setBusy(false)
     }
   }
-  const start = () => run(() => companyActions.start({ speed, day_minutes: dayMinutes, reset: fresh ? 'empty' : 'keep', use_llm: llm }))
+  const start = () => run(() => companyActions.start(publicDemo ? { ...DEMO_START, use_llm: liveAi } : { speed, day_minutes: dayMinutes, reset: fresh ? 'empty' : 'keep', use_llm: llm }))
 
   const remaining = c.next_cycle_at && now && c.status === 'running' ? Math.max(0, (new Date(c.next_cycle_at).getTime() - now.getTime()) / 1000) : null
   const clock = now ? now.toLocaleTimeString('en-GB') : '--:--:--'
+
+  // Public demo: one compact control row, so the story and the graph keep the height.
+  if (publicDemo)
+    return (
+      <div className="shrink-0 rounded-lg border border-line bg-surface px-3 py-1.5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h1 className="text-xs font-medium text-muted">Company day</h1>
+          <Badge className={st.cls}>{st.label}</Badge>
+          <div role="timer" aria-label="Simulated clock" className="font-mono text-xl font-semibold leading-none tracking-tight tabular-nums">{clock}</div>
+          <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} small />
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {editable && <Button icon={<Play size={15} />} onClick={start} loading={busy}>{c.status === 'finished' ? 'Play again' : 'Play day'}</Button>}
+            {c.status === 'running' && <Button icon={<Pause size={15} />} onClick={() => run(companyActions.pause)} loading={busy}>Pause</Button>}
+            {c.status === 'paused' && <Button variant="primary" icon={<Play size={15} />} onClick={() => run(companyActions.resume)} loading={busy}>Resume</Button>}
+          </div>
+        </div>
+        {c.status !== 'idle' && <DemoProgress c={c} nowMs={now?.getTime() ?? null} />}
+      </div>
+    )
 
   const options = (
     <>
@@ -187,7 +233,7 @@ export function CompanyHeader({ c, compact }: { c: CompanyState; compact?: boole
           <div role="timer" aria-label="Simulated clock" className="font-mono text-2xl font-semibold sm:text-3xl leading-none tracking-tight tabular-nums">{clock}</div>
         </div>
         <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {editable && <Button variant="primary" icon={<Play size={15} />} onClick={start} loading={busy}>{c.status === 'finished' ? 'Run another day' : 'Start the day'}</Button>}
           {c.status === 'running' && <Button icon={<Pause size={15} />} onClick={() => run(companyActions.pause)} loading={busy}>Pause</Button>}
           {c.status === 'paused' && <Button variant="primary" icon={<Play size={15} />} onClick={() => run(companyActions.resume)} loading={busy}>Resume</Button>}

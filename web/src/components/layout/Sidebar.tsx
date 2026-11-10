@@ -1,4 +1,4 @@
-import { Menu, PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, FlaskConical, GitBranch, LogOut, MessagesSquare, Network, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
+import { Menu, PanelTop, Activity, Building2, BookOpenCheck, Bot, Database, Eye, FlaskConical, GitBranch, LogOut, MessagesSquare, Network, Plug, Radar, Settings as SettingsIcon, Waypoints, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Drawer, IconButton } from '../ui'
@@ -44,6 +44,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: '/pipeline', label: 'Architecture', title: 'Pipeline architecture', subtitle: 'Technical breakdown and justification: from Slack to the multi-layer Knowledge Graph', icon: GitBranch },
       { to: '/llm', label: 'AI activity', title: 'AI activity', subtitle: 'Every request sent to the language model', icon: Bot },
       { to: '/data', label: 'Data', title: 'Data', subtitle: 'Equipment, people and test scenarios', icon: Database },
+      { to: '/connections', label: 'Connections', title: 'Connections', subtitle: 'Connect an AI provider and optionally Slack; the built-in demo needs no setup', icon: Plug },
       { to: '/settings', label: 'Settings', title: 'Settings', subtitle: 'How conversations are turned into knowledge', icon: SettingsIcon },
     ],
   },

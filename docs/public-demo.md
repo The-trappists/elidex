@@ -4,9 +4,23 @@ The deployment uses one checkout of `main`, one Compose project and three contai
 
 The full marketing homepage stays at `/`, using the homepage from `main`. It does not allocate a workspace or depend on API availability. The visitor enters the private demo through its dashboard links; the workspace logo returns to the homepage.
 
-The demo opens on a task-focused walkthrough, separate from the marketing homepage: read the original TRN-042 SFP conversation, inspect that conversation's captured workaround, then run a prepared TRN-117 case with observations and a planned reboot. Explicit next-step links preserve the walkthrough across screens. This path is scripted and does not consume the live allowance. Company simulation and the single live trial remain available for further exploration.
+The demo opens on a task-focused walkthrough, separate from the marketing homepage. The company screen shows a compact evidence path — TRN-042 optical-module replacement → Erkki's captured rule → TRN-117 safer plan — with one primary **Start the SFP case** action; the company simulation is the secondary, fully working action. The walkthrough then reads the original TRN-042 conversation, inspects the captured workaround, and runs a prepared TRN-117 case. The agent step presents the observed symptoms and the planned reboot up front, keeps entity, preset and observation editing behind an optional disclosure, and always runs the scripted case even when a visitor has connected live AI. On success the recommendation is focused and scrolled into view (instantly under reduced motion), with knowledge, sources and the guard verdict below it. Explicit next-step links preserve the walkthrough across screens. This path is scripted and does not consume the live allowance. Company simulation and the single live trial remain available for further exploration.
+
+The public knowledge graph lists captured knowledge before people, equipment and other objects, with an accurate **Browse the map** heading and stable grouping. Public navigation and walkthrough text are at least 14 px; utility metadata is 11–12 px. The graph canvas, search, selection and timeline keep their existing behavior.
 
 Each workspace starts with preloaded synthetic data. Scripted exploration does not call model APIs or connect to Slack. A visitor can spend one bounded live scenario allowance, then continue in scripted mode. This is a browser allowance, not a verified-person allowance: clearing cookies can create another workspace.
+
+## Local keyless check
+
+The public demo, the team dashboard and the scripted walkthrough all run with no `.env` and no model keys:
+
+```bash
+uv run ctx demo                    # deterministic walkthrough, no server
+PUBLIC_DEMO=1 uv run ctx dashboard # public demo on http://127.0.0.1:8010
+uv run ctx dashboard               # team test bench on http://127.0.0.1:8010
+```
+
+In scripted mode every workspace forces `extractor_mode="scripted"`, Slack and the critic stay off, and the company day recombines the hand-written scenarios offline when no LLM is configured. Live AI stays disabled unless `DEMO_LIVE_ENABLED=1` and a provider is configured.
 
 ## Prepare and deploy (human operator)
 

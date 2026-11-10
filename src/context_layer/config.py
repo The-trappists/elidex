@@ -93,6 +93,19 @@ def is_google_vertex_primary() -> bool:
 
 
 def llm_configured() -> bool:
+    # A workspace connection overrides the deployment configuration. A public workspace that
+    # used a personal key never falls back to the deployment key after disconnect.
+    try:
+        from .connections import current_connection
+
+        registry = current_connection()
+        if registry is not None:
+            if registry.ai is not None:
+                return True
+            if not registry.allow_server_ai:
+                return False
+    except Exception:  # noqa: BLE001 - configuration must stay importable on its own
+        pass
     has_auth = _key_set(LLM_API_KEY) or google_auth_configured()
     return has_auth and bool(LLM_MODEL)
 
@@ -146,6 +159,7 @@ DASHBOARD_LLM_CALLS_FILE = DASHBOARD_STATE_FILE.parent / "llm_calls.jsonl"
 DASHBOARD_LLM_CACHE_FILE = DASHBOARD_STATE_FILE.parent / "llm_cache.json"
 DASHBOARD_SEED_DIR = DATA_DIR / "dashboard"
 DASHBOARD_SIM_START = os.getenv("DASHBOARD_SIM_START", "2026-10-20T07:30")
+DASHBOARD_PORT = int(os.getenv("DASHBOARD_PORT", "8010"))
 DASHBOARD_IDLE_SECONDS = float(os.getenv("DASHBOARD_IDLE_SECONDS", "8"))
 WEB_DIST_DIR = ROOT / "web" / "dist"
 

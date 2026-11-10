@@ -6,6 +6,7 @@ import { formatDistanceToNowStrict } from 'date-fns'
 import { fmtDateTime } from '../../lib/format'
 import { EmptyState, Button, withToast } from '../ui'
 import { JobSteps } from '../pipeline/JobSteps'
+import { useLiveAiReady } from '../../store/connections'
 import { useDemo } from '../../store/demo'
 
 export function ParserOutput({
@@ -24,6 +25,8 @@ export function ParserOutput({
   idleSeconds: number | null
 }) {
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const canUseLiveAi = useLiveAiReady()
+  const canProcess = !publicDemo || canUseLiveAi
   const [showPrev, setShowPrev] = useState(false)
   const mine = jobs.filter((j) => j.thread_id === thread.id)
   const latest = mine.find((j) => j.id === thread.last_job_id) ?? mine[mine.length - 1]
@@ -36,12 +39,12 @@ export function ParserOutput({
           icon={<ScanSearch size={28} />}
           title="Not processed yet"
           hint={
-            publicDemo ? 'This conversation is part of the preloaded company history. Play the scripted day to watch new knowledge being captured.' : idleSeconds != null
+            publicDemo && !canProcess ? 'This conversation is part of the preloaded company history. Play the scripted day to watch new knowledge being captured.' : idleSeconds != null
               ? `This conversation is read after ${idleSeconds} seconds of quiet. You can also run it now.`
               : 'Read this conversation to find useful knowledge.'
           }
           action={
-            !publicDemo && <Button variant="primary" icon={<Play size={14} />} disabled={!thread.messages.length} onClick={() => withToast(() => api.processThread(thread.id), 'Processing started')}>
+            canProcess && <Button variant="primary" icon={<Play size={14} />} disabled={!thread.messages.length} onClick={() => withToast(() => api.processThread(thread.id), 'Processing started')}>
               Process now
             </Button>
           }

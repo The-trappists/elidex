@@ -95,7 +95,7 @@ uv run ctx patterns --entity TRN-117 --json # only patterns involving an element
 
 | Where | What |
 | --- | --- |
-| Dashboard UI | **Patterns** page (Observe group): a short list ("Possible common cause", then "Keeps coming back"; resolved ones behind a toggle), one line per pattern. Selecting one shows it on the network map: the problems in red, the possible common cause in amber, the links between them in red, the rest dimmed. Details (hypotheses, what was done, who to ask, reports) open under the selected row. Report download |
+| Dashboard UI | **Correlations** page: a short list ("Linked problems", then "Recurring"; resolved ones behind a toggle), one line per pattern. The default view is an evidence graph: human reports connected to the affected equipment, and dashed links to the shared factors, with the same top timeline slider used by the Network and Knowledge graph pages. A **Network map** view keeps problems in red, possible common causes in amber and their links in red. Details (hypotheses, what was done, who to ask, reports) open under the selected row. Report download. Every shared factor is labelled a hypothesis to check, never a confirmed cause or an agent rule |
 | REST | `GET /api/patterns?at=&entity_id=` (JSON), `GET /api/patterns/report.md?at=` |
 | MCP | `get_patterns(entity_id, at)`: for agents, with the "not a rule" warning in its description |
 

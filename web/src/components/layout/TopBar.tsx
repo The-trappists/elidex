@@ -1,4 +1,4 @@
-import { ChevronDown, Clock3, LogOut, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
+import { ChevronDown, Clock3, LogOut, Pause, Play, PlayCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn'
 import { fmtDateTime, toNaiveIso } from '../../lib/format'
 import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
+import { useConnections } from '../../store/connections'
 import { useLive } from '../../store/live'
 import { Button, IconButton, withToast } from '../ui'
 import { ALL_NAV } from './Sidebar'
@@ -54,28 +55,6 @@ function ScenarioLauncher() {
   )
 }
 
-function useTheme() {
-  const [dark, setDark] = useState(() => {
-    try {
-      const v = localStorage.getItem('theme')
-      if (v) return v === 'dark'
-    } catch {
-      /* storage blocked */
-    }
-    // The dashboard is dark-first; use dark unless the user has saved a choice.
-    return true
-  })
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    try {
-      localStorage.setItem('theme', dark ? 'dark' : 'light')
-    } catch {
-      /* storage blocked */
-    }
-  }, [dark])
-  return [dark, setDark] as const
-}
-
 function Dot({ on, bad }: { on: boolean; bad?: boolean }) {
   return <span className={cn('size-1.5 rounded-full', on ? 'bg-ok' : bad ? 'bg-bad' : 'bg-muted/50')} />
 }
@@ -85,14 +64,22 @@ export function TopBar() {
   const settings = useLive((s) => s.settings)
   const slack = useLive((s) => s.slack)
   const connection = useLive((s) => s.connection)
+  const connections = useConnections((s) => s.snapshot)
+  const refreshConnections = useConnections((s) => s.refresh)
   const now = useSimNow(500)
-  const [dark, setDark] = useTheme()
   const [showClock, setShowClock] = useState(false)
   const { pathname } = useLocation()
   const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? { title: 'Page not found', subtitle: '' }
 
+  useEffect(() => {
+    void refreshConnections(true)
+  }, [refreshConnections])
+
   const mode = settings?.extractor_mode ?? 'auto'
-  const llmOn = !!settings?.llm_configured && mode !== 'scripted'
+  const aiConnected = connections?.ai.connected ?? !!settings?.llm_configured
+  const aiModel = connections?.ai.model ?? settings?.llm_model
+  const liveSlack = connections?.slack ?? slack
+  const llmOn = aiConnected && (connections?.ai.source === 'session' || mode !== 'scripted')
 
   return (
     <header className="app-topbar sticky top-0 z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-4 py-1.5 md:px-6">
@@ -130,11 +117,11 @@ export function TopBar() {
         </div>
 
         <div className="hidden items-center gap-3 text-xs text-muted xl:flex">
-          <span className="flex items-center gap-1.5" title={settings?.llm_model ?? 'No LLM key: scripted extraction'}>
-            <Dot on={llmOn} bad={mode === 'llm' && !llmOn} /> {llmOn ? settings?.llm_model : mode === 'llm' ? 'AI needs a key' : 'Scripted'}
+          <span className="flex items-center gap-1.5" title={aiModel ?? 'No LLM key: scripted extraction'}>
+            <Dot on={llmOn} bad={mode === 'llm' && !aiConnected} /> {llmOn ? aiModel : mode === 'llm' ? 'AI needs a key' : 'Scripted'}
           </span>
-          <span className="flex items-center gap-1.5" title={slack.error ?? slack.channel ?? 'Slack bridge off'}>
-            <Dot on={slack.connected} /> Slack
+          <span className="flex items-center gap-1.5" title={liveSlack.error ?? liveSlack.channel ?? 'Slack bridge off'}>
+            <Dot on={liveSlack.connected} /> Slack
           </span>
         </div>
 
@@ -151,9 +138,6 @@ export function TopBar() {
           {connection === 'live' ? 'Live' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
         </span>
 
-        <IconButton onClick={() => setDark(!dark)} aria-label={dark ? 'Switch to the light theme' : 'Switch to the dark theme'}>
-          {dark ? <Sun size={16} /> : <Moon size={16} />}
-        </IconButton>
         <ScenarioLauncher />
         <Link
           to="/"

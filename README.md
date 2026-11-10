@@ -124,7 +124,16 @@ uv run ctx context TRN-117 --at 2026-10-20T08:00
 uv run ctx agent --conditions --guard
 ```
 
-### 2. Launch the Web Dashboard
+### 2. Try the scripted demo (no API keys)
+One command runs the whole walkthrough offline: it replays cached extractions over `data/elisa` + `data/synthetic`, shows the TRN-042 workaround captured from the Teams chat, follows the same rule to TRN-117 through the element class, and shows the Ask-Before-Act guard turning a planned reboot into the bounce-first advice.
+
+```bash
+uv run ctx demo
+```
+
+No `.env`, `LLM_API_KEY`, Google credentials or Slack tokens are needed, and no network call is made. The same steps are available one by one with `uv run ctx run --lifecycle`, `uv run ctx context TRN-117 --at 2026-10-20T07:50` and `uv run ctx agent --conditions --guard`. The dashboard and the company day also start keyless; when no LLM is configured, the endless day generates chats by recombining the hand-written scenarios offline.
+
+### 3. Launch the Web Dashboard
 Build the frontend and launch the unified FastAPI server:
 
 ```bash
@@ -134,10 +143,18 @@ npm run build
 cd ..
 uv run ctx dashboard
 ```
-Open **[http://127.0.0.1:8010](http://127.0.0.1:8010)** in your browser.
+Open **[http://127.0.0.1:8010](http://127.0.0.1:8010)** in your browser. Change the port with `uv run ctx dashboard --port 9000` or `DASHBOARD_PORT=9000` in `.env`.
 
-### 3. Connect Live Models & Integrations (Optional)
-To use live LLMs (Gemini, Vertex AI, Mistral) or the Slack bridge, copy `.env.example` to `.env` and fill in your keys:
+### 4. Connect Live Models & Integrations (Optional)
+Open **Connections** (`/connections`) in the dashboard. The prepared demo, local storage and built-in knowledge graph work without any external account.
+
+- **Live AI:** choose Gemini, Mistral, Groq, OpenAI or Featherless, enter a model available to your account and an API key, then test and connect. The small connection check and subsequent AI use are billed by your provider. A chat subscription is not an API key.
+- **Slack (optional):** connect a bot token, Socket Mode app token and channel ID. A workspace administrator may need to approve the app; follow [Slack setup](docs/slack-setup.md).
+- **MongoDB Atlas, Tiger Data and Neo4j (optional):** deployment-owner infrastructure for larger datasets, archives or a graph mirror. None is required to explore the app.
+
+Keys entered in Connections stay in server memory, not browser storage or exported dashboard data. Public-demo connections belong to the visitor's private workspace and end on expiry or disconnect; the team dashboard is shared and its connections affect everyone using it, until disconnect or server restart. Conversations sent to a connected service are subject to that service's policies.
+
+For persistent deployment configuration, CLI use or Vertex AI, a human operator can instead copy `.env.example` to `.env` and configure the server:
 ```bash
 cp .env.example .env
 uv run ctx llm-check       # Verify your LLM configuration

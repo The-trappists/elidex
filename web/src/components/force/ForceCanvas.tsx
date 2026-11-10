@@ -1,6 +1,6 @@
 // Canvas force graph: a small physics engine with pan, zoom and drag.
 // Topology mode draws each site as a surface around its equipment; selecting a site (or something in it) opens it.
-// Colors come from the theme tokens, so light and dark both work.
+// Colors come from the theme tokens, so the palette stays consistent.
 import { Maximize2, Minus, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 
@@ -28,6 +28,8 @@ export interface ForceNode {
   faded?: boolean
   /** Just added: a pulsing accent ring for a few seconds. */
   fresh?: boolean
+  /** Correlation mark: a dashed amber ring; `suspect` also gets a dot on that ring. */
+  correlation?: 'problem' | 'suspect'
 }
 
 export interface ForceLink {
@@ -42,6 +44,8 @@ export interface ForceLink {
   color?: string
   /** Shown along the line when it is part of the focus. */
   label?: string
+  /** Correlation mark: a dashed amber line. */
+  correlation?: boolean
 }
 
 /** Ring colors for emphasized nodes and links. */
@@ -322,7 +326,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
     const color = (token: string) => {
       let c = colors.get(token)
       if (!c) {
-        c = getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '#888888'
+        c = getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '#64748b'
         colors.set(token, c)
       }
       return c
@@ -523,7 +527,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
           ctx.globalAlpha *= open ? 0.9 : 0.75
           ctx.fill()
           ctx.globalAlpha = focus && !focus.has(gid) ? 0.35 : 1
-          ctx.strokeStyle = open ? accent : g.alert ? color('--bad') : line
+          ctx.strokeStyle = open ? accent : g.alert ? color('--bad') : color('--g-site-line')
           ctx.lineWidth = (open ? 2 : 1.2) * Math.max(1, px * 0.8)
           ctx.setLineDash(open ? [] : [5, 4])
           ctx.stroke()
@@ -567,9 +571,16 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
         if (l.kind === 'anchor') continue
         const [a, b] = ends(s, l)
         if (!a || !b || a === b) continue
-        let alpha = topo ? 0.7 : 0.55
+        let alpha = topo ? 0.75 : 0.7
         let stroke = l.color ? color(l.color) : linkColor
         let width = l.kind === 'inter' ? 1.8 : 1.3
+        let dash = l.dash ?? []
+        if (l.correlation) {
+          alpha = 0.7
+          stroke = color('--warn')
+          width = 1.6
+          dash = [4, 3]
+        }
         if (s.toneLinks.has(l.id)) {
           alpha = 1
           stroke = color(TONE[s.linkTone])
@@ -577,7 +588,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
         } else if (focus) {
           if (s.direct.has(l.id)) {
             alpha = 1
-            stroke = l.color ? stroke : accent
+            stroke = l.correlation ? color('--warn') : l.color ? stroke : accent
             width = 2.2
             // Name the link only when it is long enough on screen to hold the name.
             if (l.label && nameable(l.label) && Math.hypot(b.x - a.x, b.y - a.y) * c.scale > 90) labels.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, t: l.label })
@@ -590,7 +601,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
         ctx.strokeStyle = stroke
         ctx.lineWidth = width * Math.max(1, px * 0.6)
         ctx.lineCap = 'round'
-        ctx.setLineDash(l.dash ?? [])
+        ctx.setLineDash(dash)
         ctx.stroke()
       }
       ctx.setLineDash([])
@@ -628,6 +639,17 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
         }
         if (n.alert) ring(3 + pulse * 3, color('--bad'), 2.2, 0.55 + pulse * 0.45)
         if (n.fresh) ring(4 + pulse * 6, accent, 2.4, 0.5 + pulse * 0.5)
+        if (n.correlation) {
+          ring(11, color('--warn'), 1.5, 0.85, [3, 3])
+          if (n.correlation === 'suspect') {
+            const angle = -Math.PI / 4
+            ctx.globalAlpha = alpha * 0.85
+            ctx.beginPath()
+            ctx.arc(n.x + Math.cos(angle) * (n.radius + 11), n.y + Math.sin(angle) * (n.radius + 11), 3, 0, Math.PI * 2)
+            ctx.fillStyle = color('--warn')
+            ctx.fill()
+          }
+        }
         const tone = s.tones.get(n.id)
         if (tone) {
           ctx.globalAlpha = alpha * (0.18 + pulse * 0.12)

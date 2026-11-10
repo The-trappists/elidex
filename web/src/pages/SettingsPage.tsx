@@ -1,10 +1,11 @@
 import { PageIntro } from '../components/layout/PageIntro'
-import { Bot, Hash, Sparkles, SlidersHorizontal, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Hash, Plug, Sparkles, SlidersHorizontal, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
 import type { ExtractorMode, Settings, SettingsPatch } from '../api/types'
 import { cn } from '../lib/cn'
+import { useConnections } from '../store/connections'
 import { useLive } from '../store/live'
 import { Badge, Card, Input, Toggle, withToast } from '../components/ui'
 
@@ -70,9 +71,20 @@ function NumberSetting({ value, onSave, min = 0, suffix }: { value: number; onSa
 export default function SettingsPage() {
   const settings = useLive((s) => s.settings)
   const slack = useLive((s) => s.slack)
+  const connections = useConnections((s) => s.snapshot)
+  const refreshConnections = useConnections((s) => s.refresh)
+  useEffect(() => {
+    void refreshConnections(true)
+  }, [refreshConnections])
   if (!settings) return null
   const save = (patch: SettingsPatch) => withToast(() => api.updateSettings(patch))
   const st: Settings = settings
+  const liveSlack = connections?.slack ?? slack
+  const ai = connections?.ai
+  const publicDemo = connections?.public_demo ?? false
+  const aiConnected = ai?.connected ?? st.llm_configured
+  const aiSource = ai?.source === 'session' ? (publicDemo ? 'This private workspace' : 'This session') : ai?.source === 'server' ? 'Deployment model' : null
+  const aiModel = ai?.model ?? st.llm_model
 
   return (
     <div className="h-full overflow-auto p-6">
@@ -109,10 +121,10 @@ export default function SettingsPage() {
               </label>
             ))}
           </div>
-          {st.extractor_mode === 'llm' && !st.llm_configured && (
+          {st.extractor_mode === 'llm' && !aiConnected && (
             <div className="rounded-md border border-warn/40 bg-warn/10 p-3 text-xs">
-              The AI is selected but no key is configured, so every conversation will fail to be read. Ask the team to connect an AI
-              provider, or choose Automatic.
+              The AI is selected but no model is connected, so every conversation will fail to be read. Connect a provider in Connections,
+              or choose Automatic.
             </div>
           )}
           <Row
@@ -152,48 +164,48 @@ export default function SettingsPage() {
 
         <Section icon={Hash} title="Slack" intro="Slack stands in for Teams, to show that the listening works on tools people already use.">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge className={slack.connected ? 'bg-ok/15 text-ok' : 'bg-surface-2 text-muted'}>
-              {slack.connected ? 'Connected' : 'Not connected'}
+            <Badge className={liveSlack.connected ? 'bg-ok/15 text-ok' : 'bg-surface-2 text-muted'}>
+              {liveSlack.connected ? 'Connected' : 'Not connected'}
             </Badge>
-            {slack.channel && <span className="break-all font-mono text-xs">#{slack.channel.replace(/^#/, '')}</span>}
-            {slack.error && <span className="text-xs text-bad">{slack.error}</span>}
+            {liveSlack.channel && <span className="break-all font-mono text-xs">#{liveSlack.channel.replace(/^#/, '')}</span>}
+            {liveSlack.error && <span className="text-xs text-bad">{liveSlack.error}</span>}
           </div>
           <Row label="Mirror to Slack" text="Messages written in the dashboard are also posted in the Slack channel.">
-            <Toggle checked={st.slack_mirror} disabled={!slack.connected} onChange={(v) => save({ slack_mirror: v })} />
+            <Toggle checked={st.slack_mirror} disabled={!liveSlack.connected} onChange={(v) => save({ slack_mirror: v })} />
           </Row>
-          {!slack.connected && (
-            <details className="text-xs text-muted">
-              <summary className="cursor-pointer font-medium">Connection setup for the team</summary>
-              <p className="mt-2 leading-relaxed">
-                A team member can connect the Slack app using the instructions in docs/slack-setup.md. Once connected, messages can be
-                shared with the channel.
-              </p>
-            </details>
-          )}
+          <p className="text-xs leading-relaxed text-muted">
+            {liveSlack.connected
+              ? 'The bridge runs for this workspace. Tokens are held in server memory, never in browser storage.'
+              : 'Connect a Slack app with Socket Mode to read a real channel. Tokens are entered on the Connections page and are never stored in your browser.'}
+          </p>
+          <Link to="/connections" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+            Manage the Slack connection
+            <ArrowRight size={14} />
+          </Link>
         </Section>
 
-        <Section icon={Bot} title="Connected AI" intro="Which language models read the conversations. Set on the server, read-only here.">
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-y-2 text-sm">
-            <span className="text-muted">Ready to use</span>
-            <span>
-              <Badge className={st.llm_configured ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad'}>{st.llm_configured ? 'Yes' : 'No'}</Badge>
-            </span>
-            <span className="text-muted">Model</span>
-            <span className="break-all font-mono text-xs">{st.llm_model ?? '—'}</span>
-            <span className="text-muted">Backup model</span>
-            <span className="break-all font-mono text-xs">{st.llm_fallback_model ?? '—'}</span>
+        <Section icon={Plug} title="Connected AI" intro="The model that reads conversations. Connect one for this workspace, or use the deployment model.">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Badge className={aiConnected ? 'bg-ok/15 text-ok' : 'bg-surface-2 text-muted'}>{aiConnected ? 'Connected' : 'Not connected'}</Badge>
+            {aiConnected && aiModel && <span className="break-all font-mono text-xs">{aiModel}</span>}
+            {aiConnected && aiSource && <Badge className="bg-surface-2 text-muted">{aiSource}</Badge>}
           </div>
-          {!st.llm_configured && (
-            <p className="text-sm text-muted">
-              No AI provider is connected. Ask the team to configure one on the server; prepared demo scenarios are still available.
-            </p>
-          )}
-          <div className="flex gap-4 text-sm">
-            <Link className="text-accent hover:underline" to="/llm">
-              See what the AI did
+          <p className="text-sm leading-relaxed text-muted">
+            {!aiConnected
+              ? 'No AI provider is connected. Prepared demo scenarios still work. Connect a provider to read new conversations and use the agent with AI.'
+              : ai?.source === 'server'
+                ? publicDemo
+                  ? 'The deployment has a shared model, but visitor workspaces do not use it. Connect your own key to run live conversations.'
+                  : 'Configured by the deployment and shared by everyone. It ends on server restart and cannot be changed from this page.'
+                : 'Connected for this workspace. The key is held in server memory and ends when you disconnect or the server restarts.'}
+          </p>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <Link className="inline-flex items-center gap-1 font-medium text-accent hover:underline" to="/connections">
+              Manage AI connection
+              <ArrowRight size={14} />
             </Link>
             <Link className="text-accent hover:underline" to="/llm">
-              Test the AI connection
+              See what the AI did
             </Link>
           </div>
         </Section>

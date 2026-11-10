@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .. import config
+from ..connections import ConnectionRegistry, current_connection
 from ..link import Inventory
 from ..models import ContextAssertion, ElementClass, Message, SourceRef, Trust
 from ..store import ContextStore, same_knowledge
@@ -112,6 +113,7 @@ class Dashboard:
         self.bus = EventBus(self.clock.now)
         self.state_file = Path(state_file or config.DASHBOARD_STATE_FILE)
         self.settings = Settings(idle_seconds=config.DASHBOARD_IDLE_SECONDS)
+        self.connections = ConnectionRegistry(public_demo=False)
         self.llm_calls = []
         self.slack = None  # set by the app; only read for settings.slack_connected
         self._listeners: list[MessageListener] = []
@@ -173,9 +175,13 @@ class Dashboard:
 
     def refresh_readonly_settings(self) -> None:
         s = self.settings
+        registry = current_connection()
+        ai = registry.ai if registry is not None else None
         s.llm_configured = config.llm_configured()
-        s.llm_model = config.LLM_MODEL or None
-        s.llm_fallback_model = config.LLM_FALLBACK_MODEL if config.llm_fallback_configured() else None
+        s.llm_model = ai.model if ai is not None else (config.LLM_MODEL or None)
+        s.llm_fallback_model = None if ai is not None else (
+            config.LLM_FALLBACK_MODEL if config.llm_fallback_configured() else None
+        )
         s.slack_connected = bool(getattr(self.slack, "connected", False))
 
     def update_settings(self, patch: SettingsPatch) -> Settings:
@@ -364,6 +370,10 @@ class Dashboard:
 
     def add_message_listener(self, fn: MessageListener) -> None:
         self._listeners.append(fn)
+
+    def remove_message_listener(self, fn: MessageListener) -> None:
+        if fn in self._listeners:
+            self._listeners.remove(fn)
 
     def request_processing(self, thread_id: str, immediate: bool = False) -> None:
         """Schedule the pipeline job for a thread (after idle_seconds, or now)."""

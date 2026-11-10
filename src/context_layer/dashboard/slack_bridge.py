@@ -38,7 +38,15 @@ class SlackBridge:
 
     # ------------------------------------------------------------ lifecycle
 
+    def _safe(self, text: str) -> str:
+        for token in (self.bot_token, self.app_token):
+            if token:
+                text = text.replace(token, "[redacted]")
+        return text
+
     async def start(self) -> None:
+        if self.connected:
+            return
         try:
             from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
             from slack_bolt.async_app import AsyncApp
@@ -65,7 +73,7 @@ class SlackBridge:
             self.wb.settings.slack_connected = True
         except Exception as exc:  # never raise
             self.connected = False
-            self.error = _describe(exc)
+            self.error = self._safe(_describe(exc))
             log.warning("Slack bridge failed to start: %s", self.error)
         self.wb.emit("slack.status", self.status())
 
@@ -78,9 +86,22 @@ class SlackBridge:
                 await self._handler.close_async()
         except Exception as exc:
             log.warning("Slack disconnect failed: %s", exc)
+        remove = getattr(self.wb, "remove_message_listener", None)
+        if callable(remove):
+            remove(self._on_wb_message)
+        self.queue = asyncio.Queue()
+        self._handler = None
         self.connected = False
-        self.wb.settings.slack_connected = False
-        self.wb.emit("slack.status", self.status())
+        self.error = None
+        self.bot_token = ""
+        self.app_token = ""
+        try:
+            self.client.token = ""  # the bridge object is discarded; keep no credential in memory
+        except Exception:  # noqa: BLE001 - a mock or a closed client
+            pass
+        if getattr(self.wb, "slack", None) is self:
+            self.wb.settings.slack_connected = False
+            self.wb.emit("slack.status", self.status())
 
     def status(self) -> dict:
         return {
@@ -103,8 +124,8 @@ class SlackBridge:
             try:
                 await self.send_message(thread_id, message)
             except Exception as exc:
-                log.warning("Slack post failed: %s", _describe(exc))
-                self.error = _describe(exc)
+                log.warning("Slack post failed: %s", self._safe(_describe(exc)))
+                self.error = self._safe(_describe(exc))
                 self.wb.emit("slack.status", self.status())
             finally:
                 self.queue.task_done()
@@ -183,7 +204,7 @@ class SlackBridge:
                 name = profile.get("display_name") or u.get("real_name") or u.get("name") or user_id
                 self._users[user_id] = (name, profile.get("title") or None)
             except Exception as exc:
-                log.warning("users.info failed for %s: %s", user_id, exc)
+                log.warning("users.info failed for %s: %s", user_id, self._safe(str(exc)))
                 return user_id, None
         return self._users[user_id]
 

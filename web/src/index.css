@@ -1,124 +1,72 @@
 @import 'tailwindcss';
 
-/* Dark mode follows the .dark class on <html> (dark by default; user choice persists). */
+/* No dark theme. Pinning the variant to a class that is never set keeps any stray `dark:` utility inert. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
  * Design tokens. Use the Tailwind names (bg-surface, text-muted, border-line, bg-accent...)
- * rather than raw colors, so light and dark stay consistent.
+ * rather than raw colors, so the palette stays consistent.
  */
 :root {
   color-scheme: light;
-  /* Neutral scale: one hue, flat surfaces. */
-  --bg: #f3f5f8;
+
+  --bg: #f6f8fb;
   --surface: #ffffff;
-  --surface-2: #f1f2f4;
-  --surface-3: #e6e8ec;
-  --line: #e3e5e9;
-  --text: #202c42;
-  --muted: #646a78;
+  --surface-2: #eef2f7;
+  --surface-3: #e1e7f0;
+  --line: #dbe2ec;
+  --line-strong: #6b7689;
+  --text: #171c43;
+  --muted: #5a6478;
 
-  /* One accent. Everything interactive uses it; nothing else is "brand". */
-  --accent: #315ce7;
-  --accent-2: #2f5bea;
-  --accent-soft: #eaf0ff;
+  --accent: #006aed;
+  --accent-2: #0056c6;
+  --accent-soft: #f0f6ff;
   --on-accent: #ffffff;
-  --brand-gradient: #2f5bea;
+  --brand-gradient: #006aed;
 
-  /* Channels, types and trust are NOT colored in the UI (a small dot at most). */
-  --teams: #646a78;
-  --email: #646a78;
-  --slack: #646a78;
-  --t-workaround: #646a78;
-  --t-access: #646a78;
-  --t-fact: #646a78;
-  --t-invalidation: #646a78;
-  --trust-hunch: #646a78;
-  --trust-stated: #646a78;
-  --trust-verified: #15803d;
+  --teams: #5a6478;
+  --email: #5a6478;
+  --slack: #5a6478;
+  --t-workaround: #5a6478;
+  --t-access: #5a6478;
+  --t-fact: #5a6478;
+  --t-invalidation: #5a6478;
+  --trust-hunch: #5a6478;
+  --trust-stated: #5a6478;
+  --trust-verified: #0c6b35;
 
-  /* Status: the only semantic colors. */
-  --ok: #15803d;
-  --warn: #a16207;
+  --ok: #0c6b35;
+  --warn: #7d5208;
   --bad: #c0262d;
-  --info: #2f5bea;
+  --info: #0056c6;
 
   --radius-container: 0.625rem;
   --radius-control: 0.5rem;
 
-  --shadow-sm: none;
-  --shadow-md: 0 4px 16px -4px rgb(21 23 28 / 0.12);
-  --shadow-lg: 0 16px 40px -12px rgb(21 23 28 / 0.25);
+  --shadow-sm: 0 1px 2px rgb(23 28 67 / 0.06);
+  --shadow-md: 0 4px 16px -4px rgb(23 28 67 / 0.14);
+  --shadow-lg: 0 16px 40px -12px rgb(23 28 67 / 0.22);
   --glow: none;
 
   /* graph */
-  --g-element: #3a4152;
-  --g-site: #e9ebf0;
-  --g-class: #7c5cd6;
-  --g-assertion: #7c5cd6;
+  --g-element: #334155;
+  --g-site: #dbe6f4;
+  --g-site-line: #64748b;
+  --g-class: #6d4fd0;
+  --g-assertion: #6d4fd0;
   --g-incident: #c0262d;
-  --g-link: #9aa1b2;
+  --g-link: #475569;
 
   /* knowledge graph: one hue per kind of item */
-  --k-knowledge: #315ce7;
-  --k-person: #0f8a7e;
-  --k-equipment: #4b5568;
-  --k-site: #8a93a6;
-  --k-group: #7c5cd6;
-  --k-event: #c27a12;
+  --k-knowledge: #006aed;
+  --k-person: #0d7f73;
+  --k-equipment: #475569;
+  --k-site: #64748b;
+  --k-group: #6d4fd0;
+  --k-event: #b45309;
   --k-conversation: #c2417a;
-  --k-message: #a3a9b6;
-}
-
-.dark {
-  color-scheme: dark;
-  --bg: #0e0f12;
-  --surface: #15171c;
-  --surface-2: #1b1e25;
-  --surface-3: #252932;
-  --line: #262a33;
-  --text: #e8eaee;
-  --muted: #8b92a1;
-
-  --accent: #7b9bff;
-  --accent-2: #7b9bff;
-  --accent-soft: #19233f;
-  --on-accent: #0e0f12;
-  --brand-gradient: #7b9bff;
-
-  --teams: #8b92a1;
-  --email: #8b92a1;
-  --slack: #8b92a1;
-  --t-workaround: #8b92a1;
-  --t-access: #8b92a1;
-  --t-fact: #8b92a1;
-  --t-invalidation: #8b92a1;
-  --trust-hunch: #8b92a1;
-  --trust-stated: #8b92a1;
-  --trust-verified: #4ade80;
-
-  --ok: #4ade80;
-  --warn: #facc15;
-  --bad: #f87171;
-  --info: #7b9bff;
-
-  --shadow-md: 0 6px 20px -6px rgb(0 0 0 / 0.6);
-  --shadow-lg: 0 20px 48px -12px rgb(0 0 0 / 0.7);
-
-  --g-element: #c9cedb;
-  --g-site: #1c1f27;
-  --g-class: #a78bfa;
-  --g-assertion: #a78bfa;
-  --g-link: #4a5163;
-
-  --k-knowledge: #7b9bff;
-  --k-person: #34c7b4;
-  --k-equipment: #aab2c2;
-  --k-site: #6b7385;
-  --k-group: #a78bfa;
-  --k-event: #f0b046;
-  --k-conversation: #f07aa8;
-  --k-message: #5c6375;
+  --k-message: #7c879c;
 }
 
 @theme inline {
@@ -130,6 +78,7 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
@@ -174,7 +123,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--surface-3) transparent;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 :focus-visible {
@@ -189,10 +138,7 @@ select {
   background-repeat: no-repeat;
   background-position: right 0.6rem center;
   background-size: 0.85rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23646a78' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-}
-.dark select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b92a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6478' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 select option { background: var(--surface); color: var(--text); }
 input[type='datetime-local'],
@@ -296,16 +242,6 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 }
 .live-dot { animation: live-dot 1.8s ease-out infinite; }
 
-@keyframes flow {
-  from { background-position: 0 0; }
-  to { background-position: 28px 0; }
-}
-.progress-flow {
-  background-image: repeating-linear-gradient(115deg, rgb(255 255 255 / 0.25) 0 8px, transparent 8px 16px);
-  background-size: 28px 100%;
-  animation: flow 0.9s linear infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
@@ -386,12 +322,20 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 .diagram-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
 .diagram-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--line); }
 .diagram-toolbar:empty { display: none; }
+.diagram-status { display: flex; flex-shrink: 0; align-items: center; gap: 6px; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.diagram-meta { margin-top: 4px; font-size: 12px; color: var(--muted); }
 .diagram-canvas { position: relative; flex: 1; min-height: 260px; background-color: var(--bg); }
 .diagram-details { min-width: 0; overflow: auto; border-left: 1px solid var(--line); overscroll-behavior: contain; }
 .diagram-key { padding: 10px 14px; border-top: 1px solid var(--line); }
 .diagram-view-switch { display: none; gap: 6px; }
 .graph-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--muted); }
 .graph-key li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.graph-key-more { display: inline-flex; align-items: center; min-height: 24px; padding: 0 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); font-size: 11px; cursor: pointer; }
+.graph-key-more:hover { color: var(--text); }
+/* Compact explorers reach the rail directly on desktop; the view switch stays on narrow screens. */
+@media (min-width: 1101px) {
+  .diagram-workspace.is-compact .diagram-view-switch { display: none; }
+}
 .graph-loading line { stroke: var(--g-link); stroke-width: 2; stroke-dasharray: 4 4; animation: graph-flow 0.9s linear infinite; }
 .graph-loading circle { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: graph-pulse 1.2s ease-in-out infinite; }
 .graph-loading circle:nth-of-type(2) { animation-delay: 0.2s; }
@@ -415,7 +359,8 @@ button:not(:disabled):active { transform: translateY(0.5px); }
  .diagram-heading p { font-size: 12px; }
  .diagram-body { min-height: 360px; }
  .diagram-toolbar > div:first-child { flex-basis: 100%; }
- .graph-key { gap: 4px 12px; font-size: 10px; }
+  .graph-key { gap: 4px 12px; font-size: 10px; }
+  .graph-key-more { min-height: 32px; }
 }
 
 /* Insights keeps its list under the map on narrow screens (it has no Browse/Details switch). */
@@ -424,6 +369,11 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   /* The list is the main content here: the map shrinks to a strip, the list gets most of the height. */
   .diagram-body:has(> .insights-list) { grid-template-rows: minmax(100px, 1fr) minmax(0, 2.4fr); }
   .diagram-body:has(> .insights-list) .diagram-canvas { min-height: 100px; }
+}
+/* Public correlations: the list carries the screen on phones; the map path is `Open on network`. */
+@media (max-width: 767px) {
+  .diagram-workspace.is-public-insights .diagram-main { display: none; }
+  .diagram-workspace.is-public-insights .diagram-body { grid-template-rows: minmax(0, 1fr); }
 }
 
 /* Company day: a status dot that flashes once when its element changes state. */
@@ -467,3 +417,88 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   button { min-width: 32px; }
 }
 summary { padding-block: 4px; }
+
+/* Simulation timeline: one axis, three lanes of markers, a draggable time cursor. */
+.sim-timeline { position: relative; flex-shrink: 0; border-top: 1px solid var(--line); padding: 4px 12px 6px; }
+.sim-head { display: flex; align-items: center; gap: 6px; height: 24px; }
+.sim-presets, .sim-zoom { display: flex; gap: 2px; }
+.sim-btn { display: inline-flex; align-items: center; justify-content: center; height: 24px; min-width: 24px; padding: 0 6px; border-radius: 4px; font-size: 11px; color: var(--muted); }
+.sim-btn:hover { background: var(--surface-2); color: var(--text); }
+.sim-btn[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent); }
+.sim-off { height: 24px; padding: 0 6px; border-radius: 4px; font-size: 11px; color: var(--accent); white-space: nowrap; }
+.sim-off:hover { background: var(--accent-soft); }
+.sim-head-now { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sim-scrubber { display: flex; align-items: center; height: 32px; }
+.sim-range { appearance: none; display: block; width: 100%; height: 32px; margin: 0; background: transparent; cursor: ew-resize; touch-action: none; }
+.sim-range::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--accent) var(--scrub-progress), var(--surface-3) var(--scrub-progress)); }
+.sim-range::-moz-range-track { height: 6px; border-radius: 3px; background: var(--surface-3); }
+.sim-range::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent); }
+.sim-range::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; margin-top: -7px; border: 3px solid var(--accent); border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); }
+.sim-range::-moz-range-thumb { width: 14px; height: 14px; border: 3px solid var(--accent); border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); }
+.sim-range:active { cursor: grabbing; }
+.sim-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.sim-track { position: relative; height: 68px; --lane-h: 18px; --sub-h: 9px; --mark: 12px; margin-top: 2px; touch-action: pan-y; cursor: crosshair; }
+.sim-ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; pointer-events: none; }
+.sim-tick { position: absolute; bottom: 0; transform: translateX(-50%); font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sim-tick.is-major { color: var(--text); font-weight: 600; }
+.sim-now-line, .sim-at-line { position: absolute; top: 0; bottom: 14px; width: 1px; pointer-events: none; }
+.sim-now-line { background: color-mix(in srgb, var(--accent) 50%, transparent); }
+.sim-at-line { background: var(--text); width: 2px; }
+.sim-now-pill, .sim-at-pill { position: absolute; top: -2px; transform: translateX(-50%); font-size: 9px; line-height: 1; padding: 2px 4px; border-radius: 3px; pointer-events: none; white-space: nowrap; }
+.sim-now-pill { background: var(--accent); color: var(--on-accent); }
+.sim-at-pill { background: var(--text); color: var(--surface); }
+.sim-marker { position: absolute; width: 24px; height: 24px; margin-left: -12px; display: flex; align-items: center; justify-content: center; padding: 0; background: none; border: 0; pointer-events: none; }
+.sim-marker .sim-mark { width: var(--mark); height: var(--mark); }
+.sim-marker.is-pinned .sim-mark { filter: drop-shadow(0 0 2px var(--text)); }
+.sim-marker.is-selected .sim-mark { filter: drop-shadow(0 0 2px var(--accent)); }
+.sim-count { position: absolute; top: 0; right: 0; min-width: 11px; height: 11px; padding: 0 2px; border-radius: 6px; background: var(--text); color: var(--surface); font-size: 8px; line-height: 11px; font-variant-numeric: tabular-nums; }
+.sim-now-jump { position: absolute; top: 0; height: 24px; padding: 0 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font-size: 10px; color: var(--accent); white-space: nowrap; }
+.sim-now-jump.is-left { left: 0; }
+.sim-now-jump.is-right { right: 0; }
+.sim-card { position: absolute; bottom: calc(100% + 4px); width: 260px; max-width: calc(100% - 16px); z-index: 20; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow-md); font-size: 12px; }
+.sim-card-head { display: flex; justify-content: space-between; width: 100%; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.sim-card-title { font-weight: 600; line-height: 1.35; }
+.sim-card-detail { color: var(--muted); line-height: 1.4; }
+.sim-card-source { font-size: 11px; color: var(--muted); }
+.sim-card-list { list-style: disc; padding-left: 16px; color: var(--muted); }
+.sim-card-list li { line-height: 1.35; }
+.sim-card-more { font-size: 11px; color: var(--muted); }
+.sim-card-link { font-size: 11px; font-weight: 600; color: var(--accent); }
+.sim-card-link:hover { text-decoration: underline; }
+.sim-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 10px; color: var(--muted); }
+.sim-legend > span { display: inline-flex; align-items: center; gap: 3px; }
+.sim-legend .sim-mark { width: 9px; height: 9px; }
+.sim-more { height: 24px; padding: 0 6px; font-size: 10px; color: var(--accent); }
+.sim-empty { font-size: 11px; color: var(--muted); }
+
+@media (max-width: 767px) {
+  .sim-card { left: 8px !important; right: 8px; width: auto; max-width: none; }
+  .sim-track { --mark: 14px; }
+  .sim-btn { min-width: 32px; height: 32px; }
+  .sim-more { height: 32px; }
+}
+@media (max-height: 759px) {
+  .sim-timeline { padding: 2px 10px 4px; }
+  .sim-track { height: 24px; --lane-h: 8px; --sub-h: 4px; --mark: 7px; margin-top: 0; }
+  .sim-ticks, .sim-legend, .sim-empty { display: none; }
+  .sim-now-line, .sim-at-line { bottom: 0; }
+  .sim-now-pill, .sim-at-pill { display: none; }
+  .sim-count { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sim-card, .sim-marker { transition: none; }
+}
+
+@media (min-width: 768px) and (max-height: 759px) {
+  .sim-timeline { padding-bottom: 2px; }
+  .sim-scrubber, .sim-range { height: 24px; }
+}
+
+/* Correlations keep the evidence graph and time slider available on phones too. */
+@media (max-width: 1100px) {
+  .diagram-workspace.correlation-workspace { overflow: auto; }
+  .correlation-workspace .diagram-body { display: flex; flex-direction: column; flex: none; min-height: 0; overflow: visible; }
+  .diagram-workspace.correlation-workspace .diagram-main { display: flex; min-height: 540px; }
+  .correlation-workspace .diagram-canvas { min-height: 280px; }
+  .correlation-workspace .diagram-details.insights-list { overflow: visible; border-top: 1px solid var(--line); }
+}

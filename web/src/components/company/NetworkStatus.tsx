@@ -1,13 +1,14 @@
-import { Network } from 'lucide-react'
+import { ArrowRight, Network } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { CompanyState, HealthStatus } from '../../api/types'
 import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
 import { Badge, EmptyState } from '../ui'
-import { HEALTH_ORDER, HEALTH_STYLE, fmtHM } from './status'
+import { HEALTH_ORDER, HEALTH_STYLE, fmtHM, healthCounts } from './status'
 
 /** Bar with one segment per status, from the counts of the latest cycle (or computed when there is none yet). */
-function SummaryBar({ counts }: { counts: Record<string, number> }) {
+function SummaryBar({ counts }: { counts: Record<HealthStatus, number> }) {
   const total = HEALTH_ORDER.reduce((n, k) => n + (counts[k] ?? 0), 0) || 1
   return (
     <div>
@@ -26,21 +27,14 @@ function SummaryBar({ counts }: { counts: Record<string, number> }) {
   )
 }
 
-export function NetworkStatus({ c }: { c: CompanyState }) {
+export function NetworkStatus({ c, variant = 'full' }: { c: CompanyState; variant?: 'summary' | 'full' }) {
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
   const flash = useLive((s) => s.healthFlash)
   const [picked, setPicked] = useState<string | null>(null)
 
-  const counts = useMemo(() => {
-    const latest = c.cycles[c.cycles.length - 1]?.health_counts
-    const own: Record<string, number> = { healthy: elements.length, degraded: 0, down: 0, recovering: 0 }
-    for (const h of c.health) if (h.status !== 'healthy') {
-      own[h.status] += 1
-      own.healthy -= 1
-    }
-    return { ...own, ...(latest ?? {}) }
-  }, [c.cycles, c.health, elements.length])
+  const counts = useMemo(() => healthCounts(c, elements), [c, elements])
+  const problems = useMemo(() => c.health.filter((h) => h.status !== 'healthy'), [c.health])
 
   const groups = useMemo(() => {
     const siteOf = new Map(elements.map((e) => [e.id, e.site_id]))
@@ -53,6 +47,29 @@ export function NetworkStatus({ c }: { c: CompanyState }) {
     return [...by.entries()].map(([sid, list]) => ({ sid, name: name.get(sid) ?? 'Unknown site', list: list.sort((a, b) => a.element_id.localeCompare(b.element_id)) }))
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [c, elements, sites])
+
+  // Public demo: the health number is on the KPI tile, so this strip shows the counts and the worst elements only.
+  if (variant === 'summary')
+    return (
+      <div className="flex h-full flex-col gap-3 p-4">
+        <SummaryBar counts={counts} />
+        {problems.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {problems.slice(0, 3).map((h) => (
+              <span key={h.element_id} className={cn('inline-flex items-center gap-1.5 rounded-md border border-line px-2 py-1 font-mono text-xs', HEALTH_STYLE[h.status].text)} title={`${h.element_id}: ${HEALTH_STYLE[h.status].label}. ${h.reason}`}>
+                <span className={cn('size-2 rounded-full', HEALTH_STYLE[h.status].dot)} />
+                {h.element_id}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted">Every element is healthy.</p>
+        )}
+        <Link to="/network" className="mt-auto inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+          Open network <ArrowRight size={13} />
+        </Link>
+      </div>
+    )
 
   const sel = c.health.find((h) => h.element_id === picked)
   const ok = elements.length > 0 && !c.health.length

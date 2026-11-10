@@ -1,7 +1,9 @@
 // Turn the live store (topology) and the knowledge graph into ForceCanvas nodes and links.
-import type { ContextAssertion, ElementClass, Incident, KgElement, KgKind, TopologyLink, WbElement, WbSite } from '../../api/types'
+import type { ContextAssertion, ElementClass, Incident, KgElement, KgKind, Pattern, TopologyLink, WbElement, WbSite } from '../../api/types'
 import { EDGE_LABEL, KIND, title } from '../kg/kgStyle'
 import { classMembers, validAt } from '../graph/graphModel'
+import type { PatternIndex } from '../insights/patternIndex'
+import { incidentOpenAt } from '../timeline/timelineModel'
 import type { Emphasis, ForceLink, ForceNode, Shape } from './ForceCanvas'
 
 /** One shape and theme hue per equipment family; anything else is a plain circle. */
@@ -24,8 +26,9 @@ export function topologyModel(g: {
   assertions: ContextAssertion[]
   incidents: Incident[]
   at: Date
+  correlations?: PatternIndex
 }) {
-  const open = new Set(g.incidents.filter((i) => i.status === 'open').map((i) => i.entity_id))
+  const open = new Set(g.incidents.filter((i) => incidentOpenAt(i, g.at)).map((i) => i.entity_id))
   const siteIds = new Set(g.sites.map((s) => s.id))
   const classById = new Map(g.classes.map((c) => [c.id, c]))
   // Knowledge in force at `at`, per equipment or site it applies to.
@@ -47,21 +50,24 @@ export function topologyModel(g: {
   }
   const nodes: ForceNode[] = []
   const links: ForceLink[] = []
+  // Correlations are hypotheses: a dashed amber ring, never a solid incident red.
+  const correlation = (id: string): ForceNode['correlation'] =>
+    g.correlations?.problem.has(id) ? 'problem' : g.correlations?.suspect.has(id) ? 'suspect' : undefined
   for (const s of g.sites) {
-    nodes.push({ id: s.id, label: s.name, color: '--k-site', shape: 'square', radius: 16, isGroup: true, alert: open.has(s.id), knowledge: siteKnowledge(s.id) })
+    nodes.push({ id: s.id, label: s.name, color: '--k-site', shape: 'square', radius: 16, isGroup: true, alert: open.has(s.id), knowledge: siteKnowledge(s.id), correlation: correlation(s.id) })
   }
   const groupOf = new Map<string, string | undefined>()
   for (const e of g.elements) {
     const st = equipmentStyle(e.type)
     const group = e.site_id && siteIds.has(e.site_id) ? e.site_id : undefined
     groupOf.set(e.id, group)
-    nodes.push({ id: e.id, label: e.id, color: st.color, shape: st.shape, radius: st.radius, group, alert: open.has(e.id), badge: known.has(e.id) })
+    nodes.push({ id: e.id, label: e.id, color: st.color, shape: st.shape, radius: st.radius, group, alert: open.has(e.id), badge: known.has(e.id), correlation: correlation(e.id) })
     if (group) links.push({ id: `anchor:${e.id}`, source: e.id, target: group, kind: 'anchor' })
   }
   for (const l of g.links) {
     if (!groupOf.has(l.a) || !groupOf.has(l.b)) continue
     const inter = groupOf.get(l.a) !== groupOf.get(l.b)
-    links.push({ id: l.id, source: l.a, target: l.b, kind: inter ? 'inter' : 'intra', dash: LINK_DASH[l.kind], label: l.kind })
+    links.push({ id: l.id, source: l.a, target: l.b, kind: inter ? 'inter' : 'intra', dash: LINK_DASH[l.kind], label: l.kind, correlation: g.correlations?.links.has(l.id) })
   }
   return { nodes, links }
 }
@@ -104,7 +110,15 @@ const shortLabel = (s: string, n = 54) => (s.length > n ? s.slice(0, n - 1) + 'â
 /** Knowledge graph nodes and links for the visible kinds. When messages are hidden, their links move onto their
  * conversation. Knowledge is the spine: only knowledge and its direct neighbours are drawn, plus the neighbours of
  * `keep` (the selection), so clicking a node reveals what hangs off it. */
-export function knowledgeModel(nodes: Map<string, KgData>, edges: KgData[], visible: (d: KgData | undefined) => boolean, showMessages: boolean, keep?: string | null) {
+export function knowledgeModel(
+  nodes: Map<string, KgData>,
+  edges: KgData[],
+  visible: (d: KgData | undefined) => boolean,
+  showMessages: boolean,
+  keep?: string | null,
+  correlations?: PatternIndex,
+  focusPattern?: Pattern | null,
+) {
   const threadOf = new Map(edges.filter((e) => e.type === 'PART_OF').map((e) => [String(e.source), String(e.target)]))
   const fNodes: ForceNode[] = []
   const fLinks: ForceLink[] = []
@@ -142,15 +156,34 @@ export function knowledgeModel(nodes: Map<string, KgData>, edges: KgData[], visi
   fLinks.length = 0
   fLinks.push(...links)
   for (const d of nodes.values()) {
-    if (!visible(d) || !keepNode(d.id)) continue
+    if (!keepNode(d.id) || (!visible(d) && d.id !== keep)) continue
     const k = d.kind as KgKind
+    const correlation: ForceNode['correlation'] =
+      correlations?.problem.has(d.id) || correlations?.occurrenceAssertions.has(d.id)
+        ? 'problem'
+        : correlations?.suspect.has(d.id)
+          ? 'suspect'
+          : undefined
     fNodes.push({
       id: d.id,
       label: shortLabel(title(d)),
       color: KIND[k]?.token ?? '--k-message',
       ...(KG_SHAPE[k] ?? { shape: 'circle', radius: 10 }),
       faded: k === 'Assertion' && d.valid === false,
+      correlation,
     })
+  }
+  // A selected correlation draws the line between its reports: "these failed together". Only the focused pattern,
+  // so the graph does not become a hairball.
+  if (focusPattern) {
+    const ids = focusPattern.occurrences.map((o) => o.assertion_id).filter((id) => keepNode(id) && visible(nodes.get(id)))
+    for (let i = 0; i < ids.length - 1; i++) {
+      const source = ids[i]
+      const target = ids[i + 1]
+      const id = `pattern:${source}|${target}`
+      if (source === target || fLinks.some((l) => l.id === id)) continue
+      fLinks.push({ id, source, target, kind: 'edge', dash: [4, 3], color: '--warn', correlation: true })
+    }
   }
   return { fNodes, fLinks }
 }

@@ -2,9 +2,9 @@
 import type { AssertionType, Origin, Severity, SourceKind, StageName, StageStatus, ThreadStatus, TrustLevel } from '../api/types'
 
 export const TYPE_STYLE: Record<AssertionType, { label: string; cls: string; hex: string }> = {
-  workaround: { label: 'Workaround', cls: 'bg-surface-2 text-muted', hex: '#7c6bd6' },
-  access: { label: 'Access', cls: 'bg-surface-2 text-muted', hex: '#c98a1b' },
-  fact: { label: 'Fact', cls: 'bg-surface-2 text-muted', hex: '#3d8bd9' },
+  workaround: { label: 'Workaround', cls: 'bg-surface-2 text-muted', hex: '#6d4fd0' },
+  access: { label: 'Access', cls: 'bg-surface-2 text-muted', hex: '#92610a' },
+  fact: { label: 'Fact', cls: 'bg-surface-2 text-muted', hex: '#1d63c9' },
   invalidation: { label: 'Invalidation', cls: 'bg-surface-2 text-muted', hex: '#64748b' },
 }
 
@@ -23,8 +23,8 @@ export const TRUST_HELP: Record<TrustLevel, string> = {
 
 export const SOURCE_STYLE: Record<SourceKind, { label: string; cls: string; hex: string }> = {
   teams: { label: 'Teams', cls: 'bg-surface-2 text-muted', hex: '#5b5fc7' },
-  email: { label: 'Email', cls: 'bg-surface-2 text-muted', hex: '#0ea5e9' },
-  slack: { label: 'Slack', cls: 'bg-surface-2 text-muted', hex: '#e01e5a' },
+  email: { label: 'Email', cls: 'bg-surface-2 text-muted', hex: '#0b7fa8' },
+  slack: { label: 'Slack', cls: 'bg-surface-2 text-muted', hex: '#c81e4f' },
   operator: { label: 'Operator', cls: 'bg-surface-2 text-muted', hex: '#64748b' },
 }
 

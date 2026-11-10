@@ -2,18 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      (() => {
-        try {
-          const theme = localStorage.getItem('theme')
-          if (theme !== 'light') document.documentElement.classList.add('dark')
-        } catch {
-          document.documentElement.classList.add('dark')
-        }
-      })()
-    </script>
     <link rel="icon" type="image/png" href="/elidex-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f8fb" />
+    <meta name="color-scheme" content="light" />
     <meta name="description" content="ElidEx connects knowledge from specialist conversations to the network context agents need." />
     <title>ElidEx · Context Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

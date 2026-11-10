@@ -1,10 +1,11 @@
 import { Mail, Hash, MessageSquare, Plus, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { LiveThread, Origin, ThreadSource, ThreadStatus } from '../../api/types'
 import { cn } from '../../lib/cn'
 import { fmtDateTime } from '../../lib/format'
 import { ORIGIN_STYLE, SOURCE_STYLE, THREAD_STATUS_STYLE } from '../../lib/semantic'
+import { useConnections, useLiveAiReady } from '../../store/connections'
 import { useLive } from '../../store/live'
 import { Badge, Button, EmptyState, FilterMenu, Input, Select } from '../ui'
 import { NewThreadModal } from './NewThreadModal'
@@ -23,13 +24,32 @@ export const threadTitle = (t: LiveThread) => t.subject || (t.id === 'elisa/team
 
 export function ThreadList({ selectedId }: { selectedId: string | null }) {
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const canUseLiveAi = useLiveAiReady()
+  const connectionsLoaded = useConnections((state) => state.snapshot !== null)
+  const refreshConnections = useConnections((s) => s.refresh)
   const threadsMap = useLive((s) => s.threads)
   const nav = useNavigate()
+  const [params, setParams] = useSearchParams()
   const [q, setQ] = useState('')
   const [source, setSource] = useState<ThreadSource | ''>('')
   const [origin, setOrigin] = useState<Origin | ''>('')
   const [status, setStatus] = useState<ThreadStatus | ''>('')
   const [creating, setCreating] = useState(false)
+
+  useEffect(() => {
+    void refreshConnections(true)
+  }, [refreshConnections])
+
+  // Connections links here with ?new=1. Only open the composer when a live model is
+  // available; the scripted demo keeps its prepared conversations.
+  useEffect(() => {
+    if (params.get('new') !== '1') return
+    if (canUseLiveAi) setCreating(true)
+    if (!canUseLiveAi && !connectionsLoaded) return
+    const next = new URLSearchParams(params)
+    next.delete('new')
+    setParams(next, { replace: true })
+  }, [params, canUseLiveAi, connectionsLoaded, setParams])
 
   const threads = useMemo(() => {
     const ql = q.trim().toLowerCase()
@@ -73,7 +93,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
             ))}
           </Select>
           </FilterMenu>
-          {!publicDemo && <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
+          {(!publicDemo || canUseLiveAi) && <Button variant="primary" icon={<Plus size={14} />} onClick={() => setCreating(true)}>
             New
           </Button>}
         </div>
@@ -83,7 +103,7 @@ export function ThreadList({ selectedId }: { selectedId: string | null }) {
           <EmptyState
             icon={<MessageSquare size={28} />}
             title={Object.keys(threadsMap).length ? 'No thread matches the filters' : 'No conversations yet'}
-            hint={publicDemo ? 'Play the scripted day from Try the demo.' : 'Run a scenario from Data, or start a thread by hand.'}
+            hint={publicDemo ? canUseLiveAi ? 'Start a thread with New, or play the scripted day from Company day.' : 'Play the scripted day from Company day, or connect an AI provider in Connections to start your own.' : 'Run a scenario from Data, or start a thread by hand.'}
           />
         ) : (
           threads.map((t) => {

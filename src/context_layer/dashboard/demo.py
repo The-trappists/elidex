@@ -14,10 +14,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 
 from .. import config
+from ..connections import ConnectionRegistry, bind_connections, current_connection
 from ..demo_policy import BudgetLedger, DemoLimitError, DemoPolicy, PriceCatalog, bind_policy
 from . import persistence
 from .archive import Archive
@@ -33,9 +35,16 @@ COOKIE = "context_demo"
 class PublicDashboard(Dashboard):
     def refresh_readonly_settings(self):
         super().refresh_readonly_settings()
-        self.settings.extractor_mode = "scripted"
-        self.settings.slack_connected = False
-        self.settings.slack_mirror = False
+        registry = current_connection()
+        personal = registry is not None and registry.ai is not None
+        self.settings.extractor_mode = "llm" if personal else "scripted"
+        self.settings.llm_configured = personal
+        self.settings.llm_model = registry.ai.model if personal else None
+        self.settings.llm_fallback_model = None
+        self.settings.slack_connected = bool(getattr(self.slack, "connected", False))
+        self.settings.slack_mirror = bool(
+            registry is not None and registry.slack_bridge is not None and getattr(registry.slack_bridge, "connected", False)
+        )
         self.settings.use_critic = False
         self.settings.use_judge = False
         self.settings.use_outcome_loop = False
@@ -49,8 +58,10 @@ class Workspace:
         self.directory = manager.root / ident
         self.policy = DemoPolicy(trace_sink=self.trace, ledger=manager.budget, prices=manager.prices,
                                  workspace_id=ident, budget_required=True)
-        with bind_policy(self.policy):
+        self.connections = ConnectionRegistry(public_demo=True)
+        with bind_policy(self.policy), bind_connections(self.connections):
             self.wb = PublicDashboard(state_file=self.directory / "state.json", seed=False)
+        self.wb.connections = self.connections
         self.wb.llm_calls_file = self.directory / "llm_calls.jsonl"
         self.wb.llm_cache_file = self.directory / "extractions.json"
         self.live_task = None
@@ -63,7 +74,7 @@ class Workspace:
     async def start(self):
         loop = asyncio.get_running_loop()
         self.wb.bus.loop = loop
-        with bind_policy(self.policy):
+        with bind_policy(self.policy), bind_connections(self.connections):
             self.wb.replace_state(copy.deepcopy(self.manager.snapshot))
             self.wb.refresh_readonly_settings()
             self.wb.clock.start()
@@ -85,7 +96,10 @@ class Workspace:
                 self.wb.llm_calls.append(call)
                 del self.wb.llm_calls[:-100]
                 self.wb.emit("llm.call", call)
-        self.wb.bus.loop.call_soon_threadsafe(record)
+        try:
+            self.wb.bus.loop.call_soon_threadsafe(record)
+        except RuntimeError:  # the loop closed while a worker was finishing
+            pass
 
     def status(self):
         budget = self.manager.budget_status(self.id)
@@ -102,6 +116,12 @@ class Workspace:
         self.closed = True
         self.state.closing = True
         self.policy.finish_run()
+        try:
+            await self.connections.close()
+        except Exception:  # noqa: BLE001 - expiry must still clean the workspace
+            pass
+        self.wb.slack = None
+        self.state.slack = None
         tasks = self.tasks + ([self.live_task] if self.live_task else [])
         for task in tasks:
             task.cancel()
@@ -184,14 +204,17 @@ class WorkspaceManager:
                     "budget_available": False}
 
     def live_unavailable_reason(self, workspace_id):
-        if not self.live_enabled:
-            return "Live AI is paused by the team. Scripted exploration remains available."
-        if self.budget_error:
-            return self.budget_error
-        if self.prices.error:
-            return self.prices.error
-        if not self.budget_status(workspace_id)["budget_available"]:
-            return "The live AI budget is exhausted. Scripted exploration remains available."
+        registry = current_connection()
+        personal = registry is not None and registry.ai is not None
+        if not personal:
+            if not self.live_enabled:
+                return "Live AI is paused by the team. Scripted exploration remains available."
+            if self.budget_error:
+                return self.budget_error
+            if self.prices.error:
+                return self.prices.error
+            if not self.budget_status(workspace_id)["budget_available"]:
+                return "The live AI budget is exhausted. Scripted exploration remains available."
         if not config.llm_configured():
             return "Live generation is currently unavailable. Explore the scripted scenarios."
         from .. import llm
@@ -199,8 +222,9 @@ class WorkspaceManager:
             chain = llm.providers()
             if not chain:
                 return "Live generation is currently unavailable. Explore the scripted scenarios."
-            for provider in chain:
-                self.prices.get(provider.base_url, provider.model)
+            if not personal:
+                for provider in chain:
+                    self.prices.get(provider.base_url, provider.model)
         except DemoLimitError as exc:
             return str(exc)
         except Exception:
@@ -295,10 +319,21 @@ class DemoMiddleware:
 
         # Public routes intentionally exclude data imports, remote data sources, settings and provider checks.
         blocked = path.startswith("/api/sources") or path.startswith("/api/llm/check")
+        personal = workspace.connections.has_ai
+        thread_post = personal and (
+            path == "/api/threads"
+            or (path.startswith("/api/threads/") and (path.endswith("/messages") or path.endswith("/process")))
+        )
         allowed_post = path in {"/api/demo/live-run", "/api/agent/run", "/api/guard", "/api/sim/start", "/api/sim/pause",
                                "/api/sim/speed", "/api/company/start", "/api/company/stop", "/api/company/pause", "/api/company/resume",
-                               "/api/data/reset"} or (path.startswith("/api/sim/scenarios/") and path.endswith("/run"))
-        if blocked or (method not in {"GET", "HEAD"} and not (method == "POST" and allowed_post)):
+                               "/api/data/reset", "/api/connections/ai", "/api/connections/slack"} or thread_post or (
+                               path.startswith("/api/sim/scenarios/") and path.endswith("/run"))
+        allowed_delete = path in {"/api/connections/ai", "/api/connections/slack"}
+        if blocked or (
+            method not in {"GET", "HEAD"}
+            and not (method == "POST" and allowed_post)
+            and not (method == "DELETE" and allowed_delete)
+        ):
             return await JSONResponse({"detail": "This control is unavailable in the public demo."}, status_code=403)(scope, receive, respond)
         if method == "POST" and path != "/api/demo/live-run":
             if path.endswith("/run") and path.startswith("/api/sim/scenarios/"):
@@ -314,21 +349,22 @@ class DemoMiddleware:
                 if not isinstance(body, dict):
                     raise ValueError()
                 if path == "/api/company/start":
-                    body.update(use_llm=False, reset="keep", clear_archive=False,
+                    body.update(use_llm=personal and bool(body.get("use_llm", True)), reset="keep", clear_archive=False,
                                 speed=min(120, max(1, float(body.get("speed", 120)))),
                                 day_minutes=min(480, max(1, int(body.get("day_minutes", 480)))), cycle_minutes=10)
                 if path == "/api/agent/run":
-                    body["use_llm"] = False
+                    body["use_llm"] = personal and bool(body.get("use_llm", True))
                 if path == "/api/sim/speed":
                     body["speed"] = min(120, max(1, float(body.get("speed", 120))))
                 if path == "/api/data/reset":
                     if workspace.live_task and not workspace.live_task.done():
                         return await JSONResponse({"detail": "Wait for the live run to finish before resetting."}, status_code=409)(scope, receive, respond)
-                    with bind_policy(workspace.policy):
+                    with bind_policy(workspace.policy), bind_connections(workspace.connections):
                         workspace.state.company.stop()
                         workspace.wb.replace_state(copy.deepcopy(self.manager.snapshot))
                         workspace.wb.refresh_readonly_settings()
-                    return await JSONResponse(workspace.status())(scope, receive, respond)
+                        reset_status = workspace.status()
+                    return await JSONResponse(reset_status)(scope, receive, respond)
             except (ValueError, TypeError):
                 return await JSONResponse({"detail": "Invalid demo request."}, status_code=422)(scope, receive, respond)
             payload = json.dumps(body).encode()
@@ -341,13 +377,14 @@ class DemoMiddleware:
                     return {"type": "http.request", "body": payload, "more_body": False}
                 return await original_receive()
             receive = rewritten_receive
-        with bind_policy(workspace.policy):
+        with bind_policy(workspace.policy), bind_connections(workspace.connections):
             await self.app(scope, receive, respond)
 
 
 def create_demo_app(root=None, background=True):
     from .app import _serve_web
     from .routes import router
+    from .routes_connections import router as connections_router
     from .routes_export import router as export_router
     from .routes_knowledge import router as knowledge_router
     manager = WorkspaceManager(root or os.getenv("DEMO_STATE_DIR", str(config.OUT_DIR / "public-demo")), background)
@@ -368,6 +405,16 @@ def create_demo_app(root=None, background=True):
     app = FastAPI(title="Context public demo", lifespan=lifespan)
     app.state.demo_manager = manager
     app.add_middleware(DemoMiddleware, manager=manager)
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, exc: RequestValidationError):
+        # Never echo submitted credentials: FastAPI's default body repeats the input values.
+        details = [
+            {"loc": ".".join(str(part) for part in err.get("loc", ()) if part != "body"),
+             "msg": err.get("msg", "Invalid value"), "type": err.get("type", "value_error")}
+            for err in exc.errors()
+        ]
+        return JSONResponse({"detail": details}, status_code=422)
 
     @app.get("/api/demo")
     async def status(request: Request):
@@ -390,6 +437,7 @@ def create_demo_app(root=None, background=True):
         return workspace.status()
 
     app.include_router(router)
+    app.include_router(connections_router)
     app.include_router(export_router)
     app.include_router(knowledge_router)
     _serve_web(app)

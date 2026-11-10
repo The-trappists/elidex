@@ -1,13 +1,23 @@
-import { addDays, format } from 'date-fns'
+import { addDays } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import type { Pattern } from '../api/types'
 import { Inspector } from '../components/graph/Inspector'
 import type { NodeKind } from '../components/graph/graphModel'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
+import { NetworkHealthStrip, SitesList } from '../components/network/NetworkChrome'
 import { TopologyGraph, TopologyKey } from '../components/force/TopologyGraph'
 import { knowledgeTargets } from '../components/force/models'
-import { Button, Input } from '../components/ui'
+import { CorrelationsChip } from '../components/insights/CorrelationsChip'
+import { PatternDrawer } from '../components/insights/PatternDrawer'
+import { patternIndex } from '../components/insights/patternIndex'
+import { usePatterns } from '../components/insights/usePatterns'
+import { SimTimeline, TimeChip } from '../components/timeline/SimTimeline'
+import { threadEntityIndex, type TimelineEvent } from '../components/timeline/timelineModel'
+import { useTimelineEvents } from '../components/timeline/useTimeline'
+import { useCompanyDay } from '../lib/useCompanyDay'
 import { useSimNow } from '../lib/useNow'
+import { useDemo } from '../store/demo'
 import { useLive } from '../store/live'
 
 const HOUR = 3_600_000
@@ -18,11 +28,19 @@ export default function NetworkPage() {
   const nowSec = Math.floor((useSimNow(5000) ?? new Date()).getTime() / 1000)
   const now = useMemo(() => new Date(nowSec * 1000), [nowSec])
   const [t, setT] = useState<Date | null>(null) // null = follow sim now
-  const [q, setQ] = useState('')
+  const [drawer, setDrawer] = useState(false)
+  const [focusPattern, setFocusPattern] = useState<Pattern | null>(null)
   const assertions = useLive((s) => s.assertions)
+  const incidents = useLive((s) => s.incidents)
+  const threads = useLive((s) => s.threads)
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
   const classes = useLive((s) => s.classes)
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const company = useCompanyDay()
+  const events = useTimelineEvents()
+  const { patterns } = usePatterns()
+  const correlations = useMemo(() => patternIndex(patterns), [patterns])
 
   const at = t ?? now
   const min = useMemo(() => {
@@ -50,74 +68,80 @@ export default function NetworkPage() {
     [selectedId, kind, elements, classes, assertions],
   )
 
-  const rel = at.getTime() - now.getTime()
-  const state = Math.abs(rel) < HOUR / 2 ? 'now' : rel < 0 ? 'past' : 'future'
+  const threadEntity = useMemo(() => threadEntityIndex(threads, incidents), [threads, incidents])
+  const onTimelineSelect = (e: TimelineEvent) => {
+    const id = e.kind === 'conversation' ? (e.entityId ?? (e.threadId ? threadEntity.get(e.threadId) : undefined)) : (e.assertionId ?? e.entityId)
+    if (id) select(id)
+  }
+
+  const insight = focusPattern ? { problem: focusPattern.elements, suspect: focusPattern.suspects, links: focusPattern.links } : null
 
   return (
-    <GraphWorkspace
-      title="Knowledge across the network"
-      description="Explore equipment and the experience attached to it, now or at another point in time."
-      selected={!!kind}
-      onClear={() => select(null)}
-      toolbar={
-        <>
-          <div className="flex w-full flex-wrap items-center gap-3">
-            <div className="shrink-0 leading-tight">
-              <div className="text-xs text-muted">Situation on</div>
-              <div className="text-sm font-semibold tabular-nums">
-                {format(at, 'EEE d MMM yyyy, HH:mm')}
-                {state !== 'now' && <span className="ml-2 font-normal text-muted">({state === 'past' ? 'past' : 'future'})</span>}
-              </div>
-            </div>
-            <input
-              type="range"
-              className="min-w-24 flex-1 accent-[var(--accent)]"
-              min={min}
-              max={max}
-              step={HOUR}
-              value={Math.min(Math.max(at.getTime(), min), max)}
-              onChange={(e) => setT(new Date(Number(e.target.value)))}
-              aria-label="Travel in time"
-              title="Drag to see which knowledge was in force at another time"
-            />
-            <Button size="sm" disabled={!t} onClick={() => setT(null)}>
-              Back to now
-            </Button>
-          </div>
-        </>
-      }
-      legend={<TopologyKey />}
-      canvas={
-        <TopologyGraph at={at} selectedId={kind === 'element' || kind === 'site' ? selectedId : null} highlightIds={highlightIds} onSelect={select} />
-      }
-      browse={
-        <div className="p-4">
-          <h3 className="mb-3 font-semibold">Find equipment or a site</h3>
-          <Input aria-label="Search network" placeholder="Search by name, model or ID" value={q} onChange={(e) => setQ(e.target.value)} />
-          <div className="mt-3 divide-y divide-line">
-            {[
-              ...sites.map((s) => ({ id: s.id, title: s.name, detail: 'Site · ' + s.region })),
-              ...elements.map((e) => ({
-                id: e.id,
-                title: e.id,
-                detail: e.model + ' · ' + (sites.find((s) => s.id === e.site_id)?.name ?? 'No site'),
-              })),
-            ]
-              .filter((x) => `${x.title} ${x.id} ${x.detail}`.toLowerCase().includes(q.toLowerCase()))
-              .map((x) => (
-                <button key={x.id} onClick={() => select(x.id)} className="w-full rounded-md py-3 text-left hover:bg-surface-2">
-                  <span className="block text-sm font-medium">{x.title}</span>
-                  <span className="mt-1 block text-xs leading-relaxed text-muted">{x.detail}</span>
-                </button>
-              ))}
-          </div>
-        </div>
-      }
-      details={
-        <>
-          <Inspector id={selectedId} kind={kind} at={at} onSelect={(id) => select(id)} />
-        </>
-      }
-    />
+    <>
+      <GraphWorkspace
+        title="Network"
+        description="Sites, equipment and what is happening."
+        variant="compact"
+        actions={
+          <>
+            <CorrelationsChip patterns={patterns} onOpen={() => setDrawer(true)} />
+            <TimeChip at={at} now={now} follow={t === null} onReset={() => setT(null)} />
+          </>
+        }
+        selected={!!kind}
+        onClear={() => select(null)}
+        toolbar={null}
+        status={<NetworkHealthStrip company={company} incidents={incidents} at={at} now={now} />}
+        timeline={
+          <SimTimeline
+            events={events}
+            at={at}
+            now={now}
+            follow={t === null}
+            onChange={setT}
+            onReset={() => setT(null)}
+            onSelect={onTimelineSelect}
+            selectedId={selectedId}
+            bounds={{ min, max }}
+            company={company}
+          />
+        }
+        legend={<TopologyKey compact />}
+        canvas={
+          <TopologyGraph
+            at={at}
+            selectedId={kind === 'element' || kind === 'site' ? selectedId : null}
+            highlightIds={highlightIds}
+            onSelect={select}
+            correlations={correlations}
+            insight={insight}
+          />
+        }
+        browse={<SitesList at={at} selectedId={selectedId} onSelect={select} company={company} />}
+        details={
+          <Inspector
+            id={selectedId}
+            kind={kind}
+            at={at}
+            summary={publicDemo}
+            onSelect={(id) => select(id)}
+            patterns={patterns}
+            onOpenPattern={(p) => {
+              setFocusPattern(p)
+              setDrawer(true)
+            }}
+          />
+        }
+      />
+      <PatternDrawer
+        open={drawer}
+        onClose={() => setDrawer(false)}
+        patterns={patterns}
+        threads={threads}
+        selectedId={focusPattern?.id}
+        onFocus={setFocusPattern}
+        publicDemo={publicDemo}
+      />
+    </>
   )
 }

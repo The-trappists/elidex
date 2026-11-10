@@ -1,15 +1,26 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
-/** A quiet, always-visible key. It explains the picture; it is not a control. */
-export function GraphKey({ items }: { items: { label: string; swatch: ReactNode }[] }) {
+/** A quiet, always-visible key. It explains the picture; it is not a control.
+ * `moreAfter` shows the first N items and keeps the rest behind a `More` button (0 = never collapse). */
+export function GraphKey({ items, moreAfter = 4 }: { items: { label: string; swatch: ReactNode }[]; moreAfter?: number }) {
+  const [open, setOpen] = useState(false)
+  const collapse = moreAfter > 0 && items.length > moreAfter
+  const shown = collapse && !open ? items.slice(0, moreAfter) : items
   return (
     <ul className="graph-key" aria-label="Legend">
-      {items.map((i) => (
+      {shown.map((i) => (
         <li key={i.label}>
           {i.swatch}
           <span>{i.label}</span>
         </li>
       ))}
+      {collapse && (
+        <li>
+          <button type="button" className="graph-key-more" aria-expanded={open} onClick={() => setOpen(!open)}>
+            {open ? 'Less' : 'More'}
+          </button>
+        </li>
+      )}
     </ul>
   )
 }
@@ -42,8 +53,8 @@ export function LineSwatch({ color = 'var(--g-link)', dash }: { color?: string; 
 }
 
 /** A node shape as drawn on the force canvas. */
-export function ShapeSwatch({ color, shape, dot }: { color: string; shape: 'circle' | 'square' | 'hexagon' | 'triangle' | 'diamond'; dot?: boolean }) {
-  const common = { fill: 'var(--surface)', stroke: color, strokeWidth: 1.6 }
+export function ShapeSwatch({ color, shape, dot, dashed }: { color: string; shape: 'circle' | 'square' | 'hexagon' | 'triangle' | 'diamond'; dot?: boolean; dashed?: boolean }) {
+  const common = { fill: 'var(--surface)', stroke: color, strokeWidth: 1.6, strokeDasharray: dashed ? '2.5 2' : undefined }
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" className="shrink-0" aria-hidden>
       {shape === 'circle' && <circle cx="7" cy="7" r="5.5" {...common} />}

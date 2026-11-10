@@ -21,6 +21,38 @@ uv run ctx llm-check            # which LLM provider / JSON mode works
 - Knowledge comes only from the messages. Nobody fills in a form.
 - Slack stands in for Teams: it shows that the listen step works on the channels people already use.
 
+## Graph time travel
+
+Network and Knowledge graph share an always-visible slider at the top of the timeline, above its range controls and event markers. Drag its handle or click anywhere on the slider to inspect a time; the graph updates during dragging, without waiting for release. The selected date and time stay visible, including on short screens.
+
+The selected time controls incident state and knowledge validity. Event markers remain available for source inspection. Use Day/All and the zoom controls to choose the visible period, and Back to now to follow the simulation clock again. Keyboard controls: Left/Right step one minute, Shift steps 15 minutes, Home/End select the visible range boundaries, and N returns to now.
+
+## Connections
+
+Both dashboard modes expose `/connections`. Start with the keyless prepared demo; connect one AI provider only when you want to read new conversations. Slack is an optional source, not a prerequisite. Teams and email in the demo are prepared conversations, not connected Microsoft accounts.
+
+Live integrations require users to provide their own service accounts, API keys, tokens and channel IDs. The Connections page makes this explicit rather than advertising a public-demo call allowance; backend resource safeguards still apply.
+
+The UI supports Gemini (AI Studio), Mistral, Groq, OpenAI and Featherless using fixed HTTPS API endpoints. Users supply a model they can access and explicitly consent to a small billable connection check and subsequent provider charges. A successful check is required before replacing a working connection. Vertex AI and separate server-side fallback/critic configuration remain deployment-owner options.
+
+Connection credentials are held only in server memory, excluded from state persistence, exports and API snapshots. Public visitors have separate cookie-scoped workspaces; a reload retains a connection, but expiry, disconnect or server shutdown removes it. The team dashboard is one shared workspace, so connection changes there affect every team user. Already-sent provider requests cannot be recalled by disconnecting.
+
+Public personal AI is user-funded, separate from the deployment's shared demo allowance: by default at most 30 provider attempts per 600-second window per workspace (`DEMO_PERSONAL_MAX_CALLS`), 24,000 input characters per call, 1,024 output tokens and a 30-second timeout. Reconnecting does not refill the window. Public critic, judge and outcome-loop toggles remain off; the shared team dashboard can enable them. The team dashboard does not impose the public personal-call cap. The existing one-off live scenario remains once per public workspace.
+
+MongoDB Atlas and Tiger Data remain optional server-managed dataset/archive services; local files work without either. A configured service is not a verified healthy connection. Public demo archives stay local even if the deployment has cloud databases. The built-in knowledge graph requires no external database; the optional Neo4j mirror is managed with `ctx graph push`.
+
+See [Slack setup](slack-setup.md) for the actual app, scopes, approval, tokens and channel invitation required for Socket Mode. There is no one-click OAuth installation or bulk channel-history import.
+
+| Connection endpoint | Body | Result |
+| --- | --- | --- |
+| `GET /api/connections` | | Sanitized AI, Slack, optional infrastructure and dashboard-mode status |
+| `POST /api/connections/ai` | `{provider, model, api_key}` | Tests the provider, then installs the personal connection on success |
+| `DELETE /api/connections/ai` | | Removes the in-memory AI connection |
+| `POST /api/connections/slack` | `{bot_token, app_token, channel_id}` | Validates access and starts the workspace's bridge |
+| `DELETE /api/connections/slack` | | Stops the bridge and removes its listener |
+
+These credentials configure the running dashboard only; they do not configure a separate CLI or MCP process.
+
 ## Loop v2 overview
 
 The Dashboard runs the loop v2 agents on top of the five pipeline steps. The loop is **fully automated**: knowledge goes live with no human review and nobody is asked for a click. The operator console is optional, for observation, debugging and manual override.

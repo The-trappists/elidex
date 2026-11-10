@@ -14,7 +14,7 @@ const networkHref = (id: string) => `/network?select=${encodeURIComponent(id)}`
 const graphHref = (id: string) => `/graph?focus=${encodeURIComponent(id)}`
 const SHOWN_REPORTS = 3
 
-export function PatternRow({ p, active, isNew, onSelect, threads }: { p: Pattern; active: boolean; isNew: boolean; onSelect: () => void; threads: Record<string, LiveThread> }) {
+export function PatternRow({ p, active, isNew, onSelect, threads, publicDemo, compact }: { p: Pattern; active: boolean; isNew: boolean; onSelect: () => void; threads: Record<string, LiveThread>; publicDemo?: boolean; compact?: boolean }) {
   return (
     <div className={cn('my-1 rounded-md', active && 'bg-accent-soft/40 ring-1 ring-accent/40', p.level === 'resolved' && !active && 'opacity-70')}>
       <button onClick={onSelect} aria-expanded={active} className="w-full rounded-md px-2 py-3 text-left hover:bg-surface-2">
@@ -27,27 +27,27 @@ export function PatternRow({ p, active, isNew, onSelect, threads }: { p: Pattern
         <span className="mt-1 block truncate font-mono text-xs text-muted">{p.elements.join(' · ')}</span>
         <span className="mt-0.5 block break-words text-sm leading-relaxed">{p.headline}</span>
       </button>
-      {active && <Details p={p} threads={threads} />}
+      {active && <Details p={p} threads={threads} publicDemo={publicDemo} compact={compact} />}
     </div>
   )
 }
 
-function Report({ o, threads }: { o: PatternOccurrence; threads: Record<string, LiveThread> }) {
+function Report({ o, threads, publicDemo }: { o: PatternOccurrence; threads: Record<string, LiveThread>; publicDemo?: boolean }) {
   return (
     <li className="rounded-md border border-line bg-surface p-2">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="tabular-nums text-muted">{fmtDate(o.at)}</span>
-        <Link to={networkHref(o.element)} title="Show on the Network page"><IdChip className="hover:border-accent">{o.element}</IdChip></Link>
+        <Link to={networkHref(o.element)} title="Show on the Network page" className="inline-flex min-h-8 items-center"><IdChip className="hover:border-accent">{o.element}</IdChip></Link>
         {o.kind === 'applied' && <Badge>Agent applied it</Badge>}
         {o.by && <span className="text-muted">{o.by}</span>}
       </div>
       <p className="mt-1 break-words">{o.action ?? o.topic}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <CopyId id={o.assertion_id} />
-        <Link className="inline-flex min-h-6 items-center gap-1 text-accent hover:underline" to={assertionHref(o.assertion_id)}><ExternalLink size={11} />Knowledge</Link>
-        <Link className="inline-flex min-h-6 items-center gap-1 text-accent hover:underline" to={graphHref(o.assertion_id)}><Waypoints size={11} />Graph</Link>
+        {!publicDemo && <CopyId id={o.assertion_id} />}
+        <Link className="inline-flex min-h-8 items-center gap-1 text-accent hover:underline" to={assertionHref(o.assertion_id)}><ExternalLink size={11} />Knowledge</Link>
+        <Link className="inline-flex min-h-8 items-center gap-1 text-accent hover:underline" to={graphHref(o.assertion_id)}><Waypoints size={11} />Graph</Link>
         {o.sources.slice(0, 2).map((s) => (
-          <Link key={s} className="inline-flex min-h-6 max-w-full items-center gap-1 text-accent hover:underline" to={threadHref(s)} title={s}>
+          <Link key={s} className="inline-flex min-h-8 max-w-full items-center gap-1 text-accent hover:underline" to={threadHref(s)} title={s}>
             <MessageSquare size={11} /><span className="truncate">{threads[s]?.subject ?? 'Conversation'}</span>
           </Link>
         ))}
@@ -56,15 +56,17 @@ function Report({ o, threads }: { o: PatternOccurrence; threads: Record<string, 
   )
 }
 
-function Details({ p, threads }: { p: Pattern; threads: Record<string, LiveThread> }) {
+function Details({ p, threads, publicDemo, compact }: { p: Pattern; threads: Record<string, LiveThread>; publicDemo?: boolean; compact?: boolean }) {
   const [all, setAll] = useState(false)
-  const reports = all ? p.occurrences : p.occurrences.slice(0, SHOWN_REPORTS)
+  const limit = compact ? 2 : SHOWN_REPORTS
+  const reports = all ? p.occurrences : p.occurrences.slice(0, limit)
   const first = p.occurrences[0]
   return (
     <div className="flex flex-col gap-3 border-t border-line px-2 pb-3 pt-2.5 text-xs">
-      <p className="text-muted"><b className="font-semibold text-text">{LEVEL_LABEL[p.level]}.</b> {LEVEL_HELP[p.level]} Every cause below is a hypothesis to check, never a rule.</p>
+      {!compact && <p className="text-muted"><b className="font-semibold text-text">{LEVEL_LABEL[p.level]}.</b> {LEVEL_HELP[p.level]} Every cause below is a hypothesis to check, never a rule.</p>}
 
-      {p.hypotheses.slice(0, 3).map((h, i) => (
+      {compact && <><h4 className="font-medium text-muted">Possible explanation</h4><p className="text-muted">Hypothesis to check, not a confirmed cause or an agent rule.</p></>}
+      {p.hypotheses.slice(0, compact ? 1 : 3).map((h, i) => (
         <div key={i} className="rounded-md border border-line bg-surface p-2.5">
           <div className="flex gap-1.5">
             <Lightbulb size={13} className="mt-0.5 shrink-0 text-accent" aria-hidden />
@@ -82,9 +84,9 @@ function Details({ p, threads }: { p: Pattern; threads: Record<string, LiveThrea
       ))}
 
       <div>
-        <h4 className="mb-1.5 font-medium text-muted">{p.occurrences.length} supporting report{p.occurrences.length === 1 ? '' : 's'}</h4>
-        <ul className="space-y-1.5">{reports.map((o, i) => <Report key={`${o.assertion_id}-${i}`} o={o} threads={threads} />)}</ul>
-        {p.occurrences.length > SHOWN_REPORTS && (
+        <h4 className="mb-1.5 font-medium text-muted">{compact ? 'Reports' : `${p.occurrences.length} supporting report${p.occurrences.length === 1 ? '' : 's'}`}</h4>
+        <ul className="space-y-1.5">{reports.map((o, i) => <Report key={`${o.assertion_id}-${i}`} o={o} threads={threads} publicDemo={publicDemo} />)}</ul>
+        {p.occurrences.length > limit && (
           <button className="mt-1.5 font-medium text-muted hover:text-text" onClick={() => setAll(!all)}>{all ? 'Show fewer' : `Show all ${p.occurrences.length}`}</button>
         )}
       </div>
@@ -102,20 +104,20 @@ function Details({ p, threads }: { p: Pattern; threads: Record<string, LiveThrea
         </div>
       )}
       {p.people.length > 0 && <div><span className="font-medium text-muted">Who to ask: </span>{p.people.join(', ')}</div>}
-      {p.grouped.length > 0 && <div className="text-muted">Counted as one problem: {p.grouped.join('; ')}</div>}
+      {!compact && p.grouped.length > 0 && <div className="text-muted">Counted as one problem: {p.grouped.join('; ')}</div>}
 
       <div className="flex flex-wrap items-center gap-1.5">
         {[...p.elements, ...p.suspects].map((id) => (
-          <Link key={id} to={networkHref(id)} title="Show on the Network page"><IdChip className="hover:border-accent">{id}</IdChip></Link>
+          <Link key={id} to={networkHref(id)} title="Show on the Network page" className="inline-flex min-h-8 items-center"><IdChip className="hover:border-accent">{id}</IdChip></Link>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
-        {first && <Link to={graphHref(first.assertion_id)}><Button size="sm" icon={<Waypoints size={13} />}>Show in graph</Button></Link>}
-        <Link to={networkHref(p.suspects[0] ?? p.elements[0])}><Button size="sm" icon={<Network size={13} />}>Show on network</Button></Link>
-        <ExportListMenu label="Export evidence" filename={p.id} build={(f) => buildPatternsExport([p], threads, f)} />
-        <CopyId id={p.id} />
+        {first && <Link to={graphHref(first.assertion_id)}><Button size="sm" icon={<Waypoints size={13} />}>{compact ? 'Open in graph' : 'Show in graph'}</Button></Link>}
+        <Link to={networkHref(p.suspects[0] ?? p.elements[0])}><Button size="sm" icon={<Network size={13} />}>{compact ? 'Open on network' : 'Show on network'}</Button></Link>
+        {!publicDemo && <ExportListMenu label="Export evidence" filename={p.id} build={(f) => buildPatternsExport([p], threads, f)} />}
+        {!publicDemo && <CopyId id={p.id} />}
       </div>
-      <div className="text-[11px] text-muted">{p.note}</div>
+      {!compact && <div className="text-[11px] text-muted">{p.note}</div>}
     </div>
   )
 }
