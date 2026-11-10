@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { api } from '../../api/client'
 import { demoKnowledgeGraph, isDemo } from '../../api/fixtures/company'
 import type { KgElement, KgKind } from '../../api/types'
-import { cn } from '../../lib/cn'
 import { useLive } from '../../store/live'
 import { ForceCanvas, GraphLoading, type ForceNode } from '../force/ForceCanvas'
 import { knowledgeModel } from '../force/models'
@@ -15,16 +14,47 @@ import { Badge, EmptyState, Toggle } from '../ui'
 type Data = KgElement['data']
 const KINDS = new Set<KgKind>(['Assertion', 'Person', 'Element', 'Class', 'Event', 'Thread'])
 const FRESH_MS = 7000
+const NO_IDS: Set<string> = new Set()
 
 const fetchGraph = () => (isDemo() ? Promise.resolve(demoKnowledgeGraph(useLive)) : api.knowledgeGraph())
 
-export function CompanyGraph({ since, onlyNew, onOnlyNew }: { since: Set<string>; onlyNew: boolean; onOnlyNew: (v: boolean) => void }) {
+export function CompanyGraph({
+  since = NO_IDS,
+  onlyNew = false,
+  onOnlyNew,
+  publicDemo,
+  maxNodes,
+  newCount,
+}: {
+  since?: Set<string>
+  onlyNew?: boolean
+  onOnlyNew?: (v: boolean) => void
+  publicDemo?: boolean
+  /** Public demo: only the newest valid knowledge nodes are drawn (the full graph stays on /graph). */
+  maxNodes?: number
+  /** Public demo: knowledge added since the last sync, for the chip. */
+  newCount?: number
+}) {
   const { data, error } = useGraphQuery(fetchGraph, 'company-kg', 1200, 4000)
   const [selected, setSelected] = useState<string | null>(null)
   const [fresh, setFresh] = useState<Set<string>>(new Set())
   const known = useRef<Set<string> | null>(null)
   const timers = useRef<number[]>([])
   const hasKnowledge = useLive((s) => Object.keys(s.assertions).length > 0)
+  const assertions = useLive((s) => s.assertions)
+
+  // The newest valid knowledge nodes, from the store (the graph payload has no guaranteed valid_from).
+  const newest = useMemo(() => {
+    if (!publicDemo) return null
+    const cap = maxNodes ?? 40
+    return new Set(
+      Object.values(assertions)
+        .filter((a) => a.valid_to == null)
+        .sort((a, b) => b.valid_from.localeCompare(a.valid_from))
+        .slice(0, cap)
+        .map((a) => a.id),
+    )
+  }, [assertions, publicDemo, maxNodes])
 
   // Same nodes and links as the last answer: keep the old objects so the layout is not touched.
   const last = useRef<{ sig: string; value: { nodes: Map<string, Data>; edges: Data[] } } | null>(null)
@@ -58,31 +88,54 @@ export function CompanyGraph({ since, onlyNew, onOnlyNew }: { since: Set<string>
   useEffect(() => () => timers.current.forEach(window.clearTimeout), [])
 
   const model = useMemo(
-    () => knowledgeModel(nodes, edges, (d) => !!d && KINDS.has(d.kind as KgKind) && (d.kind !== 'Assertion' || (d.valid !== false && (!onlyNew || since.has(d.id)))), false, selected),
-    [nodes, edges, onlyNew, since, selected],
+    () =>
+      knowledgeModel(
+        nodes,
+        edges,
+        (d) =>
+          !!d &&
+          KINDS.has(d.kind as KgKind) &&
+          (d.kind !== 'Assertion' || (d.valid !== false && (!onlyNew || since.has(d.id)) && (!newest || newest.has(d.id)))),
+        false,
+        selected,
+      ),
+    [nodes, edges, onlyNew, since, newest, selected],
   )
   const fNodes: ForceNode[] = useMemo(() => model.fNodes.map((n) => (fresh.has(n.id) ? { ...n, fresh: true } : n)), [model.fNodes, fresh])
   const sel = selected ? nodes.get(selected) : undefined
+  const canvas = error && !data ? (
+    <EmptyState icon={<Waypoints size={24} />} title="The knowledge map is unavailable" hint="Check the dashboard connection." />
+  ) : !data && hasKnowledge ? (
+    <GraphLoading label="Connecting the knowledge…" />
+  ) : fNodes.length === 0 ? (
+    <EmptyState
+      icon={<Waypoints size={24} />}
+      title={onlyNew ? 'Nothing new since the last sync' : 'The graph is empty'}
+      hint={onlyNew ? 'Turn the filter off to see all knowledge.' : 'It grows as conversations are turned into knowledge.'}
+    />
+  ) : (
+    <ForceCanvas mode="knowledge" nodes={fNodes} links={model.fLinks} selectedId={selected} onSelect={setSelected} ariaLabel="Knowledge graph that grows during the company day" />
+  )
+
+  // Public demo: the canvas is the hero, with the title and the way out laid over it.
+  if (publicDemo)
+    return (
+      <div className="relative min-h-0 flex-1 bg-bg">
+        {canvas}
+        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap items-center gap-2">
+          <h2 className="rounded-md border border-line bg-surface/90 px-2 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm">Knowledge map</h2>
+          <Badge className="bg-accent-soft text-accent shadow-sm" title="Knowledge added since the last sync">{newCount ?? 0} new</Badge>
+        </div>
+        {sel && <span className="pointer-events-none absolute bottom-3 left-3 max-w-[60%] truncate rounded-md bg-surface/90 px-2 py-1 text-xs text-muted shadow-sm">{title(sel)}</span>}
+        <Link to={sel ? `/graph?node=${encodeURIComponent(sel.id)}` : '/graph'} className="absolute bottom-3 right-3 inline-flex min-h-8 items-center rounded-md border border-line bg-surface/90 px-2.5 text-xs font-medium text-accent shadow-sm hover:bg-surface">Open graph</Link>
+      </div>
+    )
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="relative min-h-0 flex-1 bg-bg">
-        {error && !data ? (
-          <EmptyState icon={<Waypoints size={24} />} title="The knowledge map is unavailable" hint="Check the dashboard connection." />
-        ) : !data && hasKnowledge ? (
-          <GraphLoading label="Connecting the knowledge…" />
-        ) : fNodes.length === 0 ? (
-          <EmptyState
-            icon={<Waypoints size={24} />}
-            title={onlyNew ? 'Nothing new since the last sync' : 'The graph is empty'}
-            hint={onlyNew ? 'Turn the filter off to see all knowledge.' : 'It grows as conversations are turned into knowledge.'}
-          />
-        ) : (
-          <ForceCanvas mode="knowledge" nodes={fNodes} links={model.fLinks} selectedId={selected} onSelect={setSelected} ariaLabel="Knowledge graph that grows during the company day" />
-        )}
-      </div>
-      <div className={cn('flex min-h-9 shrink-0 items-center gap-3 border-t border-line px-3 py-1.5 text-xs')}>
-        <Toggle checked={onlyNew} onChange={onOnlyNew} label={<span className="text-xs">Only since last sync</span>} />
+      <div className="relative min-h-0 flex-1 bg-bg">{canvas}</div>
+      <div className="flex min-h-9 shrink-0 items-center gap-3 border-t border-line px-3 py-1.5 text-xs">
+        <Toggle checked={onlyNew} onChange={onOnlyNew ?? (() => undefined)} label={<span className="text-xs">Only since last sync</span>} />
         {sel ? (
           <span className="ml-auto flex min-w-0 items-center gap-2">
             <span className="truncate text-muted">{title(sel)}</span>

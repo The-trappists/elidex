@@ -3,9 +3,9 @@ import { useMemo } from 'react'
 import type { CompanyState } from '../../api/types'
 import { useLive } from '../../store/live'
 import { Stat } from '../ui'
-import { callCount } from './status'
+import { callCount, healthCounts } from './status'
 
-export function CompanyKpis({ c, compact }: { c: CompanyState; compact?: boolean }) {
+export function CompanyKpis({ c, compact, publicDemo }: { c: CompanyState; compact?: boolean; publicDemo?: boolean }) {
   const threads = useLive((s) => s.threads)
   const assertions = useLive((s) => s.assertions)
   const incidents = useLive((s) => s.incidents)
@@ -16,13 +16,24 @@ export function CompanyKpis({ c, compact }: { c: CompanyState; compact?: boolean
     return { valid: all.filter((a) => a.valid_to == null).length, total: all.length }
   }, [assertions])
   const open = useMemo(() => Object.values(incidents).filter((i) => i.status === 'open').length, [incidents])
+  const counts = useMemo(() => healthCounts(c, elements), [c, elements])
   const pct = useMemo(() => {
-    const n = elements.length
-    if (!n) return null
-    const bad = Math.min(n, c.health.filter((h) => h.status !== 'healthy').length)
-    return Math.round(((n - bad) / n) * 100)
-  }, [elements, c.health])
+    const n = counts.healthy + counts.degraded + counts.down + counts.recovering
+    return n ? Math.round((counts.healthy / n) * 100) : null
+  }, [counts])
   const tone = pct == null ? 'neutral' : pct >= 95 ? 'ok' : pct >= 80 ? 'warn' : 'bad'
+
+  // Public demo: four tiles, the health number appears here only (the network strip shows counts).
+  if (publicDemo)
+    return (
+      <div className="grid shrink-0 grid-cols-2 gap-2 md:grid-cols-4 md:gap-3 [&>button]:py-2">
+        <Stat icon={<AlertTriangle size={18} />} label="Open incidents" value={open} tone={open ? 'warn' : 'neutral'} />
+        <Stat icon={<BookOpenCheck size={18} />} label="Knowledge in force" value={valid} tone="accent" />
+        <Stat icon={<Activity size={18} />} label="Network health" value={pct ?? 0} text={pct == null ? '—' : undefined} suffix="%" tone={tone} />
+        <Stat icon={<Bot size={18} />} label="Agent calls" value={callCount(c)} tone="neutral" />
+      </div>
+    )
+
   const size = compact ? 14 : 18
   const wrap = compact ? 'flex shrink-0 gap-2 overflow-x-auto' : `grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3 ${c.endless ? 'lg:grid-cols-3 2xl:grid-cols-6' : 'xl:grid-cols-5'}`
   return (
