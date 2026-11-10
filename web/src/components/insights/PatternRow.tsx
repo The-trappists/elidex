@@ -65,7 +65,7 @@ function Details({ p, threads, publicDemo, compact }: { p: Pattern; threads: Rec
     <div className="flex flex-col gap-3 border-t border-line px-2 pb-3 pt-2.5 text-xs">
       {!compact && <p className="text-muted"><b className="font-semibold text-text">{LEVEL_LABEL[p.level]}.</b> {LEVEL_HELP[p.level]} Every cause below is a hypothesis to check, never a rule.</p>}
 
-      {compact && <h4 className="font-medium text-muted">Likely cause</h4>}
+      {compact && <><h4 className="font-medium text-muted">Possible explanation</h4><p className="text-muted">Hypothesis to check, not a confirmed cause or an agent rule.</p></>}
       {p.hypotheses.slice(0, compact ? 1 : 3).map((h, i) => (
         <div key={i} className="rounded-md border border-line bg-surface p-2.5">
           <div className="flex gap-1.5">
@@ -86,7 +86,7 @@ function Details({ p, threads, publicDemo, compact }: { p: Pattern; threads: Rec
       <div>
         <h4 className="mb-1.5 font-medium text-muted">{compact ? 'Reports' : `${p.occurrences.length} supporting report${p.occurrences.length === 1 ? '' : 's'}`}</h4>
         <ul className="space-y-1.5">{reports.map((o, i) => <Report key={`${o.assertion_id}-${i}`} o={o} threads={threads} publicDemo={publicDemo} />)}</ul>
-        {!compact && p.occurrences.length > SHOWN_REPORTS && (
+        {p.occurrences.length > limit && (
           <button className="mt-1.5 font-medium text-muted hover:text-text" onClick={() => setAll(!all)}>{all ? 'Show fewer' : `Show all ${p.occurrences.length}`}</button>
         )}
       </div>

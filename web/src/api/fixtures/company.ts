@@ -406,10 +406,11 @@ function makePattern(partial: Partial<Pattern> & Pick<Pattern, 'id' | 'kind' | '
 }
 
 /** Correlations for fixture mode: assertions that share a site and name different problems. Demo only. */
-export function demoPatterns(store: Store): PatternReport {
+export function demoPatterns(store: Store, at?: string | null): PatternReport {
   const st = store.getState()
   const bySite = new Map<string, ContextAssertion[]>()
   for (const a of Object.values(st.assertions)) {
+    if (at && new Date(a.valid_from).getTime() > new Date(at).getTime()) continue
     for (const b of a.bound_to) {
       if (b.role === 'trigger') continue
       const site = st.elements.find((e) => e.id === b.entity)?.site_id
@@ -454,5 +455,5 @@ export function demoPatterns(store: Store): PatternReport {
       }),
     )
   }
-  return { at: new Date().toISOString(), meaning: 'off (words only)', patterns }
+  return { at: at ?? new Date().toISOString(), meaning: 'off (words only)', patterns }
 }

@@ -5,14 +5,16 @@ import { demoPatterns, isDemo } from '../../api/fixtures/company'
 import { useLive } from '../../store/live'
 import { useGraphQuery } from '../graph/useGraphQuery'
 
-export function usePatterns(reloadKey: string | number = 0) {
-  const key = `patterns-${reloadKey}`
+export function usePatterns(reloadKey: string | number = 0, at?: string | null) {
+  const key = `patterns-${reloadKey}-${at ?? 'now'}`
   const { data, error } = useGraphQuery(
-    () => (isDemo() ? Promise.resolve(demoPatterns(useLive)) : api.patterns()),
+    async () => ({ at: at ?? null, report: isDemo() ? demoPatterns(useLive, at) : await api.patterns(null, at) }),
     key,
-    2000,
-    15000,
+    at ? 400 : 2000,
+    at ? 2000 : 15000,
   )
+  // A previous snapshot must not masquerade as evidence from the selected time.
+  const report = data?.at === (at ?? null) ? data.report : null
   const [refreshing, setRefreshing] = useState(false)
   const lastKey = useRef(key)
   useEffect(() => {
@@ -24,10 +26,10 @@ export function usePatterns(reloadKey: string | number = 0) {
     if (data) setRefreshing(false)
   }, [data])
   return {
-    report: data,
-    patterns: data?.patterns ?? [],
+    report,
+    patterns: report?.patterns ?? [],
     error,
-    loading: !data && !error,
+    loading: !report && !error,
     refreshing,
   }
 }

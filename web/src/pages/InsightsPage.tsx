@@ -13,12 +13,16 @@ import { TopologyGraph } from '../components/force/TopologyGraph'
 import { GraphKey, LineSwatch, ShapeSwatch, Swatch } from '../components/graph/GraphLegend'
 import { PatternRow } from '../components/insights/PatternRow'
 import { buildPatternsExport, LEVEL_CLS, LEVEL_HELP, LEVEL_LABEL, LEVEL_ORDER, patternText } from '../components/insights/meta'
+import { CorrelationGraph } from '../components/insights/CorrelationGraph'
+import { SimTimeline, TimeChip } from '../components/timeline/SimTimeline'
+import { useTimelineEvents } from '../components/timeline/useTimeline'
+import { useCompanyDay } from '../lib/useCompanyDay'
+import { toNaiveIso } from '../lib/format'
 import { usePatterns } from '../components/insights/usePatterns'
 import { MergesBadge } from '../components/knowledge/MergesDrawer'
 import { ExportListMenu } from '../components/review/ExportListMenu'
 import { Button, EmptyState, Input, Select, Tabs } from '../components/ui'
 import { cn } from '../lib/cn'
-import { useMediaQuery } from '../lib/useMediaQuery'
 import { useSimNow } from '../lib/useNow'
 import { useDemo } from '../store/demo'
 import { useLive } from '../store/live'
@@ -36,10 +40,13 @@ const order = (rows: Pattern[], sort: Sort) =>
 export default function InsightsPage() {
   const threads = useLive((s) => s.threads)
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)
-  const narrow = useMediaQuery('(max-width: 767px)')
   const [params, setParams] = useSearchParams()
   const [reloadKey, setReloadKey] = useState(0)
-  const { report, patterns, error, loading, refreshing } = usePatterns(reloadKey)
+  const [t, setT] = useState<Date | null>(null)
+  const [view, setView] = useState<'evidence' | 'network'>('evidence')
+  const { report, patterns, error, loading, refreshing } = usePatterns(reloadKey, t ? toNaiveIso(t) : null)
+  const events = useTimelineEvents()
+  const company = useCompanyDay()
   const [levels, setLevels] = useState<Set<PatternLevel>>(new Set(['insight', 'watch']))
   const [q, setQ] = useState('')
   const [sort, setSort] = useState<Sort>('newest')
@@ -48,17 +55,18 @@ export default function InsightsPage() {
   const [newIds, setNewIds] = useState<Set<string>>(new Set())
   const nowSec = Math.floor((useSimNow(30_000) ?? new Date()).getTime() / 60_000)
   const now = useMemo(() => new Date(nowSec * 60_000), [nowSec])
+  const at = t ?? now
 
   // Patterns that were not there on the previous report are marked New until the page is left.
   useEffect(() => {
-    if (!report) return
+    if (!report || t) return
     const ids = new Set(report.patterns.map((p) => p.id))
     if (known.current) {
       const added = report.patterns.filter((p) => !known.current!.has(p.id)).map((p) => p.id)
       if (added.length) setNewIds((old) => new Set([...old, ...added]))
     }
     known.current = ids
-  }, [report])
+  }, [report, t])
 
   const computedAt = report ? new Date(report.at) : null
   const needle = q.trim().toLowerCase()
@@ -113,38 +121,43 @@ export default function InsightsPage() {
   const retry = () => setReloadKey((k) => k + 1)
 
   const map = (
-    <section className="diagram-main" aria-label="Network map">
-      <div className="diagram-canvas">
-        {!(publicDemo && narrow) && <TopologyGraph at={now} insight={focus} selectedId={picked} onSelect={setPicked} showKnowledge={false} />}
-        {shown && (
-          <div className="pointer-events-none absolute left-3 top-3 z-[5] max-w-[min(28rem,calc(100%-5rem))] rounded-lg border border-line bg-surface/95 px-3 py-2 text-xs shadow-sm">
-            <span className="text-muted">{shown.kind === 'recurring' ? 'Recurring issue' : 'Shared root cause'}</span>
-            <span className="mt-0.5 block font-medium leading-snug">{shown.headline}</span>
-          </div>
-        )}
+    <section className="diagram-main" aria-label="Correlation explorer">
+      <div className="diagram-toolbar" role="group" aria-label="Correlation view">
+        <Button size="sm" variant={view === 'evidence' ? 'primary' : 'secondary'} aria-pressed={view === 'evidence'} onClick={() => setView('evidence')}>Evidence graph</Button>
+        <Button size="sm" variant={view === 'network' ? 'primary' : 'secondary'} aria-pressed={view === 'network'} onClick={() => setView('network')}>Network map</Button>
       </div>
+      <div className="diagram-canvas" aria-busy={loading}>
+        {loading ? <div className="flex h-full items-center justify-center p-4 text-sm text-muted" role="status">Loading correlations at the selected time…</div>
+          : error ? <EmptyState icon={<Lightbulb size={26} />} title="Could not load correlations" hint={error} action={<Button size="sm" onClick={retry}>Try again</Button>} />
+          : view === 'evidence' ? shown ? <CorrelationGraph key={shown.id} pattern={shown} threads={threads} /> : <EmptyState icon={<Lightbulb size={26} />} title="No correlation at this time" hint="Move the slider forward or run the company day to collect more reports." />
+          : <TopologyGraph at={at} insight={focus} selectedId={picked} onSelect={setPicked} showKnowledge={false} />}
+      </div>
+      <SimTimeline events={events} at={at} now={now} follow={t === null} onChange={setT} onReset={() => setT(null)} company={company} />
       <div className="diagram-key">
-        <GraphKey
-          items={[
-            { label: 'Problem reported', swatch: <ShapeSwatch shape="circle" color="var(--bad)" dot /> },
-            { label: 'Possible common cause', swatch: <ShapeSwatch shape="circle" color="var(--warn)" dot /> },
-            { label: 'Link between them', swatch: <LineSwatch color="var(--bad)" /> },
-            { label: 'Site', swatch: <Swatch color="var(--g-site-line)" radius={4} dashed /> },
-          ]}
-        />
+        <GraphKey items={view === 'evidence' ? [
+          { label: 'Human report', swatch: <ShapeSwatch shape="circle" color="var(--k-conversation)" /> },
+          { label: 'Equipment', swatch: <ShapeSwatch shape="square" color="var(--k-equipment)" /> },
+          { label: 'Shared factor · hypothesis', swatch: <ShapeSwatch shape="hexagon" color="var(--warn)" dashed /> },
+          ...(shown?.kind === 'recurring' ? [{ label: 'Same reported problem', swatch: <ShapeSwatch shape="hexagon" color="var(--accent)" /> }] : []),
+        ] : [
+          { label: 'Problem reported', swatch: <ShapeSwatch shape="circle" color="var(--bad)" dot /> },
+          { label: 'Possible common cause', swatch: <ShapeSwatch shape="circle" color="var(--warn)" dot /> },
+          { label: 'Link between them', swatch: <LineSwatch color="var(--bad)" /> },
+          { label: 'Site', swatch: <Swatch color="var(--g-site-line)" radius={4} dashed /> },
+        ]} />
       </div>
     </section>
   )
 
   if (publicDemo) {
     return (
-      <div className="diagram-workspace is-public-insights">
+      <div className="diagram-workspace correlation-workspace is-public-insights">
         <div className="diagram-heading flex-wrap">
           <div className="min-w-0">
             <h2 className="font-display text-2xl font-medium tracking-tight">Correlations</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted">Problems that repeat, and what they share.</p>
           </div>
-          <span className="text-sm font-semibold">{openCount ? `${openCount} open` : 'Nothing open'}</span>
+          <div className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold">{openCount ? `${openCount} open` : 'Nothing open'}</span><TimeChip at={at} now={now} follow={t === null} onReset={() => setT(null)} /></div>
         </div>
         <div className="diagram-body">
           {map}
@@ -171,7 +184,7 @@ export default function InsightsPage() {
                 </div>
               )}
               {nothingYet ? (
-                <EmptyState icon={<Lightbulb size={26} />} title="No correlations yet." hint="They appear when the same problem repeats." />
+                <EmptyState icon={<Lightbulb size={26} />} title="No correlations at this time." hint="Move the slider forward or run a company day to collect more human reports." />
               ) : (
                 report &&
                 !rows.length && <p className="px-2 py-6 text-sm text-muted">Nothing open here.</p>
@@ -193,7 +206,7 @@ export default function InsightsPage() {
   }
 
   return (
-    <div className="diagram-workspace">
+    <div className="diagram-workspace correlation-workspace">
       <div className="diagram-heading flex-wrap">
         <div className="min-w-0">
           <h2 className="font-display text-2xl font-medium tracking-tight">Insights from the field</h2>
@@ -203,13 +216,14 @@ export default function InsightsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold">{openCount ? `${openCount} open` : 'Nothing open'}</span>
+          <TimeChip at={at} now={now} follow={t === null} onReset={() => setT(null)} />
           <MergesBadge />
           <span className="text-xs text-muted" aria-live="polite">{loading ? 'Updating…' : computedAt ? `Updated ${computedAt.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : ''}</span>
           <Button size="sm" icon={<RefreshCw size={14} className={cn((loading || refreshing) && 'animate-spin')} />} onClick={retry} disabled={loading || refreshing}>
             Refresh
           </Button>
           <ExportListMenu filename="insights" disabled={!all.length} build={(f) => buildPatternsExport(all, threads, f)} />
-          <a href={api.patternsReportUrl()} download title="Download the full report (Markdown)">
+          <a href={api.patternsReportUrl(t ? toNaiveIso(t) : null)} download title="Download the full report (Markdown)">
             <Button size="sm" icon={<Download size={14} />}>
               Report
             </Button>
@@ -227,7 +241,7 @@ export default function InsightsPage() {
               value={tab}
               onChange={setTab}
               items={[
-                { id: 'linked', label: 'Shared root cause', count: shared.length },
+                { id: 'linked', label: 'Linked problems', count: shared.length },
                 { id: 'recurring', label: 'Recurring', count: recurring.length },
               ]}
             />
