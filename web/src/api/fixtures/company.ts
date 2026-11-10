@@ -13,6 +13,9 @@ import type {
   KgGraph,
   KgElement,
   LiveThread,
+  Pattern,
+  PatternOccurrence,
+  PatternReport,
   PipelineJob,
   SourceKind,
   Stage,
@@ -375,4 +378,81 @@ export function demoKnowledgeGraph(store: Store): KgGraph {
     }
   }
   return { at: new Date().toISOString(), elements: els }
+}
+
+/** Every `Pattern` field, so the fixture cannot drift from the contract. */
+function makePattern(partial: Partial<Pattern> & Pick<Pattern, 'id' | 'kind' | 'level' | 'title'>): Pattern {
+  return {
+    elements: [],
+    topics: [],
+    first_seen: '',
+    last_seen: '',
+    count: 0,
+    occurrences: [],
+    factors: [],
+    fixes: [],
+    lasting_fixes: [],
+    hypotheses: [],
+    status_note: null,
+    resolved_by: null,
+    people: [],
+    grouped: [],
+    headline: '',
+    suspects: [],
+    links: [],
+    note: '',
+    ...partial,
+  }
+}
+
+/** Correlations for fixture mode: assertions that share a site and name different problems. Demo only. */
+export function demoPatterns(store: Store): PatternReport {
+  const st = store.getState()
+  const bySite = new Map<string, ContextAssertion[]>()
+  for (const a of Object.values(st.assertions)) {
+    for (const b of a.bound_to) {
+      if (b.role === 'trigger') continue
+      const site = st.elements.find((e) => e.id === b.entity)?.site_id
+      if (site) bySite.set(site, [...(bySite.get(site) ?? []), a])
+    }
+  }
+  const patterns: Pattern[] = []
+  for (const [site, list] of bySite) {
+    const occurrences: PatternOccurrence[] = list.map((a) => {
+      const element = a.bound_to.find((b) => b.role !== 'trigger')?.entity ?? site
+      return {
+        element,
+        at: a.valid_from,
+        topic: a.topic,
+        problem: a.topic,
+        assertion_id: a.id,
+        kind: 'reported',
+        sources: a.sources.map((s) => s.file),
+        by: a.trust.stated_by,
+        action: a.action,
+        worked: null,
+      }
+    })
+    const elements = [...new Set(occurrences.map((o) => o.element))]
+    if (elements.length < 2) continue
+    const times = occurrences.map((o) => o.at).sort()
+    patterns.push(
+      makePattern({
+        id: `demo-linked-${site}`,
+        kind: 'linked',
+        level: 'watch',
+        title: `Problems at ${site}`,
+        elements,
+        topics: [...new Set(list.map((a) => a.topic))],
+        first_seen: times[0],
+        last_seen: times[times.length - 1],
+        count: occurrences.length,
+        occurrences,
+        suspects: [site],
+        headline: `${elements.length} problems at ${site} may share a cause.`,
+        note: 'Hypothesis to check, not a rule.',
+      }),
+    )
+  }
+  return { at: new Date().toISOString(), meaning: 'off (words only)', patterns }
 }

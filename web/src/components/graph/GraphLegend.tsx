@@ -42,8 +42,8 @@ export function LineSwatch({ color = 'var(--g-link)', dash }: { color?: string; 
 }
 
 /** A node shape as drawn on the force canvas. */
-export function ShapeSwatch({ color, shape, dot }: { color: string; shape: 'circle' | 'square' | 'hexagon' | 'triangle' | 'diamond'; dot?: boolean }) {
-  const common = { fill: 'var(--surface)', stroke: color, strokeWidth: 1.6 }
+export function ShapeSwatch({ color, shape, dot, dashed }: { color: string; shape: 'circle' | 'square' | 'hexagon' | 'triangle' | 'diamond'; dot?: boolean; dashed?: boolean }) {
+  const common = { fill: 'var(--surface)', stroke: color, strokeWidth: 1.6, strokeDasharray: dashed ? '2.5 2' : undefined }
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" className="shrink-0" aria-hidden>
       {shape === 'circle' && <circle cx="7" cy="7" r="5.5" {...common} />}

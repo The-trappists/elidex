@@ -1,7 +1,11 @@
 import { ArrowRight, BookOpen } from 'lucide-react'
+import { format } from 'date-fns'
 import { Link } from 'react-router-dom'
-import type { KgElement, KgKind } from '../../api/types'
+import type { KgElement, KgKind, Pattern } from '../../api/types'
 import { fmtDateTime } from '../../lib/format'
+import { useLive } from '../../store/live'
+import { validAt } from '../graph/graphModel'
+import { CorrelationBlock } from '../insights/CorrelationBlock'
 import { CopyId } from '../knowledge/bits'
 import { JustificationPanel } from '../knowledge/JustificationPanel'
 import { EDGE_LABEL, KIND, KIND_ORDER, title } from './kgStyle'
@@ -65,8 +69,26 @@ function openLink(d: Data): { to: string; label: string } | null {
   }
 }
 
-export function KgDetails({ node, nodes, edges, onSelect }: { node: Data; nodes: Map<string, Data>; edges: Data[]; onSelect: (id: string) => void }) {
+export function KgDetails({
+  node,
+  nodes,
+  edges,
+  onSelect,
+  at,
+  patterns,
+  onOpenPattern,
+}: {
+  node: Data
+  nodes: Map<string, Data>
+  edges: Data[]
+  onSelect: (id: string) => void
+  /** The time the page is showing, for `In force`. */
+  at?: Date
+  patterns?: Pattern[]
+  onOpenPattern?: (p: Pattern) => void
+}) {
   const k = KIND[node.kind as KgKind]
+  const live = useLive((s) => (node.kind === 'Assertion' ? s.assertions[node.id] : undefined))
   const props = Object.entries(node).filter(([key, v]) => !HIDDEN.has(key) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && PROP_LABEL[key])
   const link = openLink(node)
 
@@ -106,6 +128,16 @@ export function KgDetails({ node, nodes, edges, onSelect }: { node: Data; nodes:
           </Link>
         )}
       </div>
+
+      {node.kind === 'Assertion' && live && at && (
+        <p className="text-xs text-muted">
+          {validAt(live, at)
+            ? `In force since ${format(new Date(live.valid_from), 'HH:mm')}`
+            : `Not in force at this time${live.valid_to ? ` · until ${format(new Date(live.valid_to), 'HH:mm')}` : ''}`}
+        </p>
+      )}
+
+      <CorrelationBlock id={node.id} patterns={patterns} onOpen={onOpenPattern} />
 
       {node.kind === 'Assertion' && <JustificationPanel id={node.id} />}
 

@@ -2,6 +2,7 @@
 import { useMemo } from 'react'
 import { useLive } from '../../store/live'
 import { GraphKey, LineSwatch, ShapeSwatch, Swatch } from '../graph/GraphLegend'
+import type { PatternIndex } from '../insights/patternIndex'
 import { ForceCanvas, type Emphasis } from './ForceCanvas'
 import { EQUIPMENT, insightEmphasis, topologyModel } from './models'
 
@@ -13,11 +14,13 @@ export interface TopologyGraphProps {
   highlightIds?: string[]
   /** Insights: problems in red, possible common cause in amber, the links between them. */
   insight?: { problem: string[]; suspect: string[]; links: string[] } | null
+  /** Open correlations: dashed amber rings and links. */
+  correlations?: PatternIndex
   /** Show where knowledge is attached (counts on sites, dots on equipment). Default true. */
   showKnowledge?: boolean
 }
 
-export function TopologyGraph({ at, selectedId, onSelect, highlightIds, insight, showKnowledge = true }: TopologyGraphProps) {
+export function TopologyGraph({ at, selectedId, onSelect, highlightIds, insight, correlations, showKnowledge = true }: TopologyGraphProps) {
   const ready = useLive((s) => s.ready)
   const elements = useLive((s) => s.elements)
   const sites = useLive((s) => s.sites)
@@ -36,9 +39,10 @@ export function TopologyGraph({ at, selectedId, onSelect, highlightIds, insight,
         assertions: Object.values(assertions),
         incidents: Object.values(incidents),
       at: new Date(minute * 60000),
+      correlations,
     })
     return showKnowledge ? m : { ...m, nodes: m.nodes.map((n) => ({ ...n, badge: false, knowledge: undefined })) }
-  }, [elements, sites, links, classes, assertions, incidents, minute, showKnowledge])
+  }, [elements, sites, links, classes, assertions, incidents, minute, showKnowledge, correlations])
 
   const hlKey = (highlightIds ?? []).join('|')
   const emphasis = useMemo<Emphasis | null>(
@@ -73,6 +77,7 @@ export function TopologyKey() {
         ...EQUIPMENT.map((e) => ({ label: e.label, swatch: <ShapeSwatch shape={e.shape} color={`var(${e.color})`} /> })),
         { label: 'Knowledge attached', swatch: <ShapeSwatch shape="circle" color="var(--g-assertion)" dot /> },
         { label: 'Open incident', swatch: <ShapeSwatch shape="circle" color="var(--bad)" /> },
+        { label: 'Correlation', swatch: <ShapeSwatch shape="circle" color="var(--warn)" dashed /> },
         { label: 'Fibre', swatch: <LineSwatch /> },
         { label: 'Microwave', swatch: <LineSwatch dash="4 3" /> },
         { label: 'Backhaul', swatch: <LineSwatch dash="1 3" /> },

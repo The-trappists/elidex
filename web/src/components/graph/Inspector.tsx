@@ -1,10 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { ClassCriteria, ContextAssertion } from '../../api/types'
+import type { ClassCriteria, ContextAssertion, Pattern } from '../../api/types'
 import { MousePointerClick } from 'lucide-react'
 import { fmtAgo } from '../../lib/format'
 import { ORIGIN_STYLE, SEVERITY_STYLE, TYPE_STYLE } from '../../lib/semantic'
 import { useLive } from '../../store/live'
+import { CorrelationBlock } from '../insights/CorrelationBlock'
+import { incidentOpenAt } from '../timeline/timelineModel'
 import { useContextHits } from '../incidents/useContextHits'
 import { Badge, Button, EmptyState, IdChip, Toggle } from '../ui'
 import { ContextCard } from './ContextCard'
@@ -37,14 +39,33 @@ const critText = (c: ClassCriteria) =>
 
 const bound = (a: ContextAssertion, id: string) => a.bound_to.some((b) => b.entity === id && b.role !== 'trigger')
 
-export function Inspector({ id, kind, at, onSelect }: { id: string | null; kind: NodeKind | null; at: Date; onSelect: (id: string, kind: NodeKind) => void }) {
+export function Inspector({
+  id,
+  kind,
+  at,
+  onSelect,
+  patterns,
+  onOpenPattern,
+}: {
+  id: string | null
+  kind: NodeKind | null
+  at: Date
+  onSelect: (id: string, kind: NodeKind) => void
+  patterns?: Pattern[]
+  onOpenPattern?: (p: Pattern) => void
+}) {
   if (!id || !kind)
     return <EmptyState icon={<MousePointerClick size={26} />} title="Select a node" hint="Click an element, site, class or piece of knowledge in the graph to see what is known about it at the chosen time." />
-  const props = { id, at, onSelect }
+  const props = { id, at, onSelect, patterns, onOpenPattern }
   return kind === 'element' ? <ElementInfo {...props} /> : kind === 'site' ? <SiteInfo {...props} /> : kind === 'class' ? <ClassInfo {...props} /> : <AssertionInfo {...props} />
 }
 
-type P = { id: string; at: Date; onSelect: (id: string, kind: NodeKind) => void }
+type P = { id: string; at: Date; onSelect: (id: string, kind: NodeKind) => void; patterns?: Pattern[]; onOpenPattern?: (p: Pattern) => void }
+
+/** What the open correlations say about this node. Hypotheses only; the drawer has the detail. */
+function CorrelationSection({ id, patterns, onOpen }: { id: string; patterns?: Pattern[]; onOpen?: (p: Pattern) => void }) {
+  return <CorrelationBlock id={id} patterns={patterns} onOpen={onOpen} className="border-b border-line px-4 py-3 last:border-0" />
+}
 
 function Title({ kind, title, sub }: { kind: string; title: string; sub?: ReactNode }) {
   return (
@@ -56,7 +77,7 @@ function Title({ kind, title, sub }: { kind: string; title: string; sub?: ReactN
   )
 }
 
-function ElementInfo({ id, at, onSelect }: P) {
+function ElementInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
   const nav = useNavigate()
   const el = useLive((s) => s.elements.find((e) => e.id === id))
   const sites = useLive((s) => s.sites)
@@ -79,6 +100,7 @@ function ElementInfo({ id, at, onSelect }: P) {
   return (
     <div>
       <Title kind="Equipment" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
       <Section title="Details">
         <Row k="Type" v={el.type.replace(/_/g, ' ')} />
         <Row k="Model" v={el.model} />
@@ -115,17 +137,20 @@ function ElementInfo({ id, at, onSelect }: P) {
       <Section title="Incidents" count={mine.length}>
         {mine.length ? (
           <ul className="space-y-1.5">
-            {mine.map((i) => (
-              <li key={i.id} className="rounded-md border border-line p-2 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <Badge className={SEVERITY_STYLE[i.severity].cls}>{SEVERITY_STYLE[i.severity].label}</Badge>
-                  <span className="font-medium">{i.kind}</span>
-                  <Badge className={i.status === 'open' ? 'ml-auto bg-bad/15 text-bad' : 'ml-auto bg-ok/15 text-ok'}>{i.status}</Badge>
-                </div>
-                <p className="mt-1 text-muted">{i.summary}</p>
-                <div className="mt-1 text-xs text-muted">{fmtAgo(i.opened_at, at)}</div>
-              </li>
-            ))}
+            {mine.map((i) => {
+              const open = incidentOpenAt(i, at)
+              return (
+                <li key={i.id} className="rounded-md border border-line p-2 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Badge className={SEVERITY_STYLE[i.severity].cls}>{SEVERITY_STYLE[i.severity].label}</Badge>
+                    <span className="font-medium">{i.kind}</span>
+                    <Badge className={open ? 'ml-auto bg-bad/15 text-bad' : 'ml-auto bg-ok/15 text-ok'}>{open ? 'open' : 'resolved'}</Badge>
+                  </div>
+                  <p className="mt-1 text-muted">{i.summary}</p>
+                  <div className="mt-1 text-xs text-muted">{fmtAgo(i.opened_at, at)}</div>
+                </li>
+              )
+            })}
           </ul>
         ) : <None>No incident on this element.</None>}
       </Section>
@@ -146,7 +171,7 @@ function ElementInfo({ id, at, onSelect }: P) {
   )
 }
 
-function SiteInfo({ id, at, onSelect }: P) {
+function SiteInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
   const site = useLive((s) => s.sites.find((x) => x.id === id))
   const elements = useLive((s) => s.elements)
   const assertions = useLive((s) => s.assertions)
@@ -156,6 +181,7 @@ function SiteInfo({ id, at, onSelect }: P) {
   return (
     <div>
       <Title kind="Site" title={site.name} sub={<IdChip>{site.id}</IdChip>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
       <Section title="Details">
         <Row k="Region" v={site.region ?? '—'} />
         <Row k="Origin" v={ORIGIN_STYLE[site.origin].label} />
@@ -171,7 +197,7 @@ function SiteInfo({ id, at, onSelect }: P) {
   )
 }
 
-function ClassInfo({ id, at, onSelect }: P) {
+function ClassInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
   const cls = useLive((s) => s.classes[id])
   const elements = useLive((s) => s.elements)
   const assertions = useLive((s) => s.assertions)
@@ -181,6 +207,7 @@ function ClassInfo({ id, at, onSelect }: P) {
   return (
     <div>
       <Title kind="Class of elements" title={cls.label} sub={<IdChip>{cls.id}</IdChip>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
       <Section title="Criteria"><p className="text-xs">{critText(cls.criteria)}</p></Section>
       <Section title="Members" count={members.length}>
         {members.length ? <div className="flex flex-wrap gap-1.5">{members.map((e) => <IdChip key={e.id} onClick={() => onSelect(e.id, 'element')}>{e.id}</IdChip>)}</div> : <None>No element matches this class.</None>}
@@ -192,13 +219,14 @@ function ClassInfo({ id, at, onSelect }: P) {
   )
 }
 
-function AssertionInfo({ id, at, onSelect }: P) {
+function AssertionInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
   const nav = useNavigate()
   const a = useLive((s) => s.assertions[id])
   if (!a) return <EmptyState title="Knowledge not found" hint={id} />
   return (
     <div>
       <Title kind="Knowledge" title={a.topic} sub={<><Badge className={TYPE_STYLE[a.type].cls}>{TYPE_STYLE[a.type].label}</Badge><IdChip>{a.id}</IdChip></>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
       <div className="p-4">
         <ContextCard a={a} at={at} />
         <Button className="mt-3 w-full" onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(a.id)}`)}>Open in Knowledge</Button>
