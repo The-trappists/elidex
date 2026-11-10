@@ -34,6 +34,26 @@ const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Eve
 const PUBLIC_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Thread']
 const HOUR = 3_600_000
 
+/** Knowledge first, then the other kinds in a stable order; alphabetical inside each group. */
+function groupBrowseNodes(items: Data[]) {
+  const order = new Map(KIND_ORDER.map((kind, index) => [kind, index]))
+  const sorted = [...items].sort((a, b) => {
+    const ak = a.kind as KgKind
+    const bk = b.kind as KgKind
+    const byKind = (order.get(ak) ?? KIND_ORDER.length) - (order.get(bk) ?? KIND_ORDER.length)
+    if (byKind) return byKind
+    return title(a).localeCompare(title(b), undefined, { numeric: true, sensitivity: 'base' }) || a.id.localeCompare(b.id)
+  })
+  const groups: { kind: KgKind; items: Data[] }[] = []
+  for (const d of sorted) {
+    const kind = d.kind as KgKind
+    const last = groups[groups.length - 1]
+    if (last?.kind === kind) last.items.push(d)
+    else groups.push({ kind, items: [d] })
+  }
+  return groups
+}
+
 export default function GraphPage() {
   const [params, setParams] = useSearchParams()
   // ?focus=<id> is the deep link from the Knowledge page; it selects that node like ?node does.
@@ -171,6 +191,7 @@ export default function GraphPage() {
   const browseNodes = [...nodes.values()].filter(
     (d) => kinds.has(d.kind as KgKind) && (showOutdated || inForce(d)) && (!q || `${title(d)} ${d.id}`.toLowerCase().includes(q.toLowerCase())),
   )
+  const browseGroups = groupBrowseNodes(browseNodes)
   return (
     <>
       <GraphWorkspace
@@ -293,21 +314,29 @@ export default function GraphPage() {
         }
         browse={
           <div className="p-4">
-            <h3 className="font-semibold">Knowledge</h3>
+            <h3 className="font-semibold">Browse the map</h3>
+            <p className="mt-1 text-xs text-muted">Knowledge first, then the objects it touches.</p>
             <Input className="mt-3" aria-label="Search the item list" placeholder="Search knowledge, people, equipment" value={q} onChange={(e) => setQ(e.target.value)} />
             <p className="mb-2 mt-3 text-xs text-muted">
               {browseNodes.length} items{q && ' matching your search'}
             </p>
-            <div className="divide-y divide-line">
-              {browseNodes.map((d) => (
-                <button key={d.id} onClick={() => selectNode(d.id)} className="min-h-11 w-full rounded-md py-3 text-left hover:bg-surface-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted">{KIND[d.kind as KgKind]?.label}</span>
-                  <span className="mt-1 block break-words text-sm leading-relaxed">{title(d)}</span>
-                </button>
-              ))}
-            </div>
+            {browseGroups.map((group) => (
+              <section key={group.kind} className="mt-4" aria-label={KIND[group.kind].plural}>
+                <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
+                  {KIND[group.kind].plural} <span className="font-normal">({group.items.length})</span>
+                </h4>
+                <div className="divide-y divide-line">
+                  {group.items.map((d) => (
+                    <button key={d.id} onClick={() => selectNode(d.id)} className="min-h-11 w-full rounded-md py-3 text-left hover:bg-surface-2">
+                      <span className="block break-words text-sm leading-relaxed">{title(d)}</span>
+                      {title(d) !== d.id && <span className="mt-0.5 block truncate font-mono text-[11px] text-muted">{d.id}</span>}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
             {!browseNodes.length && (
-              <p className="py-6 text-sm text-muted">No knowledge matches these filters.</p>
+              <p className="py-6 text-sm text-muted">No items match these filters.</p>
             )}
           </div>
         }

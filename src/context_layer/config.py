@@ -93,6 +93,19 @@ def is_google_vertex_primary() -> bool:
 
 
 def llm_configured() -> bool:
+    # A workspace connection overrides the deployment configuration. A public workspace that
+    # used a personal key never falls back to the deployment key after disconnect.
+    try:
+        from .connections import current_connection
+
+        registry = current_connection()
+        if registry is not None:
+            if registry.ai is not None:
+                return True
+            if not registry.allow_server_ai:
+                return False
+    except Exception:  # noqa: BLE001 - configuration must stay importable on its own
+        pass
     has_auth = _key_set(LLM_API_KEY) or google_auth_configured()
     return has_auth and bool(LLM_MODEL)
 

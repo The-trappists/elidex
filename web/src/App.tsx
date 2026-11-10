@@ -6,6 +6,7 @@ import { TopBar } from './components/layout/TopBar'
 import { Toaster } from './components/ui'
 import AgentTesterPage from './pages/AgentTesterPage'
 import CompanyPage from './pages/CompanyPage'
+import ConnectionsPage from './pages/ConnectionsPage'
 import ConversationsPage from './pages/ConversationsPage'
 import DataPage from './pages/DataPage'
 import KnowledgePage from './pages/KnowledgePage'
@@ -64,6 +65,7 @@ function DashboardLayout() {
                 <Route path="/architecture" element={<Navigate to="/pipeline" replace />} />
                 <Route path="/llm" element={<LlmLogPage />} />
                 <Route path="/data" element={<DataPage />} />
+                <Route path="/connections" element={<ConnectionsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>

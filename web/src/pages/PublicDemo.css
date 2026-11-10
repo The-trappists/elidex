@@ -1,34 +1,39 @@
 .demo-header { display: flex; flex-shrink: 0; align-items: center; gap: 24px; min-height: 56px; padding: 0 24px; border-bottom: 1px solid var(--line); background: var(--bg); }
 .demo-navigation { display: flex; align-items: center; gap: 20px; min-width: 0; }
-.demo-nav-link { display: flex; align-items: center; min-height: 40px; padding: 0 2px; border-bottom: 2px solid transparent; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.demo-nav-link { display: flex; align-items: center; min-height: 40px; padding: 0 2px; border-bottom: 2px solid transparent; font-size: 14px; color: var(--muted); white-space: nowrap; }
 .demo-nav-link:hover { color: var(--text); }
 .demo-nav-link.is-active { color: var(--accent); border-bottom-color: var(--accent); }
 .demo-session { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .demo-menu-button { display: none; }
 .demo-drawer-navigation { display: flex; flex-direction: column; gap: 8px; }
 .demo-drawer-navigation .demo-nav-link { min-height: 44px; padding-inline: 8px; }
-.demo-overline { display: flex; align-items: center; gap: 12px; color: var(--muted); font: 10px/1.6 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
-.demo-primary-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 14px; border-radius: var(--radius-control); background: var(--accent); color: var(--on-accent); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.demo-overline { display: flex; align-items: center; gap: 12px; color: var(--muted); font: 11px/1.6 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
+.demo-primary-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 14px; border-radius: var(--radius-control); background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 600; white-space: nowrap; }
 .demo-primary-link:hover { filter: brightness(1.08); }
 .demo-step-bar { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 24px; background: var(--accent-soft); border-bottom: 1px solid var(--line); }
 .demo-step-bar > div { min-width: 0; flex: 1 1 260px; }
-.demo-step-bar > div > p:last-child { margin-top: 4px; font-size: 12px; line-height: 1.6; }
+.demo-step-bar > div > p:last-child { margin-top: 4px; font-size: 14px; line-height: 1.5; }
 @media (min-width: 768px) {
   .demo-step-bar > div { display: flex; align-items: baseline; gap: 12px; }
   .demo-step-bar > div > p:last-child { margin-top: 0; }
 }
 /* The hero answers the screen's question: at least half the viewport, a little more on short screens. */
 .demo-hero { display: flex; flex-direction: column; min-height: 50vh; }
+@media (max-width: 1023px) {
+  .demo-header { gap: 16px; }
+  .demo-navigation { gap: 14px; }
+  .demo-session-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 @media (max-height: 899px) { .demo-hero { min-height: 54vh; } }
 @media (max-width: 767px) {
   .demo-header { gap: 12px; padding: 0 16px; }
   .demo-navigation { display: none; }
   .demo-session { margin-left: auto; }
-  .demo-session-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .demo-menu-button { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); cursor: pointer; }
   .demo-step-bar { padding: 10px 16px; }
   .demo-step-bar > .demo-primary-link { width: 100%; }
-  .demo-overline { font-size: 8px; }
+  .demo-overline { font-size: 11px; }
   .demo-hero { min-height: 50vh; }
 }
+.public-demo .graph-key { font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { .public-demo * { scroll-behavior: auto !important; } }

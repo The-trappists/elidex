@@ -14,7 +14,7 @@ import json
 import threading
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -23,6 +23,7 @@ import openai
 from openai import OpenAI
 
 from . import config
+from .connections import current_connection
 from .demo_policy import current_policy
 
 TraceSink = Callable[[dict[str, Any]], None]
@@ -59,20 +60,53 @@ def jsonl_sink(path: Path) -> TraceSink:
 class Provider:
     name: str  # "primary" or "fallback" (a critic provider is named "critic" / "critic_fallback")
     base_url: str
-    api_key: str
+    api_key: str = field(repr=False)
     model: str
     json_mode: str
     reasoning_effort: str = ""
     role: str = "primary"  # "primary" or "critic"
     role_note: str = ""  # e.g. "critic not configured: used primary"
     is_vertex: bool = False
+    source: str = "server"  # "server" or "session" (a visitor's own key)
 
 
 Role = Literal["primary", "critic"]
 
 
+def _personal_provider(base_url: str, api_key: str, model: str, role: Role) -> Provider:
+    """A visitor's own provider. It replaces every server role: no fallback, no critic key, no ADC."""
+    name = "primary" if role == "primary" else "critic"
+    effort = "low" if "generativelanguage.googleapis.com" in base_url else ""
+    return Provider(
+        name,
+        base_url,
+        api_key,
+        model,
+        "json_object",
+        effort,
+        role=role,
+        role_note="personal AI connection" if role == "critic" else "",
+        source="session",
+    )
+
+
+def active_model() -> str | None:
+    """The model a new call would use: the workspace connection first, then the deployment."""
+    registry = current_connection()
+    if registry is not None and registry.ai is not None:
+        return registry.ai.model
+    return config.LLM_MODEL or None
+
+
 def providers(role: Role = "primary", model: str | None = None) -> list[Provider]:
     """Provider chain for a role. An unconfigured critic falls back to the primary chain (noted in role_note)."""
+    registry = current_connection()
+    if registry is not None:
+        if registry.ai is not None:
+            return [_personal_provider(registry.ai.base_url, registry.ai.api_key,
+                                       model or registry.ai.model, role)]
+        if not registry.allow_server_ai:
+            return []  # a public workspace that used a personal key never spends deployment keys
     if role == "critic":
         out = []
         if config.llm_critic_configured():
@@ -163,6 +197,13 @@ def _retryable(exc: Exception) -> bool:
     return isinstance(exc, openai.APIStatusError) and exc.status_code >= 500
 
 
+def _redact(text: str, provider: Provider) -> str:
+    """Never let a personal key reach a trace, a log or an API response."""
+    if provider.source == "session" and provider.api_key:
+        return text.replace(provider.api_key, "[redacted]")
+    return text
+
+
 def call_provider(
     p: Provider,
     system: str,
@@ -210,10 +251,21 @@ def call_provider(
     t0 = time.perf_counter()
     text, exc = None, None
     reservation = None
+    personal = p.source == "session"
+    registry = current_connection()
     try:
         policy = current_policy()
         timeout = config.LLM_TIMEOUT
-        if policy is not None:
+        if personal:
+            if registry is None or registry.ai is None:
+                from .demo_policy import DemoLimitError
+
+                raise DemoLimitError("The personal AI connection is no longer available. Reconnect a provider.")
+            if policy is not None:
+                registry.reserve_personal_call(system, user)
+                kwargs["max_tokens"] = min(1024, policy.max_output_tokens)
+                timeout = min(timeout, 30.0)
+        elif policy is not None:
             timeout = min(timeout, policy.reserve(system, user))
             kwargs["max_tokens"] = min(4096, policy.max_output_tokens)
             reservation = policy.reserve_budget(p.base_url, p.model, {
@@ -222,6 +274,10 @@ def call_provider(
                 "temperature": 0,
                 **kwargs,
             })
+        if not personal and registry is not None and not registry.allow_server_ai:
+            from .demo_policy import DemoLimitError
+
+            raise DemoLimitError("Server AI is unavailable in this demo session. Connect your own provider.")
         from . import google_auth
 
         api_key = p.api_key
@@ -235,7 +291,7 @@ def call_provider(
             )
             model = google_auth.format_vertex_model(model)
 
-        if policy is not None:
+        if not personal and policy is not None:
             # Authentication may have taken time, or the workspace may have expired.
             # The reserved final call remains valid even when it reaches max_calls.
             if not policy.active or time.monotonic() >= policy.deadline:
@@ -251,6 +307,8 @@ def call_provider(
             **kwargs,
         )
         text = resp.choices[0].message.content or ""
+        if personal:
+            text = _redact(text, p)
         trace["raw_response"] = text
         if resp.usage:
             u = resp.usage.model_dump()
@@ -267,10 +325,10 @@ def call_provider(
                 trace["parsed_ok"] = True
             except Exception as e:  # noqa: BLE001 - recorded, the caller re-raises when it parses
                 trace["parsed_ok"] = False
-                trace["parse_error"] = str(e)[:2000]
+                trace["parse_error"] = _redact(str(e), p)[:2000]
     except Exception as e:  # noqa: BLE001
         exc = e
-        trace["error"] = f"{type(e).__name__}: {e}"[:2000]
+        trace["error"] = _redact(f"{type(e).__name__}: {e}", p)[:2000]
     trace["latency_ms"] = int((time.perf_counter() - t0) * 1000)
     if emit:
         policy = current_policy()
@@ -304,10 +362,14 @@ def complete_traced(
     returned as it is (the caller's parse raises, as before).
     """
     policy = current_policy()
-    if policy is not None:
+    registry = current_connection()
+    personal = registry is not None and registry.ai is not None
+    if policy is not None and not personal:
         policy.require_active()
     chain = providers(role, model)
     if not chain:
+        if registry is not None and not registry.allow_server_ai:
+            raise RuntimeError("No personal AI provider is connected. Connect one in Connections.")
         raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
     traces: list[dict[str, Any]] = []
     last: Exception | None = None

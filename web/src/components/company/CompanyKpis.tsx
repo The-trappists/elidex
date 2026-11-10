@@ -26,11 +26,11 @@ export function CompanyKpis({ c, compact, publicDemo }: { c: CompanyState; compa
   // Public demo: four tiles, the health number appears here only (the network strip shows counts).
   if (publicDemo)
     return (
-      <div className="grid shrink-0 grid-cols-2 gap-2 md:grid-cols-4 md:gap-3 [&>button]:py-2">
-        <Stat icon={<AlertTriangle size={18} />} label="Open incidents" value={open} tone={open ? 'warn' : 'neutral'} />
-        <Stat icon={<BookOpenCheck size={18} />} label="Knowledge in force" value={valid} tone="accent" />
-        <Stat icon={<Activity size={18} />} label="Network health" value={pct ?? 0} text={pct == null ? '—' : undefined} suffix="%" tone={tone} />
-        <Stat icon={<Bot size={18} />} label="Agent calls" value={callCount(c)} tone="neutral" />
+      <div className="grid shrink-0 grid-cols-2 gap-2 md:grid-cols-4 md:gap-3 [&>button]:gap-2.5 [&>button]:px-3 [&>button]:py-1.5">
+        <Stat icon={<AlertTriangle size={18} />} label="Open incidents" value={open} tone={open ? 'warn' : 'neutral'} wrapLabel />
+        <Stat icon={<BookOpenCheck size={18} />} label="Knowledge in force" value={valid} tone="accent" wrapLabel />
+        <Stat icon={<Activity size={18} />} label="Network health" value={pct ?? 0} text={pct == null ? '—' : undefined} suffix="%" tone={tone} wrapLabel />
+        <Stat icon={<Bot size={18} />} label="Agent calls" value={callCount(c)} tone="neutral" wrapLabel />
       </div>
     )
 

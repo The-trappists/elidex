@@ -8,6 +8,7 @@ import { cn } from '../lib/cn'
 import { refreshDemo, useDemo } from '../store/demo'
 import { useLive } from '../store/live'
 import AgentTesterPage from './AgentTesterPage'
+import ConnectionsPage from './ConnectionsPage'
 import ConversationsPage from './ConversationsPage'
 import GraphPage from './GraphPage'
 import InsightsPage from './InsightsPage'
@@ -16,14 +17,16 @@ import NetworkPage from './NetworkPage'
 import './PublicDemo.css'
 
 // Public demo navigation: the guided company-day walkthrough, the two
-// visualizations and the correlations screen. Conversations, knowledge and the
-// agent tester stay routable because the walkthrough links to them, but they are
-// not advertised here.
+// visualizations, the correlations screen and the connection catalogue.
+// Conversations, knowledge and the agent tester stay routable because the
+// walkthrough and the connection next steps link to them, but they are not
+// advertised here.
 const NAV = [
   { to: '/company', label: 'Company day' },
   { to: '/network', label: 'Network' },
   { to: '/graph', label: 'Knowledge graph' },
   { to: '/insights', label: 'Correlations' },
+  { to: '/connections', label: 'Connections' },
 ]
 
 const SFP_CONVERSATION = '/conversations/elisa%2Fteams_chat.json?walkthrough=sfp'
@@ -46,7 +49,7 @@ function SfpWalkthrough() {
   const text = step === 1 ? 'Read how Erkki fixed TRN-042.' : step === 2 ? 'Check where this rule comes from.' : complete ? 'The case ran. Read the advice.' : 'Press Run SFP case to see the advice.'
   return <section className="demo-step-bar" aria-label="SFP walkthrough">
     <div><p className="demo-overline">SFP case · {step} of 3</p><p>{text}</p></div>
-    {(step < 3 || complete) && <Link to={next} className="demo-primary-link">{label}<ArrowRight size={14} /></Link>}
+    {step < 3 && <Link to={next} className="demo-primary-link">{label}<ArrowRight size={14} /></Link>}
   </section>
 }
 
@@ -55,7 +58,7 @@ function DemoCompany() {
     <CompanyBoard
       publicDemo
       cta={
-        <Link to={SFP_CONVERSATION} onClick={() => useDemo.setState({ sfpCaseComplete: false })} className="demo-primary-link">
+        <Link to={SFP_CONVERSATION} onClick={() => useDemo.setState({ sfpCaseComplete: false })} className="demo-primary-link max-sm:w-full">
           Start the SFP case <ArrowRight size={14} />
         </Link>
       }
@@ -97,6 +100,7 @@ export default function PublicDemo() {
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/graph" element={<GraphPage />} />
           <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/connections" element={<ConnectionsPage />} />
           <Route path="/agent" element={<AgentTesterPage key={search} />} />
           <Route path="*" element={<Navigate to="/company" replace />} />
         </Routes>}

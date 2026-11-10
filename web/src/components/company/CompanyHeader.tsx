@@ -1,9 +1,10 @@
 import { format } from 'date-fns'
 import { Pause, Play, Square } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { companyActions } from './actions'
 import type { CompanyState } from '../../api/types'
 import { useSimNow } from '../../lib/useNow'
+import { useConnections, useLiveAiReady } from '../../store/connections'
 import { useLive } from '../../store/live'
 import { cn } from '../../lib/cn'
 import { Badge, Button, FilterMenu, Modal, Select, Toggle, withToast } from '../ui'
@@ -148,8 +149,10 @@ function DemoProgress({ c, nowMs }: { c: CompanyState; nowMs: number | null }) {
   )
 }
 
-export function CompanyHeader({ c, compact, publicDemo, cta }: { c: CompanyState; compact?: boolean; publicDemo?: boolean; cta?: ReactNode }) {
+export function CompanyHeader({ c, compact, publicDemo }: { c: CompanyState; compact?: boolean; publicDemo?: boolean }) {
   const now = useSimNow(500)
+  const liveAi = useLiveAiReady()
+  const refreshConnections = useConnections((state) => state.refresh)
   const [speed, setSpeed] = useState(120)
   const [dayMinutes, setDayMinutes] = useState(0)
   const [fresh, setFresh] = useState(true)
@@ -158,6 +161,10 @@ export function CompanyHeader({ c, compact, publicDemo, cta }: { c: CompanyState
   const [confirmStop, setConfirmStop] = useState(false)
   const editable = c.status === 'idle' || c.status === 'finished'
   const st = STATUS_BADGE[c.status]
+
+  useEffect(() => {
+    void refreshConnections(true)
+  }, [refreshConnections])
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true)
@@ -168,10 +175,29 @@ export function CompanyHeader({ c, compact, publicDemo, cta }: { c: CompanyState
       setBusy(false)
     }
   }
-  const start = () => run(() => companyActions.start(publicDemo ? DEMO_START : { speed, day_minutes: dayMinutes, reset: fresh ? 'empty' : 'keep', use_llm: llm }))
+  const start = () => run(() => companyActions.start(publicDemo ? { ...DEMO_START, use_llm: liveAi } : { speed, day_minutes: dayMinutes, reset: fresh ? 'empty' : 'keep', use_llm: llm }))
 
   const remaining = c.next_cycle_at && now && c.status === 'running' ? Math.max(0, (new Date(c.next_cycle_at).getTime() - now.getTime()) / 1000) : null
   const clock = now ? now.toLocaleTimeString('en-GB') : '--:--:--'
+
+  // Public demo: one compact control row, so the story and the graph keep the height.
+  if (publicDemo)
+    return (
+      <div className="shrink-0 rounded-lg border border-line bg-surface px-3 py-1.5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h1 className="text-xs font-medium text-muted">Company day</h1>
+          <Badge className={st.cls}>{st.label}</Badge>
+          <div role="timer" aria-label="Simulated clock" className="font-mono text-xl font-semibold leading-none tracking-tight tabular-nums">{clock}</div>
+          <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} small />
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {editable && <Button icon={<Play size={15} />} onClick={start} loading={busy}>{c.status === 'finished' ? 'Play again' : 'Play day'}</Button>}
+            {c.status === 'running' && <Button icon={<Pause size={15} />} onClick={() => run(companyActions.pause)} loading={busy}>Pause</Button>}
+            {c.status === 'paused' && <Button variant="primary" icon={<Play size={15} />} onClick={() => run(companyActions.resume)} loading={busy}>Resume</Button>}
+          </div>
+        </div>
+        {c.status !== 'idle' && <DemoProgress c={c} nowMs={now?.getTime() ?? null} />}
+      </div>
+    )
 
   const options = (
     <>
@@ -199,58 +225,49 @@ export function CompanyHeader({ c, compact, publicDemo, cta }: { c: CompanyState
   return (
     <div className={cn('shrink-0 rounded-lg border border-line bg-surface', compact ? 'px-3 py-2' : 'px-4 py-3')}>
       <div className={cn('flex flex-wrap items-center gap-x-5', compact ? 'gap-y-2' : 'gap-y-3')}>
-        {publicDemo && (
-          <div className="min-w-0">
-            <h1 className="font-display text-xl font-semibold leading-tight tracking-tight">Company day</h1>
-            <p className="text-xs text-muted">Is the knowledge being used?</p>
-          </div>
-        )}
         <div>
           <div className="flex items-center gap-2 text-xs text-muted">
-            {!publicDemo && 'Simulated clock'}
+            Simulated clock
             <Badge className={st.cls}>{st.label}</Badge>
           </div>
           <div role="timer" aria-label="Simulated clock" className="font-mono text-2xl font-semibold sm:text-3xl leading-none tracking-tight tabular-nums">{clock}</div>
         </div>
-        <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} small={publicDemo} />
+        <SyncRing remainingS={remaining} totalS={c.cycle_minutes * 60} />
         <div className="flex flex-wrap items-center gap-2">
-          {editable && <Button variant="primary" icon={<Play size={15} />} onClick={start} loading={busy}>{publicDemo ? (c.status === 'finished' ? 'Play again' : 'Play day') : c.status === 'finished' ? 'Run another day' : 'Start the day'}</Button>}
+          {editable && <Button variant="primary" icon={<Play size={15} />} onClick={start} loading={busy}>{c.status === 'finished' ? 'Run another day' : 'Start the day'}</Button>}
           {c.status === 'running' && <Button icon={<Pause size={15} />} onClick={() => run(companyActions.pause)} loading={busy}>Pause</Button>}
           {c.status === 'paused' && <Button variant="primary" icon={<Play size={15} />} onClick={() => run(companyActions.resume)} loading={busy}>Resume</Button>}
-          {!publicDemo && (c.status === 'running' || c.status === 'paused') && <Button variant="danger" icon={<Square size={14} />} onClick={() => setConfirmStop(true)} aria-haspopup="dialog">Stop</Button>}
-          {cta}
+          {(c.status === 'running' || c.status === 'paused') && <Button variant="danger" icon={<Square size={14} />} onClick={() => setConfirmStop(true)} aria-haspopup="dialog">Stop</Button>}
         </div>
-        {!publicDemo && compact && <div className="min-w-[140px] flex-1" title={`${c.timeline.length} planned chats`}>{timeline}</div>}
-        {!publicDemo && (compact ? (
+        {compact && <div className="min-w-[140px] flex-1" title={`${c.timeline.length} planned chats`}>{timeline}</div>}
+        {compact ? (
           <FilterMenu className="ml-auto" label="Options">{options}</FilterMenu>
         ) : (
           <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-2">{options}</div>
-        ))}
+        )}
       </div>
-      {publicDemo ? <DemoProgress c={c} nowMs={now?.getTime() ?? null} /> : !compact && <div className="mt-2">{timeline}</div>}
-      {!publicDemo && (
-        <Modal
-          open={confirmStop}
-          onClose={() => setConfirmStop(false)}
-          title="Stop the company day?"
-          footer={
-            <>
-              <Button onClick={() => setConfirmStop(false)}>Keep running</Button>
-              <Button
-                variant="danger"
-                onClick={() => {
-                  setConfirmStop(false)
-                  void run(companyActions.stop)
-                }}
-              >
-                Stop the day
-              </Button>
-            </>
-          }
-        >
-          <p className="text-sm text-muted">The simulated day ends here. Conversations, knowledge and cycles so far are kept.</p>
-        </Modal>
-      )}
+      {!compact && <div className="mt-2">{timeline}</div>}
+      <Modal
+        open={confirmStop}
+        onClose={() => setConfirmStop(false)}
+        title="Stop the company day?"
+        footer={
+          <>
+            <Button onClick={() => setConfirmStop(false)}>Keep running</Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setConfirmStop(false)
+                void run(companyActions.stop)
+              }}
+            >
+              Stop the day
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-muted">The simulated day ends here. Conversations, knowledge and cycles so far are kept.</p>
+      </Modal>
     </div>
   )
 }

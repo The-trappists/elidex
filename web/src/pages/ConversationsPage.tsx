@@ -1,6 +1,6 @@
 import { Download, MessageSquare, Play, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { Composer } from '../components/chat/Composer'
 import { buildCitations } from '../components/chat/citations'
@@ -10,12 +10,17 @@ import { SourceIcon, ThreadList, threadTitle } from '../components/chat/ThreadLi
 import { Button, EmptyState, Modal, withToast } from '../components/ui'
 import { cn } from '../lib/cn'
 import { ORIGIN_STYLE, THREAD_STATUS_STYLE } from '../lib/semantic'
+import { useLiveAiReady } from '../store/connections'
 import { useLive } from '../store/live'
 import { useDemo } from '../store/demo'
 
 export default function ConversationsPage() {
   const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const canUseLiveAi = useLiveAiReady()
+  const canWrite = !publicDemo || canUseLiveAi
   const params = useParams()
+  const [searchParams] = useSearchParams()
+  const creatingNew = searchParams.get('new') === '1'
   const threadId = params.threadId ? decodeURIComponent(params.threadId) : null
   const nav = useNavigate()
   const thread = useLive((s) => (threadId ? s.threads[threadId] : undefined))
@@ -34,8 +39,8 @@ export default function ConversationsPage() {
     [threads],
   )
   useEffect(() => {
-    if (!threadId && latestId) nav(`/conversations/${encodeURIComponent(latestId)}`, { replace: true })
-  }, [threadId, latestId, nav])
+    if (!threadId && latestId && !creatingNew) nav(`/conversations/${encodeURIComponent(latestId)}`, { replace: true })
+  }, [threadId, latestId, nav, creatingNew])
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const latestJob = useMemo(() => {
@@ -109,7 +114,7 @@ export default function ConversationsPage() {
                     <span className="truncate">{thread.participants.join(', ')}</span>
                   </div>
                 </div>
-                {!publicDemo && <Button
+                {canWrite && <Button
                   size="sm"
                   variant="primary"
                   icon={<Play size={13} />}
@@ -134,7 +139,7 @@ export default function ConversationsPage() {
               <div className="min-h-0 flex-1">
                 <MessageList thread={thread} personas={personas} citations={citations} hoverItem={hoverItem} onHoverItem={setHoverItem} />
               </div>
-              {!publicDemo && <div className="bg-surface">
+              {canWrite && <div className="bg-surface">
                 <Composer key={thread.id} thread={thread} />
               </div>}
             </section>

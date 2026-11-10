@@ -731,7 +731,8 @@ async def put_settings(body: SettingsPatch, request: Request) -> Settings:
 
 @router.get("/slack/status")
 async def slack_status(request: Request) -> dict:
-    slack = getattr(request.app.state, "slack", None)
+    wb = get_wb(request)
+    slack = getattr(wb, "slack", None) or getattr(request.app.state, "slack", None)
     if slack is not None:
         try:
             return slack.status()

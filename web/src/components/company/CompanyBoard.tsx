@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck } from 'lucide-react'
+import { ArrowRight, Building2, CalendarCheck } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { api, type ArchiveStats } from '../../api/client'
 import { isDemo } from '../../api/fixtures/company'
@@ -95,7 +95,22 @@ export function CompanyBoard({ publicDemo, cta }: { publicDemo: boolean; cta?: R
     return (
       <div className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 px-4 py-3 md:px-6">
-          <CompanyHeader c={c} compact={short} publicDemo cta={cta} />
+          {cta && (
+            <section aria-label="Prepared SFP case" className="flex flex-col gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 sm:flex sm:items-baseline sm:gap-3">
+                <p className="text-[11px] font-medium uppercase tracking-[.12em] text-muted">Prepared SFP case</p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-snug sm:mt-0">
+                  <span className="font-medium">TRN-042 optical-module replacement</span>
+                  <ArrowRight size={14} className="shrink-0 text-muted" aria-hidden />
+                  <span className="font-medium">Erkki's captured rule</span>
+                  <ArrowRight size={14} className="shrink-0 text-muted" aria-hidden />
+                  <span className="font-medium">TRN-117 safer plan</span>
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-1 sm:items-end">{cta}</div>
+            </section>
+          )}
+          <CompanyHeader c={c} compact={short} publicDemo />
           <CompanyKpis c={c} publicDemo />
           <div className="demo-hero relative overflow-hidden rounded-lg border border-line bg-surface">
             <CompanyGraph publicDemo maxNodes={40} newCount={since.count} />

@@ -29,9 +29,17 @@ Use an existing Slack workspace, or create a free one at https://slack.com/get-s
 2. In the channel type `/invite @Context Dashboard`.
 3. Get the channel ID: right-click the channel, **View channel details**, the ID (`C0123456789`) is at the bottom. This is `SLACK_CHANNEL_ID`.
 
-## 6. Configure and restart
+## 6. Connect in the app
 
-Add to `.env` (never commit it):
+Open **Connections → Slack**, then enter the bot token (`xoxb-...`), app token (`xapp-...`) and channel ID. The app checks access and opens the Socket Mode listener; it does not offer OAuth or bypass workspace approval. Only share channel content you are allowed to process.
+
+An AI connection is needed to extract knowledge from new Slack conversations. Without one, the prepared demo still works, but arbitrary new messages do not gain prepared answers.
+
+Tokens entered here live only in server memory. On the public demo, they belong to your private workspace until disconnect or expiry (closing a tab does not disconnect). On the shared team dashboard, changes affect everyone using that dashboard and last until disconnect or server restart. Use **Disconnect** to stop listening. Channel history is not bulk-imported; the bridge listens for new messages.
+
+### Persistent deployment configuration (optional)
+
+A human deployment owner can instead add these values to `.env` (never commit it):
 
 ```
 SLACK_BOT_TOKEN=xoxb-...
@@ -39,7 +47,7 @@ SLACK_APP_TOKEN=xapp-...
 SLACK_CHANNEL_ID=C0123456789
 ```
 
-Restart `uv run ctx dashboard`. The header of the UI shows the **Slack on** badge with the channel name. `GET /api/slack/status` gives the details and the last error.
+Restart `uv run ctx dashboard`. **Connections** shows the bridge status; `GET /api/slack/status` gives the channel and last error. Server-configured tokens remain a deployment-owner responsibility.
 
 ## Using it
 

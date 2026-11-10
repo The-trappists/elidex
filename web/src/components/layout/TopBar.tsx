@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn'
 import { fmtDateTime, toNaiveIso } from '../../lib/format'
 import { SOURCE_STYLE } from '../../lib/semantic'
 import { useSimNow } from '../../lib/useNow'
+import { useConnections } from '../../store/connections'
 import { useLive } from '../../store/live'
 import { Button, IconButton, withToast } from '../ui'
 import { ALL_NAV } from './Sidebar'
@@ -63,13 +64,22 @@ export function TopBar() {
   const settings = useLive((s) => s.settings)
   const slack = useLive((s) => s.slack)
   const connection = useLive((s) => s.connection)
+  const connections = useConnections((s) => s.snapshot)
+  const refreshConnections = useConnections((s) => s.refresh)
   const now = useSimNow(500)
   const [showClock, setShowClock] = useState(false)
   const { pathname } = useLocation()
   const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? { title: 'Page not found', subtitle: '' }
 
+  useEffect(() => {
+    void refreshConnections(true)
+  }, [refreshConnections])
+
   const mode = settings?.extractor_mode ?? 'auto'
-  const llmOn = !!settings?.llm_configured && mode !== 'scripted'
+  const aiConnected = connections?.ai.connected ?? !!settings?.llm_configured
+  const aiModel = connections?.ai.model ?? settings?.llm_model
+  const liveSlack = connections?.slack ?? slack
+  const llmOn = aiConnected && (connections?.ai.source === 'session' || mode !== 'scripted')
 
   return (
     <header className="app-topbar sticky top-0 z-20 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-4 py-1.5 md:px-6">
@@ -107,11 +117,11 @@ export function TopBar() {
         </div>
 
         <div className="hidden items-center gap-3 text-xs text-muted xl:flex">
-          <span className="flex items-center gap-1.5" title={settings?.llm_model ?? 'No LLM key: scripted extraction'}>
-            <Dot on={llmOn} bad={mode === 'llm' && !llmOn} /> {llmOn ? settings?.llm_model : mode === 'llm' ? 'AI needs a key' : 'Scripted'}
+          <span className="flex items-center gap-1.5" title={aiModel ?? 'No LLM key: scripted extraction'}>
+            <Dot on={llmOn} bad={mode === 'llm' && !aiConnected} /> {llmOn ? aiModel : mode === 'llm' ? 'AI needs a key' : 'Scripted'}
           </span>
-          <span className="flex items-center gap-1.5" title={slack.error ?? slack.channel ?? 'Slack bridge off'}>
-            <Dot on={slack.connected} /> Slack
+          <span className="flex items-center gap-1.5" title={liveSlack.error ?? liveSlack.channel ?? 'Slack bridge off'}>
+            <Dot on={liveSlack.connected} /> Slack
           </span>
         </div>
 

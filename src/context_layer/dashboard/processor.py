@@ -49,8 +49,11 @@ class HookContext:
 def agents_quiet(ctx: HookContext) -> bool:
     """True when the LLM agents (critic, judge) must stay silent: no LLM key (scripted mode) or the job
     processes the seed at first start (no extra LLM calls)."""
+    from ..connections import current_connection
     from ..demo_policy import current_policy
-    if current_policy() is not None:
+    registry = current_connection()
+    personal = registry is not None and registry.ai is not None
+    if current_policy() is not None and not personal:
         return True
     proc = getattr(ctx.wb, "processor", None)
     return not config.llm_configured() or (proc is not None and proc.is_bootstrap(ctx.job.thread_id))
@@ -357,7 +360,17 @@ class Processor:
 
     async def _extract(self, job: PipelineJob, thread: LiveThread, core) -> list[ExtractedItem]:
         wb = self.wb
+        from ..connections import current_connection
         from ..demo_policy import current_policy, DemoLimitError
+        registry = current_connection()
+        if registry is not None and registry.ai is not None:
+            try:
+                return await self._extract_llm(job, core)
+            except Exception as e:  # noqa: BLE001 - a personal key failure must not fail the job
+                job.notes.append(f"Personal AI failed ({type(e).__name__}), fell back to scripted answers")
+                return self._extract_scripted(job, thread, core)
+        if registry is not None and not registry.allow_server_ai:
+            return self._extract_scripted(job, thread, core)
         policy = current_policy()
         if policy is not None:
             try:
@@ -381,7 +394,7 @@ class Processor:
             raise RuntimeError("LLM not configured: set LLM_API_KEY (or GOOGLE_APPLICATION_CREDENTIALS) and LLM_MODEL in .env")
         extractor = LLMExtractor(cache_path=getattr(wb, "llm_cache_file", config.DASHBOARD_LLM_CACHE_FILE))
         topics = sorted({a.topic for a in wb.store.assertions.values()})
-        job.extractor = f"llm:{config.LLM_MODEL}"
+        job.extractor = f"llm:{llm.active_model() or config.LLM_MODEL}"
         self._touch(job)
         try:
             return await asyncio.to_thread(extractor.extract, core, topics, wb.now())

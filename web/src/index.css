@@ -428,8 +428,16 @@ summary { padding-block: 4px; }
 .sim-off { height: 24px; padding: 0 6px; border-radius: 4px; font-size: 11px; color: var(--accent); white-space: nowrap; }
 .sim-off:hover { background: var(--accent-soft); }
 .sim-head-now { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.sim-track { position: relative; height: 68px; --lane-h: 18px; --sub-h: 9px; --mark: 12px; margin-top: 2px; touch-action: pan-y; outline: none; cursor: crosshair; }
-.sim-track:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.sim-scrubber { display: flex; align-items: center; height: 32px; }
+.sim-range { appearance: none; display: block; width: 100%; height: 32px; margin: 0; background: transparent; cursor: ew-resize; touch-action: none; }
+.sim-range::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--accent) var(--scrub-progress), var(--surface-3) var(--scrub-progress)); }
+.sim-range::-moz-range-track { height: 6px; border-radius: 3px; background: var(--surface-3); }
+.sim-range::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent); }
+.sim-range::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; margin-top: -7px; border: 3px solid var(--accent); border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); }
+.sim-range::-moz-range-thumb { width: 14px; height: 14px; border: 3px solid var(--accent); border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); }
+.sim-range:active { cursor: grabbing; }
+.sim-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.sim-track { position: relative; height: 68px; --lane-h: 18px; --sub-h: 9px; --mark: 12px; margin-top: 2px; touch-action: pan-y; cursor: crosshair; }
 .sim-ticks { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; pointer-events: none; }
 .sim-tick { position: absolute; bottom: 0; transform: translateX(-50%); font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sim-tick.is-major { color: var(--text); font-weight: 600; }
@@ -472,11 +480,16 @@ summary { padding-block: 4px; }
 @media (max-height: 759px) {
   .sim-timeline { padding: 2px 10px 4px; }
   .sim-track { height: 24px; --lane-h: 8px; --sub-h: 4px; --mark: 7px; margin-top: 0; }
-  .sim-ticks, .sim-legend, .sim-head-now, .sim-empty { display: none; }
+  .sim-ticks, .sim-legend, .sim-empty { display: none; }
   .sim-now-line, .sim-at-line { bottom: 0; }
   .sim-now-pill, .sim-at-pill { display: none; }
   .sim-count { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sim-card, .sim-marker { transition: none; }
+}
+
+@media (min-width: 768px) and (max-height: 759px) {
+  .sim-timeline { padding-bottom: 2px; }
+  .sim-scrubber, .sim-range { height: 24px; }
 }

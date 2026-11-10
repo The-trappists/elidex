@@ -201,7 +201,7 @@ export function SimTimeline({ events, at, now, follow, onChange, onReset, onSele
     if (c) onSelect?.(c.events[0])
   }
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const t = at.getTime()
     const step = e.shiftKey ? 15 * 60_000 : 60_000
     if (e.key === 'ArrowLeft') {
@@ -310,22 +310,35 @@ export function SimTimeline({ events, at, now, follow, onChange, onReset, onSele
             {off.later} later ›
           </button>
         )}
-        <span className="sim-head-now" aria-hidden>
-          {format(now, 'HH:mm')}
+        <span className="sim-head-now">
+          {follow ? 'Now' : 'Viewing'} · {format(at, 'd MMM yyyy, HH:mm')}
         </span>
+      </div>
+
+      <div className="sim-scrubber">
+        <input
+          className="sim-range"
+          type="range"
+          min={domain.start}
+          max={domain.end}
+          step={1000}
+          value={Math.min(domain.end, Math.max(domain.start, at.getTime()))}
+          aria-label="Time travel"
+          aria-valuetext={format(at, 'EEE d MMM yyyy, HH:mm:ss')}
+          title="Drag to view the graph at any time. Use arrow keys for minutes, Shift for 15 minutes."
+          style={{ '--scrub-progress': `${Math.min(100, Math.max(0, pct(at.getTime())))}%` } as React.CSSProperties}
+          onKeyDown={onKeyDown}
+          onChange={(e) => {
+            setPinned(null)
+            setHover(null)
+            moveTo(Number(e.target.value))
+          }}
+        />
       </div>
 
       <div
         ref={trackRef}
         className="sim-track"
-        role="slider"
-        tabIndex={0}
-        aria-label="Time travel"
-        aria-valuemin={domain.start}
-        aria-valuemax={domain.end}
-        aria-valuenow={at.getTime()}
-        aria-valuetext={format(at, 'EEE d MMM, HH:mm')}
-        onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -449,7 +462,7 @@ export function TimeChip({ at, now, follow, onReset }: { at: Date; now: Date; fo
     <div className="flex flex-wrap items-center gap-2">
       <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs" aria-live="polite">
         <span className={cn('size-1.5 rounded-full', follow ? 'bg-accent' : 'bg-warn')} aria-hidden />
-        {follow ? 'As of now' : `As of ${format(at, 'HH:mm')}`}
+        {follow ? 'As of now' : `As of ${format(at, 'd MMM yyyy, HH:mm')}`}
         {!follow && state !== 'now' && <span className="text-muted">{state}</span>}
       </span>
       {!follow && (

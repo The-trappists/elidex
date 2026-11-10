@@ -8,14 +8,17 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from .. import config
+from ..connections import ConnectionRegistry, bind_connections
 from . import loop_agents
 from .processor import install_llm_sinks
 from .routes import emit_clock, router
+from .routes_connections import router as connections_router
 from .routes_export import router as export_router
 from .llm_compact import LlmCompactor
 from .sources import router as sources_router
@@ -57,14 +60,13 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         app.state.closing = False
         wb = Dashboard(state_file=state_file, seed=seed)
         wb.bus.loop = loop
+        wb.connections = ConnectionRegistry(public_demo=False)
         app.state.wb = wb
+        app.state.connections = wb.connections
         from . import persistence
 
         wb.llm_calls = persistence.read_llm_calls(config.DASHBOARD_LLM_CALLS_FILE)[-500:]
         remove_sinks = install_llm_sinks(wb, loop)
-        wb.clock.start()
-        wb.processor.start()
-        loop_agents.install_all()
 
         app.state.simulator = Simulator(wb)
         cloud = state_file is None  # tests pass a state file: they never reach Atlas or Tiger
@@ -72,21 +74,28 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         app.state.company = CompanyDay(wb, app.state.simulator, archive=archive)
         app.state.slack = None
         app.state.llm_compactor = LlmCompactor(wb)
-        tasks = [loop.create_task(_clock_ticks(wb))]
-        if background:
-            tasks.append(loop.create_task(_guarded(wb, "simulator", app.state.simulator.run_forever())))
-            tasks.append(loop.create_task(_guarded(wb, "company day", app.state.company.run_forever())))
-            tasks.append(loop.create_task(_guarded(wb, "llm log compaction", app.state.llm_compactor.run_forever())))
-        if config.slack_configured():
-            slack = SlackBridge(wb, config.SLACK_BOT_TOKEN, config.SLACK_APP_TOKEN, config.SLACK_CHANNEL_ID)
-            app.state.slack, wb.slack = slack, slack
-            tasks.append(loop.create_task(_guarded(wb, "slack bridge", slack.start())))
+        with bind_connections(wb.connections):
+            wb.clock.start()
+            wb.processor.start()
+            loop_agents.install_all()
+            tasks = [loop.create_task(_clock_ticks(wb))]
+            if background:
+                tasks.append(loop.create_task(_guarded(wb, "simulator", app.state.simulator.run_forever())))
+                tasks.append(loop.create_task(_guarded(wb, "company day", app.state.company.run_forever())))
+                tasks.append(loop.create_task(_guarded(wb, "llm log compaction", app.state.llm_compactor.run_forever())))
+            if config.slack_configured():
+                slack = SlackBridge(wb, config.SLACK_BOT_TOKEN, config.SLACK_APP_TOKEN, config.SLACK_CHANNEL_ID)
+                app.state.slack, wb.slack = slack, slack
+                wb.connections.server_slack = slack
+                tasks.append(loop.create_task(_guarded(wb, "slack bridge", slack.start())))
         try:
             yield
         finally:
             app.state.closing = True
             for t in tasks:
                 t.cancel()
+            with contextlib.suppress(Exception):
+                await wb.connections.close()
             if app.state.slack is not None:
                 with contextlib.suppress(Exception):
                     await app.state.slack.stop()
@@ -95,6 +104,25 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
             wb.save_now()
 
     app = FastAPI(title="Context Dashboard", lifespan=lifespan)
+
+    @app.middleware("http")
+    async def bind_workspace_connections(request: Request, call_next):
+        registry = getattr(request.app.state, "connections", None)
+        if registry is None:
+            return await call_next(request)
+        with bind_connections(registry):
+            return await call_next(request)
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, exc: RequestValidationError):
+        # Never echo submitted credentials: FastAPI's default body repeats the input values.
+        details = [
+            {"loc": ".".join(str(part) for part in err.get("loc", ()) if part != "body"),
+             "msg": err.get("msg", "Invalid value"), "type": err.get("type", "value_error")}
+            for err in exc.errors()
+        ]
+        return JSONResponse({"detail": details}, status_code=422)
+
     @app.get("/api/demo")
     async def demo_status():
         return {"enabled": False}
@@ -105,6 +133,7 @@ def create_app(state_file=None, seed: bool = True, background: bool = True) -> F
         allow_headers=["*"],
     )
     app.include_router(router)
+    app.include_router(connections_router)
     app.include_router(export_router)
     app.include_router(sources_router)
     app.include_router(knowledge_router)
