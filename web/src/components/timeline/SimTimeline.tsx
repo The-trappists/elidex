@@ -283,6 +283,26 @@ export function SimTimeline({ events, at, now, follow, onChange, onReset, onSele
 
   return (
     <div className={cn('sim-timeline', className)}>
+      <div className="sim-scrubber">
+        <input
+          className="sim-range"
+          type="range"
+          min={domain.start}
+          max={domain.end}
+          step={1000}
+          value={Math.min(domain.end, Math.max(domain.start, at.getTime()))}
+          aria-label="Time travel"
+          aria-valuetext={format(at, 'EEE d MMM yyyy, HH:mm:ss')}
+          title="Drag to view the graph at any time. Use arrow keys for minutes, Shift for 15 minutes."
+          style={{ '--scrub-progress': `${Math.min(100, Math.max(0, pct(at.getTime())))}%` } as React.CSSProperties}
+          onKeyDown={onKeyDown}
+          onChange={(e) => {
+            setPinned(null)
+            setHover(null)
+            moveTo(Number(e.target.value))
+          }}
+        />
+      </div>
       <div className="sim-head">
         <div className="sim-presets" role="group" aria-label="Timeline range">
           <button type="button" className="sim-btn" aria-pressed={preset === 'day'} onClick={() => setPreset('day')}>
@@ -315,26 +335,6 @@ export function SimTimeline({ events, at, now, follow, onChange, onReset, onSele
         </span>
       </div>
 
-      <div className="sim-scrubber">
-        <input
-          className="sim-range"
-          type="range"
-          min={domain.start}
-          max={domain.end}
-          step={1000}
-          value={Math.min(domain.end, Math.max(domain.start, at.getTime()))}
-          aria-label="Time travel"
-          aria-valuetext={format(at, 'EEE d MMM yyyy, HH:mm:ss')}
-          title="Drag to view the graph at any time. Use arrow keys for minutes, Shift for 15 minutes."
-          style={{ '--scrub-progress': `${Math.min(100, Math.max(0, pct(at.getTime())))}%` } as React.CSSProperties}
-          onKeyDown={onKeyDown}
-          onChange={(e) => {
-            setPinned(null)
-            setHover(null)
-            moveTo(Number(e.target.value))
-          }}
-        />
-      </div>
 
       <div
         ref={trackRef}

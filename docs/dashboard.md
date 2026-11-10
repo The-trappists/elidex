@@ -23,7 +23,7 @@ uv run ctx llm-check            # which LLM provider / JSON mode works
 
 ## Graph time travel
 
-Network and Knowledge graph share an always-visible timeline scrubber below the canvas. Drag the blue bar's handle or click anywhere on the bar to inspect a time; the graph updates during dragging, without waiting for release. The selected date and time stay visible, including on short screens.
+Network and Knowledge graph share an always-visible slider at the top of the timeline, above its range controls and event markers. Drag its handle or click anywhere on the slider to inspect a time; the graph updates during dragging, without waiting for release. The selected date and time stay visible, including on short screens.
 
 The selected time controls incident state and knowledge validity. Event markers remain available for source inspection. Use Day/All and the zoom controls to choose the visible period, and Back to now to follow the simulation clock again. Keyboard controls: Left/Right step one minute, Shift steps 15 minutes, Home/End select the visible range boundaries, and N returns to now.
 
