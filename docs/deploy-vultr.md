@@ -51,7 +51,7 @@ docker --version && docker compose version
 
 ## 5. Clone the repo (private, deploy key)
 
-The repo is private (`The-trappists/since-ai-hackathon`), so give the VM a read-only key.
+The repo is private (`The-trappists/elidex`), so give the VM a read-only key.
 
 On the VM:
 
@@ -66,8 +66,8 @@ Back on the VM:
 
 ```bash
 printf 'Host github.com\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' >> ~/.ssh/config
-git clone git@github.com:The-trappists/since-ai-hackathon.git
-cd since-ai-hackathon
+git clone git@github.com:The-trappists/elidex.git
+cd elidex
 git checkout feat/dashboard   # or main, once merged
 ```
 
@@ -155,7 +155,7 @@ docker run --rm -v context-dashboard_dashboard-data:/data -v "$PWD":/backup alpi
   tar czf /backup/dashboard-backup-$(date +%F).tgz -C /data .
 ```
 
-Download it with `scp root@IP:since-ai-hackathon/dashboard-backup-*.tgz .`.
+Download it with `scp root@IP:elidex/dashboard-backup-*.tgz .`.
 
 Restore: stop the app, extract into the volume, start again.
 

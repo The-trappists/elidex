@@ -94,10 +94,10 @@ The ElidEx Dashboard (`web/`) is an interactive operational environment built wi
 | View | Purpose | Screenshot |
 | :--- | :--- | :--- |
 | **Company Day** | Simulates a full day of network operations under a Finnish working calendar with concurrent chats, incidents, and autonomous resolutions. | ![Company Day](docs/images/site-barrier-case.png) |
-| **Network & Graph** | Real-time force-directed topology map and dynamic knowledge graph showing entities, knowledge rules, and temporal validity. | ![Topology & Knowledge](docs/images/knowledge-graph-topology.png) |
+| **Network & Graph** | Real-time force-directed topology map and dynamic knowledge graph showing entities, knowledge rules, and temporal validity. A time slider on top of the timeline scrubs every graph to any moment. | ![Topology & Knowledge](docs/images/knowledge-graph-topology.png) |
 | **Context Assertions** | Transparent assertion cards with verbatim quoted evidence, author provenance, and confidence levels. | ![Assertion Card](docs/images/context-assertion-card.png) |
 | **Agent Tester** | Interactive sandbox where operators can simulate incidents, trigger agent retrieval via MCP, and observe outcome verification. | ![Agent Resolution](docs/images/agent-resolution.png) |
-| **Insights** | Discovers recurring workarounds and linked multi-element failures sharing unmentioned common dependencies. | ![Insights](docs/images/insights-patterns.png) |
+| **Insights** | Discovers recurring workarounds and linked multi-element failures sharing unmentioned common dependencies. The default evidence graph links each human report to the affected equipment and the shared factor (always a hypothesis), with the same time slider; a network-map view stays available. | ![Insights](docs/images/insights-patterns.png) |
 
 ---
 
@@ -112,8 +112,8 @@ The ElidEx Dashboard (`web/`) is an interactive operational environment built wi
 The entire test suite and demonstration pipeline run offline without requiring paid API keys:
 
 ```bash
-git clone https://github.com/The-trappists/since-ai-hackathon.git
-cd since-ai-hackathon
+git clone https://github.com/The-trappists/elidex.git
+cd elidex
 uv sync
 
 # Build context store from sample conversations and cached extractions
