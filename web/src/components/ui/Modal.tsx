@@ -47,7 +47,7 @@ export function Modal({
   const { mounted, closing } = usePresence(open)
   if (!mounted) return null
   return (
-    <div className={cn('fixed inset-0 z-50 flex items-center justify-center bg-[#05060e]/55 p-0 backdrop-blur-sm md:p-4', closing ? 'animate-fade-out' : 'animate-fade-in')} onMouseDown={onClose}>
+    <div className={cn('fixed inset-0 z-50 flex items-center justify-center bg-text/45 p-0 backdrop-blur-sm md:p-4', closing ? 'animate-fade-out' : 'animate-fade-in')} onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"
@@ -92,7 +92,7 @@ export function Drawer({
   const { mounted, closing } = usePresence(open)
   if (!mounted) return null
   return (
-    <div className={cn('fixed inset-0 z-40 flex bg-[#05060e]/45 backdrop-blur-[3px]', closing ? 'animate-fade-out' : 'animate-fade-in', side === 'left' ? 'justify-start' : 'justify-end')} onMouseDown={onClose}>
+    <div className={cn('fixed inset-0 z-40 flex bg-text/35 backdrop-blur-[3px]', closing ? 'animate-fade-out' : 'animate-fade-in', side === 'left' ? 'justify-start' : 'justify-end')} onMouseDown={onClose}>
       <aside
         role="dialog"
         aria-modal="true"

@@ -69,7 +69,7 @@ export function TopologyKey() {
   return (
     <GraphKey
       items={[
-        { label: 'Site', swatch: <Swatch color="var(--g-link)" radius={4} dashed /> },
+        { label: 'Site', swatch: <Swatch color="var(--g-site-line)" radius={4} dashed /> },
         ...EQUIPMENT.map((e) => ({ label: e.label, swatch: <ShapeSwatch shape={e.shape} color={`var(${e.color})`} /> })),
         { label: 'Knowledge attached', swatch: <ShapeSwatch shape="circle" color="var(--g-assertion)" dot /> },
         { label: 'Open incident', swatch: <ShapeSwatch shape="circle" color="var(--bad)" /> },

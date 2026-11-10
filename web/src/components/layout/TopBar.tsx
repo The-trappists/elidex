@@ -1,4 +1,4 @@
-import { ChevronDown, Clock3, LogOut, Moon, Pause, Play, PlayCircle, Sun } from 'lucide-react'
+import { ChevronDown, Clock3, LogOut, Pause, Play, PlayCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { api } from '../../api/client'
@@ -54,28 +54,6 @@ function ScenarioLauncher() {
   )
 }
 
-function useTheme() {
-  const [dark, setDark] = useState(() => {
-    try {
-      const v = localStorage.getItem('theme')
-      if (v) return v === 'dark'
-    } catch {
-      /* storage blocked */
-    }
-    // The dashboard is dark-first; use dark unless the user has saved a choice.
-    return true
-  })
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    try {
-      localStorage.setItem('theme', dark ? 'dark' : 'light')
-    } catch {
-      /* storage blocked */
-    }
-  }, [dark])
-  return [dark, setDark] as const
-}
-
 function Dot({ on, bad }: { on: boolean; bad?: boolean }) {
   return <span className={cn('size-1.5 rounded-full', on ? 'bg-ok' : bad ? 'bg-bad' : 'bg-muted/50')} />
 }
@@ -86,7 +64,6 @@ export function TopBar() {
   const slack = useLive((s) => s.slack)
   const connection = useLive((s) => s.connection)
   const now = useSimNow(500)
-  const [dark, setDark] = useTheme()
   const [showClock, setShowClock] = useState(false)
   const { pathname } = useLocation()
   const page = ALL_NAV.find((n) => (n.end ? pathname === n.to : pathname.startsWith(n.to))) ?? { title: 'Page not found', subtitle: '' }
@@ -151,9 +128,6 @@ export function TopBar() {
           {connection === 'live' ? 'Live' : connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
         </span>
 
-        <IconButton onClick={() => setDark(!dark)} aria-label={dark ? 'Switch to the light theme' : 'Switch to the dark theme'}>
-          {dark ? <Sun size={16} /> : <Moon size={16} />}
-        </IconButton>
         <ScenarioLauncher />
         <Link
           to="/"

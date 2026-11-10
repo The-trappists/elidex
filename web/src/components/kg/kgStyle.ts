@@ -1,6 +1,6 @@
 import type { KgElement, KgKind } from '../../api/types'
 
-/** One hue per node kind, from the theme tokens (`--k-*`), so light and dark both work. */
+/** One hue per node kind, from the theme tokens (`--k-*`), so the palette stays consistent. */
 export const KIND: Record<KgKind, { label: string; plural: string; token: string; color: string; help: string }> = {
   Assertion: { label: 'Knowledge', plural: 'Knowledge', token: '--k-knowledge', color: 'var(--k-knowledge)', help: 'A piece of know-how taken from a conversation' },
   Person: { label: 'Person', plural: 'People', token: '--k-person', color: 'var(--k-person)', help: 'Someone who wrote a message or stated knowledge' },

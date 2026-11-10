@@ -964,7 +964,7 @@ export default function PipelinePage() {
 
                 {/* Transition Action */}
                 <div className="my-3 flex items-center justify-center">
-                  <div className="flex items-center gap-2 rounded-full border border-line bg-surface-3 px-3 py-1 text-[11px] font-mono text-accent">
+                  <div className="flex items-center gap-2 rounded-full border border-line bg-surface-3 px-3 py-1 text-[11px] font-mono text-accent-2">
                     <ArrowRight size={12} />
                     <span>{payload.transformLabel}</span>
                   </div>

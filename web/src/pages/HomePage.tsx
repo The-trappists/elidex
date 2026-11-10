@@ -118,7 +118,7 @@ const FEATURE_INSIGHT_LINKS: ForceLink[] = [
 const FEATURE_FEED_MESSAGES = [
   { initials: 'JJ', color: 'bg-pink-600', name: 'Jaakko Järvinen', role: 'Network Engineer', text: 'I can do it! Do we want the cardamom ones too?', time: '08:16', subject: 'Friday chat' },
   { initials: 'RR', color: 'bg-red-600', name: 'Raimo Rantanen', role: 'Radio Specialist', text: "Cardamom or I'm not coming. Also the weekly planning is moved to 13:00, the room is booked.", time: '08:17', subject: 'Friday chat' },
-  { initials: 'VV', color: 'bg-green-600', name: 'Veikko Vikkelä', role: 'Field Engineer', text: '13:00 works. Did anyone see the football last night?', time: '08:19', subject: 'Friday chat' },
+  { initials: 'VV', color: 'bg-green-700', name: 'Veikko Vikkelä', role: 'Field Engineer', text: '13:00 works. Did anyone see the football last night?', time: '08:19', subject: 'Friday chat' },
 ]
 
 export default function HomePage() {
@@ -287,7 +287,7 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-            <div aria-live="polite" className="relative aspect-[1.65/1] min-h-64 w-full min-w-0 overflow-hidden rounded-3xl border border-line bg-[#101113]">
+            <div aria-live="polite" className="relative aspect-[1.65/1] min-h-64 w-full min-w-0 overflow-hidden rounded-3xl border border-line bg-surface-2 shadow-[var(--shadow-sm)]">
               {activeFeature === 0 ? (
                 <ForceCanvas
                   mode="knowledge"
@@ -335,8 +335,8 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                  <div aria-hidden="true" className="absolute inset-0 bg-black/35" />
-                  <Link to="/company" className="relative z-10 inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-ok px-7 text-base font-semibold text-black transition-colors hover:brightness-95">
+                  <div aria-hidden="true" className="absolute inset-0 bg-text/35" />
+                  <Link to="/company" className="relative z-10 inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-ok px-7 text-base font-semibold text-on-accent transition-colors hover:brightness-95">
                     <Play size={15} />
                     Start the day
                   </Link>

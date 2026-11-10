@@ -5,7 +5,7 @@ import { cn } from '../../lib/cn'
 const width = (className?: string) => (/(^|\s)!?w-/.test(className ?? '') ? '' : 'w-full')
 
 const BASE =
-  'rounded-md border border-line bg-surface px-2.5 text-sm text-text transition placeholder:text-muted/70 hover:border-muted/40 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
+  'rounded-md border border-line-strong bg-surface px-2.5 text-sm text-text transition placeholder:text-muted hover:border-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20'
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(BASE, width(className), 'h-8', className)} {...rest} />
@@ -41,9 +41,9 @@ export function Toggle({ checked, onChange, label, disabled }: { checked: boolea
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={cn('relative h-6 w-10 shrink-0 rounded-full transition', checked ? 'bg-accent' : 'bg-surface-3')}
+        className={cn('relative h-6 w-10 shrink-0 rounded-full border border-line-strong transition', checked ? 'bg-accent' : 'bg-surface-3')}
       >
-        <span className={cn('absolute top-1 size-4 rounded-full bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-1')} />
+        <span className={cn('absolute top-1 size-4 rounded-full border border-line-strong bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-1')} />
       </button>
       {label}
     </label>

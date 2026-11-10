@@ -22,7 +22,7 @@
 .journey-copy > p:not(.journey-stop-label) { font-size: 14px; line-height: 1.85; color: var(--muted); }
 .journey-detail { margin: 22px 0; font: 10px/1.9 var(--font-mono); color: var(--muted); }
 .journey-copy > a, .journey-end a { display: inline-flex; align-items: center; gap: 10px; color: var(--accent); font-size: 12px; font-weight: 600; padding: 8px 0; }
-.journey-preview { min-width: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: 0 20px 50px -30px rgb(0 0 0 / .3); transition: border-color .4s, transform .6s; }
+.journey-preview { min-width: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow-lg); transition: border-color .4s, transform .6s; }
 .journey-stop[data-active=true] .journey-preview { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateY(-4px); }
 .journey-window { display: flex; align-items: center; gap: 8px; padding: 13px 15px; border-bottom: 1px solid var(--line); font-size: 10px; color: var(--muted); background: var(--surface-2); }
 .journey-window-mark { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }

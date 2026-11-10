@@ -1,6 +1,6 @@
 // Canvas force graph: a small physics engine with pan, zoom and drag.
 // Topology mode draws each site as a surface around its equipment; selecting a site (or something in it) opens it.
-// Colors come from the theme tokens, so light and dark both work.
+// Colors come from the theme tokens, so the palette stays consistent.
 import { Maximize2, Minus, Plus } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 
@@ -322,7 +322,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
     const color = (token: string) => {
       let c = colors.get(token)
       if (!c) {
-        c = getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '#888888'
+        c = getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '#64748b'
         colors.set(token, c)
       }
       return c
@@ -523,7 +523,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
           ctx.globalAlpha *= open ? 0.9 : 0.75
           ctx.fill()
           ctx.globalAlpha = focus && !focus.has(gid) ? 0.35 : 1
-          ctx.strokeStyle = open ? accent : g.alert ? color('--bad') : line
+          ctx.strokeStyle = open ? accent : g.alert ? color('--bad') : color('--g-site-line')
           ctx.lineWidth = (open ? 2 : 1.2) * Math.max(1, px * 0.8)
           ctx.setLineDash(open ? [] : [5, 4])
           ctx.stroke()
@@ -567,7 +567,7 @@ export function ForceCanvas({ mode, nodes, links, selectedId, onSelect, emphasis
         if (l.kind === 'anchor') continue
         const [a, b] = ends(s, l)
         if (!a || !b || a === b) continue
-        let alpha = topo ? 0.7 : 0.55
+        let alpha = topo ? 0.75 : 0.7
         let stroke = l.color ? color(l.color) : linkColor
         let width = l.kind === 'inter' ? 1.8 : 1.3
         if (s.toneLinks.has(l.id)) {

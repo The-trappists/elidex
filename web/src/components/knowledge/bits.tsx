@@ -92,7 +92,7 @@ export function CopyId({ id }: { id: string }) {
       title="Copy id"
       aria-label={`Copy id ${id}`}
       onClick={() => { void navigator.clipboard?.writeText(id).then(() => { setDone(true); window.setTimeout(() => setDone(false), 1200) }, () => undefined) }}
-      className="inline-flex max-w-full items-center gap-1 rounded-md border border-line bg-surface-2 px-1.5 py-1 font-mono text-xs hover:border-accent hover:text-accent"
+      className="inline-flex max-w-full items-center gap-1 rounded-md border border-line bg-surface-2 px-1.5 py-1 font-mono text-xs hover:border-accent hover:text-accent-2"
     >
       <span className="truncate">{done ? 'Copied' : id}</span>
       {!done && <Copy size={11} className="shrink-0" />}

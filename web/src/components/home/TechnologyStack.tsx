@@ -20,7 +20,7 @@ const GROUPS = [
     { name: 'React', icon: 'react', role: 'Builds the live dashboard, pipeline views and interactive graphs, drawn with our own canvas force engine.' },
     { name: 'TypeScript', icon: 'typescript', role: 'Types the frontend data contracts, API client and interactive dashboard components.' },
     { name: 'Vite', icon: 'vite', role: 'Provides the frontend development server and builds the production dashboard assets.' },
-    { name: 'Tailwind CSS', icon: 'tailwindcss', role: 'Styles responsive layouts using shared theme tokens for light and dark modes.' },
+    { name: 'Tailwind CSS', icon: 'tailwindcss', role: 'Styles responsive layouts using shared theme tokens for one consistent light theme.' },
   ] },
   { title: 'Package & deploy', summary: 'Keep the dashboard and its live processes running.', tools: [
     { name: 'Docker', icon: 'docker', role: 'Packages the app; Compose runs the services together for deployment.' },

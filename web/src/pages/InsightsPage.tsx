@@ -157,7 +157,7 @@ export default function InsightsPage() {
                 { label: 'Problem reported', swatch: <ShapeSwatch shape="circle" color="var(--bad)" dot /> },
                 { label: 'Possible common cause', swatch: <ShapeSwatch shape="circle" color="var(--warn)" dot /> },
                 { label: 'Link between them', swatch: <LineSwatch color="var(--bad)" /> },
-                { label: 'Site', swatch: <Swatch color="var(--g-link)" radius={4} dashed /> },
+                { label: 'Site', swatch: <Swatch color="var(--g-site-line)" radius={4} dashed /> },
               ]}
             />
           </div>

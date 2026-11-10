@@ -36,8 +36,8 @@
   flex: 0 0 48px;
   height: 48px;
   border-radius: 10px;
-  background: #fff;
-  border: 1px solid #e2e5ea;
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 @media (max-width: 479px) {
   .technology-card { flex-basis: 272px; width: 272px; padding: 20px; }

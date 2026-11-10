@@ -198,7 +198,7 @@ function Similar({ id, defaultQuery, onSelect }: { id: string; defaultQuery: str
       <form className="mb-2 flex items-center gap-1.5" onSubmit={(e) => { e.preventDefault(); if (q.trim()) setAsked(q.trim()) }}>
         <div className="relative flex-1">
           <Search size={12} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted" />
-          <input aria-label="Describe a situation" value={q} onChange={(e) => setQ(e.target.value)} className="h-8 w-full rounded-md border border-line bg-surface pl-7 pr-2 text-xs outline-none focus:border-accent" placeholder="Describe a situation…" />
+          <input aria-label="Describe a situation" value={q} onChange={(e) => setQ(e.target.value)} className="h-8 w-full rounded-md border border-line-strong bg-surface pl-7 pr-2 text-xs outline-none placeholder:text-muted focus:border-accent" placeholder="Describe a situation…" />
         </div>
         <Button size="sm" type="submit">Search</Button>
       </form>
