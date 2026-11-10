@@ -4,6 +4,8 @@
 
 The message of the demo: the loop is automated. Nobody types, confirms or rates anything. The console only shows what the loop did and lets a human correct it if they want to.
 
+> **On-screen guide.** The dashboard also has a **Demo** mode (top bar button) that walks through the Elisa case in seven steps with the right element pre-selected and a "Reset to start" button: incident, conversation, rule captured and linked, element context with human activity, agent and guard, field reply, "Confirmed in the field". It covers steps 1, 2 and 4 of the table below on one story (TRN-042); the timed script stays as it is. See [workbench.md](workbench.md#demo-mode-guided-story).
+
 ## Before the demo (not counted in the 2m30)
 
 1. Start the Dashboard: `uv run ctx dashboard` (UI on `http://127.0.0.1:8010`). Check **Settings**: `extractor_mode` is `auto` (or `llm`), and `use_critic`, `use_judge` and `use_outcome_loop` are **on** (they default to on; the critic and judge stay silent without an LLM key).
