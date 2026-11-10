@@ -1,15 +1,26 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
-/** A quiet, always-visible key. It explains the picture; it is not a control. */
-export function GraphKey({ items }: { items: { label: string; swatch: ReactNode }[] }) {
+/** A quiet, always-visible key. It explains the picture; it is not a control.
+ * `moreAfter` shows the first N items and keeps the rest behind a `More` button (0 = never collapse). */
+export function GraphKey({ items, moreAfter = 4 }: { items: { label: string; swatch: ReactNode }[]; moreAfter?: number }) {
+  const [open, setOpen] = useState(false)
+  const collapse = moreAfter > 0 && items.length > moreAfter
+  const shown = collapse && !open ? items.slice(0, moreAfter) : items
   return (
     <ul className="graph-key" aria-label="Legend">
-      {items.map((i) => (
+      {shown.map((i) => (
         <li key={i.label}>
           {i.swatch}
           <span>{i.label}</span>
         </li>
       ))}
+      {collapse && (
+        <li>
+          <button type="button" className="graph-key-more" aria-expanded={open} onClick={() => setOpen(!open)}>
+            {open ? 'Less' : 'More'}
+          </button>
+        </li>
+      )}
     </ul>
   )
 }

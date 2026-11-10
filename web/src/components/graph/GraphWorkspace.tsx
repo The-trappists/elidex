@@ -7,6 +7,7 @@ import { cn } from '../../lib/cn'
 export function GraphWorkspace({
   title,
   description,
+  meta,
   actions,
   status,
   toolbar,
@@ -17,9 +18,12 @@ export function GraphWorkspace({
   legend,
   selected,
   onClear,
+  variant = 'full',
 }: {
   title: string
   description: string
+  /** A short line under the description: counts, not prose. */
+  meta?: ReactNode
   /** Heading actions on the right: correlations, time chip. */
   actions?: ReactNode
   /** Thin strip above the canvas. */
@@ -33,6 +37,8 @@ export function GraphWorkspace({
   legend?: ReactNode
   selected: boolean
   onClear: () => void
+  /** `compact` hides the desktop view switch; the rail is visible at ≥ 1101 px. */
+  variant?: 'full' | 'compact'
 }) {
   const [view, setView] = useState<'map' | 'list' | 'details'>('map')
   const [previousSelection, setPreviousSelection] = useState(selected)
@@ -42,11 +48,12 @@ export function GraphWorkspace({
     else if (view === 'details') setView('list')
   }
   return (
-    <div className="diagram-workspace" data-view={view}>
+    <div className={cn('diagram-workspace', variant === 'compact' && 'is-compact')} data-view={view}>
       <div className="diagram-heading">
         <div>
           <h2 className="font-display text-2xl font-medium tracking-tight">{title}</h2>
           <p className="mt-1 text-sm leading-relaxed text-muted">{description}</p>
+          {meta && <div className="diagram-meta">{meta}</div>}
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {actions}

@@ -43,6 +43,7 @@ export function Inspector({
   id,
   kind,
   at,
+  summary,
   onSelect,
   patterns,
   onOpenPattern,
@@ -50,17 +51,26 @@ export function Inspector({
   id: string | null
   kind: NodeKind | null
   at: Date
+  /** Public demo: the core facts, with the full sections behind `More details`. */
+  summary?: boolean
   onSelect: (id: string, kind: NodeKind) => void
   patterns?: Pattern[]
   onOpenPattern?: (p: Pattern) => void
 }) {
   if (!id || !kind)
     return <EmptyState icon={<MousePointerClick size={26} />} title="Select a node" hint="Click an element, site, class or piece of knowledge in the graph to see what is known about it at the chosen time." />
-  const props = { id, at, onSelect, patterns, onOpenPattern }
+  const props = { id, at, summary, onSelect, patterns, onOpenPattern }
   return kind === 'element' ? <ElementInfo {...props} /> : kind === 'site' ? <SiteInfo {...props} /> : kind === 'class' ? <ClassInfo {...props} /> : <AssertionInfo {...props} />
 }
 
-type P = { id: string; at: Date; onSelect: (id: string, kind: NodeKind) => void; patterns?: Pattern[]; onOpenPattern?: (p: Pattern) => void }
+type P = { id: string; at: Date; summary?: boolean; onSelect: (id: string, kind: NodeKind) => void; patterns?: Pattern[]; onOpenPattern?: (p: Pattern) => void }
+
+const MoreDetails = ({ children }: { children: ReactNode }) => (
+  <details className="border-b border-line px-4 py-3 last:border-0">
+    <summary className="cursor-pointer text-xs font-medium text-muted">More details</summary>
+    <div className="mt-3">{children}</div>
+  </details>
+)
 
 /** What the open correlations say about this node. Hypotheses only; the drawer has the detail. */
 function CorrelationSection({ id, patterns, onOpen }: { id: string; patterns?: Pattern[]; onOpen?: (p: Pattern) => void }) {
@@ -77,7 +87,7 @@ function Title({ kind, title, sub }: { kind: string; title: string; sub?: ReactN
   )
 }
 
-function ElementInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
+function ElementInfo({ id, at, summary, onSelect, patterns, onOpenPattern }: P) {
   const nav = useNavigate()
   const el = useLive((s) => s.elements.find((e) => e.id === id))
   const sites = useLive((s) => s.sites)
@@ -97,10 +107,26 @@ function ElementInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
   if (!el) return <EmptyState title="Element not found" hint={id} />
   const site = sites.find((s) => s.id === el.site_id)
   const its = classesOf(el, Object.values(classes))
-  return (
-    <div>
-      <Title kind="Equipment" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
-      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
+  const incidentRows = (list: typeof mine) => (
+    <ul className="space-y-1.5">
+      {list.map((i) => {
+        const open = incidentOpenAt(i, at)
+        return (
+          <li key={i.id} className="rounded-md border border-line p-2 text-xs">
+            <div className="flex items-center gap-1.5">
+              <Badge className={SEVERITY_STYLE[i.severity].cls}>{SEVERITY_STYLE[i.severity].label}</Badge>
+              <span className="font-medium">{i.kind}</span>
+              <Badge className={open ? 'ml-auto bg-bad/15 text-bad' : 'ml-auto bg-ok/15 text-ok'}>{open ? 'open' : 'resolved'}</Badge>
+            </div>
+            <p className="mt-1 text-muted">{i.summary}</p>
+            <div className="mt-1 text-xs text-muted">{fmtAgo(i.opened_at, at)}</div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+  const sections = (
+    <>
       <Section title="Details">
         <Row k="Type" v={el.type.replace(/_/g, ' ')} />
         <Row k="Model" v={el.model} />
@@ -135,24 +161,7 @@ function ElementInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
         <Experts entityId={id} at={at} />
       </Section>
       <Section title="Incidents" count={mine.length}>
-        {mine.length ? (
-          <ul className="space-y-1.5">
-            {mine.map((i) => {
-              const open = incidentOpenAt(i, at)
-              return (
-                <li key={i.id} className="rounded-md border border-line p-2 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <Badge className={SEVERITY_STYLE[i.severity].cls}>{SEVERITY_STYLE[i.severity].label}</Badge>
-                    <span className="font-medium">{i.kind}</span>
-                    <Badge className={open ? 'ml-auto bg-bad/15 text-bad' : 'ml-auto bg-ok/15 text-ok'}>{open ? 'open' : 'resolved'}</Badge>
-                  </div>
-                  <p className="mt-1 text-muted">{i.summary}</p>
-                  <div className="mt-1 text-xs text-muted">{fmtAgo(i.opened_at, at)}</div>
-                </li>
-              )
-            })}
-          </ul>
-        ) : <None>No incident on this element.</None>}
+        {mine.length ? incidentRows(mine) : <None>No incident on this element.</None>}
       </Section>
       <Section title="Conversations mentioning it" count={mentioning.length}>
         {mentioning.length ? (
@@ -167,21 +176,49 @@ function ElementInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
           </ul>
         ) : <None>No conversation mentions {id}.</None>}
       </Section>
+    </>
+  )
+  return (
+    <div>
+      <Title kind="Equipment" title={el.id} sub={<Badge className={ORIGIN_STYLE[el.origin].cls}>{ORIGIN_STYLE[el.origin].label}</Badge>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
+      {summary ? (
+        <>
+          <Section title="What we know" count={hits?.length}>
+            {hits === null || (loading && !hits.length) ? (
+              <div className="h-16 animate-pulse rounded-md bg-surface-2" />
+            ) : hits.length ? (
+              <ul className="space-y-1.5">
+                {hits.slice(0, 3).map((h) => (
+                  <li key={h.id} className="text-xs">
+                    <span className="font-medium">{h.topic}</span>
+                    <span className="mt-0.5 block text-muted">{h.summary}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <None>Nothing known about {id} at this time.</None>
+            )}
+          </Section>
+          <Section title="Incidents" count={mine.length}>
+            {mine.length ? incidentRows(mine.slice(0, 2)) : <None>No incident on this element.</None>}
+          </Section>
+          <MoreDetails>{sections}</MoreDetails>
+        </>
+      ) : sections}
     </div>
   )
 }
 
-function SiteInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
+function SiteInfo({ id, at, summary, onSelect, patterns, onOpenPattern }: P) {
   const site = useLive((s) => s.sites.find((x) => x.id === id))
   const elements = useLive((s) => s.elements)
   const assertions = useLive((s) => s.assertions)
   if (!site) return <EmptyState title="Site not found" hint={id} />
   const els = elements.filter((e) => e.site_id === id)
   const as = Object.values(assertions).filter((a) => bound(a, id))
-  return (
-    <div>
-      <Title kind="Site" title={site.name} sub={<IdChip>{site.id}</IdChip>} />
-      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
+  const sections = (
+    <>
       <Section title="Details">
         <Row k="Region" v={site.region ?? '—'} />
         <Row k="Origin" v={ORIGIN_STYLE[site.origin].label} />
@@ -193,21 +230,33 @@ function SiteInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
       <Section title="Knowledge about this site" count={as.length}>
         {as.length ? <div className="space-y-2">{as.map((a) => <ContextCard key={a.id} a={a} at={at} />)}</div> : <None>Nothing is bound to this site.</None>}
       </Section>
+    </>
+  )
+  return (
+    <div>
+      <Title kind="Site" title={site.name} sub={<IdChip>{site.id}</IdChip>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
+      {summary ? (
+        <>
+          <Section title="Elements" count={els.length}>
+            {els.length ? <div className="flex flex-wrap gap-1.5">{els.slice(0, 8).map((e) => <IdChip key={e.id} onClick={() => onSelect(e.id, 'element')}>{e.id}</IdChip>)}</div> : <None>No element on this site.</None>}
+          </Section>
+          <MoreDetails>{sections}</MoreDetails>
+        </>
+      ) : sections}
     </div>
   )
 }
 
-function ClassInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
+function ClassInfo({ id, at, summary, onSelect, patterns, onOpenPattern }: P) {
   const cls = useLive((s) => s.classes[id])
   const elements = useLive((s) => s.elements)
   const assertions = useLive((s) => s.assertions)
   if (!cls) return <EmptyState title="Class not found" hint={id} />
   const members = classMembers(cls, elements)
   const as = Object.values(assertions).filter((a) => bound(a, id))
-  return (
-    <div>
-      <Title kind="Class of elements" title={cls.label} sub={<IdChip>{cls.id}</IdChip>} />
-      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
+  const sections = (
+    <>
       <Section title="Criteria"><p className="text-xs">{critText(cls.criteria)}</p></Section>
       <Section title="Members" count={members.length}>
         {members.length ? <div className="flex flex-wrap gap-1.5">{members.map((e) => <IdChip key={e.id} onClick={() => onSelect(e.id, 'element')}>{e.id}</IdChip>)}</div> : <None>No element matches this class.</None>}
@@ -215,14 +264,38 @@ function ClassInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
       <Section title="Knowledge about this group of equipment" count={as.length}>
         {as.length ? <div className="space-y-2">{as.map((a) => <ContextCard key={a.id} a={a} at={at} />)}</div> : <None>No assertion is bound to this class.</None>}
       </Section>
+    </>
+  )
+  return (
+    <div>
+      <Title kind="Class of elements" title={cls.label} sub={<IdChip>{cls.id}</IdChip>} />
+      <CorrelationSection id={id} patterns={patterns} onOpen={onOpenPattern} />
+      {summary ? (
+        <>
+          <Section title="Members" count={members.length}>
+            {members.length ? <div className="flex flex-wrap gap-1.5">{members.slice(0, 8).map((e) => <IdChip key={e.id} onClick={() => onSelect(e.id, 'element')}>{e.id}</IdChip>)}</div> : <None>No element matches this class.</None>}
+          </Section>
+          <MoreDetails>{sections}</MoreDetails>
+        </>
+      ) : sections}
     </div>
   )
 }
 
-function AssertionInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
+function AssertionInfo({ id, at, summary, onSelect, patterns, onOpenPattern }: P) {
   const nav = useNavigate()
   const a = useLive((s) => s.assertions[id])
   if (!a) return <EmptyState title="Knowledge not found" hint={id} />
+  const sections = (
+    <>
+      <Section title="Where it comes from">
+        <Provenance assertionId={a.id} />
+      </Section>
+      <Section title="What it reaches">
+        <Reach assertionId={a.id} onSelect={(el) => onSelect(el, 'element')} />
+      </Section>
+    </>
+  )
   return (
     <div>
       <Title kind="Knowledge" title={a.topic} sub={<><Badge className={TYPE_STYLE[a.type].cls}>{TYPE_STYLE[a.type].label}</Badge><IdChip>{a.id}</IdChip></>} />
@@ -231,12 +304,7 @@ function AssertionInfo({ id, at, onSelect, patterns, onOpenPattern }: P) {
         <ContextCard a={a} at={at} />
         <Button className="mt-3 w-full" onClick={() => nav(`/knowledge?assertion=${encodeURIComponent(a.id)}`)}>Open in Knowledge</Button>
       </div>
-      <Section title="Where it comes from">
-        <Provenance assertionId={a.id} />
-      </Section>
-      <Section title="What it reaches">
-        <Reach assertionId={a.id} onSelect={(el) => onSelect(el, 'element')} />
-      </Section>
+      {summary ? <MoreDetails>{sections}</MoreDetails> : sections}
     </div>
   )
 }

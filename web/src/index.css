@@ -322,12 +322,20 @@ button:not(:disabled):active { transform: translateY(0.5px); }
 .diagram-main { display: flex; min-width: 0; min-height: 0; flex-direction: column; }
 .diagram-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--line); }
 .diagram-toolbar:empty { display: none; }
+.diagram-status { display: flex; flex-shrink: 0; align-items: center; gap: 6px; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.diagram-meta { margin-top: 4px; font-size: 12px; color: var(--muted); }
 .diagram-canvas { position: relative; flex: 1; min-height: 260px; background-color: var(--bg); }
 .diagram-details { min-width: 0; overflow: auto; border-left: 1px solid var(--line); overscroll-behavior: contain; }
 .diagram-key { padding: 10px 14px; border-top: 1px solid var(--line); }
 .diagram-view-switch { display: none; gap: 6px; }
 .graph-key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: var(--muted); }
 .graph-key li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.graph-key-more { display: inline-flex; align-items: center; min-height: 24px; padding: 0 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); font-size: 11px; cursor: pointer; }
+.graph-key-more:hover { color: var(--text); }
+/* Compact explorers reach the rail directly on desktop; the view switch stays on narrow screens. */
+@media (min-width: 1101px) {
+  .diagram-workspace.is-compact .diagram-view-switch { display: none; }
+}
 .graph-loading line { stroke: var(--g-link); stroke-width: 2; stroke-dasharray: 4 4; animation: graph-flow 0.9s linear infinite; }
 .graph-loading circle { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: graph-pulse 1.2s ease-in-out infinite; }
 .graph-loading circle:nth-of-type(2) { animation-delay: 0.2s; }
@@ -351,7 +359,8 @@ button:not(:disabled):active { transform: translateY(0.5px); }
  .diagram-heading p { font-size: 12px; }
  .diagram-body { min-height: 360px; }
  .diagram-toolbar > div:first-child { flex-basis: 100%; }
- .graph-key { gap: 4px 12px; font-size: 10px; }
+  .graph-key { gap: 4px 12px; font-size: 10px; }
+  .graph-key-more { min-height: 32px; }
 }
 
 /* Insights keeps its list under the map on narrow screens (it has no Browse/Details switch). */
@@ -360,6 +369,11 @@ button:not(:disabled):active { transform: translateY(0.5px); }
   /* The list is the main content here: the map shrinks to a strip, the list gets most of the height. */
   .diagram-body:has(> .insights-list) { grid-template-rows: minmax(100px, 1fr) minmax(0, 2.4fr); }
   .diagram-body:has(> .insights-list) .diagram-canvas { min-height: 100px; }
+}
+/* Public correlations: the list carries the screen on phones; the map path is `Open on network`. */
+@media (max-width: 767px) {
+  .diagram-workspace.is-public-insights .diagram-main { display: none; }
+  .diagram-workspace.is-public-insights .diagram-body { grid-template-rows: minmax(0, 1fr); }
 }
 
 /* Company day: a status dot that flashes once when its element changes state. */

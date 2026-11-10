@@ -75,6 +75,7 @@ export function KgDetails({
   edges,
   onSelect,
   at,
+  compact,
   patterns,
   onOpenPattern,
 }: {
@@ -84,6 +85,8 @@ export function KgDetails({
   onSelect: (id: string) => void
   /** The time the page is showing, for `In force`. */
   at?: Date
+  /** Public demo: the core facts, with the full sections behind `More details`. */
+  compact?: boolean
   patterns?: Pattern[]
   onOpenPattern?: (p: Pattern) => void
 }) {
@@ -104,43 +107,103 @@ export function KgDetails({
     groups.set(key, [...(groups.get(key) ?? []), other])
   }
 
-  return (
-    <div className="space-y-5 p-4">
-      <div>
-        <div className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="size-2 rounded-full" style={{ background: k?.color }} />
-          {k?.label ?? node.kind}
-          {node.kind === 'Assertion' && node.valid === false && <span className="text-warn">· not in force at this time</span>}
+  const header = (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs text-muted">
+        <span className="size-2 rounded-full" style={{ background: k?.color }} />
+        {k?.label ?? node.kind}
+        {node.kind === 'Assertion' && node.valid === false && <span className="text-warn">· not in force at this time</span>}
+      </div>
+      <h3 className="mt-1 text-base font-semibold leading-snug">{title(node)}</h3>
+      <details className="mt-3 text-xs text-muted"><summary className="cursor-pointer">Technical reference</summary><p className="mt-2 break-all font-mono">{node.id}</p>{node.topic != null && <p className="mt-1 break-all">Topic: {String(node.topic)}</p>}</details>
+      {node.kind === 'Assertion' && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Link to={`/knowledge?assertion=${encodeURIComponent(node.id)}`} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
+            <BookOpen size={13} /> Open in Knowledge
+          </Link>
+          {!compact && <CopyId id={node.id} />}
         </div>
-        <h3 className="mt-1 text-base font-semibold leading-snug">{title(node)}</h3>
-        <details className="mt-3 text-xs text-muted"><summary className="cursor-pointer">Technical reference</summary><p className="mt-2 break-all font-mono">{node.id}</p>{node.topic != null && <p className="mt-1 break-all">Topic: {String(node.topic)}</p>}</details>
-        {node.kind === 'Assertion' && (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Link to={`/knowledge?assertion=${encodeURIComponent(node.id)}`} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-xs font-medium hover:bg-surface-2">
-              <BookOpen size={13} /> Open in Knowledge
-            </Link>
-            <CopyId id={node.id} />
+      )}
+      {link && node.kind !== 'Assertion' && (
+        <Link to={link.to} className="mt-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
+          {link.label} <ArrowRight size={13} />
+        </Link>
+      )}
+    </div>
+  )
+
+  const inForce = node.kind === 'Assertion' && live && at && (
+    <p className="text-xs text-muted">
+      {validAt(live, at)
+        ? `In force since ${format(new Date(live.valid_from), 'HH:mm')}`
+        : `Not in force at this time${live.valid_to ? ` · until ${format(new Date(live.valid_to), 'HH:mm')}` : ''}`}
+    </p>
+  )
+
+  const entries = [...groups.entries()].flatMap(([name, ids]) => ids.map((id) => ({ name, id })))
+  const renderConnections = (list: { name: string; id: string }[]) => (
+    <div className="space-y-3">
+      {list.map(({ name, id }) => {
+        const d = nodes.get(id)
+        const kk = KIND[d?.kind as KgKind]
+        return (
+          <div key={`${name}-${id}`}>
+            <div className="mb-1 text-xs text-muted">{name}</div>
+            <button onClick={() => onSelect(id)} className="flex items-center gap-2 rounded-md px-2 py-1 text-left text-[13px] transition-colors hover:bg-surface-2">
+              <span className="size-2 shrink-0 rounded-full" style={{ background: kk?.color }} />
+              <span className="truncate">{d ? title(d) : id}</span>
+            </button>
+          </div>
+        )
+      })}
+    </div>
+  )
+  const connections = (
+    <div>
+      <div className="mb-2 text-xs font-medium text-muted">Connections</div>
+      {entries.length === 0 ? <p className="text-xs text-muted">Not connected to anything.</p> : renderConnections(entries)}
+    </div>
+  )
+
+  if (compact) {
+    return (
+      <div className="space-y-4 p-4">
+        {header}
+        {inForce}
+        <CorrelationBlock id={node.id} patterns={patterns} onOpen={onOpenPattern} />
+        {entries.length > 0 && (
+          <div>
+            <div className="mb-1 text-xs font-medium text-muted">Connections</div>
+            {renderConnections(entries.slice(0, 5))}
           </div>
         )}
-        {link && node.kind !== 'Assertion' && (
-          <Link to={link.to} className="mt-2 inline-flex items-center gap-1 text-sm text-accent hover:underline">
-            {link.label} <ArrowRight size={13} />
-          </Link>
-        )}
+        <details className="text-xs">
+          <summary className="cursor-pointer text-xs font-medium text-muted">More details</summary>
+          <div className="mt-3 space-y-4">
+            {node.kind === 'Assertion' && <JustificationPanel id={node.id} />}
+            {props.length > 0 && (
+              <dl className="space-y-2 text-[13px]">
+                {props.map(([key, v]) => (
+                  <div key={key}>
+                    <dt className="text-xs text-muted">{PROP_LABEL[key]}</dt>
+                    <dd className="whitespace-pre-wrap break-words">{fmt(key, v)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {connections}
+          </div>
+        </details>
       </div>
+    )
+  }
 
-      {node.kind === 'Assertion' && live && at && (
-        <p className="text-xs text-muted">
-          {validAt(live, at)
-            ? `In force since ${format(new Date(live.valid_from), 'HH:mm')}`
-            : `Not in force at this time${live.valid_to ? ` · until ${format(new Date(live.valid_to), 'HH:mm')}` : ''}`}
-        </p>
-      )}
-
+  return (
+    <div className="space-y-5 p-4">
+      {header}
+      {inForce}
       <CorrelationBlock id={node.id} patterns={patterns} onOpen={onOpenPattern} />
-
       {node.kind === 'Assertion' && <JustificationPanel id={node.id} />}
-
       {props.length > 0 && (
         <dl className="space-y-2 text-[13px]">
           {props.map(([key, v]) => (
@@ -151,33 +214,7 @@ export function KgDetails({
           ))}
         </dl>
       )}
-
-      <div>
-        <div className="mb-2 text-xs font-medium text-muted">Connections</div>
-        {groups.size === 0 ? (
-          <p className="text-xs text-muted">Not connected to anything.</p>
-        ) : (
-          <div className="space-y-3">
-            {[...groups.entries()].map(([name, ids]) => (
-              <div key={name}>
-                <div className="mb-1 text-xs text-muted">{name}</div>
-                <div className="flex flex-col">
-                  {ids.map((id) => {
-                    const d = nodes.get(id)
-                    const kk = KIND[d?.kind as KgKind]
-                    return (
-                      <button key={id} onClick={() => onSelect(id)} className="flex items-center gap-2 rounded-md px-2 py-1 text-left text-[13px] transition-colors hover:bg-surface-2">
-                        <span className="size-2 shrink-0 rounded-full" style={{ background: kk?.color }} />
-                        <span className="truncate">{d ? title(d) : id}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {connections}
     </div>
   )
 }

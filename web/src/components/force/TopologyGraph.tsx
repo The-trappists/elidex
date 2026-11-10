@@ -69,9 +69,10 @@ export function TopologyGraph({ at, selectedId, onSelect, highlightIds, insight,
   )
 }
 
-export function TopologyKey() {
+export function TopologyKey({ compact = false }: { compact?: boolean }) {
   return (
     <GraphKey
+      moreAfter={compact ? 5 : 0}
       items={[
         { label: 'Site', swatch: <Swatch color="var(--g-site-line)" radius={4} dashed /> },
         ...EQUIPMENT.map((e) => ({ label: e.label, swatch: <ShapeSwatch shape={e.shape} color={`var(${e.color})`} /> })),

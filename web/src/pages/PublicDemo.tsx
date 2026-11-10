@@ -10,17 +10,20 @@ import { useLive } from '../store/live'
 import AgentTesterPage from './AgentTesterPage'
 import ConversationsPage from './ConversationsPage'
 import GraphPage from './GraphPage'
+import InsightsPage from './InsightsPage'
 import KnowledgePage from './KnowledgePage'
 import NetworkPage from './NetworkPage'
 import './PublicDemo.css'
 
-// Public demo navigation: only the guided company-day walkthrough and the two
-// visualizations. Conversations, knowledge and the agent tester stay routable
-// because the walkthrough links to them, but they are not advertised here.
+// Public demo navigation: the guided company-day walkthrough, the two
+// visualizations and the correlations screen. Conversations, knowledge and the
+// agent tester stay routable because the walkthrough links to them, but they are
+// not advertised here.
 const NAV = [
   { to: '/company', label: 'Company day' },
   { to: '/network', label: 'Network' },
   { to: '/graph', label: 'Knowledge graph' },
+  { to: '/insights', label: 'Correlations' },
 ]
 
 const SFP_CONVERSATION = '/conversations/elisa%2Fteams_chat.json?walkthrough=sfp'
@@ -93,6 +96,7 @@ export default function PublicDemo() {
           <Route path="/knowledge" element={<KnowledgePage />} />
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/graph" element={<GraphPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/agent" element={<AgentTesterPage key={search} />} />
           <Route path="*" element={<Navigate to="/company" replace />} />
         </Routes>}

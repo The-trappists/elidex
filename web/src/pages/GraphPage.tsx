@@ -31,6 +31,7 @@ import { cn } from '../lib/cn'
 type Data = KgElement['data']
 
 const DEFAULT_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Class', 'Event', 'Thread']
+const PUBLIC_KINDS: KgKind[] = ['Assertion', 'Person', 'Element', 'Thread']
 const HOUR = 3_600_000
 
 export default function GraphPage() {
@@ -38,7 +39,9 @@ export default function GraphPage() {
   // ?focus=<id> is the deep link from the Knowledge page; it selects that node like ?node does.
   const selectedId = params.get('node') ?? params.get('focus')
   const select = (id: string | null) => setParams(id ? { node: id } : {}, { replace: true })
-  const [kinds, setKinds] = useState<Set<KgKind>>(new Set(DEFAULT_KINDS))
+  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
+  const [kinds, setKinds] = useState<Set<KgKind>>(() => new Set(publicDemo ? PUBLIC_KINDS : DEFAULT_KINDS))
+  const [moreTypes, setMoreTypes] = useState(false)
   const [showOutdated, setShowOutdated] = useState(false)
   const [q, setQ] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -53,7 +56,6 @@ export default function GraphPage() {
   const atMs = at.getTime()
   const assertions = useLive((s) => s.assertions)
   const threads = useLive((s) => s.threads)
-  const publicDemo = useDemo((s) => s.status?.enabled ?? false)
   const company = useCompanyDay()
   const events = useTimelineEvents()
   const { patterns } = usePatterns()
@@ -156,14 +158,26 @@ export default function GraphPage() {
 
   const selected = selectedId ? nodes.get(selectedId) : undefined
 
+  const metaCounts = useMemo(() => {
+    const c: Partial<Record<KgKind, number>> = {}
+    for (const d of nodes.values()) {
+      const k = d.kind as KgKind
+      if (!kinds.has(k) || (!showOutdated && !inForce(d))) continue
+      c[k] = (c[k] ?? 0) + 1
+    }
+    return c
+  }, [nodes, kinds, showOutdated, inForce])
+
   const browseNodes = [...nodes.values()].filter(
     (d) => kinds.has(d.kind as KgKind) && (showOutdated || inForce(d)) && (!q || `${title(d)} ${d.id}`.toLowerCase().includes(q.toLowerCase())),
   )
   return (
     <>
       <GraphWorkspace
-        title="Follow the knowledge"
-        description="See where a piece of knowledge came from, who shared it, and where it applies."
+        title="Knowledge graph"
+        description="What we know, and what it touches."
+        variant="compact"
+        meta={`${metaCounts.Assertion ?? 0} knowledge · ${metaCounts.Person ?? 0} people · ${metaCounts.Element ?? 0} equipment`}
         actions={
           <>
             <CorrelationsChip patterns={patterns} onOpen={() => setDrawer(true)} />
@@ -178,7 +192,7 @@ export default function GraphPage() {
               <Search size={17} className="shrink-0 text-muted" />
               <Input
                 className="min-w-0"
-                placeholder="Search knowledge, people or equipment"
+                placeholder="Search knowledge, people, equipment"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && matches[0] && selectNode(matches[0])}
@@ -188,11 +202,11 @@ export default function GraphPage() {
             <Button icon={<SlidersHorizontal size={15} />} aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}>
               Filters
             </Button>
-            <ExportMenu />
+            {!publicDemo && <ExportMenu />}
             {filtersOpen && (
               <div className="w-full space-y-3 border-t border-line pt-3">
                 <div className="flex flex-wrap gap-2" role="group" aria-label="Show item types">
-                  {KIND_ORDER.map((k) => (
+                  {(publicDemo && !moreTypes ? PUBLIC_KINDS : KIND_ORDER).map((k) => (
                     <button
                       key={k}
                       aria-pressed={kinds.has(k)}
@@ -205,8 +219,13 @@ export default function GraphPage() {
                       {KIND[k].plural} · {counts[k] ?? 0}
                     </button>
                   ))}
+                  {publicDemo && !moreTypes && (
+                    <button type="button" className="rounded-lg border border-line px-3 py-2 text-xs text-muted" onClick={() => setMoreTypes(true)}>
+                      More types
+                    </button>
+                  )}
                 </div>
-                <Toggle checked={showOutdated} onChange={setShowOutdated} label="Include knowledge that no longer applies" />
+                <Toggle checked={showOutdated} onChange={setShowOutdated} label="Show knowledge not in force" />
               </div>
             )}
           </>
@@ -227,6 +246,7 @@ export default function GraphPage() {
         }
         legend={
           <GraphKey
+            moreAfter={4}
             items={[
               ...KIND_ORDER.filter((k) => kinds.has(k)).map((k) => ({
                 label: KIND[k].plural,
@@ -273,22 +293,21 @@ export default function GraphPage() {
         }
         browse={
           <div className="p-4">
-            <h3 className="font-semibold">Browse connections</h3>
-            <Input className="mt-3" aria-label="Search the item list" placeholder="Search knowledge, people or equipment" value={q} onChange={(e) => setQ(e.target.value)} />
-            <p className="mb-4 mt-1 text-xs leading-relaxed text-muted">Choose an item to read its context and follow related knowledge.</p>
-            <p className="mb-2 text-xs text-muted">
+            <h3 className="font-semibold">Knowledge</h3>
+            <Input className="mt-3" aria-label="Search the item list" placeholder="Search knowledge, people, equipment" value={q} onChange={(e) => setQ(e.target.value)} />
+            <p className="mb-2 mt-3 text-xs text-muted">
               {browseNodes.length} items{q && ' matching your search'}
             </p>
             <div className="divide-y divide-line">
               {browseNodes.map((d) => (
-                <button key={d.id} onClick={() => selectNode(d.id)} className="w-full rounded-md py-3 text-left hover:bg-surface-2">
+                <button key={d.id} onClick={() => selectNode(d.id)} className="min-h-11 w-full rounded-md py-3 text-left hover:bg-surface-2">
                   <span className="text-[10px] font-medium uppercase tracking-wider text-muted">{KIND[d.kind as KgKind]?.label}</span>
                   <span className="mt-1 block break-words text-sm leading-relaxed">{title(d)}</span>
                 </button>
               ))}
             </div>
             {!browseNodes.length && (
-              <p className="py-6 text-sm text-muted">No matching items. Try a different search or adjust the filters.</p>
+              <p className="py-6 text-sm text-muted">No knowledge matches these filters.</p>
             )}
           </div>
         }
@@ -300,6 +319,7 @@ export default function GraphPage() {
               edges={edges}
               onSelect={selectNode}
               at={at}
+              compact={publicDemo}
               patterns={patterns}
               onOpenPattern={(p) => {
                 setFocusPattern(p)

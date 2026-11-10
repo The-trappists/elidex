@@ -5,6 +5,7 @@ import type { Pattern } from '../api/types'
 import { Inspector } from '../components/graph/Inspector'
 import type { NodeKind } from '../components/graph/graphModel'
 import { GraphWorkspace } from '../components/graph/GraphWorkspace'
+import { NetworkHealthStrip, SitesList } from '../components/network/NetworkChrome'
 import { TopologyGraph, TopologyKey } from '../components/force/TopologyGraph'
 import { knowledgeTargets } from '../components/force/models'
 import { CorrelationsChip } from '../components/insights/CorrelationsChip'
@@ -14,7 +15,6 @@ import { usePatterns } from '../components/insights/usePatterns'
 import { SimTimeline, TimeChip } from '../components/timeline/SimTimeline'
 import { threadEntityIndex, type TimelineEvent } from '../components/timeline/timelineModel'
 import { useTimelineEvents } from '../components/timeline/useTimeline'
-import { Input } from '../components/ui'
 import { useCompanyDay } from '../lib/useCompanyDay'
 import { useSimNow } from '../lib/useNow'
 import { useDemo } from '../store/demo'
@@ -28,7 +28,6 @@ export default function NetworkPage() {
   const nowSec = Math.floor((useSimNow(5000) ?? new Date()).getTime() / 1000)
   const now = useMemo(() => new Date(nowSec * 1000), [nowSec])
   const [t, setT] = useState<Date | null>(null) // null = follow sim now
-  const [q, setQ] = useState('')
   const [drawer, setDrawer] = useState(false)
   const [focusPattern, setFocusPattern] = useState<Pattern | null>(null)
   const assertions = useLive((s) => s.assertions)
@@ -80,8 +79,9 @@ export default function NetworkPage() {
   return (
     <>
       <GraphWorkspace
-        title="Knowledge across the network"
-        description="Explore equipment and the experience attached to it, now or at another point in time."
+        title="Network"
+        description="Sites, equipment and what is happening."
+        variant="compact"
         actions={
           <>
             <CorrelationsChip patterns={patterns} onOpen={() => setDrawer(true)} />
@@ -91,6 +91,7 @@ export default function NetworkPage() {
         selected={!!kind}
         onClear={() => select(null)}
         toolbar={null}
+        status={<NetworkHealthStrip company={company} incidents={incidents} at={at} now={now} />}
         timeline={
           <SimTimeline
             events={events}
@@ -105,7 +106,7 @@ export default function NetworkPage() {
             company={company}
           />
         }
-        legend={<TopologyKey />}
+        legend={<TopologyKey compact />}
         canvas={
           <TopologyGraph
             at={at}
@@ -116,34 +117,13 @@ export default function NetworkPage() {
             insight={insight}
           />
         }
-        browse={
-          <div className="p-4">
-            <h3 className="mb-3 font-semibold">Find equipment or a site</h3>
-            <Input aria-label="Search network" placeholder="Search by name, model or ID" value={q} onChange={(e) => setQ(e.target.value)} />
-            <div className="mt-3 divide-y divide-line">
-              {[
-                ...sites.map((s) => ({ id: s.id, title: s.name, detail: 'Site · ' + s.region })),
-                ...elements.map((e) => ({
-                  id: e.id,
-                  title: e.id,
-                  detail: e.model + ' · ' + (sites.find((s) => s.id === e.site_id)?.name ?? 'No site'),
-                })),
-              ]
-                .filter((x) => `${x.title} ${x.id} ${x.detail}`.toLowerCase().includes(q.toLowerCase()))
-                .map((x) => (
-                  <button key={x.id} onClick={() => select(x.id)} className="w-full rounded-md py-3 text-left hover:bg-surface-2">
-                    <span className="block text-sm font-medium">{x.title}</span>
-                    <span className="mt-1 block text-xs leading-relaxed text-muted">{x.detail}</span>
-                  </button>
-                ))}
-            </div>
-          </div>
-        }
+        browse={<SitesList at={at} selectedId={selectedId} onSelect={select} company={company} />}
         details={
           <Inspector
             id={selectedId}
             kind={kind}
             at={at}
+            summary={publicDemo}
             onSelect={(id) => select(id)}
             patterns={patterns}
             onOpenPattern={(p) => {
