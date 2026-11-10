@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react'
 // Company-scale retrieval evaluation (run 2026-11-08,
 // `ctx dataset eval out/dataset/large --split test`). Source: docs/evaluation.md#part-3.
 export const REPORT_URL =
-  'https://github.com/The-trappists/since-ai-hackathon/blob/main/docs/evaluation.md#part-3-retrieval-accuracy-at-company-scale'
+  'https://github.com/The-trappists/elidex/blob/main/docs/evaluation.md#part-3-retrieval-accuracy-at-company-scale'
 
 const STATS = [
   {

@@ -114,7 +114,7 @@ export default function HomePage() {
           </nav>
           <div className="ml-auto flex items-center gap-4">
             <a
-              href="https://github.com/The-trappists/since-ai-hackathon"
+              href="https://github.com/The-trappists/elidex"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden py-2 text-sm text-muted hover:text-text sm:inline"
@@ -188,7 +188,7 @@ export default function HomePage() {
                 Team
               </a>
               <a
-                href="https://github.com/The-trappists/since-ai-hackathon"
+                href="https://github.com/The-trappists/elidex"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMenuOpen(false)}
@@ -440,7 +440,7 @@ export default function HomePage() {
             <ul className="mt-2 text-sm">
               <li>
                 <a
-                  href="https://github.com/The-trappists/since-ai-hackathon"
+                  href="https://github.com/The-trappists/elidex"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 min-w-8 items-center hover:text-accent"
@@ -450,7 +450,7 @@ export default function HomePage() {
               </li>
               <li>
                 <a
-                  href="https://github.com/The-trappists/since-ai-hackathon/blob/main/LICENSE"
+                  href="https://github.com/The-trappists/elidex/blob/main/LICENSE"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-11 min-w-8 items-center hover:text-accent"

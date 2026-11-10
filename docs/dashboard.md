@@ -23,7 +23,7 @@ uv run ctx llm-check            # which LLM provider / JSON mode works
 
 ## Graph time travel
 
-Network and Knowledge graph share an always-visible slider at the top of the timeline, above its range controls and event markers. Drag its handle or click anywhere on the slider to inspect a time; the graph updates during dragging, without waiting for release. The selected date and time stay visible, including on short screens.
+Network, Knowledge graph and Correlations share an always-visible slider at the top of the timeline, above its range controls and event markers. Drag its handle or click anywhere on the slider to inspect a time; the graph updates during dragging, without waiting for release. The selected date and time stay visible, including on short screens.
 
 The selected time controls incident state and knowledge validity. Event markers remain available for source inspection. Use Day/All and the zoom controls to choose the visible period, and Back to now to follow the simulation clock again. Keyboard controls: Left/Right step one minute, Shift steps 15 minutes, Home/End select the visible range boundaries, and N returns to now.
 
@@ -330,7 +330,7 @@ Everything except Elisa's chat and email is synthetic and documented in `data/da
 ## UI conventions (web/)
 
 - **Calm by default.** Neutral surfaces, one accent (`accent`) for what is interactive, and color only for status (`ok`, `warn`, `bad`). Types, trust, channels and origins are plain grey chips (a small dot at most). Graphs are the one place with a color per kind, and their legend is also their filter. No gradients, glows or decorative motion.
-- **One job per screen.** Overview = incidents and recent processing. Conversations = read a thread and follow it through the five pipeline steps (`components/pipeline/JobSteps.tsx`, one step open at a time, each with what it received and produced). Network = topology over time. Graph = the knowledge graph (`pages/GraphPage.tsx`, fed by `GET /graph`). Knowledge = the list.
+- **One job per screen.** Overview = incidents and recent processing. Conversations = read a thread and follow it through the five pipeline steps (`components/pipeline/JobSteps.tsx`, one step open at a time, each with what it received and produced). Network = topology over time. Graph = the knowledge graph (`pages/GraphPage.tsx`, fed by `GET /graph`). Knowledge = the list. Correlations = recurring and linked problems as an evidence graph (reports → equipment → shared factors), with the network map as an alternative.
 - Colors come only from the tokens in `src/index.css` and from `src/lib/semantic.ts`.
 - Components come from `src/components/ui` (Button, Badge, IdChip, Card/Panel, Modal/Drawer, Input/Select/Textarea/Field/Toggle, Tabs, Table, Avatar, EmptyState, JsonView, `toast` and `withToast`). Containers use `rounded-lg`, controls `rounded-md`; section labels are sentence case, not uppercase.
 - Live data is read with `useLive(selector)` from `src/store/live.ts`. Pages never keep their own copy of the state, and they call `api.*` for actions. The SSE event brings the change back.
