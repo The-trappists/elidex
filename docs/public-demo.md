@@ -8,6 +8,8 @@ The demo opens on a task-focused walkthrough, separate from the marketing homepa
 
 The public knowledge graph lists captured knowledge before people, equipment and other objects, with an accurate **Browse the map** heading and stable grouping. Public navigation and walkthrough text are at least 14 px; utility metadata is 11–12 px. The graph canvas, search, selection and timeline keep their existing behavior.
 
+Public navigation shows Company day, Network, Knowledge graph, **Correlations** and Connections. Correlations defaults to the evidence graph (human reports → affected equipment → shared factors, all hypotheses) with the same top time slider as the other graph pages; the network map remains available.
+
 Each workspace starts with preloaded synthetic data. Scripted exploration does not call model APIs or connect to Slack. A visitor can spend one bounded live scenario allowance, then continue in scripted mode. This is a browser allowance, not a verified-person allowance: clearing cookies can create another workspace.
 
 ## Local keyless check
